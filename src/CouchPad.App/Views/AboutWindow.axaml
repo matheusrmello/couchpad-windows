@@ -1,0 +1,64 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:CouchPad.App.Localization"
+        xmlns:vm="using:CouchPad.App.ViewModels"
+        x:Class="CouchPad.App.Views.AboutWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{loc:Tr about.title}"
+        Width="440"
+        Height="340"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource CouchPad.Background}"
+        Foreground="{DynamicResource CouchPad.TextPrimary}"
+        FontSize="{DynamicResource CouchPad.FontSize.Body}"
+        FontFamily="{DynamicResource CouchPad.FontFamily}">
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="{DynamicResource CouchPad.Padding.Window}">
+
+    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12">
+      <Border Width="42"
+              Height="42"
+              CornerRadius="{DynamicResource CouchPad.Radius.Control}"
+              Background="{DynamicResource CouchPad.AccentMuted}">
+        <TextBlock Text="{loc:Tr app.mark}"
+                   FontSize="22"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource CouchPad.Accent}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center" />
+      </Border>
+      <StackPanel VerticalAlignment="Center">
+        <TextBlock Text="{loc:Tr app.name}"
+                   FontSize="{DynamicResource CouchPad.FontSize.H1}"
+                   FontWeight="SemiBold" />
+        <TextBlock Text="{loc:Tr app.tagline}"
+                   FontSize="{DynamicResource CouchPad.FontSize.Caption}"
+                   Foreground="{DynamicResource CouchPad.TextSecondary}" />
+      </StackPanel>
+    </StackPanel>
+
+    <StackPanel Grid.Row="1" Spacing="8" Margin="0,20,0,0">
+      <TextBlock Text="{loc:Tr about.free}"
+                 TextWrapping="Wrap"
+                 Foreground="{DynamicResource CouchPad.TextPrimary}" />
+      <TextBlock Classes="caption" Text="{loc:Tr about.license}" />
+      <TextBlock Classes="caption" Text="{Binding VersionText}" />
+      <TextBlock Classes="caption" Text="{loc:Tr footer.phase}" />
+    </StackPanel>
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto">
+      <TextBlock Classes="caption"
+                 Text="{loc:Tr app.name}"
+                 VerticalAlignment="Center" />
+      <Button x:Name="CloseButton"
+              Grid.Column="1"
+              Classes="secondary"
+              Content="{loc:Tr about.close}"
+              IsDefault="True"
+              IsCancel="True"
+              Click="OnCloseClick" />
+    </Grid>
+  </Grid>
+</Window>

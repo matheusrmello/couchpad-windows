@@ -23,6 +23,9 @@
 | D014 | 2026-11-09 | Idioma padrão = cultura do sistema; pt-BR + inglês; fallback inglês | Primeira experiência |
 | D015 | 2026-11-09 | Config em `%LOCALAPPDATA%\CouchPad\settings.json`; journal em `state\session.json`; logs em `logs\` | Per-user, sem admin |
 | D016 | 2026-11-09 | Primeiro uso com automação desligada e configuração mínima guiada | Evitar mudança acidental |
+| D017 | 2026-11-09 | Layout do shell reposicionado em code-behind com 3 breakpoints (`≥1000`, `720–999`, `<720`); janela mínima `640×640`; conteúdo rolável | Alcançar os 3 layouts sem duplicar XAML |
+| D018 | 2026-11-09 | P1 é somente UI: toggle de automação alterna `Inativo`/`Aguardando gamepad`; refresh de displays é placeholder de 700 ms; nada de CCD/áudio/HDR | Validar o shell sem risco de hardware |
+| D019 | 2026-11-09 | Até glifos curtos (chips `1`/`LB`/`RB`/`A` e unidades `1 s`) vêm dos catálogos; teste de XAML bloqueia texto visível literal | Cumprir "nenhuma string fora dos dicionários" |
 
 ## Pendentes
 

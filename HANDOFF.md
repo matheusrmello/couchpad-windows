@@ -279,7 +279,8 @@ Estados obrigatórios:
 - `>= 1000 px`: 3 colunas (principal 2 + sidebar 1).
 - `720–999 px`: 2 colunas.
 - `< 720 px`: 1 coluna.
-- Janela padrão ~1020×780; mínimo ~900×700.
+- Janela padrão ~1020×780; mínimo `640×640` (permite alcançar 1 coluna).
+- Conteúdo em `ScrollViewer`; cabeçalho e rodapé fixos.
 
 ### 7.6 i18n
 
@@ -677,7 +678,7 @@ separados.
 | Setup REA | Codex | **pendente** | Planejado; nada gravado. Ver seção 5 |
 | REA 2.2.0 | Codex | **pendente** | Depende do setup e da extração do bundle |
 | P0 bootstrap | DeepSeek | **concluído** | build 0 avisos/0 erros; 26 testes; smoke pt/en; revisão aplicada; ver seção 19 |
-| P1 shell | DeepSeek | pendente | Depende de P0 |
+| P1 shell | DeepSeek | **concluído** | build 0 avisos/0 erros; testes de i18n; smoke 1020×780 pt/en; capturas 3/2/1 colunas; ver seção 20 |
 | P2 componentes | DeepSeek | pendente | Depende de P1 |
 | P3 simulação | DeepSeek | pendente | Depende de P2 |
 | P4 display | Codex | pendente | Depende de spec REA + hardware |
@@ -708,6 +709,9 @@ separados.
 | 09/11/2026 | D014 | Cultura do sistema; pt-BR + inglês; fallback inglês | Primeira experiência |
 | 09/11/2026 | D015 | Config/journal/logs em `%LOCALAPPDATA%\CouchPad` | Per-user, sem admin |
 | 09/11/2026 | D016 | Automação desligada no primeiro uso | Evitar mudança acidental |
+| 09/11/2026 | D017 | Layout responsivo em code-behind, 3 breakpoints, mínimo 640×640 | Alcançar 1 coluna sem duplicar XAML |
+| 09/11/2026 | D018 | P1 somente UI; refresh de displays é placeholder de 700 ms | Validar shell sem hardware |
+| 09/11/2026 | D019 | Até glifos/unidades vêm dos catálogos; teste bloqueia literais | Nenhuma string fora dos dicionários |
 
 ---
 
@@ -857,3 +861,58 @@ O agente `reviewer` revisou o commit P0 e apontou 10 itens. Aplicados:
 2. Componentes do catálogo (`Card`, `Pill`, `StatusDot`, etc.).
 3. Spec visual em `docs/ui-spec.md`.
 4. Screenshots dos 3 breakpoints × 2 idiomas.
+
+---
+
+## 20. Evidência do P1 (09/11/2026)
+
+### Entregue
+
+- Shell estático com cabeçalho, 7 cards e rodapé (8 áreas).
+- `MainWindowViewModel` com estado dos toggles, selects, atrasos, modos,
+  caminho do launcher, comandos de refresh/reset e seletor de idioma.
+- `MainWindow.axaml` com os cards Automação, Display, Gamepad, Combinação,
+  Parâmetros, Transição e Launchers.
+- Layout responsivo em 3/2/1 colunas (`MainWindow.axaml.cs`), com
+  `ScrollViewer` e janela mínima `640×640`.
+- `AboutWindow` modal com versão, licença e aviso 100% gratuito.
+- Catálogo pt-BR/en com 78 chaves; chips e unidades também localizados.
+- `Controls.axaml`: cards, pills, dots, chips, path box, botões, select e
+  toggle switch com estados.
+- `docs/ui-spec.md` com breakpoints, áreas, tokens, estados, i18n e a11y.
+- `UiLocalizationTests`: chaves do XAML existem nos dois catálogos; nenhum
+  texto visível literal; as 7 seções aparecem na janela principal.
+- `docs/handoff-deepseek-to-deepseek-p1.md` com contratos e TODOs da P2.
+
+### Verificação
+
+| Item | Resultado |
+|---|---|
+| `dotnet build CouchPad.slnx -c Debug` | 0 avisos, 0 erros |
+| `dotnet test CouchPad.slnx -c Debug` | 29 aprovados, 0 falhas |
+| `dotnet CouchPad.dll --smoke` | janela 1020×780; pt `Ouvindo gamepad`; en `Listening for gamepad`; título CouchPad |
+| Layout 3 colunas | 1020×780, sem rolagem |
+| Layout 2 colunas | 860×780, rolagem vertical |
+| Layout 1 coluna | 660×780, rolagem vertical |
+| Idioma | troca em tempo real; estado `Aguardando gamepad` em âmbar |
+| Sobre | diálogo modal abre e fecha; `Esc` fecha |
+
+### Capturas de revisão (fora do repositório)
+
+`C:\Users\Usuario\AppData\Local\Temp\opencode\p1-3col.png`,
+`p1-2col.png`, `p1-1col.png`, `p1-en.png`, `p1-en-waiting.png`,
+`p1-screen.png`. As oficiais entram em `docs/screenshots/` na P7a.
+
+### Decisões da fase
+
+- D017: layout responsivo em code-behind; mínimo `640×640`.
+- D018: P1 somente UI; refresh de displays é placeholder de 700 ms.
+- D019: glifos/unidades também vêm dos catálogos; teste bloqueia literais.
+
+### Fora do escopo (por desenho)
+
+- Detecção real de gamepad e captura de combinação (P3).
+- Persistência dos toggles e atrasos (P3).
+- Leitura/aplicação de display, áudio e HDR (P4/P5).
+- Bandeja, autostart, rescue e tarefa (P6).
+- Screenshots oficiais versionadas (P7a).

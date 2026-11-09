@@ -42,9 +42,9 @@ public partial class App : Application
                     var initial = localization.Language;
 
                     localization.SetLanguage(AppLanguage.PtBr);
-                    var pt = localization["p0.title"];
+                    var pt = localization["automation.toggle"];
                     localization.SetLanguage(AppLanguage.En);
-                    var en = localization["p0.title"];
+                    var en = localization["automation.toggle"];
 
                     Console.WriteLine(
                         $"SMOKE: window opened {window.Bounds.Width}x{window.Bounds.Height}; " +

@@ -5,6 +5,7 @@
   <Color x:Key="CouchPad.Color.Background">#0A0A0B</Color>
   <Color x:Key="CouchPad.Color.Surface">#17181A</Color>
   <Color x:Key="CouchPad.Color.SurfaceRaised">#1F2023</Color>
+  <Color x:Key="CouchPad.Color.SurfaceSunken">#111214</Color>
   <Color x:Key="CouchPad.Color.Border">#2A2B2F</Color>
   <Color x:Key="CouchPad.Color.BorderStrong">#3A3B40</Color>
   <Color x:Key="CouchPad.Color.TextPrimary">#F2F3F5</Color>
@@ -13,12 +14,16 @@
   <Color x:Key="CouchPad.Color.Accent">#2FD07A</Color>
   <Color x:Key="CouchPad.Color.AccentMuted">#123D28</Color>
   <Color x:Key="CouchPad.Color.Info">#2F80ED</Color>
+  <Color x:Key="CouchPad.Color.InfoMuted">#15304F</Color>
   <Color x:Key="CouchPad.Color.Warning">#F2C94C</Color>
+  <Color x:Key="CouchPad.Color.WarningMuted">#3A3117</Color>
   <Color x:Key="CouchPad.Color.Danger">#EB5757</Color>
+  <Color x:Key="CouchPad.Color.DangerMuted">#3A1D1E</Color>
 
   <SolidColorBrush x:Key="CouchPad.Background" Color="{StaticResource CouchPad.Color.Background}" />
   <SolidColorBrush x:Key="CouchPad.Surface" Color="{StaticResource CouchPad.Color.Surface}" />
   <SolidColorBrush x:Key="CouchPad.SurfaceRaised" Color="{StaticResource CouchPad.Color.SurfaceRaised}" />
+  <SolidColorBrush x:Key="CouchPad.SurfaceSunken" Color="{StaticResource CouchPad.Color.SurfaceSunken}" />
   <SolidColorBrush x:Key="CouchPad.Border" Color="{StaticResource CouchPad.Color.Border}" />
   <SolidColorBrush x:Key="CouchPad.BorderStrong" Color="{StaticResource CouchPad.Color.BorderStrong}" />
   <SolidColorBrush x:Key="CouchPad.TextPrimary" Color="{StaticResource CouchPad.Color.TextPrimary}" />
@@ -27,11 +32,15 @@
   <SolidColorBrush x:Key="CouchPad.Accent" Color="{StaticResource CouchPad.Color.Accent}" />
   <SolidColorBrush x:Key="CouchPad.AccentMuted" Color="{StaticResource CouchPad.Color.AccentMuted}" />
   <SolidColorBrush x:Key="CouchPad.Info" Color="{StaticResource CouchPad.Color.Info}" />
+  <SolidColorBrush x:Key="CouchPad.InfoMuted" Color="{StaticResource CouchPad.Color.InfoMuted}" />
   <SolidColorBrush x:Key="CouchPad.Warning" Color="{StaticResource CouchPad.Color.Warning}" />
+  <SolidColorBrush x:Key="CouchPad.WarningMuted" Color="{StaticResource CouchPad.Color.WarningMuted}" />
   <SolidColorBrush x:Key="CouchPad.Danger" Color="{StaticResource CouchPad.Color.Danger}" />
+  <SolidColorBrush x:Key="CouchPad.DangerMuted" Color="{StaticResource CouchPad.Color.DangerMuted}" />
 
   <!-- Tipografia -->
   <FontFamily x:Key="CouchPad.FontFamily">Segoe UI Variable, Inter, Segoe UI</FontFamily>
+  <FontFamily x:Key="CouchPad.FontFamily.Mono">Cascadia Mono, Consolas, Segoe UI</FontFamily>
   <x:Double x:Key="CouchPad.FontSize.Display">28</x:Double>
   <x:Double x:Key="CouchPad.FontSize.H1">20</x:Double>
   <x:Double x:Key="CouchPad.FontSize.CardTitle">15</x:Double>
@@ -40,7 +49,7 @@
   <x:Double x:Key="CouchPad.FontSize.Mono">12</x:Double>
 
   <!-- Espaçamento -->
-  <Thickness x:Key="CouchPad.Padding.Card">20</Thickness>
+  <Thickness x:Key="CouchPad.Padding.Card">16</Thickness>
   <Thickness x:Key="CouchPad.Padding.Window">24</Thickness>
   <x:Double x:Key="CouchPad.Gap">16</x:Double>
   <x:Double x:Key="CouchPad.Gap.Small">8</x:Double>

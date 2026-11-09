@@ -3,11 +3,93 @@
   "app.mark": "C",
   "app.tagline": "Control your display and audio",
   "status.free": "Free",
-  "p0.title": "Initial structure ready",
-  "p0.body": "Theme, i18n and projects created. The full interface starts in P1.",
+
+  "status.idle": "Idle",
+  "status.waiting": "Waiting for gamepad",
+  "status.applying": "Applying",
+  "status.active": "Active",
+  "status.error": "Error",
+  "status.rescue_pending": "Recovery pending",
+
+  "section.automation": "Automation",
+  "section.display": "Display",
+  "section.gamepad": "Gamepad",
+  "section.combo": "Combo",
+  "section.settings": "Settings",
+  "section.transition": "Transition",
+  "section.launchers": "Launchers",
+
+  "automation.toggle": "Listening for gamepad",
+  "automation.help": "Turn on to react when the controller connects.",
+  "automation.gamepad": "Gamepad",
+  "automation.display": "Display",
+  "automation.audio": "Audio",
+  "automation.launcher": "Launcher",
+  "automation.none": "No controller connected",
+  "automation.primary_display": "Primary monitor",
+  "automation.default_audio": "Default output",
+  "automation.no_launcher": "None",
+
+  "display.current": "Current",
+  "display.target": "Target",
+  "display.current_value": "Primary monitor · 1920×1080",
+  "display.target_value": "TV · HDMI",
+  "display.refresh": "Refresh displays",
+  "display.refreshing": "Refreshing…",
+
+  "gamepad.primary": "Primary controller",
+  "gamepad.none": "No controller connected",
+  "gamepad.reset": "Reset controller",
+  "gamepad.reset_reason": "Available when a controller is detected.",
+
+  "combo.help": "Sequence to enable automation.",
+  "combo.change": "Change",
+  "combo.change_reason": "Available when button capture is active.",
+  "combo.key.1": "1",
+  "combo.key.lb": "LB",
+  "combo.key.rb": "RB",
+  "combo.key.a": "A",
+
+  "settings.close_launcher": "Close launcher on activate",
+  "settings.start_with_windows": "Start with Windows",
+  "settings.minimize_to_tray": "Minimize to tray",
+  "settings.activation_delay": "Activation delay",
+  "settings.deactivation_delay": "Deactivation delay",
+  "settings.help": "Applied only when automation is on.",
+
+  "delay.immediate": "Immediate",
+  "delay.1s": "1 s",
+  "delay.2s": "2 s",
+  "delay.3s": "3 s",
+  "delay.5s": "5 s",
+
+  "transition.display_mode": "Display mode",
+  "transition.audio_mode": "Audio mode",
+
+  "display_mode.tv_only": "TV only",
+  "display_mode.extend": "Extend",
+  "display_mode.mirror": "Mirror",
+
+  "audio_mode.move": "Move to HDMI",
+  "audio_mode.keep": "Keep current",
+
+  "launchers.steam": "Steam",
+  "launchers.custom": "Custom launcher",
+  "launchers.no_path": "No path selected",
+  "launchers.choose": "Choose folder",
+  "launchers.choose_title": "Choose launcher folder",
+
+  "footer.version": "Version {0}",
+  "footer.phase": "P1 · shell",
+  "footer.reset": "Reset",
+  "footer.about": "About",
+
   "language.label": "Language",
   "language.ptbr": "Português (Brasil)",
   "language.en": "English",
-  "footer.version": "Version {0}",
-  "footer.phase": "P0 · bootstrap"
+
+  "about.title": "About CouchPad",
+  "about.free": "100% free — no license, activation or telemetry.",
+  "about.license": "MIT License",
+  "about.close": "Close"
 }
