@@ -227,13 +227,31 @@ public sealed class AutomationCoordinator
             return;
         }
 
-        SetState(AutomationState.Applying);
-
         var previousSnapshot = Snapshot;
         var displayBefore = _display.GetCurrent();
         var audioBefore = _audio.GetCurrent();
         var restoreDisplay = previousSnapshot?.RestoreDisplay ?? displayBefore;
         var restoreAudio = previousSnapshot?.RestoreAudio ?? audioBefore;
+
+        var pending = new SessionJournalEntry(
+            SessionJournalEntry.PendingState,
+            settings.DisplayMode,
+            settings.AudioMode,
+            _time.GetUtcNow())
+        {
+            RestoreDisplay = restoreDisplay,
+            RestoreAudio = restoreAudio,
+        };
+
+        // Fail-closed: sem journal não há rescue possível para uma mudança
+        // inicial. Em reaplicação, o journal ativo anterior já tem o baseline.
+        if (!TrySaveJournal(pending) && previousSnapshot is null)
+        {
+            SetState(AutomationState.Error, "journal unavailable");
+            return;
+        }
+
+        SetState(AutomationState.Applying);
 
         try
         {
@@ -253,30 +271,48 @@ public sealed class AutomationCoordinator
                 _snapshot = snapshot;
             }
 
-            TrySaveJournal(snapshot);
+            var active = new SessionJournalEntry(
+                SessionJournalEntry.ActiveState,
+                settings.DisplayMode,
+                settings.AudioMode,
+                _time.GetUtcNow())
+            {
+                RestoreDisplay = restoreDisplay,
+                RestoreAudio = restoreAudio,
+                AppliedAudio = audio,
+            };
+
+            // Se esta gravação falhar, o pending anterior ainda contém o
+            // baseline e serve para o rescue da P6.
+            TrySaveJournal(active);
             SetState(AutomationState.Active);
         }
         catch (OperationCanceledException)
         {
-            await TryRestoreAsync(displayBefore, audioBefore);
+            var restored = await TryRestoreAsync(displayBefore, audioBefore);
 
             lock (_sync)
             {
                 _snapshot = previousSnapshot;
+            }
+
+            if (restored && previousSnapshot is null)
+            {
+                TryClearJournal();
             }
 
             throw;
         }
         catch (Exception ex)
         {
-            await TryRestoreAsync(displayBefore, audioBefore);
+            var restored = await TryRestoreAsync(displayBefore, audioBefore);
 
             lock (_sync)
             {
                 _snapshot = previousSnapshot;
             }
 
-            if (previousSnapshot is null)
+            if (restored && previousSnapshot is null)
             {
                 TryClearJournal();
             }
@@ -393,15 +429,17 @@ public sealed class AutomationCoordinator
         StateChanged?.Invoke(this, args);
     }
 
-    private async Task TryRestoreAsync(DisplayState display, AudioOutput audio)
+    private async Task<bool> TryRestoreAsync(DisplayState display, AudioOutput audio)
     {
+        var restored = true;
+
         try
         {
             await _display.RestoreAsync(display, CancellationToken.None);
         }
         catch
         {
-            // Rollback é melhor esforço; o erro original é preservado.
+            restored = false;
         }
 
         try
@@ -410,32 +448,28 @@ public sealed class AutomationCoordinator
         }
         catch
         {
-            // Rollback é melhor esforço; o erro original é preservado.
+            restored = false;
         }
+
+        return restored;
     }
 
-    private void TrySaveJournal(AutomationSnapshot snapshot)
+    private bool TrySaveJournal(SessionJournalEntry entry)
     {
         if (_journal is null)
         {
-            return;
+            return true;
         }
 
         try
         {
-            _journal.Save(new SessionJournalEntry(
-                SessionJournalEntry.ActiveState,
-                snapshot.DisplayMode,
-                snapshot.AudioMode,
-                _time.GetUtcNow())
-            {
-                RestoreDisplay = snapshot.RestoreDisplay,
-                RestoreAudio = snapshot.RestoreAudio,
-            });
+            _journal.Save(entry);
+            return true;
         }
         catch
         {
-            // Journal não pode derrubar a automação.
+            // O chamador decide se a falha é fatal (pending inicial) ou não.
+            return false;
         }
     }
 

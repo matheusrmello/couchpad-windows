@@ -4,10 +4,15 @@
 - Origem: P3 — serviço simulado, state machine, atrasos, journal e persistência
 - Destino: REA 2.2.0 + P4 — display real
 - Tag da origem: `v0.4.0-sim`
+- Contrato endurecido: commit `fix(P3): topologia e journal antes do apply` (versão 0.4.1)
 - Build: 0 avisos, 0 erros
-- Testes: 56 aprovados
-- Árvore: limpa
+- Testes: 59 aprovados
+- Árvore: limpa (os arquivos de REA/P4 do Codex são commitados separadamente)
 - Aceite do usuário: 09/11/2026
+
+> Atualização de contrato: `DisplayState.Topology` e o journal `pending`
+> antes do apply foram adicionados depois da tag `v0.4.0-sim`. Use o HEAD
+> atual, não apenas a tag, ao iniciar a P4.
 
 ---
 
@@ -41,22 +46,28 @@ Em `src/CouchPad.Core`:
    - `ApplyAsync(mode, ct)` respeita cancelamento e retorna o estado aplicado;
    - `RestoreAsync(state, ct)` restaura exatamente o `DisplayState` recebido;
    - falhas devem ser exceções; o coordenador faz rollback e vira `Error`.
-3. **`DisplayState`** é abstrato (`Mode`, `PrimaryActive`, `TvActive`). Se a
-   implementação real precisar de mais dados (target path, EDID, resolução),
-   adicione campos opcionais ao record ou um estado interno na implementação,
-   sem quebrar a UI.
-4. **Journal**: mantenha `state`, `displayMode`, `audioMode`, `updatedAt`,
-   `restoreDisplay` e `restoreAudio`. A P6 usa o baseline para rescue.
-5. **Settings**: conserve os campos existentes e a gravação que relê o arquivo
+3. **`DisplayState`** é abstrato (`Mode`, `PrimaryActive`, `TvActive`) e tem
+   `Topology` opaco. A implementação real deve preencher `Topology` em
+   `GetCurrent()`/`ApplyAsync` com o snapshot completo da topologia CCD
+   (paths, modes, flags e versão do schema). O Core não interpreta o conteúdo;
+   `RestoreAsync` o consome.
+4. **Journal**: mantenha `state` (`pending`/`active`), `displayMode`,
+   `audioMode`, `updatedAt`, `restoreDisplay` (com `Topology`), `restoreAudio`
+   e `appliedAudio`. O `pending` é gravado **antes** do apply; o `active`
+   depois. A P6 usa o baseline para rescue.
+5. **Falha de journal**: se o `pending` inicial não puder ser gravado, o
+   coordenador aborta a mudança com `Error`. Se o `active` falhar, o `pending`
+   permanece e ainda serve para rescue.
+6. **Settings**: conserve os campos existentes e a gravação que relê o arquivo
    antes de salvar (`language` e extensões desconhecidas).
-6. **UI**: o `MainWindowViewModel` aceita `IGamepadWatcher`, `IDisplayService`,
+7. **UI**: o `MainWindowViewModel` aceita `IGamepadWatcher`, `IDisplayService`,
    `IAudioService` e `IDelayScheduler` no construtor. A composição em
    `App.axaml.cs` escolhe simulação ou implementação real.
-7. **Sem admin por padrão**, per-user em `%LOCALAPPDATA%\CouchPad`.
-8. **Sem P/Invoke no App/Core**: implementações Win32/COM ficam em
+8. **Sem admin por padrão**, per-user em `%LOCALAPPDATA%\CouchPad`.
+9. **Sem P/Invoke no App/Core**: implementações Win32/COM ficam em
    `src/CouchPad.Platform.Windows/**`.
-9. **i18n**: nada de texto visível fora dos catálogos; se a P4 adicionar
-   estados, use chaves nos dois idiomas e atualize o teste de XAML.
+10. **i18n**: nada de texto visível fora dos catálogos; se a P4 adicionar
+    estados, use chaves nos dois idiomas e atualize o teste de XAML.
 
 ---
 
@@ -64,8 +75,9 @@ Em `src/CouchPad.Core`:
 
 Ordem recomendada:
 
-1. **REA 2.2.0 estático** (Codex) — preencher
-   `docs/rea-shiftpad-2.2.0.md` com evidência, sem executar o binário.
+1. **REA 2.2.0 estático** (Codex) — concluída no commit `d2e1a74`;
+   consulte `docs/rea-shiftpad-2.2.0.md`. O que restou como desconhecido virou
+   hipótese e não bloqueia a implementação clean-room.
 2. Identidade da TV:
    - target path + EDID quando disponível;
    - fallback por nome/fabricante;

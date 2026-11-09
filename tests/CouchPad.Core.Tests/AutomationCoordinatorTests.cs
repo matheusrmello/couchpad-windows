@@ -75,11 +75,12 @@ public sealed class AutomationCoordinatorTests
         Assert.Equal(AutomationState.Active, coordinator.State);
         Assert.Equal(new[] { DisplayMode.TvOnly }, display.Applied);
         Assert.Equal(AudioOutput.Hdmi, audio.Current);
-        Assert.NotNull(journal.Entry);
+        Assert.Equal(2, journal.Saves);
+        Assert.Equal(SessionJournalEntry.PendingState, journal.Saved[0].State);
         Assert.Equal(SessionJournalEntry.ActiveState, journal.Entry!.State);
         Assert.Equal(new DisplayState(DisplayMode.Extend, true, false), journal.Entry.RestoreDisplay);
         Assert.Equal(AudioOutput.Default, journal.Entry.RestoreAudio);
-        Assert.Equal(1, journal.Saves);
+        Assert.Equal(AudioOutput.Hdmi, journal.Entry.AppliedAudio);
     }
 
     [Fact]
@@ -101,6 +102,55 @@ public sealed class AutomationCoordinatorTests
         Assert.Equal(AutomationState.WaitingForGamepad, coordinator.State);
         Assert.Empty(display.Applied);
         Assert.Equal(0, delay.PendingCount);
+    }
+
+    [Fact]
+    public async Task Journal_failure_before_apply_aborts_without_changing()
+    {
+        var (coordinator, display, _, _, journal) = Create();
+        journal.FailOnSaveNumber = 1;
+        await coordinator.UpdateSettingsAsync(new AutomationSettings { Enabled = true });
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Contains("journal", coordinator.LastError);
+        Assert.Empty(display.Applied);
+        Assert.Null(coordinator.Snapshot);
+    }
+
+    [Fact]
+    public async Task Journal_failure_after_apply_keeps_pending_baseline()
+    {
+        var (coordinator, display, _, _, journal) = Create();
+        journal.FailOnSaveNumber = 2;
+        await coordinator.UpdateSettingsAsync(new AutomationSettings { Enabled = true });
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Active, coordinator.State);
+        Assert.Single(display.Applied);
+        Assert.Equal(1, journal.Saves);
+        Assert.Equal(SessionJournalEntry.PendingState, journal.Entry!.State);
+        Assert.Equal(new DisplayState(DisplayMode.Extend, true, false), journal.Entry.RestoreDisplay);
+    }
+
+    [Fact]
+    public async Task Topology_snapshot_is_persisted_in_the_journal()
+    {
+        const string topology = "{\"schema\":1,\"paths\":[]}";
+        var baseline = new DisplayState(DisplayMode.Extend, PrimaryActive: true, TvActive: false)
+        {
+            Topology = topology,
+        };
+        var (coordinator, _, _, _, journal) = Create(baseline);
+        await coordinator.UpdateSettingsAsync(new AutomationSettings { Enabled = true });
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(2, journal.Saves);
+        Assert.Equal(topology, journal.Saved[0].RestoreDisplay!.Topology);
+        Assert.Equal(topology, journal.Entry!.RestoreDisplay!.Topology);
     }
 
     [Fact]
@@ -284,9 +334,14 @@ public sealed class AutomationCoordinatorTests
         FakeDisplayService Display,
         FakeAudioService Audio,
         ManualDelayScheduler Delay,
-        FakeJournal Journal) Create()
+        FakeJournal Journal) Create(DisplayState? baseline = null)
     {
         var display = new FakeDisplayService();
+        if (baseline is not null)
+        {
+            display.Current = baseline;
+        }
+
         var audio = new FakeAudioService();
         var delay = new ManualDelayScheduler();
         var journal = new FakeJournal();
@@ -410,23 +465,36 @@ public sealed class AutomationCoordinatorTests
 
     private sealed class FakeJournal : ISessionJournalStore
     {
-        public SessionJournalEntry? Entry { get; private set; }
+        public List<SessionJournalEntry> Saved { get; } = new();
 
-        public int Saves { get; private set; }
+        public SessionJournalEntry? Entry => Saved.Count > 0 ? Saved[^1] : null;
+
+        public int Saves => Saved.Count;
 
         public int Clears { get; private set; }
+
+        public int SaveAttempts { get; private set; }
+
+        /// <summary>Número da tentativa (1-based) que deve falhar; 0 = nunca.</summary>
+        public int FailOnSaveNumber { get; set; }
 
         public SessionJournalEntry? Load() => Entry;
 
         public void Save(SessionJournalEntry entry)
         {
-            Entry = entry;
-            Saves++;
+            SaveAttempts++;
+
+            if (FailOnSaveNumber == SaveAttempts)
+            {
+                throw new IOException("journal unavailable");
+            }
+
+            Saved.Add(entry);
         }
 
         public void Clear()
         {
-            Entry = null;
+            Saved.Clear();
             Clears++;
         }
     }

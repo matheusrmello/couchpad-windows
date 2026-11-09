@@ -15,10 +15,19 @@ public sealed record SessionJournalEntry(
 {
     public const string ActiveState = "active";
 
+    /// <summary>
+    /// Gravado antes de qualquer mudança de topologia. Se o processo cair
+    /// durante o apply, a P6 encontra este estado e restaura o baseline.
+    /// </summary>
+    public const string PendingState = "pending";
+
     /// <summary>Baseline anterior, alvo do restore da P6.</summary>
     public DisplayState? RestoreDisplay { get; init; }
 
     public AudioOutput? RestoreAudio { get; init; }
+
+    /// <summary>Saída aplicada; nulo no estado pending.</summary>
+    public AudioOutput? AppliedAudio { get; init; }
 }
 
 public interface ISessionJournalStore

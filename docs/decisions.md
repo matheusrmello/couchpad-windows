@@ -35,6 +35,7 @@
 | D026 | 2026-11-09 | `AutomationSnapshot` guarda o baseline de restauração separado do modo aplicado; reaplicar modo preserva o baseline; o journal grava modo aplicado, baseline (`restoreDisplay`/`restoreAudio`) e é limpo ao restaurar | Fail-closed: restaurar sempre o estado anterior real, inclusive no rescue da P6 |
 | D027 | 2026-11-09 | `AppSettings` persiste toggles, atrasos, modos, launcher e caminho; cada gravação relê o arquivo para preservar `language` e chaves desconhecidas | Preferências sobrevivem ao restart sem perder extensões |
 | D028 | 2026-11-09 | UI da P3 expõe conectar/desconectar gamepad simulado; o watcher real só entra na P4/P6 | Validar a state machine com risco zero |
+| D029 | 2026-11-09 | Endurecimento do contrato P3/P4: `DisplayState.Topology` é um snapshot opaco da topologia completa; journal grava `pending` antes do apply e `active` depois, com baseline; falha do `pending` inicial aborta a mudança | Fechar a janela de crash e permitir rescue fiel na P6 |
 
 ## Pendentes
 

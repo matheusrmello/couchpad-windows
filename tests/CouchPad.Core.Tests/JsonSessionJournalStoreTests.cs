@@ -29,8 +29,12 @@ public sealed class JsonSessionJournalStoreTests : IDisposable
             AudioMode.MoveToHdmi,
             new DateTimeOffset(2026, 11, 9, 12, 0, 0, TimeSpan.Zero))
         {
-            RestoreDisplay = new DisplayState(DisplayMode.Extend, PrimaryActive: true, TvActive: false),
+            RestoreDisplay = new DisplayState(DisplayMode.Extend, PrimaryActive: true, TvActive: false)
+            {
+                Topology = "{\"schema\":1,\"paths\":[]}",
+            },
             RestoreAudio = AudioOutput.Default,
+            AppliedAudio = AudioOutput.Hdmi,
         };
 
         store.Save(expected);

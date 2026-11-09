@@ -149,6 +149,9 @@ Idle ─────────────────────────
 - `RestoreDisplay` e `RestoreAudio`: **baseline anterior**, alvo da restauração.
 - `DisplayMode` e `AudioMode`: modo aplicado.
 - `AppliedAudio`: saída aplicada.
+- `RestoreDisplay.Topology`: snapshot **opaco** da topologia completa,
+  serializado pela implementação de plataforma (schema/versão próprio). O
+  Core não interpreta o conteúdo; ele persiste e devolve no restore.
 
 Reaplicar um modo enquanto `Active` (ex.: trocar TV-only por estender) usa o
 baseline original do snapshot anterior, não o estado aplicado. Isso evita
@@ -194,16 +197,26 @@ desconectar. O estado visível durante o atraso é `Pending`
     "restoreDisplay": {
       "mode": "extend",
       "primaryActive": true,
-      "tvActive": false
+      "tvActive": false,
+      "topology": "{\"schema\":1,\"paths\":[]}"
     },
-    "restoreAudio": "default"
+    "restoreAudio": "default",
+    "appliedAudio": "hdmi"
   }
   ```
-- `active` é gravado quando a automação entra em `Active`.
+- `pending` é gravado **antes** de qualquer mudança, com o baseline e os
+  modos alvo. Se o processo cair durante o apply, a P6 encontra este estado e
+  restaura o baseline.
+- `active` é gravado após o sucesso. Se essa gravação falhar, o `pending`
+  anterior permanece e ainda serve para o rescue.
+- Se a gravação `pending` falhar em uma ativação inicial, a mudança é
+  abortada com `Error` (fail-closed): sem journal não há como recuperar.
 - `restoreDisplay`/`restoreAudio` são o **baseline anterior**; a P6 usa esses
   valores para o rescue, não o modo aplicado.
-- O arquivo é apagado quando a restauração termina.
-- Falha de journal nunca derruba a automação.
+- `restoreDisplay.topology` é opaco e obrigatório para restaurar a topologia
+  completa; a P4 preenche esse campo.
+- O arquivo é apagado quando a restauração termina com sucesso. Se o rollback
+  falhar, o journal é mantido para a P6.
 - A P6 usará o journal para rescue no logon; a P3 só grava/limpa.
 
 ---
@@ -246,8 +259,11 @@ chaves desconhecidas (`[JsonExtensionData]`). Falha de escrita é silenciosa.
 
 - conectar com automação desligada fica `Idle`;
 - ligar sem gamepad fica `WaitingForGamepad`;
-- atraso de ativação: `Pending` → `Active`, display/áudio aplicados, journal
-  gravado com baseline;
+- atraso de ativação: `Pending` → `Active`, journal `pending` antes do apply
+  e `active` depois, com baseline;
+- falha do journal antes do apply aborta a ativação sem mudar o display;
+- falha do journal depois do apply mantém o `pending` com o baseline;
+- topologia opaca é persistida no journal;
 - desconectar durante o atraso cancela e não aplica;
 - desconectar sem snapshot fica `WaitingForGamepad`; com automação desligada
   fica `Idle`;
@@ -268,7 +284,7 @@ journal antigo sem baseline (campos nulos).
 `JsonAppSettingsStoreTests` cobre os novos campos e a preservação de chaves
 desconhecidas.
 
-Total na P3: **56 testes**.
+Total na P3: **59 testes**.
 
 ---
 

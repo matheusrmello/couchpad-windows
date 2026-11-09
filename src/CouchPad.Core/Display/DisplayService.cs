@@ -8,7 +8,15 @@ public enum DisplayMode
 }
 
 /// <summary>Estado abstrato do display, sem P/Invoke e sem nomes de tela.</summary>
-public sealed record DisplayState(DisplayMode Mode, bool PrimaryActive, bool TvActive);
+public sealed record DisplayState(DisplayMode Mode, bool PrimaryActive, bool TvActive)
+{
+    /// <summary>
+    /// Snapshot opaco da topologia completa, serializado pela implementação de
+    /// plataforma (schema/versão próprio). O Core não interpreta o conteúdo;
+    /// ele apenas persiste e devolve no restore.
+    /// </summary>
+    public string? Topology { get; init; }
+}
 
 public interface IDisplayService
 {
