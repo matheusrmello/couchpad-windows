@@ -679,7 +679,7 @@ separados.
 | REA 2.2.0 | Codex | **pendente** | Depende do setup e da extração do bundle |
 | P0 bootstrap | DeepSeek | **concluído** | build 0 avisos/0 erros; 26 testes; smoke pt/en; revisão aplicada; ver seção 19 |
 | P1 shell | DeepSeek | **concluído** | tag `v0.2.0-shell`; build 0 avisos/0 erros; 29 testes; smoke 1020×780 pt/en; capturas 3/2/1 colunas; ver seção 20 |
-| P2 componentes | DeepSeek | pendente | Depende de P1 |
+| P2 componentes | DeepSeek | **concluído** | tag `v0.3.0-components`; build 0 avisos/0 erros; 34 testes; galeria pt/en; shell 3/2/1 colunas; ver seção 21 |
 | P3 simulação | DeepSeek | pendente | Depende de P2 |
 | P4 display | Codex | pendente | Depende de spec REA + hardware |
 | P5 áudio/HDR | Codex | pendente | Depende de P4 |
@@ -712,6 +712,10 @@ separados.
 | 09/11/2026 | D017 | Layout responsivo em code-behind, 3 breakpoints, mínimo 640×640 | Alcançar 1 coluna sem duplicar XAML |
 | 09/11/2026 | D018 | P1 somente UI; refresh de displays é placeholder de 700 ms | Validar shell sem hardware |
 | 09/11/2026 | D019 | Até glifos/unidades vêm dos catálogos; teste bloqueia literais | Nenhuma string fora dos dicionários |
+| 09/11/2026 | D020 | Componentes com `ControlTheme` próprio e galeria `--gallery` | Reuso e validação sem hardware |
+| 09/11/2026 | D021 | `ActionButton` com Variant/State; foco `TextPrimary` 2 px; hover/pressed primários distintos | Estados visíveis e acessíveis |
+| 09/11/2026 | D022 | Classes loading desabilitam Button/ComboBox; shell desabilita refresh durante atualização | Bloquear duplo acionamento |
+| 09/11/2026 | D023 | Folder picker por evento; view usa `StorageProvider` | Manter diálogo fora do VM/Core |
 
 ---
 
@@ -916,5 +920,89 @@ O agente `reviewer` revisou o commit P0 e apontou 10 itens. Aplicados:
 - Detecção real de gamepad e captura de combinação (P3).
 - Persistência dos toggles e atrasos (P3).
 - Leitura/aplicação de display, áudio e HDR (P4/P5).
+- Bandeja, autostart, rescue e tarefa (P6).
+- Screenshots oficiais versionadas (P7a).
+
+---
+
+## 21. Evidência do P2 (09/11/2026)
+
+- Tag: `v0.3.0-components`
+
+### Entregue
+
+- Controles próprios em `src/CouchPad.App/Controls/`:
+  `Card`, `StatusPill`, `StatusRow`, `KeyChip`, `PathPicker` e
+  `ActionButton`.
+- `Themes/Components.axaml` com `ControlTheme` implícito para cada controle,
+  mesclado em `App.axaml`.
+- `MainWindow.axaml` refatorado: os 7 cards agora usam `controls:Card`; pills,
+  linhas de status, chips e o seletor de pasta usam os controles compartilhados.
+- `ActionButton` com `Variant` (Primary/Secondary) e `State`
+  (Idle/Loading/Success/Error); foco em `TextPrimary` 2 px; hover/pressed
+  primários com `AccentMutedHover`/`AccentMutedPressed`.
+- Botão de atualizar displays exercita `State=Loading` durante o placeholder
+  de 700 ms.
+- Seletor de pasta via `ChooseLauncherFolderCommand` + evento
+  `FolderPickerRequested`; a janela abre `StorageProvider.OpenFolderPickerAsync`
+  e trata cancelamento/indisponibilidade.
+- `ComponentGalleryWindow` acessível por `--gallery`, com todos os controles e
+  estados, em pt-BR e inglês.
+- Catálogos com 116 chaves em paridade; `footer.phase` = `P2 · componentes` /
+  `P2 · components`.
+- `docs/ui-components.md` com catálogo, matriz de estados, tokens, a11y e
+  limites.
+- `UiLocalizationTests` ampliado para composição do shell, temas, estados da
+  galeria e ausência de literais no tema.
+
+### Verificação
+
+| Item | Resultado |
+|---|---|
+| `dotnet build CouchPad.slnx -c Debug` | 0 avisos, 0 erros |
+| `dotnet test CouchPad.slnx -c Debug` | 34 aprovados, 0 falhas |
+| `dotnet CouchPad.dll --smoke` | janela configurada 1020×780; limitada a 1020×699 na tela 720p de teste; pt `Ouvindo gamepad`; en `Listening for gamepad`; título CouchPad |
+| `dotnet CouchPad.dll --gallery` | galeria configurada 1100×720, limitada pela área de trabalho em telas 720p; pt/en; todos os estados |
+| Layout 3 colunas | 1020×780 |
+| Layout 2 colunas | 780×780 |
+| Layout 1 coluna | 640×780 |
+| Foco | borda `TextPrimary` 2 px no ActionButton; anel de acento no toggle |
+| Loading | barra indeterminada + `IsEnabled=false` no refresh |
+| Fronteira | nenhum P/Invoke/COM/hardware no App |
+
+### Capturas de revisão (fora do repositório)
+
+`C:\Users\Usuario\AppData\Local\Temp\opencode\p2-gallery-pt.png`,
+`p2-gallery-en.png`, `p2-main-pt.png`, `p2-main-en.png`,
+`p2-main-pt-2col.png`, `p2-main-pt-640.png`, `p2-refresh-loading.png`. As
+oficiais entram em `docs/screenshots/` na P7a.
+
+### Revisão independente
+
+O agente `reviewer` revisou a P2. Aplicados:
+
+1. Foco do `ActionButton` primário trocado de acento para `TextPrimary` 2 px.
+2. Hover/pressed primários com `AccentMutedHover` e `AccentMutedPressed`.
+3. `Button.loading` e `ComboBox.loading` passam a definir `IsEnabled=false`.
+4. `State` do botão de refresh ligado a `DisplayRefreshState`.
+5. Texto de erro do select com chave dedicada.
+6. Comentário com encoding corrigido (`Botões`).
+7. Título do `Card` com `TextWrapping`.
+8. Exemplo de foco da galeria no variant primário (pior caso).
+9. Seletores explícitos `:loading:disabled` no `ActionButton` e em
+   `Button.loading`.
+10. Teste de classes removidas estendido a `AboutWindow` e à galeria.
+
+### Decisões da fase
+
+- D020: componentes com `ControlTheme` próprio e galeria `--gallery`.
+- D021: `ActionButton` com Variant/State, foco distinto e hover/pressed.
+- D022: classes loading desabilitam Button/ComboBox; shell desabilita refresh.
+- D023: folder picker por evento; view usa `StorageProvider`.
+
+### Fora do escopo (por desenho)
+
+- Persistência dos toggles/atrasos e fluxo de ativação (P3).
+- Leitura/aplicação real de display, áudio e HDR (P4/P5).
 - Bandeja, autostart, rescue e tarefa (P6).
 - Screenshots oficiais versionadas (P7a).

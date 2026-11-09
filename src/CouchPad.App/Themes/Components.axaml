@@ -1,0 +1,350 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:CouchPad.App.Controls">
+
+  <!-- Card -->
+  <ControlTheme x:Key="{x:Type controls:Card}" TargetType="controls:Card">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.Surface}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.CardLarge}" />
+    <Setter Property="Padding" Value="{DynamicResource CouchPad.Padding.Card}" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                Padding="{TemplateBinding Padding}">
+          <StackPanel Spacing="10">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <TextBlock Classes="cardTitle"
+                         Text="{TemplateBinding Title}"
+                         TextWrapping="Wrap"
+                         VerticalAlignment="Center" />
+              <ContentPresenter Grid.Column="1"
+                                Content="{TemplateBinding HeaderAction}"
+                                VerticalAlignment="Center" />
+            </Grid>
+            <ContentPresenter Content="{TemplateBinding Content}" />
+          </StackPanel>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+
+    <Style Selector="^:attention">
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Warning}" />
+    </Style>
+
+    <Style Selector="^:error">
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Danger}" />
+    </Style>
+
+    <Style Selector="^:disabled">
+      <Setter Property="Opacity" Value="0.6" />
+    </Style>
+  </ControlTheme>
+
+  <!-- StatusPill -->
+  <ControlTheme x:Key="{x:Type controls:StatusPill}" TargetType="controls:StatusPill">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceRaised}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.Pill}" />
+    <Setter Property="Padding" Value="10,4" />
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.TextSecondary}" />
+    <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Caption}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalAlignment" Value="Left" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}"
+                Padding="{TemplateBinding Padding}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Ellipse Name="Dot"
+                     Width="8"
+                     Height="8"
+                     IsVisible="{TemplateBinding ShowDot}"
+                     Fill="{TemplateBinding Foreground}"
+                     VerticalAlignment="Center" />
+            <TextBlock Name="PART_Text"
+                       Text="{TemplateBinding Text}"
+                       Foreground="{TemplateBinding Foreground}"
+                       FontSize="{TemplateBinding FontSize}"
+                       FontWeight="{TemplateBinding FontWeight}"
+                       VerticalAlignment="Center" />
+          </StackPanel>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+
+    <Style Selector="^:accent">
+      <Setter Property="Background" Value="{DynamicResource CouchPad.AccentMuted}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.AccentMuted}" />
+      <Setter Property="Foreground" Value="{DynamicResource CouchPad.Accent}" />
+    </Style>
+
+    <Style Selector="^:warning">
+      <Setter Property="Background" Value="{DynamicResource CouchPad.WarningMuted}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.WarningMuted}" />
+      <Setter Property="Foreground" Value="{DynamicResource CouchPad.Warning}" />
+    </Style>
+
+    <Style Selector="^:danger">
+      <Setter Property="Background" Value="{DynamicResource CouchPad.DangerMuted}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.DangerMuted}" />
+      <Setter Property="Foreground" Value="{DynamicResource CouchPad.Danger}" />
+    </Style>
+  </ControlTheme>
+
+  <!-- StatusRow -->
+  <ControlTheme x:Key="{x:Type controls:StatusRow}" TargetType="controls:StatusRow">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+          <Ellipse Name="Dot"
+                   Width="8"
+                   Height="8"
+                   IsVisible="{TemplateBinding ShowDot}"
+                   Fill="{DynamicResource CouchPad.TextSecondary}"
+                   VerticalAlignment="Center" />
+          <TextBlock Grid.Column="1"
+                     Text="{TemplateBinding Label}"
+                     FontSize="{DynamicResource CouchPad.FontSize.Caption}"
+                     Foreground="{DynamicResource CouchPad.TextSecondary}"
+                     VerticalAlignment="Center" />
+          <TextBlock Name="ValueText"
+                     Grid.Column="2"
+                     Text="{TemplateBinding Value}"
+                     FontSize="{DynamicResource CouchPad.FontSize.Body}"
+                     Foreground="{DynamicResource CouchPad.TextPrimary}"
+                     TextWrapping="Wrap"
+                     TextAlignment="Right"
+                     VerticalAlignment="Center" />
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+
+    <Style Selector="^:accent /template/ Ellipse#Dot">
+      <Setter Property="Fill" Value="{DynamicResource CouchPad.Accent}" />
+    </Style>
+
+    <Style Selector="^:accent /template/ TextBlock#ValueText">
+      <Setter Property="Foreground" Value="{DynamicResource CouchPad.Accent}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="^:warning /template/ Ellipse#Dot">
+      <Setter Property="Fill" Value="{DynamicResource CouchPad.Warning}" />
+    </Style>
+
+    <Style Selector="^:warning /template/ TextBlock#ValueText">
+      <Setter Property="Foreground" Value="{DynamicResource CouchPad.Warning}" />
+    </Style>
+
+    <Style Selector="^:danger /template/ Ellipse#Dot">
+      <Setter Property="Fill" Value="{DynamicResource CouchPad.Danger}" />
+    </Style>
+
+    <Style Selector="^:danger /template/ TextBlock#ValueText">
+      <Setter Property="Foreground" Value="{DynamicResource CouchPad.Danger}" />
+    </Style>
+  </ControlTheme>
+
+  <!-- KeyChip -->
+  <ControlTheme x:Key="{x:Type controls:KeyChip}" TargetType="controls:KeyChip">
+    <Setter Property="Width" Value="30" />
+    <Setter Property="Height" Value="30" />
+    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.Control}" />
+    <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceSunken}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.BorderStrong}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                CornerRadius="{TemplateBinding CornerRadius}">
+          <TextBlock Text="{TemplateBinding Text}"
+                     FontFamily="{DynamicResource CouchPad.FontFamily.Mono}"
+                     FontSize="{DynamicResource CouchPad.FontSize.Mono}"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource CouchPad.TextPrimary}"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center" />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
+  <!-- PathPicker -->
+  <ControlTheme x:Key="{x:Type controls:PathPicker}" TargetType="controls:PathPicker">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <Border Background="{DynamicResource CouchPad.SurfaceSunken}"
+                  BorderBrush="{DynamicResource CouchPad.Border}"
+                  BorderThickness="1"
+                  CornerRadius="{DynamicResource CouchPad.Radius.Control}"
+                  Padding="10,6"
+                  MinHeight="{DynamicResource CouchPad.ControlHeight.Small}">
+            <TextBlock Text="{TemplateBinding PathText}"
+                       FontSize="{DynamicResource CouchPad.FontSize.Caption}"
+                       Foreground="{DynamicResource CouchPad.TextSecondary}"
+                       TextTrimming="CharacterEllipsis"
+                       VerticalAlignment="Center" />
+          </Border>
+          <Button Grid.Column="1"
+                  Classes="secondary small"
+                  Content="{TemplateBinding ChooseText}"
+                  Command="{TemplateBinding ChooseCommand}" />
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+
+    <Style Selector="^:disabled">
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+  </ControlTheme>
+
+  <!-- ActionButton -->
+  <ControlTheme x:Key="{x:Type controls:ActionButton}" TargetType="controls:ActionButton">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceRaised}" />
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.TextPrimary}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.Control}" />
+    <Setter Property="Padding" Value="14,7" />
+    <Setter Property="Height" Value="{DynamicResource CouchPad.ControlHeight}" />
+    <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Body}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid>
+          <Border Name="Root"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{TemplateBinding CornerRadius}"
+                  Padding="{TemplateBinding Padding}">
+            <StackPanel VerticalAlignment="Center" Spacing="1">
+              <StackPanel Orientation="Horizontal"
+                          Spacing="7"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                <Path Name="CheckGlyph"
+                      Data="M 0 5 L 4 9 L 12 0"
+                      Stroke="{TemplateBinding Foreground}"
+                      StrokeThickness="1.8"
+                      StrokeLineCap="Round"
+                      StrokeJoin="Round"
+                      IsVisible="False"
+                      VerticalAlignment="Center" />
+                <StackPanel Name="ErrorGlyph"
+                            Spacing="1"
+                            IsVisible="False"
+                            VerticalAlignment="Center">
+                  <Path Data="M 1 1 L 1 7"
+                        Stroke="{TemplateBinding Foreground}"
+                        StrokeThickness="2"
+                        StrokeLineCap="Round" />
+                  <Ellipse Width="2"
+                           Height="2"
+                           Fill="{TemplateBinding Foreground}"
+                           HorizontalAlignment="Center" />
+                </StackPanel>
+                <ContentPresenter Name="PART_ContentPresenter"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                  VerticalAlignment="Center" />
+              </StackPanel>
+              <ProgressBar Name="Spinner"
+                           Classes="inline"
+                           IsIndeterminate="True"
+                           IsVisible="False"
+                           Foreground="{TemplateBinding Foreground}" />
+            </StackPanel>
+          </Border>
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+
+    <Style Selector="^:primary">
+      <Setter Property="Background" Value="{DynamicResource CouchPad.AccentMuted}" />
+      <Setter Property="Foreground" Value="{DynamicResource CouchPad.Accent}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Accent}" />
+    </Style>
+
+    <Style Selector="^.small">
+      <Setter Property="Height" Value="{DynamicResource CouchPad.ControlHeight.Small}" />
+      <Setter Property="Padding" Value="10,4" />
+      <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Caption}" />
+    </Style>
+
+    <Style Selector="^:pointerover /template/ Border#Root">
+      <Setter Property="Background" Value="{DynamicResource CouchPad.Border}" />
+    </Style>
+
+    <Style Selector="^:primary:pointerover /template/ Border#Root">
+      <Setter Property="Background" Value="{DynamicResource CouchPad.AccentMutedHover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Accent}" />
+    </Style>
+
+    <Style Selector="^:pressed /template/ Border#Root">
+      <Setter Property="Background" Value="{DynamicResource CouchPad.BorderStrong}" />
+    </Style>
+
+    <Style Selector="^:primary:pressed /template/ Border#Root">
+      <Setter Property="Background" Value="{DynamicResource CouchPad.AccentMutedPressed}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Accent}" />
+    </Style>
+
+    <Style Selector="^:focus-visible /template/ Border#Root">
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.TextPrimary}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <Style Selector="^.focus-demo /template/ Border#Root">
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.TextPrimary}" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <Style Selector="^:disabled">
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+
+    <Style Selector="^:loading">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="^:loading:disabled">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <Style Selector="^:loading /template/ ProgressBar#Spinner">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+
+    <Style Selector="^:success">
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Accent}" />
+      <Setter Property="Foreground" Value="{DynamicResource CouchPad.Accent}" />
+    </Style>
+
+    <Style Selector="^:success /template/ Path#CheckGlyph">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+
+    <Style Selector="^:error">
+      <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Danger}" />
+      <Setter Property="Foreground" Value="{DynamicResource CouchPad.Danger}" />
+    </Style>
+
+    <Style Selector="^:error /template/ StackPanel#ErrorGlyph">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+  </ControlTheme>
+</ResourceDictionary>

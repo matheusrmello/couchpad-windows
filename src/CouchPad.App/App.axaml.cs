@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using CouchPad.App.Localization;
@@ -19,16 +20,19 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var isSmoke = desktop.Args?.Contains("--smoke", StringComparer.Ordinal) == true;
+            var isGallery = desktop.Args?.Contains("--gallery", StringComparer.Ordinal) == true;
             var settingsPath = isSmoke
                 ? Path.Combine(Path.GetTempPath(), "couchpad-smoke", "settings.json")
                 : AppPaths.SettingsFile();
 
             LocalizationService.Instance.Initialize(new JsonAppSettingsStore(settingsPath));
 
-            var window = new MainWindow
-            {
-                DataContext = new MainWindowViewModel(LocalizationService.Instance),
-            };
+            Window window = isGallery
+                ? new ComponentGalleryWindow()
+                : new MainWindow
+                {
+                    DataContext = new MainWindowViewModel(LocalizationService.Instance),
+                };
 
             desktop.MainWindow = window;
 

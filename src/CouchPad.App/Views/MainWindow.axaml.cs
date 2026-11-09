@@ -12,6 +12,7 @@ public partial class MainWindow : Window
     private const double MediumBreakpoint = 720;
 
     private int _columns = -1;
+    private MainWindowViewModel? _viewModel;
 
     public MainWindow()
     {
@@ -24,14 +25,35 @@ public partial class MainWindow : Window
             aboutButton.Click += OnAboutClick;
         }
 
-        var chooseFolderButton = this.FindControl<Button>("ChooseFolderButton");
-        if (chooseFolderButton is not null)
-        {
-            chooseFolderButton.Click += OnChooseLauncherFolder;
-        }
+        Closed += OnClosed;
     }
 
     private void InitializeComponent() => AvaloniaXamlLoader.Load(this);
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+
+        if (_viewModel is not null)
+        {
+            _viewModel.FolderPickerRequested -= OnFolderPickerRequested;
+        }
+
+        _viewModel = DataContext as MainWindowViewModel;
+
+        if (_viewModel is not null)
+        {
+            _viewModel.FolderPickerRequested += OnFolderPickerRequested;
+        }
+    }
+
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        if (_viewModel is not null)
+        {
+            _viewModel.FolderPickerRequested -= OnFolderPickerRequested;
+        }
+    }
 
     protected override void OnOpened(EventArgs e)
     {
@@ -138,9 +160,9 @@ public partial class MainWindow : Window
         };
     }
 
-    private async void OnChooseLauncherFolder(object? sender, RoutedEventArgs e)
+    private async void OnFolderPickerRequested(object? sender, EventArgs e)
     {
-        if (DataContext is not MainWindowViewModel viewModel)
+        if (_viewModel is null)
         {
             return;
         }
@@ -149,14 +171,14 @@ public partial class MainWindow : Window
         {
             var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = viewModel.ChooseFolderDialogTitle,
+                Title = _viewModel.ChooseFolderDialogTitle,
                 AllowMultiple = false,
             });
 
             var path = folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
             if (!string.IsNullOrWhiteSpace(path))
             {
-                viewModel.CustomLauncherPath = path;
+                _viewModel.CustomLauncherPath = path;
             }
         }
         catch (Exception ex) when (ex is InvalidOperationException or NotSupportedException or OperationCanceledException)

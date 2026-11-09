@@ -1,0 +1,238 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:CouchPad.App.Controls"
+        xmlns:loc="using:CouchPad.App.Localization"
+        x:Class="CouchPad.App.Views.ComponentGalleryWindow"
+        Title="{loc:Tr gallery.title}"
+        Width="1100"
+        Height="720"
+        MinWidth="720"
+        MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource CouchPad.Background}"
+        Foreground="{DynamicResource CouchPad.TextPrimary}"
+        FontSize="{DynamicResource CouchPad.FontSize.Body}"
+        FontFamily="{DynamicResource CouchPad.FontFamily}">
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="{DynamicResource CouchPad.Padding.Window}">
+
+    <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,12">
+      <TextBlock Text="{loc:Tr gallery.title}"
+                 FontSize="{DynamicResource CouchPad.FontSize.H1}"
+                 FontWeight="SemiBold" />
+      <TextBlock Classes="caption" Text="{loc:Tr gallery.subtitle}" />
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1"
+                  HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto"
+                  Padding="0,0,4,0">
+      <WrapPanel Orientation="Horizontal">
+
+        <!-- Cards -->
+        <controls:Card Title="{loc:Tr gallery.cards}"
+                       Width="330"
+                       Margin="0,0,10,10">
+          <StackPanel Spacing="10">
+            <controls:Card Title="{loc:Tr gallery.card.normal}">
+              <TextBlock Classes="hint" Text="{loc:Tr gallery.subtitle}" />
+            </controls:Card>
+            <controls:Card Title="{loc:Tr gallery.card.attention}" Tone="Attention">
+              <TextBlock Classes="hint" Text="{loc:Tr gallery.subtitle}" />
+            </controls:Card>
+            <controls:Card Title="{loc:Tr gallery.card.error}" Tone="Error">
+              <TextBlock Classes="hint" Text="{loc:Tr gallery.subtitle}" />
+            </controls:Card>
+          </StackPanel>
+        </controls:Card>
+
+        <!-- Pills e linhas de status -->
+        <controls:Card Title="{loc:Tr gallery.pills}"
+                       Width="330"
+                       Margin="0,0,10,10">
+          <StackPanel Spacing="14">
+            <WrapPanel Orientation="Horizontal">
+              <controls:StatusPill Text="{loc:Tr status.idle}" Margin="0,0,6,6" />
+              <controls:StatusPill Text="{loc:Tr status.active}" Tone="Accent" Margin="0,0,6,6" />
+              <controls:StatusPill Text="{loc:Tr status.waiting}" Tone="Warning" Margin="0,0,6,6" />
+              <controls:StatusPill Text="{loc:Tr status.error}" Tone="Danger" Margin="0,0,6,6" />
+              <controls:StatusPill Text="{loc:Tr status.free}" Tone="Accent" ShowDot="False" Margin="0,0,6,6" />
+            </WrapPanel>
+
+            <TextBlock Classes="caption" Text="{loc:Tr gallery.rows}" />
+            <StackPanel Spacing="8">
+              <controls:StatusRow Label="{loc:Tr gallery.row.label}"
+                                  Value="{loc:Tr gallery.row.value}" />
+              <controls:StatusRow Label="{loc:Tr gallery.row.label}"
+                                  Value="{loc:Tr status.active}"
+                                  Tone="Accent" />
+              <controls:StatusRow Label="{loc:Tr gallery.row.label}"
+                                  Value="{loc:Tr gallery.row.warning}"
+                                  Tone="Warning" />
+              <controls:StatusRow Label="{loc:Tr gallery.row.label}"
+                                  Value="{loc:Tr gallery.row.error}"
+                                  Tone="Danger" />
+            </StackPanel>
+          </StackPanel>
+        </controls:Card>
+
+        <!-- Botões -->
+        <controls:Card Title="{loc:Tr gallery.buttons}"
+                       Width="330"
+                       Margin="0,0,10,10">
+          <StackPanel Spacing="10">
+            <WrapPanel Orientation="Horizontal">
+              <controls:ActionButton Content="{loc:Tr gallery.button.normal}"
+                                     Variant="Secondary"
+                                     State="Idle"
+                                     Margin="0,0,6,6" />
+              <controls:ActionButton Content="{loc:Tr gallery.button.primary}"
+                                     Variant="Primary"
+                                     State="Idle"
+                                     Margin="0,0,6,6" />
+              <controls:ActionButton Content="{loc:Tr gallery.button.loading}"
+                                     Variant="Primary"
+                                     State="Loading"
+                                     Margin="0,0,6,6" />
+              <controls:ActionButton Content="{loc:Tr gallery.button.success}"
+                                     Variant="Secondary"
+                                     State="Success"
+                                     Margin="0,0,6,6" />
+              <controls:ActionButton Content="{loc:Tr gallery.button.error}"
+                                     Variant="Secondary"
+                                     State="Error"
+                                     Margin="0,0,6,6" />
+              <controls:ActionButton Content="{loc:Tr gallery.button.disabled}"
+                                     Variant="Secondary"
+                                     State="Idle"
+                                     IsEnabled="False"
+                                     Margin="0,0,6,6" />
+              <controls:ActionButton Content="{loc:Tr gallery.button.focus}"
+                                     Variant="Primary"
+                                     State="Idle"
+                                     Classes="focus-demo"
+                                     Margin="0,0,6,6" />
+            </WrapPanel>
+            <TextBlock Classes="hint" Text="{loc:Tr gallery.buttons.help}" />
+          </StackPanel>
+        </controls:Card>
+
+        <!-- Seletores -->
+        <controls:Card Title="{loc:Tr gallery.selects}"
+                       Width="330"
+                       Margin="0,0,10,10">
+          <StackPanel Spacing="10">
+            <StackPanel Spacing="3">
+              <TextBlock Classes="caption" Text="{loc:Tr gallery.select.normal}" />
+              <ComboBox SelectedIndex="0"
+                        AutomationProperties.Name="{loc:Tr gallery.select.normal}">
+                <ComboBoxItem Content="{loc:Tr gallery.select.option}" />
+                <ComboBoxItem Content="{loc:Tr gallery.select.option}" />
+              </ComboBox>
+            </StackPanel>
+
+            <StackPanel Spacing="3">
+              <TextBlock Classes="caption" Text="{loc:Tr gallery.select.loading}" />
+              <ComboBox Classes="loading"
+                        SelectedIndex="0"
+                        AutomationProperties.Name="{loc:Tr gallery.select.loading}">
+                <ComboBoxItem Content="{loc:Tr gallery.select.option}" />
+              </ComboBox>
+              <ProgressBar Height="2" MinHeight="0" IsIndeterminate="True" />
+            </StackPanel>
+
+            <StackPanel Spacing="3">
+              <TextBlock Classes="caption" Text="{loc:Tr gallery.select.error}" />
+              <ComboBox Classes="error"
+                        SelectedIndex="0"
+                        AutomationProperties.Name="{loc:Tr gallery.select.error}">
+                <ComboBoxItem Content="{loc:Tr gallery.select.option}" />
+              </ComboBox>
+              <TextBlock Classes="hint"
+                         Foreground="{DynamicResource CouchPad.Danger}"
+                         Text="{loc:Tr gallery.select.error_message}" />
+            </StackPanel>
+
+            <StackPanel Spacing="3">
+              <TextBlock Classes="caption" Text="{loc:Tr gallery.select.disabled}" />
+              <ComboBox IsEnabled="False"
+                        SelectedIndex="0"
+                        AutomationProperties.Name="{loc:Tr gallery.select.disabled}">
+                <ComboBoxItem Content="{loc:Tr gallery.select.option}" />
+              </ComboBox>
+            </StackPanel>
+          </StackPanel>
+        </controls:Card>
+
+        <!-- Toggles e chips -->
+        <controls:Card Title="{loc:Tr gallery.toggles}"
+                       Width="330"
+                       Margin="0,0,10,10">
+          <StackPanel Spacing="14">
+            <StackPanel Spacing="6">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <TextBlock Text="{loc:Tr gallery.toggle.on}" VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="1"
+                              IsChecked="True"
+                              AutomationProperties.Name="{loc:Tr gallery.toggle.on}" />
+              </Grid>
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <TextBlock Text="{loc:Tr gallery.toggle.off}" VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="1"
+                              IsChecked="False"
+                              AutomationProperties.Name="{loc:Tr gallery.toggle.off}" />
+              </Grid>
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <TextBlock Text="{loc:Tr gallery.toggle.focus}" VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="1"
+                              Classes="focus-demo"
+                              IsChecked="True"
+                              AutomationProperties.Name="{loc:Tr gallery.toggle.focus}" />
+              </Grid>
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <TextBlock Text="{loc:Tr gallery.toggle.disabled}" VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="1"
+                              IsChecked="True"
+                              IsEnabled="False"
+                              AutomationProperties.Name="{loc:Tr gallery.toggle.disabled}" />
+              </Grid>
+            </StackPanel>
+
+            <TextBlock Classes="caption" Text="{loc:Tr gallery.chips}" />
+            <WrapPanel Orientation="Horizontal">
+              <controls:KeyChip Text="{loc:Tr combo.key.1}" Margin="0,0,6,6" />
+              <controls:KeyChip Text="{loc:Tr combo.key.lb}" Margin="0,0,6,6" />
+              <controls:KeyChip Text="{loc:Tr combo.key.rb}" Margin="0,0,6,6" />
+              <controls:KeyChip Text="{loc:Tr combo.key.a}" Margin="0,0,6,6" />
+              <controls:KeyChip Text="{loc:Tr gallery.chip.esc}" Margin="0,0,6,6" />
+            </WrapPanel>
+          </StackPanel>
+        </controls:Card>
+
+        <!-- Seletor de pasta -->
+        <controls:Card Title="{loc:Tr gallery.path}"
+                       Width="330"
+                       Margin="0,0,10,10">
+          <StackPanel Spacing="10">
+            <controls:PathPicker PathText="{loc:Tr gallery.path.value}"
+                                 ChooseText="{loc:Tr launchers.choose}" />
+            <controls:PathPicker PathText="{loc:Tr launchers.no_path}"
+                                 ChooseText="{loc:Tr launchers.choose}"
+                                 IsEnabled="False" />
+          </StackPanel>
+        </controls:Card>
+      </WrapPanel>
+    </ScrollViewer>
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,12,0,0">
+      <TextBlock Classes="caption"
+                 Text="{loc:Tr app.name}"
+                 VerticalAlignment="Center" />
+      <Button Grid.Column="1"
+              Classes="secondary"
+              Content="{loc:Tr gallery.close}"
+              IsCancel="True"
+              Click="OnCloseClick" />
+    </Grid>
+  </Grid>
+</Window>

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CouchPad.App.Controls;
 using CouchPad.App.Localization;
 using CouchPad.Core.Localization;
 
@@ -54,6 +55,9 @@ public partial class MainWindowViewModel : ObservableObject
         _localization.PropertyChanged += OnLocalizationChanged;
     }
 
+    /// <summary>A view abre o seletor de pastas e devolve o caminho escolhido.</summary>
+    public event EventHandler? FolderPickerRequested;
+
     public bool IsPortuguese => _localization.Language == AppLanguage.PtBr;
 
     public bool IsEnglish => _localization.Language == AppLanguage.En;
@@ -78,10 +82,14 @@ public partial class MainWindowViewModel : ObservableObject
     public string StatusText =>
         _localization[AutomationEnabled ? "status.waiting" : "status.idle"];
 
-    public bool StatusIsWaiting => AutomationEnabled;
+    public StatusTone CurrentStatusTone =>
+        AutomationEnabled ? StatusTone.Warning : StatusTone.Neutral;
 
     public string DisplayRefreshText =>
         _localization[IsRefreshing ? "display.refreshing" : "display.refresh"];
+
+    public ActionState DisplayRefreshState =>
+        IsRefreshing ? ActionState.Loading : ActionState.Idle;
 
     public string CustomLauncherPathText =>
         string.IsNullOrWhiteSpace(CustomLauncherPath)
@@ -135,6 +143,9 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ChooseLauncherFolder() => FolderPickerRequested?.Invoke(this, EventArgs.Empty);
+
+    [RelayCommand]
     private void Reset()
     {
         AutomationEnabled = false;
@@ -153,11 +164,14 @@ public partial class MainWindowViewModel : ObservableObject
     partial void OnAutomationEnabledChanged(bool value)
     {
         OnPropertyChanged(nameof(StatusText));
-        OnPropertyChanged(nameof(StatusIsWaiting));
+        OnPropertyChanged(nameof(CurrentStatusTone));
     }
 
-    partial void OnIsRefreshingChanged(bool value) =>
+    partial void OnIsRefreshingChanged(bool value)
+    {
         OnPropertyChanged(nameof(DisplayRefreshText));
+        OnPropertyChanged(nameof(DisplayRefreshState));
+    }
 
     partial void OnSteamEnabledChanged(bool value) =>
         OnPropertyChanged(nameof(LauncherSummary));

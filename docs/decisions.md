@@ -26,6 +26,10 @@
 | D017 | 2026-11-09 | Layout do shell reposicionado em code-behind com 3 breakpoints (`≥1000`, `720–999`, `<720`); janela mínima `640×640`; conteúdo rolável | Alcançar os 3 layouts sem duplicar XAML |
 | D018 | 2026-11-09 | P1 é somente UI: toggle de automação alterna `Inativo`/`Aguardando gamepad`; refresh de displays é placeholder de 700 ms; nada de CCD/áudio/HDR | Validar o shell sem risco de hardware |
 | D019 | 2026-11-09 | Até glifos curtos (chips `1`/`LB`/`RB`/`A` e unidades `1 s`) vêm dos catálogos; teste de XAML bloqueia texto visível literal | Cumprir "nenhuma string fora dos dicionários" |
+| D020 | 2026-11-09 | P2: componentes como `ContentControl`/`TemplatedControl` com `ControlTheme` em `Themes/Components.axaml`; shell consome `Card`, `StatusPill`, `StatusRow`, `KeyChip`, `PathPicker` e `ActionButton`; galeria de estados via `--gallery` | Reuso, estados consistentes e validação visual sem hardware |
+| D021 | 2026-11-09 | `ActionButton` tem `Variant` (Primary/Secondary) e `State` (Idle/Loading/Success/Error); foco usa borda `TextPrimary` de 2 px; hover/pressed primários usam `AccentMutedHover`/`AccentMutedPressed` | Estados distinguíveis, foco visível e cor nunca como único indicador |
+| D022 | 2026-11-09 | Classes `Button.loading` e `ComboBox.loading` definem `IsEnabled=false`; o `ActionButton` não altera `IsEnabled` por si só e o shell desabilita o refresh durante a atualização | Bloquear teclado e ponteiro e evitar duplo acionamento |
+| D023 | 2026-11-09 | Seletor de pasta: o ViewModel expõe `ChooseLauncherFolderCommand` e o evento `FolderPickerRequested`; a view usa `StorageProvider.OpenFolderPickerAsync` | Manter `StorageProvider` fora do ViewModel/Core e permitir teste sem diálogo |
 
 ## Pendentes
 

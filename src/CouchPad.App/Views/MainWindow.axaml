@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:CouchPad.App.Controls"
         xmlns:loc="using:CouchPad.App.Localization"
         xmlns:vm="using:CouchPad.App.ViewModels"
         x:Class="CouchPad.App.Views.MainWindow"
@@ -45,17 +46,12 @@
                   Orientation="Horizontal"
                   Spacing="8"
                   VerticalAlignment="Center">
-        <Border Classes="pill accent">
-          <TextBlock Text="{loc:Tr status.free}" />
-        </Border>
-        <Border Classes="pill"
-                Classes.waiting="{Binding StatusIsWaiting}">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <Ellipse Classes="dot" Classes.waiting="{Binding StatusIsWaiting}" />
-            <TextBlock Text="{Binding StatusText}"
-                       AutomationProperties.LiveSetting="Polite" />
-          </StackPanel>
-        </Border>
+        <controls:StatusPill Text="{loc:Tr status.free}"
+                             Tone="Accent"
+                             ShowDot="False" />
+        <controls:StatusPill Text="{Binding StatusText}"
+                             Tone="{Binding CurrentStatusTone}"
+                             AutomationProperties.Name="{Binding StatusText}" />
       </StackPanel>
     </Grid>
 
@@ -71,103 +67,72 @@
             ColumnDefinitions="*,*,*">
 
         <!-- Automação -->
-        <Border x:Name="AutomationCard" Grid.Row="0" Grid.Column="0" Classes="card">
-          <StackPanel Spacing="10">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-              <TextBlock Classes="cardTitle"
-                         Text="{loc:Tr section.automation}"
-                         VerticalAlignment="Center" />
-              <ToggleSwitch Grid.Column="1"
-                            IsChecked="{Binding AutomationEnabled}"
-                            AutomationProperties.Name="{loc:Tr automation.toggle}"
-                            AutomationProperties.HelpText="{loc:Tr automation.help}" />
-            </Grid>
+        <controls:Card x:Name="AutomationCard"
+                       Grid.Row="0"
+                       Grid.Column="0"
+                       Title="{loc:Tr section.automation}">
+          <controls:Card.HeaderAction>
+            <ToggleSwitch IsChecked="{Binding AutomationEnabled}"
+                          AutomationProperties.Name="{loc:Tr automation.toggle}"
+                          AutomationProperties.HelpText="{loc:Tr automation.help}" />
+          </controls:Card.HeaderAction>
 
+          <StackPanel Spacing="10">
             <TextBlock Classes="hint" Text="{loc:Tr automation.help}" />
 
             <StackPanel Spacing="6">
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <TextBlock Classes="caption" Text="{loc:Tr automation.gamepad}" />
-                <TextBlock Grid.Column="1"
-                           Classes="value"
-                           Text="{loc:Tr automation.none}"
-                           TextWrapping="Wrap"
-                           TextAlignment="Right" />
-              </Grid>
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <TextBlock Classes="caption" Text="{loc:Tr automation.display}" />
-                <TextBlock Grid.Column="1"
-                           Classes="value"
-                           Text="{loc:Tr automation.primary_display}"
-                           TextWrapping="Wrap"
-                           TextAlignment="Right" />
-              </Grid>
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <TextBlock Classes="caption" Text="{loc:Tr automation.audio}" />
-                <TextBlock Grid.Column="1"
-                           Classes="value"
-                           Text="{loc:Tr automation.default_audio}"
-                           TextWrapping="Wrap"
-                           TextAlignment="Right" />
-              </Grid>
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <TextBlock Classes="caption" Text="{loc:Tr automation.launcher}" />
-                <TextBlock Grid.Column="1"
-                           Classes="value"
-                           Text="{Binding LauncherSummary}"
-                           TextWrapping="Wrap"
-                           TextAlignment="Right" />
-              </Grid>
+              <controls:StatusRow Label="{loc:Tr automation.gamepad}"
+                                  Value="{loc:Tr automation.none}" />
+              <controls:StatusRow Label="{loc:Tr automation.display}"
+                                  Value="{loc:Tr automation.primary_display}" />
+              <controls:StatusRow Label="{loc:Tr automation.audio}"
+                                  Value="{loc:Tr automation.default_audio}" />
+              <controls:StatusRow Label="{loc:Tr automation.launcher}"
+                                  Value="{Binding LauncherSummary}" />
             </StackPanel>
           </StackPanel>
-        </Border>
+        </controls:Card>
 
         <!-- Display -->
-        <Border x:Name="DisplayCard" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Classes="card">
-          <StackPanel Spacing="12">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-              <TextBlock Classes="cardTitle"
-                         Text="{loc:Tr section.display}"
-                         VerticalAlignment="Center" />
-              <Button Grid.Column="1"
-                      Classes="secondary small"
-                      Content="{Binding DisplayRefreshText}"
-                      Command="{Binding RefreshDisplaysCommand}"
-                      IsEnabled="{Binding !IsRefreshing}"
-                      AutomationProperties.Name="{Binding DisplayRefreshText}" />
-            </Grid>
+        <controls:Card x:Name="DisplayCard"
+                       Grid.Row="0"
+                       Grid.Column="1"
+                       Grid.ColumnSpan="2"
+                       Title="{loc:Tr section.display}">
+          <controls:Card.HeaderAction>
+            <controls:ActionButton Classes="small"
+                                   Variant="Secondary"
+                                   State="{Binding DisplayRefreshState}"
+                                   Content="{Binding DisplayRefreshText}"
+                                   Command="{Binding RefreshDisplaysCommand}"
+                                   IsEnabled="{Binding !IsRefreshing}"
+                                   AutomationProperties.Name="{Binding DisplayRefreshText}" />
+          </controls:Card.HeaderAction>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-              <StackPanel Spacing="4">
-                <TextBlock Classes="caption" Text="{loc:Tr display.current}" />
-                <TextBlock Classes="value"
-                           Text="{loc:Tr display.current_value}"
-                           TextWrapping="Wrap" />
-              </StackPanel>
-              <StackPanel Grid.Column="1" Spacing="4">
-                <TextBlock Classes="caption" Text="{loc:Tr display.target}" />
-                <TextBlock Classes="value accent"
-                           Text="{loc:Tr display.target_value}"
-                           TextWrapping="Wrap" />
-              </StackPanel>
-            </Grid>
-          </StackPanel>
-        </Border>
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+            <StackPanel Spacing="4">
+              <TextBlock Classes="caption" Text="{loc:Tr display.current}" />
+              <TextBlock Classes="value"
+                         Text="{loc:Tr display.current_value}"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="4">
+              <TextBlock Classes="caption" Text="{loc:Tr display.target}" />
+              <TextBlock Classes="value accent"
+                         Text="{loc:Tr display.target_value}"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+          </Grid>
+        </controls:Card>
 
         <!-- Gamepad -->
-        <Border x:Name="GamepadCard" Grid.Row="1" Grid.Column="0" Classes="card">
+        <controls:Card x:Name="GamepadCard"
+                       Grid.Row="1"
+                       Grid.Column="0"
+                       Title="{loc:Tr section.gamepad}">
           <StackPanel Spacing="10">
-            <TextBlock Classes="cardTitle" Text="{loc:Tr section.gamepad}" />
-
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr gamepad.primary}" />
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <Ellipse Classes="dot" />
-                <TextBlock Classes="value"
-                           Text="{loc:Tr gamepad.none}"
-                           TextWrapping="Wrap" />
-              </StackPanel>
-            </StackPanel>
+            <controls:StatusRow Label="{loc:Tr gamepad.primary}"
+                                Value="{loc:Tr gamepad.none}" />
 
             <Button Classes="secondary small"
                     HorizontalAlignment="Left"
@@ -176,27 +141,21 @@
                     AutomationProperties.HelpText="{loc:Tr gamepad.reset_reason}"
                     ToolTip.Tip="{loc:Tr gamepad.reset_reason}" />
           </StackPanel>
-        </Border>
+        </controls:Card>
 
         <!-- Combinação -->
-        <Border x:Name="ComboCard" Grid.Row="1" Grid.Column="1" Classes="card">
+        <controls:Card x:Name="ComboCard"
+                       Grid.Row="1"
+                       Grid.Column="1"
+                       Title="{loc:Tr section.combo}">
           <StackPanel Spacing="10">
-            <TextBlock Classes="cardTitle" Text="{loc:Tr section.combo}" />
             <TextBlock Classes="hint" Text="{loc:Tr combo.help}" />
 
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <Border Classes="keyChip">
-                <TextBlock Text="{loc:Tr combo.key.1}" />
-              </Border>
-              <Border Classes="keyChip">
-                <TextBlock Text="{loc:Tr combo.key.lb}" />
-              </Border>
-              <Border Classes="keyChip">
-                <TextBlock Text="{loc:Tr combo.key.rb}" />
-              </Border>
-              <Border Classes="keyChip">
-                <TextBlock Text="{loc:Tr combo.key.a}" />
-              </Border>
+              <controls:KeyChip Text="{loc:Tr combo.key.1}" />
+              <controls:KeyChip Text="{loc:Tr combo.key.lb}" />
+              <controls:KeyChip Text="{loc:Tr combo.key.rb}" />
+              <controls:KeyChip Text="{loc:Tr combo.key.a}" />
             </StackPanel>
 
             <Button Classes="secondary small"
@@ -206,17 +165,15 @@
                     AutomationProperties.HelpText="{loc:Tr combo.change_reason}"
                     ToolTip.Tip="{loc:Tr combo.change_reason}" />
           </StackPanel>
-        </Border>
+        </controls:Card>
 
         <!-- Parâmetros -->
-        <Border x:Name="SettingsCard"
-                Grid.Row="1"
-                Grid.Column="2"
-                Grid.RowSpan="2"
-                Classes="card">
+        <controls:Card x:Name="SettingsCard"
+                       Grid.Row="1"
+                       Grid.Column="2"
+                       Grid.RowSpan="2"
+                       Title="{loc:Tr section.settings}">
           <StackPanel Spacing="10">
-            <TextBlock Classes="cardTitle" Text="{loc:Tr section.settings}" />
-
             <StackPanel Spacing="6">
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <TextBlock Text="{loc:Tr settings.close_launcher}" VerticalAlignment="Center" />
@@ -264,13 +221,14 @@
 
             <TextBlock Classes="hint" Text="{loc:Tr settings.help}" />
           </StackPanel>
-        </Border>
+        </controls:Card>
 
         <!-- Transição -->
-        <Border x:Name="TransitionCard" Grid.Row="2" Grid.Column="0" Classes="card">
+        <controls:Card x:Name="TransitionCard"
+                       Grid.Row="2"
+                       Grid.Column="0"
+                       Title="{loc:Tr section.transition}">
           <StackPanel Spacing="10">
-            <TextBlock Classes="cardTitle" Text="{loc:Tr section.transition}" />
-
             <StackPanel Spacing="4">
               <TextBlock Classes="caption" Text="{loc:Tr transition.display_mode}" />
               <ComboBox SelectedIndex="{Binding DisplayModeIndex, Mode=TwoWay}"
@@ -290,13 +248,14 @@
               </ComboBox>
             </StackPanel>
           </StackPanel>
-        </Border>
+        </controls:Card>
 
         <!-- Launchers -->
-        <Border x:Name="LaunchersCard" Grid.Row="2" Grid.Column="1" Classes="card">
+        <controls:Card x:Name="LaunchersCard"
+                       Grid.Row="2"
+                       Grid.Column="1"
+                       Title="{loc:Tr section.launchers}">
           <StackPanel Spacing="10">
-            <TextBlock Classes="cardTitle" Text="{loc:Tr section.launchers}" />
-
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
               <TextBlock Text="{loc:Tr launchers.steam}" VerticalAlignment="Center" />
               <ToggleSwitch Grid.Column="1"
@@ -306,32 +265,21 @@
 
             <StackPanel Spacing="4">
               <TextBlock Classes="caption" Text="{loc:Tr launchers.custom}" />
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <Border Classes="pathBox">
-                  <TextBlock Classes="caption"
-                             Text="{Binding CustomLauncherPathText}"
-                             TextTrimming="CharacterEllipsis" />
-                </Border>
-                <Button x:Name="ChooseFolderButton"
-                        Grid.Column="1"
-                        Classes="secondary small"
-                        Content="{loc:Tr launchers.choose}" />
-              </Grid>
+              <controls:PathPicker PathText="{Binding CustomLauncherPathText}"
+                                   ChooseText="{loc:Tr launchers.choose}"
+                                   ChooseCommand="{Binding ChooseLauncherFolderCommand}" />
             </StackPanel>
           </StackPanel>
-        </Border>
+        </controls:Card>
       </Grid>
     </ScrollViewer>
 
     <!-- Rodapé -->
     <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="0,12,0,0">
       <StackPanel VerticalAlignment="Center" Spacing="2">
-        <StackPanel Orientation="Horizontal" Spacing="8">
-          <Ellipse Classes="dot" Classes.waiting="{Binding StatusIsWaiting}" />
-          <TextBlock Classes="caption"
-                     FontWeight="SemiBold"
-                     Text="{Binding StatusText}" />
-        </StackPanel>
+        <controls:StatusPill Text="{Binding StatusText}"
+                             Tone="{Binding CurrentStatusTone}"
+                             AutomationProperties.Name="{Binding StatusText}" />
         <TextBlock Classes="caption" Text="{Binding VersionText}" />
       </StackPanel>
 

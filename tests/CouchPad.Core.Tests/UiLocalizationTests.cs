@@ -104,14 +104,118 @@ public sealed class UiLocalizationTests
         }
     }
 
+    [Fact]
+    public void Main_window_is_composed_from_shared_controls()
+    {
+        var xaml = File.ReadAllText(Path.Combine(ViewsDirectory(), "MainWindow.axaml"));
+
+        foreach (var control in ComponentTypes)
+        {
+            Assert.True(
+                xaml.Contains($"controls:{control}", StringComparison.Ordinal),
+                $"Componente ausente no shell: {control}");
+        }
+    }
+
+    [Fact]
+    public void Windows_do_not_reintroduce_local_component_classes()
+    {
+        string[] windows = { "MainWindow.axaml", "AboutWindow.axaml", "ComponentGalleryWindow.axaml" };
+
+        foreach (var window in windows)
+        {
+            var xaml = File.ReadAllText(Path.Combine(ViewsDirectory(), window));
+
+            Assert.DoesNotContain("Classes=\"card\"", xaml, StringComparison.Ordinal);
+            Assert.DoesNotContain("Classes=\"pill", xaml, StringComparison.Ordinal);
+            Assert.DoesNotContain("Classes=\"keyChip\"", xaml, StringComparison.Ordinal);
+            Assert.DoesNotContain("Classes=\"pathBox\"", xaml, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void Component_themes_exist_for_every_control()
+    {
+        var xaml = File.ReadAllText(Path.Combine(AppDirectory(), "Themes", "Components.axaml"));
+
+        foreach (var control in ComponentTypes)
+        {
+            Assert.True(
+                xaml.Contains($"TargetType=\"controls:{control}\"", StringComparison.Ordinal),
+                $"ControlTheme ausente: {control}");
+        }
+    }
+
+    [Fact]
+    public void Component_gallery_covers_every_state_with_localized_text()
+    {
+        var path = Path.Combine(ViewsDirectory(), "ComponentGalleryWindow.axaml");
+        var xaml = File.ReadAllText(path);
+
+        foreach (var control in ComponentTypes)
+        {
+            Assert.True(
+                xaml.Contains($"controls:{control}", StringComparison.Ordinal),
+                $"Componente ausente na galeria: {control}");
+        }
+
+        string[] states =
+        {
+            "State=\"Idle\"",
+            "State=\"Loading\"",
+            "State=\"Success\"",
+            "State=\"Error\"",
+            "Classes=\"loading\"",
+            "Classes=\"error\"",
+            "Classes=\"focus-demo\"",
+            "Tone=\"Warning\"",
+            "Tone=\"Danger\"",
+            "IsEnabled=\"False\"",
+        };
+
+        foreach (var state in states)
+        {
+            Assert.True(
+                xaml.Contains(state, StringComparison.Ordinal),
+                $"Estado ausente na galeria: {state}");
+        }
+    }
+
+    [Fact]
+    public void Component_theme_has_no_hardcoded_visible_text()
+    {
+        var path = Path.Combine(AppDirectory(), "Themes", "Components.axaml");
+        var content = File.ReadAllText(path);
+
+        foreach (Match match in LiteralVisibleTextPattern.Matches(content))
+        {
+            Assert.Fail(
+                $"Components.axaml: texto visível hardcoded \"{match.Groups[1].Value}\". " +
+                "Use TemplateBinding ou {loc:Tr chave}.");
+        }
+    }
+
+    private static readonly string[] ComponentTypes =
+    {
+        "Card",
+        "StatusPill",
+        "StatusRow",
+        "KeyChip",
+        "PathPicker",
+        "ActionButton",
+    };
+
     private static IEnumerable<KeyValuePair<string, string>> ReadXamlFiles() =>
         Directory
             .EnumerateFiles(ViewsDirectory(), "*.axaml", SearchOption.AllDirectories)
             .OrderBy(path => path, StringComparer.Ordinal)
             .Select(path => new KeyValuePair<string, string>(path, File.ReadAllText(path)));
 
+    private static string AppDirectory() =>
+        Path.Combine(FindRepositoryRoot(), "src", "CouchPad.App");
+
     private static string ViewsDirectory() =>
-        Path.Combine(FindRepositoryRoot(), "src", "CouchPad.App", "Views");
+        Path.Combine(AppDirectory(), "Views");
 
     private static (Dictionary<string, string> Pt, Dictionary<string, string> En) LoadCatalogs()
     {

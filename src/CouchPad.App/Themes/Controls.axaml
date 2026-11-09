@@ -31,115 +31,6 @@
     <Setter Property="TextWrapping" Value="Wrap" />
   </Style>
 
-  <!-- Cards -->
-  <Style Selector="Border.card">
-    <Setter Property="Background" Value="{DynamicResource CouchPad.Surface}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Border}" />
-    <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.CardLarge}" />
-    <Setter Property="Padding" Value="{DynamicResource CouchPad.Padding.Card}" />
-  </Style>
-
-  <Style Selector="Border.card.attention">
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Warning}" />
-  </Style>
-
-  <Style Selector="Border.card.error">
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Danger}" />
-  </Style>
-
-  <!-- Pills de estado -->
-  <Style Selector="Border.pill">
-    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.Pill}" />
-    <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceRaised}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Border}" />
-    <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="Padding" Value="10,4" />
-    <Setter Property="VerticalAlignment" Value="Center" />
-  </Style>
-
-  <Style Selector="Border.pill TextBlock">
-    <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Caption}" />
-    <Setter Property="FontWeight" Value="SemiBold" />
-    <Setter Property="Foreground" Value="{DynamicResource CouchPad.TextSecondary}" />
-  </Style>
-
-  <Style Selector="Border.pill.accent">
-    <Setter Property="Background" Value="{DynamicResource CouchPad.AccentMuted}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.AccentMuted}" />
-  </Style>
-
-  <Style Selector="Border.pill.accent TextBlock">
-    <Setter Property="Foreground" Value="{DynamicResource CouchPad.Accent}" />
-  </Style>
-
-  <Style Selector="Border.pill.waiting">
-    <Setter Property="Background" Value="{DynamicResource CouchPad.WarningMuted}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.WarningMuted}" />
-  </Style>
-
-  <Style Selector="Border.pill.waiting TextBlock">
-    <Setter Property="Foreground" Value="{DynamicResource CouchPad.Warning}" />
-  </Style>
-
-  <Style Selector="Border.pill.danger">
-    <Setter Property="Background" Value="{DynamicResource CouchPad.DangerMuted}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.DangerMuted}" />
-  </Style>
-
-  <Style Selector="Border.pill.danger TextBlock">
-    <Setter Property="Foreground" Value="{DynamicResource CouchPad.Danger}" />
-  </Style>
-
-  <!-- StatusDot -->
-  <Style Selector="Ellipse.dot">
-    <Setter Property="Width" Value="8" />
-    <Setter Property="Height" Value="8" />
-    <Setter Property="Fill" Value="{DynamicResource CouchPad.TextSecondary}" />
-    <Setter Property="VerticalAlignment" Value="Center" />
-  </Style>
-
-  <Style Selector="Ellipse.dot.active">
-    <Setter Property="Fill" Value="{DynamicResource CouchPad.Accent}" />
-  </Style>
-
-  <Style Selector="Ellipse.dot.waiting">
-    <Setter Property="Fill" Value="{DynamicResource CouchPad.Warning}" />
-  </Style>
-
-  <Style Selector="Ellipse.dot.error">
-    <Setter Property="Fill" Value="{DynamicResource CouchPad.Danger}" />
-  </Style>
-
-  <!-- KeyChip -->
-  <Style Selector="Border.keyChip">
-    <Setter Property="Width" Value="30" />
-    <Setter Property="Height" Value="30" />
-    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.Control}" />
-    <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceSunken}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.BorderStrong}" />
-    <Setter Property="BorderThickness" Value="1" />
-  </Style>
-
-  <Style Selector="Border.keyChip TextBlock">
-    <Setter Property="FontFamily" Value="{DynamicResource CouchPad.FontFamily.Mono}" />
-    <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Mono}" />
-    <Setter Property="FontWeight" Value="SemiBold" />
-    <Setter Property="Foreground" Value="{DynamicResource CouchPad.TextPrimary}" />
-    <Setter Property="HorizontalAlignment" Value="Center" />
-    <Setter Property="VerticalAlignment" Value="Center" />
-  </Style>
-
-  <!-- PathPicker -->
-  <Style Selector="Border.pathBox">
-    <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceSunken}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Border}" />
-    <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.Control}" />
-    <Setter Property="Padding" Value="10,6" />
-    <Setter Property="MinHeight" Value="{DynamicResource CouchPad.ControlHeight.Small}" />
-  </Style>
-
   <!-- Botões -->
   <Style Selector="Button.secondary">
     <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceRaised}" />
@@ -228,6 +119,34 @@
     <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceRaised}" />
   </Style>
 
+  <!-- Estados de ação em botões comuns; o ActionButton tem tema dedicado. -->
+  <Style Selector="Button.success">
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.Accent}" />
+  </Style>
+
+  <Style Selector="Button.error">
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Danger}" />
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.Danger}" />
+  </Style>
+
+  <Style Selector="Button.loading">
+    <Setter Property="IsEnabled" Value="False" />
+    <Setter Property="Opacity" Value="0.7" />
+  </Style>
+
+  <Style Selector="Button.loading:disabled">
+    <Setter Property="Opacity" Value="0.7" />
+  </Style>
+
+  <!-- Barra de progresso compacta usada dentro de controles. -->
+  <Style Selector="ProgressBar.inline">
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="MinHeight" Value="6" />
+    <Setter Property="Width" Value="64" />
+    <Setter Property="Height" Value="6" />
+  </Style>
+
   <!-- Select -->
   <Style Selector="ComboBox">
     <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceRaised}" />
@@ -247,6 +166,28 @@
 
   <Style Selector="ComboBox:focus">
     <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Accent}" />
+  </Style>
+
+  <Style Selector="ComboBox:disabled">
+    <Setter Property="Opacity" Value="0.45" />
+  </Style>
+
+  <Style Selector="ComboBox.loading">
+    <Setter Property="IsEnabled" Value="False" />
+    <Setter Property="Opacity" Value="0.6" />
+  </Style>
+
+  <Style Selector="ComboBox.loading:disabled">
+    <Setter Property="Opacity" Value="0.85" />
+  </Style>
+
+  <Style Selector="ComboBox.error">
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Danger}" />
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.Danger}" />
+  </Style>
+
+  <Style Selector="ComboBox.error:pointerover">
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Danger}" />
   </Style>
 
   <Style Selector="ComboBoxItem">
@@ -320,6 +261,14 @@
 
   <Style Selector="ToggleSwitch:focus-visible /template/ Border#FocusRing">
     <Setter Property="IsVisible" Value="True" />
+  </Style>
+
+  <Style Selector="ToggleSwitch.focus-demo /template/ Border#FocusRing">
+    <Setter Property="IsVisible" Value="True" />
+  </Style>
+
+  <Style Selector="ToggleSwitch:pressed /template/ Border#SwitchTrack">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceRaised}" />
   </Style>
 
   <Style Selector="ToggleSwitch:disabled">

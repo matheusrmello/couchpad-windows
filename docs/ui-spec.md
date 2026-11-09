@@ -1,7 +1,7 @@
-# CouchPad — Especificação de UI (P1)
+# CouchPad — Especificação de UI (P1–P2)
 
 - Data: 2026-11-09
-- Fase: P1 — shell estático, sem hardware
+- Fases: P1 (shell estático) e P2 (componentes e estados), sem hardware
 - Base visual: referência do ShiftPad 2.2.0, recriada com identidade própria
 - Plataforma: Avalonia 12.1.4 / .NET 10 (`net10.0`)
 
@@ -189,17 +189,25 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 
 ## 5. Componentes e estados
 
-| Componente | Implementação | Estados cobertos na P1 |
+A partir da P2, os componentes são controles próprios com `ControlTheme` em
+`Themes/Components.axaml`. O catálogo detalhado (propriedades, estados,
+acessibilidade e galeria) está em `docs/ui-components.md`.
+
+| Componente | Implementação P2 | Estados cobertos |
 |---|---|---|
-| `Card` | `Border.card` | normal, atenção, erro |
-| `Pill` | `Border.pill` | neutro, acento, aviso, erro |
-| `StatusDot` | `Ellipse.dot` | neutro, ativo, aviso, erro |
-| `ToggleSwitch` | template próprio | on, off, disabled, focus |
-| `Select` | `ComboBox` estilizado | normal, hover, focus, disabled |
-| `Button` | `secondary`, `primary`, `link` | normal, hover, pressed, focus, disabled |
-| `KeyChip` | `Border.keyChip` | preenchido |
-| `PathPicker` | `Border.pathBox` + botão | vazio, preenchido |
-| `FooterLink` | `Button.link` | normal, hover, pressed |
+| `Card` | `controls:Card` | normal, atenção, erro, disabled |
+| `StatusPill` | `controls:StatusPill` | neutro, acento, aviso, erro; dot opcional |
+| `StatusRow` | `controls:StatusRow` | neutro, acento, aviso, erro |
+| `KeyChip` | `controls:KeyChip` | preenchido |
+| `PathPicker` | `controls:PathPicker` | vazio, preenchido, disabled |
+| `ActionButton` | `controls:ActionButton` | idle, hover, pressed, focus, disabled, loading, success, error |
+| `ToggleSwitch` | template próprio | on, off, hover, pressed, focus, disabled |
+| `Select` | `ComboBox` estilizado | normal, hover, focus, disabled, loading, error |
+| `Button` | `secondary`, `primary`, `link` | normal, hover, pressed, focus, disabled, loading, success, error |
+
+O shell usa `Card`, `StatusPill`, `StatusRow`, `KeyChip`, `PathPicker` e
+`ActionButton`. O botão de atualizar displays exercita o estado `Loading`
+enquanto o placeholder de 700 ms está ativo.
 
 O template do toggle desenha o visual próprio; o arrasto do knob fica
 desabilitado nesta fase e `OnContent`/`OffContent` não são renderizados.
@@ -230,7 +238,7 @@ Regras:
 Grupos de chaves: `app.*`, `status.*`, `section.*`, `automation.*`,
 `display.*`, `gamepad.*`, `combo.*`, `settings.*`, `delay.*`,
 `transition.*`, `display_mode.*`, `audio_mode.*`, `launchers.*`, `footer.*`,
-`language.*`, `about.*`.
+`language.*`, `about.*`, `gallery.*`.
 
 ---
 
@@ -242,7 +250,8 @@ Grupos de chaves: `app.*`, `status.*`, `section.*`, `automation.*`,
 - Alvos de toque: controles com pelo menos 28–32 px de altura.
 - Teclado: `Tab` percorre todos os controles; `Enter`/`Espaço` ativam;
   `Esc` fecha o Sobre.
-- Foco visível: anel de acento no toggle e foco padrão do Fluent nos demais.
+- Foco visível: anel de acento no toggle; borda `TextPrimary` de 2 px nos
+  `ActionButton`; foco padrão do Fluent nos demais.
 - Status anunciado com `LiveSetting=Polite`.
 - Nunca usar só cor: todo dot tem texto ao lado.
 - Textos longos usam `TextWrapping`/`TextTrimming`.
@@ -254,32 +263,39 @@ Grupos de chaves: `app.*`, `status.*`, `section.*`, `automation.*`,
 | Ação | Efeito |
 |---|---|
 | Alternar automação | Estado vai de `Inativo` para `Aguardando gamepad` (sem hardware real) |
-| Atualizar displays | Texto vira `Atualizando…` por 700 ms; nenhum CCD |
+| Atualizar displays | Texto vira `Atualizando…`; o `ActionButton` entra em `Loading` por 700 ms; nenhum CCD |
 | Redefinir | Restaura toggles, atrasos, modos e caminho do launcher |
 | Escolher pasta | Seletor nativo de pasta; grava o caminho em memória |
 | Sobre | Abre diálogo modal com versão e licença |
 | Idioma | Troca todos os textos em tempo real e persiste a preferência |
 
-Fora do escopo da P1: detecção de gamepad, captura de combinação, leitura real
-de displays/áudio/HDR, bandeja, autostart, rescue e persistência dos cards.
+Fora do escopo da P1/P2: detecção de gamepad, captura de combinação, leitura
+real de displays/áudio/HDR, bandeja, autostart, rescue e persistência dos
+cards.
 
 ---
 
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: catálogos + uso de i18n no XAML.
-- Smoke: janela `1020 × 780`, troca pt/en, título `CouchPad`.
+- Testes: 34 aprovados — catálogos, i18n no XAML, composição do shell,
+  `ControlTheme` de cada componente, estados da galeria e ausência de literais
+  visíveis no tema.
+- Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em
+  telas 720p), troca pt/en, título `CouchPad`.
+- Galeria: `CouchPad.dll --gallery` abre em `1100 × 720`; todos os estados
+  visíveis e navegáveis por teclado.
 - Capturas de revisão em `C:\Users\Usuario\AppData\Local\Temp\opencode\`:
-  - `p1-3col.png` (1020×780, pt-BR);
-  - `p1-2col.png` (860×780, pt-BR);
-  - `p1-1col.png` (660×780, pt-BR);
-  - `p1-en.png`, `p1-en-waiting.png` (inglês, idle e aguardando);
-  - `p1-screen.png` (diálogo Sobre aberto).
+  - `p1-3col.png`, `p1-2col.png`, `p1-1col.png` (P1);
+  - `p1-en.png`, `p1-en-waiting.png`, `p1-screen.png` (P1);
+  - `p2-gallery-pt.png`, `p2-gallery-en.png` (galeria);
+  - `p2-main-pt.png`, `p2-main-en.png` (shell 3 colunas);
+  - `p2-main-pt-2col.png`, `p2-main-pt-640.png` (2 e 1 coluna);
+  - `p2-refresh-loading.png` (ActionButton em loading no shell).
 - As capturas definitivas dos 3 breakpoints × 2 idiomas serão versionadas na
   P7a em `docs/screenshots/`.
 
-### Checklist de aceite
+### Checklist de aceite P1
 
 - [x] 8 áreas visíveis: cabeçalho, 7 cards e rodapé.
 - [x] Layout em 3, 2 e 1 coluna, com rolagem quando necessário.
@@ -287,5 +303,18 @@ de displays/áudio/HDR, bandeja, autostart, rescue e persistência dos cards.
 - [x] Toggle, select, botão, pill e dot com estados visuais.
 - [x] Nome de acessibilidade nos controles sem texto.
 - [x] Diálogo Sobre funcional e fechável por `Esc`.
+
+### Checklist de aceite P2
+
+- [x] `Card`, `StatusPill`, `StatusRow`, `KeyChip`, `PathPicker` e
+  `ActionButton` com `ControlTheme` próprio.
+- [x] Shell reutiliza os componentes, sem `Border.card`/`pill`/`keyChip`/
+  `pathBox` locais.
+- [x] Estados normal, hover, pressed, focus, disabled, loading, success e erro.
+- [x] Foco visível e distinto do variant primário.
+- [x] Loading bloqueia teclado e ponteiro nos estilos de classe; o
+  `ActionButton` do shell é desabilitado enquanto atualiza.
+- [x] Galeria `--gallery` nos dois idiomas, sem hardware.
+- [x] Nenhum P/Invoke, COM ou chamada de hardware novo.
 - [ ] Screenshots oficiais versionadas (P7a).
-- [ ] Aceite do usuário para avançar à P2.
+- [ ] Aceite do usuário para avançar à P3.
