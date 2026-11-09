@@ -354,4 +354,4 @@ captura de combinação, bandeja, autostart e rescue no logon.
 - [x] Journal atômico grava `active` e é limpo ao restaurar.
 - [x] Settings persistem toggles, atrasos, modos, launcher e idioma.
 - [x] Nenhum hardware real, P/Invoke ou COM novo.
-- [ ] Aceite do usuário para avançar à P4/REA.
+- [x] Aceite do usuário para avançar à P4/REA.

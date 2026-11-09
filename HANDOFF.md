@@ -680,7 +680,7 @@ separados.
 | P0 bootstrap | DeepSeek | **concluído** | build 0 avisos/0 erros; 26 testes; smoke pt/en; revisão aplicada; ver seção 19 |
 | P1 shell | DeepSeek | **concluído** | tag `v0.2.0-shell`; build 0 avisos/0 erros; 29 testes; smoke 1020×780 pt/en; capturas 3/2/1 colunas; ver seção 20 |
 | P2 componentes | DeepSeek | **concluído** | tag `v0.3.0-components`; build 0 avisos/0 erros; 34 testes; galeria pt/en; shell 3/2/1 colunas; ver seção 21 |
-| P3 simulação | DeepSeek | **concluído** | tag `v0.4.0-sim`; build 0 avisos/0 erros; 56 testes; fluxo simulado idle→pending→active→restored; journal e persistência; ver seção 22 |
+| P3 simulação | DeepSeek | **aceito** | tag `v0.4.0-sim`; build 0 avisos/0 erros; 56 testes; fluxo simulado idle→pending→active→restored; journal e persistência; aceite do usuário em 09/11/2026; ver seção 22 |
 | P4 display | Codex | pendente | Depende de spec REA + hardware |
 | P5 áudio/HDR | Codex | pendente | Depende de P4 |
 | P6 rescue/tray | Codex | pendente | Depende de P4/P5 |
@@ -1017,6 +1017,7 @@ O agente `reviewer` revisou a P2. Aplicados:
 ## 22. Evidência do P3 (09/11/2026)
 
 - Tag: `v0.4.0-sim`
+- Aceite do usuário: 09/11/2026
 
 ### Entregue
 
