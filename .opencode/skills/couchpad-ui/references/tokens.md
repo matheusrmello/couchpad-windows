@@ -13,7 +13,7 @@
 | `CouchPad.TextSecondary` | `#9AA0A6` | labels e ajuda |
 | `CouchPad.TextDisabled` | `#5F6368` | desabilitado |
 | `CouchPad.Accent` | `#2FD07A` | marca, status ativo, foco |
-| `CouchPad.AccentMuted` | `#1E6B45` | fundo de pill/realce |
+| `CouchPad.AccentMuted` | `#123D28` | fundo de pill/realce (contraste AA com `Accent`) |
 | `CouchPad.Info` | `#2F80ED` | controle secundário (opcional) |
 | `CouchPad.Warning` | `#F2C94C` | atenção |
 | `CouchPad.Danger` | `#EB5757` | erro |

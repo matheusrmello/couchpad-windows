@@ -676,7 +676,7 @@ separados.
 |---|---|---|---|
 | Setup REA | Codex | **pendente** | Planejado; nada gravado. Ver seção 5 |
 | REA 2.2.0 | Codex | **pendente** | Depende do setup e da extração do bundle |
-| P0 bootstrap | DeepSeek | **concluído** | build 0 avisos/0 erros; 22 testes; smoke 1020×780 em pt-BR; ver seção 17 |
+| P0 bootstrap | DeepSeek | **concluído** | build 0 avisos/0 erros; 26 testes; smoke pt/en; revisão aplicada; ver seção 19 |
 | P1 shell | DeepSeek | pendente | Depende de P0 |
 | P2 componentes | DeepSeek | pendente | Depende de P1 |
 | P3 simulação | DeepSeek | pendente | Depende de P2 |
@@ -815,17 +815,33 @@ públicas do Windows e em evidências estáticas do REA.
 - `src/CouchPad.Core`: `AppLanguage`, `AppPaths`, `AppSettings`,
   `JsonAppSettingsStore`.
 - `src/CouchPad.Platform.Windows`: fronteira vazia, sem implementação.
-- `tests/CouchPad.Core.Tests`: 22 testes.
+- `tests/CouchPad.Core.Tests`: 26 testes.
 
 ### Verificação
 
 | Item | Resultado |
 |---|---|
 | `dotnet build CouchPad.slnx -c Debug` | 0 avisos, 0 erros |
-| `dotnet test CouchPad.slnx -c Debug` | 22 aprovados, 0 falhas |
-| `dotnet CouchPad.dll --smoke` | janela 1020×780, idioma pt-BR, título CouchPad |
+| `dotnet test CouchPad.slnx -c Debug` | 26 aprovados, 0 falhas |
+| `dotnet CouchPad.dll --smoke` | janela 1020×780, pt-BR inicial, alternância pt/en, título CouchPad |
 | Skills | 5 detectadas em `.opencode/skills/` |
 | Agentes OpenCode | 6 em `.opencode/agents/` |
+| Bindings compilados | `AvaloniaUseCompiledBindingsByDefault=true`, 0 avisos |
+
+### Revisão independente
+
+O agente `reviewer` revisou o commit P0 e apontou 10 itens. Aplicados:
+
+1. `AppSettings` preserva chaves desconhecidas via `[JsonExtensionData]`.
+2. Settings aceita vírgula final e comentários; JSON corrompido gera `.bak`.
+3. Removido o estilo global de `TextBlock`; herança de `disabled`/seleção intacta.
+4. `AccentMuted` escurecido para `#123D28` (contraste AA com `Accent`).
+5. Seletor de idioma com rótulo visível e estado ativo.
+6. Marca `C` movida para a chave `app.mark`.
+7. Teste de paridade pt-BR/en e de placeholder.
+8. `MinHeight` reduzido para 640.
+9. Bindings compilados ativados.
+10. Versão lida de `AssemblyInformationalVersion`.
 
 ### Referências do repositório
 

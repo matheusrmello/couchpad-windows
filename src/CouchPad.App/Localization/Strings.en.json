@@ -1,5 +1,6 @@
 {
   "app.name": "CouchPad",
+  "app.mark": "C",
   "app.tagline": "Control your display and audio",
   "status.free": "Free",
   "p0.title": "Initial structure ready",

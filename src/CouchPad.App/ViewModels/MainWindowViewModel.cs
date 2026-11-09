@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CouchPad.App.Localization;
@@ -16,11 +17,22 @@ public partial class MainWindowViewModel : ObservableObject
         _localization.PropertyChanged += OnLocalizationChanged;
     }
 
-    public string VersionText => string.Format(
-        _localization["footer.version"],
-        typeof(MainWindowViewModel).Assembly.GetName().Version is { } v
-            ? $"{v.Major}.{v.Minor}.{v.Build}"
-            : "0.1.0");
+    public bool IsPortuguese => _localization.Language == AppLanguage.PtBr;
+
+    public bool IsEnglish => _localization.Language == AppLanguage.En;
+
+    public string VersionText
+    {
+        get
+        {
+            var informational = typeof(MainWindowViewModel).Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                .InformationalVersion;
+            var version = informational?.Split('+')[0] ?? "0.0.0";
+
+            return string.Format(_localization["footer.version"], version);
+        }
+    }
 
     [RelayCommand]
     private void SetPortuguese() => _localization.SetLanguage(AppLanguage.PtBr);
@@ -28,6 +40,10 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void SetEnglish() => _localization.SetLanguage(AppLanguage.En);
 
-    private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e) =>
+    private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
+    {
         OnPropertyChanged(nameof(VersionText));
+        OnPropertyChanged(nameof(IsPortuguese));
+        OnPropertyChanged(nameof(IsEnglish));
+    }
 }

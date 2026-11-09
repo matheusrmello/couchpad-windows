@@ -14,6 +14,7 @@ public interface IAppSettingsStore
 /// <summary>
 /// Gravação atômica: escreve em .tmp e move sobre o arquivo final.
 /// Arquivo ausente ou corrompido volta para os padrões, sem derrubar o app.
+/// Um arquivo corrompido é copiado para .bak antes de ser substituído.
 /// </summary>
 public sealed class JsonAppSettingsStore : IAppSettingsStore
 {
@@ -21,6 +22,9 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        AllowTrailingCommas = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
@@ -46,9 +50,13 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore
             return JsonSerializer.Deserialize<AppSettings>(json, SerializerOptions)
                 ?? new AppSettings();
         }
+        catch (JsonException)
+        {
+            TryBackupCorruptFile();
+            return new AppSettings();
+        }
         catch (Exception ex) when (ex is IOException
                                        or UnauthorizedAccessException
-                                       or JsonException
                                        or NotSupportedException)
         {
             return new AppSettings();
@@ -68,5 +76,20 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore
         var temp = _path + ".tmp";
         File.WriteAllText(temp, JsonSerializer.Serialize(settings, SerializerOptions));
         File.Move(temp, _path, overwrite: true);
+    }
+
+    private void TryBackupCorruptFile()
+    {
+        try
+        {
+            if (File.Exists(_path))
+            {
+                File.Copy(_path, _path + ".bak", overwrite: true);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Backup é melhor esforço; nunca impede o app de abrir.
+        }
     }
 }

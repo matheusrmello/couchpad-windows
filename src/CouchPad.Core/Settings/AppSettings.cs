@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace CouchPad.Core.Settings;
 
 /// <summary>
@@ -12,4 +15,11 @@ public sealed record AppSettings
     public bool StartWithWindows { get; init; }
 
     public bool MinimizeToTray { get; init; } = true;
+
+    /// <summary>
+    /// Preserva chaves desconhecidas ao regravar o arquivo, para não perder
+    /// configurações de versões futuras ou de outros componentes.
+    /// </summary>
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? Extensions { get; init; }
 }

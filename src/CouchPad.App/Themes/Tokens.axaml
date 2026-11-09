@@ -11,7 +11,7 @@
   <Color x:Key="CouchPad.Color.TextSecondary">#9AA0A6</Color>
   <Color x:Key="CouchPad.Color.TextDisabled">#5F6368</Color>
   <Color x:Key="CouchPad.Color.Accent">#2FD07A</Color>
-  <Color x:Key="CouchPad.Color.AccentMuted">#1E6B45</Color>
+  <Color x:Key="CouchPad.Color.AccentMuted">#123D28</Color>
   <Color x:Key="CouchPad.Color.Info">#2F80ED</Color>
   <Color x:Key="CouchPad.Color.Warning">#F2C94C</Color>
   <Color x:Key="CouchPad.Color.Danger">#EB5757</Color>

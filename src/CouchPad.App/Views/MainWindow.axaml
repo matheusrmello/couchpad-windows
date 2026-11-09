@@ -8,9 +8,11 @@
         Width="1020"
         Height="780"
         MinWidth="900"
-        MinHeight="700"
+        MinHeight="640"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource CouchPad.Background}"
+        Foreground="{DynamicResource CouchPad.TextPrimary}"
+        FontSize="{DynamicResource CouchPad.FontSize.Body}"
         FontFamily="{DynamicResource CouchPad.FontFamily}">
 
   <Grid RowDefinitions="Auto,*,Auto" Margin="{DynamicResource CouchPad.Padding.Window}">
@@ -22,7 +24,7 @@
                 Height="34"
                 CornerRadius="{DynamicResource CouchPad.Radius.Control}"
                 Background="{DynamicResource CouchPad.AccentMuted}">
-          <TextBlock Text="C"
+          <TextBlock Text="{loc:Tr app.mark}"
                      FontSize="18"
                      FontWeight="SemiBold"
                      Foreground="{DynamicResource CouchPad.Accent}"
@@ -73,11 +75,18 @@
 
         <StackPanel Orientation="Horizontal"
                     Spacing="8"
-                    Margin="0,8,0,0">
+                    Margin="0,8,0,0"
+                    VerticalAlignment="Center">
+          <TextBlock Text="{loc:Tr language.label}"
+                     Foreground="{DynamicResource CouchPad.TextSecondary}"
+                     VerticalAlignment="Center"
+                     Margin="0,0,4,0" />
           <Button Classes="secondary"
+                  Classes.active="{Binding IsPortuguese}"
                   Content="{loc:Tr language.ptbr}"
                   Command="{Binding SetPortugueseCommand}" />
           <Button Classes="secondary"
+                  Classes.active="{Binding IsEnglish}"
                   Content="{loc:Tr language.en}"
                   Command="{Binding SetEnglishCommand}" />
         </StackPanel>

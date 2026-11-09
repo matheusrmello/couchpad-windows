@@ -1,3 +1,4 @@
+using System.Text.Json;
 using CouchPad.Core.Settings;
 
 namespace CouchPad.Core.Tests;
@@ -41,7 +42,7 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
     }
 
     [Fact]
-    public void Load_corrupt_json_returns_defaults()
+    public void Load_corrupt_json_returns_defaults_and_backs_up_file()
     {
         Directory.CreateDirectory(_directory);
         File.WriteAllText(SettingsPath, "{ not json");
@@ -51,6 +52,48 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
 
         Assert.Null(settings.Language);
         Assert.False(settings.AutomationEnabled);
+        Assert.True(File.Exists(SettingsPath + ".bak"));
+        Assert.Equal("{ not json", File.ReadAllText(SettingsPath + ".bak"));
+    }
+
+    [Fact]
+    public void Load_accepts_trailing_commas_and_comments()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(
+            SettingsPath,
+            """
+            {
+              // comentário permitido em configuração local
+              "language": "pt-BR",
+              "automationEnabled": true,
+            }
+            """);
+        var store = new JsonAppSettingsStore(SettingsPath);
+
+        var settings = store.Load();
+
+        Assert.Equal("pt-BR", settings.Language);
+        Assert.True(settings.AutomationEnabled);
+    }
+
+    [Fact]
+    public void Save_preserves_unknown_fields()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(
+            SettingsPath,
+            """{"language":"en","futureKey":"keep-me","futureNumber":42}""");
+        var store = new JsonAppSettingsStore(SettingsPath);
+
+        var loaded = store.Load();
+        store.Save(loaded with { AutomationEnabled = true });
+
+        using var document = JsonDocument.Parse(File.ReadAllText(SettingsPath));
+        Assert.Equal("en", document.RootElement.GetProperty("language").GetString());
+        Assert.True(document.RootElement.GetProperty("automationEnabled").GetBoolean());
+        Assert.Equal("keep-me", document.RootElement.GetProperty("futureKey").GetString());
+        Assert.Equal(42, document.RootElement.GetProperty("futureNumber").GetInt32());
     }
 
     [Fact]
