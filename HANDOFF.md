@@ -678,7 +678,7 @@ separados.
 | Setup REA | Codex | **pendente** | Planejado; nada gravado. Ver seção 5 |
 | REA 2.2.0 | Codex | **pendente** | Depende do setup e da extração do bundle |
 | P0 bootstrap | DeepSeek | **concluído** | build 0 avisos/0 erros; 26 testes; smoke pt/en; revisão aplicada; ver seção 19 |
-| P1 shell | DeepSeek | **concluído** | build 0 avisos/0 erros; testes de i18n; smoke 1020×780 pt/en; capturas 3/2/1 colunas; ver seção 20 |
+| P1 shell | DeepSeek | **concluído** | tag `v0.2.0-shell`; build 0 avisos/0 erros; 29 testes; smoke 1020×780 pt/en; capturas 3/2/1 colunas; ver seção 20 |
 | P2 componentes | DeepSeek | pendente | Depende de P1 |
 | P3 simulação | DeepSeek | pendente | Depende de P2 |
 | P4 display | Codex | pendente | Depende de spec REA + hardware |
@@ -865,6 +865,8 @@ O agente `reviewer` revisou o commit P0 e apontou 10 itens. Aplicados:
 ---
 
 ## 20. Evidência do P1 (09/11/2026)
+
+- Tag: `v0.2.0-shell`
 
 ### Entregue
 

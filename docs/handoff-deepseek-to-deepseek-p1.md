@@ -2,7 +2,7 @@
 
 ## Identidade
 
-- Tag: `v0.2.0-shell` (a ser criada após o commit da P1)
+- Tag: `v0.2.0-shell`
 - Data: 2026-11-09
 - Fases concluídas: P0, P1
 - Próxima fase: P2 — componentes reutilizáveis e estados
