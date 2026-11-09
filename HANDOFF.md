@@ -680,7 +680,7 @@ separados.
 | P0 bootstrap | DeepSeek | **concluído** | build 0 avisos/0 erros; 26 testes; smoke pt/en; revisão aplicada; ver seção 19 |
 | P1 shell | DeepSeek | **concluído** | tag `v0.2.0-shell`; build 0 avisos/0 erros; 29 testes; smoke 1020×780 pt/en; capturas 3/2/1 colunas; ver seção 20 |
 | P2 componentes | DeepSeek | **concluído** | tag `v0.3.0-components`; build 0 avisos/0 erros; 34 testes; galeria pt/en; shell 3/2/1 colunas; ver seção 21 |
-| P3 simulação | DeepSeek | **aceito** | tag `v0.4.0-sim`; build 0 avisos/0 erros; 56 testes; fluxo simulado idle→pending→active→restored; journal e persistência; aceite do usuário em 09/11/2026; ver seção 22 |
+| P3 simulação | DeepSeek | **aceito** | tag `v0.4.0-sim`; contrato 0.4.1 no commit `5f5c8c4`; build 0 avisos/0 erros; 59 testes; fluxo simulado idle→pending→active→restored; journal e persistência; aceite do usuário em 09/11/2026; ver seção 22 |
 | P4 display | Codex | pendente | Depende de spec REA + hardware |
 | P5 áudio/HDR | Codex | pendente | Depende de P4 |
 | P6 rescue/tray | Codex | pendente | Depende de P4/P5 |
@@ -721,6 +721,7 @@ separados.
 | 09/11/2026 | D026 | Snapshot separa baseline do modo aplicado; journal grava baseline | Fail-closed e rescue P6 |
 | 09/11/2026 | D027 | AppSettings persiste toggles, atrasos, modos, launcher e caminho | Preferências sobrevivem ao restart |
 | 09/11/2026 | D028 | UI P3 simula conectar/desconectar gamepad | Validar state machine sem risco |
+| 09/11/2026 | D029 | `DisplayState.Topology` opaco e journal `pending` antes do apply; falha inicial aborta | Fechar janela de crash e permitir rescue fiel |
 
 ---
 
@@ -1057,7 +1058,7 @@ O agente `reviewer` revisou a P2. Aplicados:
 | Item | Resultado |
 |---|---|
 | `dotnet build CouchPad.slnx -c Debug` | 0 avisos, 0 erros |
-| `dotnet test CouchPad.slnx -c Debug` | 56 aprovados, 0 falhas |
+| `dotnet test CouchPad.slnx -c Debug` | 59 aprovados, 0 falhas |
 | `dotnet CouchPad.dll --smoke` | janela configurada 1020×780; pt/en; título CouchPad |
 | Fluxo simulado | idle → simulado conectado → pending → active → deactivation pending → restored |
 | Persistência | `automationEnabled=true` e idioma gravados; settings relido |
@@ -1094,11 +1095,30 @@ Nenhum bloqueador restante.
 - D026: snapshot/journal guardam o baseline.
 - D027: settings persiste todas as preferências.
 - D028: UI simula conectar/desconectar gamepad.
+- D029: `DisplayState.Topology` opaco e journal `pending` antes do apply.
 
 ### Fora do escopo (por desenho)
 
 - Display/áudio/HDR reais e watcher real de gamepad (P4/P5).
-- Capture de combinação de botões (P4/P6).
+- Captura de combinação de botões (P4/P6).
 - Rescue no logon, bandeja, autostart e tarefa (P6).
 - Refresh de displays real; continua placeholder até a P4.
 - Screenshots oficiais versionadas (P7a).
+
+### Contrato endurecido P3.1 (09/11/2026)
+
+- `DisplayState.Topology`: snapshot opaco da topologia completa, serializado
+  pela implementação de plataforma; o Core persiste e devolve no restore.
+- Journal grava `pending` **antes** do apply (com baseline) e `active` depois;
+  falha do `pending` inicial aborta a mudança, falha do `active` mantém o
+  `pending` para rescue.
+- `SessionJournalEntry` também guarda `appliedAudio`.
+- Commit `5f5c8c4`, versão `0.4.1`, 59 testes. A tag `v0.4.0-sim` permanece no
+  commit da fase; o contrato novo está no HEAD.
+
+### REA/P4 — andamento 2026-11-09
+
+- REA estática parcial aceita pelo usuário como evidência; conclusões e lacunas em `docs/rea-shiftpad-2.2.0.md`, commit `d2e1a74`.
+- P4 ainda não implementada ou aceita. O contrato de topologia/journal foi endurecido no commit `5f5c8c4` (v0.4.1); a implementação CCD, o rollback e os testes de hardware continuam pendentes.
+- `docs/p4-hardware-matrix.md` registra a consulta somente leitura e os cenários não executados; dois monitores ativos não demonstram identificação de TV nem aprovação da matriz.
+- Build serial passou com zero avisos/erros; 59 testes passaram; smoke abriu e fechou normalmente. Nenhuma topologia foi alterada.
