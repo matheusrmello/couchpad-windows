@@ -6,6 +6,7 @@
 
   "status.idle": "Inativo",
   "status.waiting": "Aguardando gamepad",
+  "status.pending": "Aguardando atraso",
   "status.applying": "Aplicando",
   "status.active": "Ativo",
   "status.error": "Erro",
@@ -25,8 +26,6 @@
   "automation.display": "Tela",
   "automation.audio": "Áudio",
   "automation.launcher": "Launcher",
-  "automation.none": "Nenhum controle conectado",
-  "automation.primary_display": "Monitor principal",
   "automation.default_audio": "Saída padrão",
   "automation.no_launcher": "Nenhum",
 
@@ -34,13 +33,18 @@
   "display.target": "Destino",
   "display.current_value": "Monitor principal · 1920×1080",
   "display.target_value": "TV · HDMI",
+  "display.active.tv_only": "TV · HDMI",
+  "display.active.extend": "Monitor principal + TV · HDMI",
+  "display.active.mirror": "Monitor principal = TV · HDMI",
   "display.refresh": "Atualizar displays",
   "display.refreshing": "Atualizando…",
 
   "gamepad.primary": "Controle principal",
   "gamepad.none": "Nenhum controle conectado",
-  "gamepad.reset": "Redefinir controle",
-  "gamepad.reset_reason": "Disponível quando um controle for detectado.",
+  "gamepad.simulated": "Controle simulado",
+  "gamepad.simulated_help": "Simulação local: nenhum controle real é usado.",
+  "gamepad.connect": "Conectar controle",
+  "gamepad.disconnect": "Desconectar",
 
   "combo.help": "Sequência para ativar a automação.",
   "combo.change": "Alterar",
@@ -73,6 +77,8 @@
   "audio_mode.move": "Mover para HDMI",
   "audio_mode.keep": "Manter atual",
 
+  "audio.active.hdmi": "TV · HDMI",
+
   "launchers.steam": "Steam",
   "launchers.custom": "Launcher personalizado",
   "launchers.no_path": "Caminho não especificado",
@@ -80,7 +86,7 @@
   "launchers.choose_title": "Escolher pasta do launcher",
 
   "footer.version": "Versão {0}",
-  "footer.phase": "P2 · componentes",
+  "footer.phase": "P3 · simulação",
   "footer.reset": "Redefinir",
   "footer.about": "Sobre",
 

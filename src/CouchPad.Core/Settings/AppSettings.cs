@@ -16,6 +16,20 @@ public sealed record AppSettings
 
     public bool MinimizeToTray { get; init; } = true;
 
+    public bool CloseLauncherOnActivate { get; init; } = true;
+
+    public bool SteamEnabled { get; init; } = true;
+
+    public string? CustomLauncherPath { get; init; }
+
+    public int ActivationDelayIndex { get; init; }
+
+    public int DeactivationDelayIndex { get; init; }
+
+    public int DisplayModeIndex { get; init; }
+
+    public int AudioModeIndex { get; init; }
+
     /// <summary>
     /// Preserva chaves desconhecidas ao regravar o arquivo, para não perder
     /// configurações de versões futuras ou de outros componentes.

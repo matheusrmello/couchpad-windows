@@ -30,6 +30,11 @@
 | D021 | 2026-11-09 | `ActionButton` tem `Variant` (Primary/Secondary) e `State` (Idle/Loading/Success/Error); foco usa borda `TextPrimary` de 2 px; hover/pressed primários usam `AccentMutedHover`/`AccentMutedPressed` | Estados distinguíveis, foco visível e cor nunca como único indicador |
 | D022 | 2026-11-09 | Classes `Button.loading` e `ComboBox.loading` definem `IsEnabled=false`; o `ActionButton` não altera `IsEnabled` por si só e o shell desabilita o refresh durante a atualização | Bloquear teclado e ponteiro e evitar duplo acionamento |
 | D023 | 2026-11-09 | Seletor de pasta: o ViewModel expõe `ChooseLauncherFolderCommand` e o evento `FolderPickerRequested`; a view usa `StorageProvider.OpenFolderPickerAsync` | Manter `StorageProvider` fora do ViewModel/Core e permitir teste sem diálogo |
+| D024 | 2026-11-09 | P3: display, áudio e gamepad simulados atrás de `IDisplayService`, `IAudioService` e `IGamepadWatcher` no Core; atrasos via `IDelayScheduler` injetável | Testar o fluxo completo sem hardware nem espera real |
+| D025 | 2026-11-09 | State machine `Idle`, `WaitingForGamepad`, `Pending`, `Applying`, `Active`, `Error` (`RescuePending` reservado); toda transição é cancelável por CTS e serializada por gate | Atrasos cancelam ao desconectar/desligar e não há transição concorrente |
+| D026 | 2026-11-09 | `AutomationSnapshot` guarda o baseline de restauração separado do modo aplicado; reaplicar modo preserva o baseline; o journal grava modo aplicado, baseline (`restoreDisplay`/`restoreAudio`) e é limpo ao restaurar | Fail-closed: restaurar sempre o estado anterior real, inclusive no rescue da P6 |
+| D027 | 2026-11-09 | `AppSettings` persiste toggles, atrasos, modos, launcher e caminho; cada gravação relê o arquivo para preservar `language` e chaves desconhecidas | Preferências sobrevivem ao restart sem perder extensões |
+| D028 | 2026-11-09 | UI da P3 expõe conectar/desconectar gamepad simulado; o watcher real só entra na P4/P6 | Validar a state machine com risco zero |
 
 ## Pendentes
 

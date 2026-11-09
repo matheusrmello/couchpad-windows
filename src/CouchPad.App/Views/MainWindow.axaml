@@ -82,11 +82,12 @@
 
             <StackPanel Spacing="6">
               <controls:StatusRow Label="{loc:Tr automation.gamepad}"
-                                  Value="{loc:Tr automation.none}" />
+                                  Value="{Binding GamepadSummary}"
+                                  Tone="{Binding GamepadTone}" />
               <controls:StatusRow Label="{loc:Tr automation.display}"
-                                  Value="{loc:Tr automation.primary_display}" />
+                                  Value="{Binding DisplaySummary}" />
               <controls:StatusRow Label="{loc:Tr automation.audio}"
-                                  Value="{loc:Tr automation.default_audio}" />
+                                  Value="{Binding AudioSummary}" />
               <controls:StatusRow Label="{loc:Tr automation.launcher}"
                                   Value="{Binding LauncherSummary}" />
             </StackPanel>
@@ -113,7 +114,7 @@
             <StackPanel Spacing="4">
               <TextBlock Classes="caption" Text="{loc:Tr display.current}" />
               <TextBlock Classes="value"
-                         Text="{loc:Tr display.current_value}"
+                         Text="{Binding DisplaySummary}"
                          TextWrapping="Wrap" />
             </StackPanel>
             <StackPanel Grid.Column="1" Spacing="4">
@@ -132,14 +133,21 @@
                        Title="{loc:Tr section.gamepad}">
           <StackPanel Spacing="10">
             <controls:StatusRow Label="{loc:Tr gamepad.primary}"
-                                Value="{loc:Tr gamepad.none}" />
+                                Value="{Binding GamepadSummary}"
+                                Tone="{Binding GamepadTone}" />
 
-            <Button Classes="secondary small"
-                    HorizontalAlignment="Left"
-                    Content="{loc:Tr gamepad.reset}"
-                    IsEnabled="False"
-                    AutomationProperties.HelpText="{loc:Tr gamepad.reset_reason}"
-                    ToolTip.Tip="{loc:Tr gamepad.reset_reason}" />
+            <TextBlock Classes="hint"
+                       IsVisible="{Binding IsSimulationAvailable}"
+                       Text="{loc:Tr gamepad.simulated_help}" />
+
+            <controls:ActionButton Classes="small"
+                                   Variant="Secondary"
+                                   State="Idle"
+                                   HorizontalAlignment="Left"
+                                   IsVisible="{Binding IsSimulationAvailable}"
+                                   Content="{Binding GamepadActionText}"
+                                   Command="{Binding ToggleGamepadCommand}"
+                                   AutomationProperties.Name="{Binding GamepadActionText}" />
           </StackPanel>
         </controls:Card>
 

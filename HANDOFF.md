@@ -680,7 +680,7 @@ separados.
 | P0 bootstrap | DeepSeek | **concluído** | build 0 avisos/0 erros; 26 testes; smoke pt/en; revisão aplicada; ver seção 19 |
 | P1 shell | DeepSeek | **concluído** | tag `v0.2.0-shell`; build 0 avisos/0 erros; 29 testes; smoke 1020×780 pt/en; capturas 3/2/1 colunas; ver seção 20 |
 | P2 componentes | DeepSeek | **concluído** | tag `v0.3.0-components`; build 0 avisos/0 erros; 34 testes; galeria pt/en; shell 3/2/1 colunas; ver seção 21 |
-| P3 simulação | DeepSeek | pendente | Depende de P2 |
+| P3 simulação | DeepSeek | **concluído** | tag `v0.4.0-sim`; build 0 avisos/0 erros; 56 testes; fluxo simulado idle→pending→active→restored; journal e persistência; ver seção 22 |
 | P4 display | Codex | pendente | Depende de spec REA + hardware |
 | P5 áudio/HDR | Codex | pendente | Depende de P4 |
 | P6 rescue/tray | Codex | pendente | Depende de P4/P5 |
@@ -716,6 +716,11 @@ separados.
 | 09/11/2026 | D021 | `ActionButton` com Variant/State; foco `TextPrimary` 2 px; hover/pressed primários distintos | Estados visíveis e acessíveis |
 | 09/11/2026 | D022 | Classes loading desabilitam Button/ComboBox; shell desabilita refresh durante atualização | Bloquear duplo acionamento |
 | 09/11/2026 | D023 | Folder picker por evento; view usa `StorageProvider` | Manter diálogo fora do VM/Core |
+| 09/11/2026 | D024 | Display/áudio/gamepad simulados atrás de interfaces; atraso injetável | Testar sem hardware |
+| 09/11/2026 | D025 | State machine Idle/Waiting/Pending/Applying/Active/Error com CTS e gate | Cancelar atrasos e evitar concorrência |
+| 09/11/2026 | D026 | Snapshot separa baseline do modo aplicado; journal grava baseline | Fail-closed e rescue P6 |
+| 09/11/2026 | D027 | AppSettings persiste toggles, atrasos, modos, launcher e caminho | Preferências sobrevivem ao restart |
+| 09/11/2026 | D028 | UI P3 simula conectar/desconectar gamepad | Validar state machine sem risco |
 
 ---
 
@@ -1005,4 +1010,94 @@ O agente `reviewer` revisou a P2. Aplicados:
 - Persistência dos toggles/atrasos e fluxo de ativação (P3).
 - Leitura/aplicação real de display, áudio e HDR (P4/P5).
 - Bandeja, autostart, rescue e tarefa (P6).
+- Screenshots oficiais versionadas (P7a).
+
+---
+
+## 22. Evidência do P3 (09/11/2026)
+
+- Tag: `v0.4.0-sim`
+
+### Entregue
+
+- Core de simulação:
+  - `IGamepadWatcher` / `ISimulatedGamepad` / `SimulatedGamepadWatcher`;
+  - `IDisplayService` / `SimulatedDisplayService`;
+  - `IAudioService` / `SimulatedAudioService`;
+  - `IDelayScheduler` / `SystemDelayScheduler`.
+- State machine `AutomationCoordinator` com `Idle`, `WaitingForGamepad`,
+  `Pending`, `Applying`, `Active`, `Error` (`RescuePending` reservado).
+  CTS + `SemaphoreSlim` cancelam e serializam transições.
+- Atrasos de 0/1/2/3/5 s (`DelayOptions`) com cancelamento ao desconectar,
+  desligar ou reconectar.
+- Snapshot separa o **baseline de restauração** do modo aplicado; reaplicar
+  modo preserva o baseline; falha de reapply mantém o snapshot anterior.
+- Journal atômico em `%LOCALAPPDATA%\CouchPad\state\session.json`:
+  grava `active`, modos aplicados e baseline (`restoreDisplay`/`restoreAudio`);
+  é limpo ao restaurar. Falha de journal não derruba a automação.
+- Persistência em `settings.json`: automação, toggles, atrasos, modos, Steam,
+  caminho do launcher e idioma; leitura antes de salvar preserva extensões.
+- UI:
+  - card Gamepad com “Conectar controle”/“Desconectar” simulado;
+  - status `status.pending` e tons da state machine;
+  - `DisplaySummary`/`AudioSummary` refletem o modo aplicado;
+  - card Automação e card Display usam os valores dinâmicos;
+  - fallback para watcher real: a VM aceita `IGamepadWatcher`,
+    `IDisplayService`, `IAudioService` e `IDelayScheduler` injetados e semeia
+    o controle já conectado no startup.
+- i18n: `status.pending`, `gamepad.connect/disconnect/simulated/simulated_help`,
+  `display.active.*`, `audio.active.hdmi`; 121 chaves em paridade.
+- Docs: `docs/automation-simulation.md`, `docs/handoff-deepseek-to-codex.md`.
+- Testes: `AutomationCoordinatorTests`, `JsonSessionJournalStoreTests`,
+  `JsonAppSettingsStoreTests` ampliado.
+
+### Verificação
+
+| Item | Resultado |
+|---|---|
+| `dotnet build CouchPad.slnx -c Debug` | 0 avisos, 0 erros |
+| `dotnet test CouchPad.slnx -c Debug` | 56 aprovados, 0 falhas |
+| `dotnet CouchPad.dll --smoke` | janela configurada 1020×780; pt/en; título CouchPad |
+| Fluxo simulado | idle → simulado conectado → pending → active → deactivation pending → restored |
+| Persistência | `automationEnabled=true` e idioma gravados; settings relido |
+| Journal | arquivo `active` criado ao ativar; limpo após restaurar |
+| Fronteira | nenhum P/Invoke/COM/hardware no App/Core; Platform.Windows intocado |
+
+### Capturas de revisão (fora do repositório)
+
+`C:\Users\Usuario\AppData\Local\Temp\opencode\p3-01-idle.png`,
+`p3-02-gamepad.png`, `p3-03-pending.png`, `p3-04-active.png`,
+`p3-05-deactivation-pending.png`, `p3-06-restored.png`.
+
+### Revisão independente
+
+O agente `reviewer` revisou a P3 e apontou melhorias aplicadas:
+
+1. Journal passou a gravar o baseline (`restoreDisplay`/`restoreAudio`), não
+   apenas o modo aplicado.
+2. `ActivateAsync`/`DeactivateAsync` capturam uma cópia imutável de
+   `AutomationSettings` antes dos awaits, evitando divergência com mudanças
+   concorrentes.
+3. ViewModel aceita interfaces injetadas e semeia o coordenador a partir do
+   gamepad atual no startup.
+4. Exemplo de `automation.none` removido de `docs/ui-components.md`.
+5. Testes adicionais para desconectar sem snapshot/desligado e para o baseline
+   no journal.
+
+Nenhum bloqueador restante.
+
+### Decisões da fase
+
+- D024: simulação atrás de interfaces; atraso injetável.
+- D025: state machine cancelável e serializada.
+- D026: snapshot/journal guardam o baseline.
+- D027: settings persiste todas as preferências.
+- D028: UI simula conectar/desconectar gamepad.
+
+### Fora do escopo (por desenho)
+
+- Display/áudio/HDR reais e watcher real de gamepad (P4/P5).
+- Capture de combinação de botões (P4/P6).
+- Rescue no logon, bandeja, autostart e tarefa (P6).
+- Refresh de displays real; continua placeholder até a P4.
 - Screenshots oficiais versionadas (P7a).

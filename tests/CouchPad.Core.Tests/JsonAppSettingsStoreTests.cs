@@ -21,6 +21,13 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
         Assert.False(settings.AutomationEnabled);
         Assert.False(settings.StartWithWindows);
         Assert.True(settings.MinimizeToTray);
+        Assert.True(settings.CloseLauncherOnActivate);
+        Assert.True(settings.SteamEnabled);
+        Assert.Null(settings.CustomLauncherPath);
+        Assert.Equal(0, settings.ActivationDelayIndex);
+        Assert.Equal(0, settings.DeactivationDelayIndex);
+        Assert.Equal(0, settings.DisplayModeIndex);
+        Assert.Equal(0, settings.AudioModeIndex);
     }
 
     [Fact]
@@ -33,6 +40,13 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
             AutomationEnabled = true,
             StartWithWindows = true,
             MinimizeToTray = false,
+            CloseLauncherOnActivate = false,
+            SteamEnabled = false,
+            CustomLauncherPath = @"C:\Games\Launcher",
+            ActivationDelayIndex = 2,
+            DeactivationDelayIndex = 3,
+            DisplayModeIndex = 1,
+            AudioModeIndex = 1,
         };
 
         store.Save(expected);

@@ -66,7 +66,7 @@ Os temas implícitos são registrados em `App.axaml`:
                      Tone="{Binding CurrentStatusTone}" />
 
 <controls:StatusRow Label="{loc:Tr automation.gamepad}"
-                    Value="{loc:Tr automation.none}" />
+                    Value="{loc:Tr gamepad.none}" />
 ```
 
 - Tons: `Neutral`, `Accent`, `Warning`, `Danger`.
@@ -206,8 +206,10 @@ com 2 px. O contraste do foco é garantido pela espessura e pelo texto ao lado.
 ## 7. Limites e próximos passos
 
 - A galeria é uma ferramenta de desenvolvimento; não faz parte do fluxo
-  principal.
+  principal. A P3 usa os mesmos componentes no shell com a state machine
+  simulada.
 - O exemplo de `PathPicker` na galeria é visual e não tem comando.
 - Hover/pressed/focus não podem ser fixados em uma captura; use a galeria.
-- Persistência de estado, atrasos reais e fluxo de ativação entram na P3.
-- Nenhum P/Invoke, COM ou chamada de hardware foi introduzido na P2.
+- Persistência de estado, atrasos e fluxo de ativação foram implementados na P3
+  com serviços simulados.
+- Nenhum P/Invoke, COM ou chamada de hardware foi introduzido nas P2/P3.

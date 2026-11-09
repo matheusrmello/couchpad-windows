@@ -6,6 +6,7 @@
 
   "status.idle": "Idle",
   "status.waiting": "Waiting for gamepad",
+  "status.pending": "Waiting for delay",
   "status.applying": "Applying",
   "status.active": "Active",
   "status.error": "Error",
@@ -25,8 +26,6 @@
   "automation.display": "Display",
   "automation.audio": "Audio",
   "automation.launcher": "Launcher",
-  "automation.none": "No controller connected",
-  "automation.primary_display": "Primary monitor",
   "automation.default_audio": "Default output",
   "automation.no_launcher": "None",
 
@@ -34,13 +33,18 @@
   "display.target": "Target",
   "display.current_value": "Primary monitor · 1920×1080",
   "display.target_value": "TV · HDMI",
+  "display.active.tv_only": "TV · HDMI",
+  "display.active.extend": "Primary monitor + TV · HDMI",
+  "display.active.mirror": "Primary monitor = TV · HDMI",
   "display.refresh": "Refresh displays",
   "display.refreshing": "Refreshing…",
 
   "gamepad.primary": "Primary controller",
   "gamepad.none": "No controller connected",
-  "gamepad.reset": "Reset controller",
-  "gamepad.reset_reason": "Available when a controller is detected.",
+  "gamepad.simulated": "Simulated controller",
+  "gamepad.simulated_help": "Local simulation: no real controller is used.",
+  "gamepad.connect": "Connect controller",
+  "gamepad.disconnect": "Disconnect",
 
   "combo.help": "Sequence to enable automation.",
   "combo.change": "Change",
@@ -73,6 +77,8 @@
   "audio_mode.move": "Move to HDMI",
   "audio_mode.keep": "Keep current",
 
+  "audio.active.hdmi": "TV · HDMI",
+
   "launchers.steam": "Steam",
   "launchers.custom": "Custom launcher",
   "launchers.no_path": "No path selected",
@@ -80,7 +86,7 @@
   "launchers.choose_title": "Choose launcher folder",
 
   "footer.version": "Version {0}",
-  "footer.phase": "P2 · components",
+  "footer.phase": "P3 · simulation",
   "footer.reset": "Reset",
   "footer.about": "About",
 

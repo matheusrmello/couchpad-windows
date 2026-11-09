@@ -1,0 +1,20 @@
+using CouchPad.Core.Audio;
+using CouchPad.Core.Display;
+
+namespace CouchPad.Core.Automation;
+
+/// <summary>Configuração que a state machine consome. Sem hardware.</summary>
+public sealed record AutomationSettings
+{
+    public bool Enabled { get; init; }
+
+    public TimeSpan ActivationDelay { get; init; } = TimeSpan.Zero;
+
+    public TimeSpan DeactivationDelay { get; init; } = TimeSpan.Zero;
+
+    public DisplayMode DisplayMode { get; init; } = DisplayMode.TvOnly;
+
+    public AudioMode AudioMode { get; init; } = AudioMode.MoveToHdmi;
+
+    public bool CloseLauncherOnActivate { get; init; } = true;
+}

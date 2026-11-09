@@ -1,13 +1,13 @@
-# CouchPad — Especificação de UI (P1–P2)
+# CouchPad — Especificação de UI (P1–P3)
 
 - Data: 2026-11-09
-- Fases: P1 (shell estático) e P2 (componentes e estados), sem hardware
+- Fases: P1 (shell), P2 (componentes) e P3 (automação simulada), sem hardware
 - Base visual: referência do ShiftPad 2.2.0, recriada com identidade própria
 - Plataforma: Avalonia 12.1.4 / .NET 10 (`net10.0`)
 
-> Esta spec descreve o shell entregue na P1. Ela não copia ícones, textos,
-> imagens, XAML ou código do ShiftPad. Todos os textos visíveis vêm de
-> `Strings.pt-BR.json` e `Strings.en.json`.
+> Esta spec descreve o shell e a automação simulada entregues até a P3. Ela
+> não copia ícones, textos, imagens, XAML ou código do ShiftPad. Todos os
+> textos visíveis vêm de `Strings.pt-BR.json` e `Strings.en.json`.
 
 ---
 
@@ -18,7 +18,8 @@
 3. Estados nunca dependem só de cor: sempre há texto ou forma ao lado.
 4. Layout responsivo em três breakpoints, com rolagem vertical quando o
    conteúdo não couber.
-5. Nenhuma chamada de tela, áudio, HDR ou gamepad na P1.
+5. Nenhuma chamada real de tela, áudio, HDR ou gamepad nas P1–P3; a P3 usa
+   serviços simulados no Core.
 6. Toda ação destrutiva ou incerta fica desabilitada até a fase que a
    implementa.
 
@@ -63,10 +64,14 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 - Marca textual `C` em bloco com `AccentMuted`.
 - Nome (`app.name`) e tagline (`app.tagline`).
 - Pill `Grátis` (`status.free`) em acento.
-- Pill de estado com `StatusDot` + texto:
-  - automação desligada → `status.idle` (neutro);
-  - automação ligada → `status.waiting` (âmbar, aguardando gamepad).
-- A pill de estado usa `AutomationProperties.LiveSetting=Polite`.
+- Pill de estado com `StatusDot` + texto, dirigida pela state machine:
+  - `Idle` → `status.idle` (neutro);
+  - `WaitingForGamepad` → `status.waiting` (âmbar);
+  - `Pending` → `status.pending` (âmbar, atraso em andamento);
+  - `Applying` → `status.applying` (acento);
+  - `Active` → `status.active` (acento);
+  - `Error` → `status.error` (perigo).
+- A pill de estado usa `AutomationProperties.LiveSetting=Polite` na P2/P3.
 
 ### 3.2 Card Automação
 
@@ -74,23 +79,33 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 - `ToggleSwitch` ligado/desligado (`automation.toggle`), com `HelpText`.
 - Texto de ajuda (`automation.help`).
 - Resumo em quatro linhas: gamepad, tela, áudio e launcher.
-- Valores da P1: nenhum controle, monitor principal, saída padrão e
-  Steam/nenhum, conforme o toggle de Steam.
+- Gamepad: `gamepad.none` ou `gamepad.simulated`, com tom
+  neutro/acento.
+- Tela: `DisplaySummary` (modo aplicado quando `Active`; senão o valor atual).
+- Áudio: `AudioSummary` (`audio.active.hdmi` quando aplicado; senão
+  `automation.default_audio`).
+- Launcher: Steam/nenhum/caminho customizado.
 
 ### 3.3 Card Display
 
 - Título `section.display`.
 - Botão `display.refresh`; durante a atualização mostra
-  `display.refreshing` e fica desabilitado por 700 ms (placeholder local).
-- Colunas `Atual` e `Destino` com valores estáticos:
-  `display.current_value` e `display.target_value` (este em acento).
-- Nenhuma chamada CCD na P1.
+  `display.refreshing` e fica desabilitado por 700 ms (placeholder até a P4).
+- Colunas `Atual` e `Destino`:
+  - `Atual` usa `DisplaySummary` (modo aplicado quando `Active`);
+  - `Destino` usa `display.target_value` (TV · HDMI, em acento).
+- Nenhuma chamada CCD até a P4.
 
 ### 3.4 Card Gamepad
 
 - Título `section.gamepad`.
-- Linha `Controle principal` com `StatusDot` neutro e `gamepad.none`.
-- Botão `gamepad.reset` desabilitado até a P3/P6.
+- Linha `Controle principal` com `gamepad.none`/`gamepad.simulated` e tom
+  neutro/acento.
+- Dica `gamepad.simulated_help` (“Simulação local: nenhum controle real é
+  usado.”).
+- Botão `ActionButton` com `gamepad.connect`/`gamepad.disconnect`; alterna o
+  `SimulatedGamepadWatcher` e dispara a state machine.
+- O watcher real de gamepad entra na P4/P6.
 
 ### 3.5 Card Combinação
 
@@ -106,7 +121,7 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
   bandeja.
 - Selects: atraso ao ativar e ao desativar (Imediato, 1 s, 2 s, 3 s, 5 s).
 - Ajuda `settings.help`.
-- Na P1 os valores existem só em memória; persistência entra na P3.
+- A P3 persiste todos esses valores em `%LOCALAPPDATA%\CouchPad\settings.json`.
 
 ### 3.7 Card Transição
 
@@ -128,7 +143,8 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 
 - `StatusDot` + texto de estado (mesmo estado do cabeçalho).
 - Versão (`footer.version`, via `AssemblyInformationalVersion`).
-- `Redefinir` (`footer.reset`) restaura os padrões da P1.
+- `Redefinir` (`footer.reset`) restaura os padrões, desliga a automação e
+  salva a configuração.
 - `Sobre` (`footer.about`) abre `AboutWindow` como diálogo modal.
 - Seletor de idioma com `language.ptbr` e `language.en`.
 
@@ -218,8 +234,8 @@ Regras:
 - Toggle sempre com `AutomationProperties.Name`; quando necessário,
   `HelpText`.
 - Ícone ou controle sem texto visível sempre com nome de acessibilidade.
-- Botão desabilitado sempre com opacidade reduzida; na P1, `Redefinir
-  controle` e `Alterar` mostram o motivo via `ToolTip.Tip`/`HelpText`.
+- Botão desabilitado sempre com opacidade reduzida; `Alterar` continua
+  desabilitado até a captura real de botões.
 
 ---
 
@@ -237,8 +253,8 @@ Regras:
 
 Grupos de chaves: `app.*`, `status.*`, `section.*`, `automation.*`,
 `display.*`, `gamepad.*`, `combo.*`, `settings.*`, `delay.*`,
-`transition.*`, `display_mode.*`, `audio_mode.*`, `launchers.*`, `footer.*`,
-`language.*`, `about.*`, `gallery.*`.
+`transition.*`, `display_mode.*`, `audio_mode.*`, `audio.*`, `launchers.*`,
+`footer.*`, `language.*`, `about.*`, `gallery.*`.
 
 ---
 
@@ -258,29 +274,35 @@ Grupos de chaves: `app.*`, `status.*`, `section.*`, `automation.*`,
 
 ---
 
-## 8. Comportamento da P1
+## 8. Comportamento da P3
 
 | Ação | Efeito |
 |---|---|
-| Alternar automação | Estado vai de `Inativo` para `Aguardando gamepad` (sem hardware real) |
-| Atualizar displays | Texto vira `Atualizando…`; o `ActionButton` entra em `Loading` por 700 ms; nenhum CCD |
-| Redefinir | Restaura toggles, atrasos, modos e caminho do launcher |
-| Escolher pasta | Seletor nativo de pasta; grava o caminho em memória |
+| Alternar automação | State machine liga/desliga; sem gamepad vai para `Aguardando gamepad` |
+| Conectar controle simulado | Com automação ligada inicia o atraso de ativação; depois aplica display/áudio |
+| Desconectar controle | Cancela ativação pendente ou agenda a desativação; restaura o baseline |
+| Atraso ao ativar/desativar | Estado `Aguardando atraso`; nova transição cancela o atraso |
+| Trocar modo com `Active` | Reaplica display/áudio preservando o baseline original |
+| Atualizar displays | Texto vira `Atualizando…`; `ActionButton` em `Loading` por 700 ms; nenhum CCD |
+| Redefinir | Desliga a automação, restaura o baseline e volta aos padrões salvos |
+| Escolher pasta | Seletor nativo de pasta; grava o caminho em memória e no settings |
 | Sobre | Abre diálogo modal com versão e licença |
 | Idioma | Troca todos os textos em tempo real e persiste a preferência |
 
-Fora do escopo da P1/P2: detecção de gamepad, captura de combinação, leitura
-real de displays/áudio/HDR, bandeja, autostart, rescue e persistência dos
-cards.
+Persistência: toggles, atrasos, modos, Steam, caminho do launcher, idioma e
+automação vão para `%LOCALAPPDATA%\CouchPad\settings.json`. O journal de
+sessão fica em `state\session.json`.
+
+Fora do escopo da P3: display/áudio/HDR reais, watcher real de gamepad,
+captura de combinação, bandeja, autostart e rescue no logon.
 
 ---
 
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: 34 aprovados — catálogos, i18n no XAML, composição do shell,
-  `ControlTheme` de cada componente, estados da galeria e ausência de literais
-  visíveis no tema.
+- Testes: 56 aprovados — catálogos/i18n, composição do shell, temas,
+  estados da galeria, state machine, atrasos/cancelamento, journal e settings.
 - Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em
   telas 720p), troca pt/en, título `CouchPad`.
 - Galeria: `CouchPad.dll --gallery` abre em `1100 × 720`; todos os estados
@@ -291,7 +313,8 @@ cards.
   - `p2-gallery-pt.png`, `p2-gallery-en.png` (galeria);
   - `p2-main-pt.png`, `p2-main-en.png` (shell 3 colunas);
   - `p2-main-pt-2col.png`, `p2-main-pt-640.png` (2 e 1 coluna);
-  - `p2-refresh-loading.png` (ActionButton em loading no shell).
+  - `p2-refresh-loading.png` (ActionButton em loading no shell);
+  - `p3-01-idle.png` … `p3-06-restored.png` (fluxo simulado completo).
 - As capturas definitivas dos 3 breakpoints × 2 idiomas serão versionadas na
   P7a em `docs/screenshots/`.
 
@@ -317,4 +340,18 @@ cards.
 - [x] Galeria `--gallery` nos dois idiomas, sem hardware.
 - [x] Nenhum P/Invoke, COM ou chamada de hardware novo.
 - [ ] Screenshots oficiais versionadas (P7a).
-- [ ] Aceite do usuário para avançar à P3.
+- [x] Aceite do usuário para avançar à P3.
+
+### Checklist de aceite P3
+
+- [x] Gamepad simulado conecta/desconecta e muda o estado.
+- [x] Atraso de ativação: `Pending` → `Applying` → `Active`.
+- [x] Desconectar durante o atraso cancela sem aplicar.
+- [x] Desconectar após ativo espera o atraso de desativação e restaura.
+- [x] Reconectar durante a desativação cancela a restauração.
+- [x] Falha de aplicação vira `Error`, restaura e não grava journal.
+- [x] Trocar modo com `Active` reaplica preservando o baseline.
+- [x] Journal atômico grava `active` e é limpo ao restaurar.
+- [x] Settings persistem toggles, atrasos, modos, launcher e idioma.
+- [x] Nenhum hardware real, P/Invoke ou COM novo.
+- [ ] Aceite do usuário para avançar à P4/REA.

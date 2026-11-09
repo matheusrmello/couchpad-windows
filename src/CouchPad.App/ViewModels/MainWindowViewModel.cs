@@ -1,20 +1,31 @@
 using System.ComponentModel;
 using System.Reflection;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CouchPad.App.Controls;
 using CouchPad.App.Localization;
+using CouchPad.Core.Audio;
+using CouchPad.Core.Automation;
+using CouchPad.Core.Devices;
+using CouchPad.Core.Display;
 using CouchPad.Core.Localization;
+using CouchPad.Core.Settings;
 
 namespace CouchPad.App.ViewModels;
 
 /// <summary>
-/// Estado do shell da P1: apenas UI e valores estáticos.
-/// Nenhuma chamada de hardware acontece aqui.
+/// Shell + simulação da P3. Nenhuma chamada de hardware: display, áudio e
+/// gamepad são serviços simulados no Core.
 /// </summary>
 public partial class MainWindowViewModel : ObservableObject
 {
     private readonly LocalizationService _localization;
+    private readonly IAppSettingsStore _settings;
+    private readonly IGamepadWatcher _gamepad;
+    private readonly ISimulatedGamepad? _gamepadSimulator;
+    private readonly AutomationCoordinator _coordinator;
+    private bool _isLoadingSettings;
 
     [ObservableProperty]
     private bool _automationEnabled;
@@ -49,10 +60,32 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private bool _isRefreshing;
 
-    public MainWindowViewModel(LocalizationService localization)
+    public MainWindowViewModel(
+        LocalizationService localization,
+        IAppSettingsStore settingsStore,
+        ISessionJournalStore? journalStore = null,
+        IGamepadWatcher? gamepadWatcher = null,
+        IDisplayService? displayService = null,
+        IAudioService? audioService = null,
+        IDelayScheduler? delayScheduler = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
+        _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         _localization.PropertyChanged += OnLocalizationChanged;
+
+        _gamepad = gamepadWatcher ?? new SimulatedGamepadWatcher();
+        _gamepadSimulator = _gamepad as ISimulatedGamepad;
+        _coordinator = new AutomationCoordinator(
+            displayService ?? new SimulatedDisplayService(),
+            audioService ?? new SimulatedAudioService(),
+            delayScheduler ?? new SystemDelayScheduler(),
+            journalStore ?? new JsonSessionJournalStore());
+
+        _coordinator.StateChanged += OnAutomationStateChanged;
+        _gamepad.ConnectionChanged += OnGamepadConnectionChanged;
+
+        LoadSettings();
+        _ = InitializeAutomationAsync();
     }
 
     /// <summary>A view abre o seletor de pastas e devolve o caminho escolhido.</summary>
@@ -78,12 +111,63 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    /// <summary>Sem hardware conectado, a automação ligada fica aguardando o gamepad.</summary>
-    public string StatusText =>
-        _localization[AutomationEnabled ? "status.waiting" : "status.idle"];
+    public string StatusText => _localization[StatusKey];
 
-    public StatusTone CurrentStatusTone =>
-        AutomationEnabled ? StatusTone.Warning : StatusTone.Neutral;
+    public StatusTone CurrentStatusTone => _coordinator.State switch
+    {
+        AutomationState.WaitingForGamepad or AutomationState.Pending => StatusTone.Warning,
+        AutomationState.Applying or AutomationState.Active => StatusTone.Accent,
+        AutomationState.Error or AutomationState.RescuePending => StatusTone.Danger,
+        _ => StatusTone.Neutral,
+    };
+
+    public bool IsGamepadConnected => _gamepad.Current is not null;
+
+    public bool IsSimulationAvailable => _gamepadSimulator is not null;
+
+    public string GamepadSummary
+    {
+        get
+        {
+            if (_gamepad.Current is not { } device)
+            {
+                return _localization["gamepad.none"];
+            }
+
+            return IsSimulationAvailable ? _localization["gamepad.simulated"] : device.Name;
+        }
+    }
+
+    public string GamepadActionText => _localization[
+        IsGamepadConnected ? "gamepad.disconnect" : "gamepad.connect"];
+
+    public StatusTone GamepadTone =>
+        IsGamepadConnected ? StatusTone.Accent : StatusTone.Neutral;
+
+    public string DisplaySummary
+    {
+        get
+        {
+            if (_coordinator.State == AutomationState.Active &&
+                _coordinator.Snapshot is { } snapshot)
+            {
+                return snapshot.DisplayMode switch
+                {
+                    DisplayMode.Extend => _localization["display.active.extend"],
+                    DisplayMode.Mirror => _localization["display.active.mirror"],
+                    _ => _localization["display.active.tv_only"],
+                };
+            }
+
+            return _localization["display.current_value"];
+        }
+    }
+
+    public string AudioSummary =>
+        _coordinator.State == AutomationState.Active &&
+        _coordinator.Snapshot is { AppliedAudio: AudioOutput.Hdmi }
+            ? _localization["audio.active.hdmi"]
+            : _localization["automation.default_audio"];
 
     public string DisplayRefreshText =>
         _localization[IsRefreshing ? "display.refreshing" : "display.refresh"];
@@ -122,6 +206,35 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    private string StatusKey => _coordinator.State switch
+    {
+        AutomationState.WaitingForGamepad => "status.waiting",
+        AutomationState.Pending => "status.pending",
+        AutomationState.Applying => "status.applying",
+        AutomationState.Active => "status.active",
+        AutomationState.Error => "status.error",
+        AutomationState.RescuePending => "status.rescue_pending",
+        _ => "status.idle",
+    };
+
+    [RelayCommand]
+    private void ToggleGamepad()
+    {
+        if (_gamepadSimulator is null)
+        {
+            return;
+        }
+
+        if (_gamepad.Current is not null)
+        {
+            _gamepadSimulator.Disconnect();
+        }
+        else
+        {
+            _gamepadSimulator.Connect();
+        }
+    }
+
     [RelayCommand]
     private async Task RefreshDisplaysAsync()
     {
@@ -133,7 +246,7 @@ public partial class MainWindowViewModel : ObservableObject
         IsRefreshing = true;
         try
         {
-            // Placeholder de carregamento; a leitura real de displays entra na P4.
+            // Leitura real de displays entra na P4; aqui só exercita o estado.
             await Task.Delay(700);
         }
         finally
@@ -148,23 +261,83 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void Reset()
     {
-        AutomationEnabled = false;
-        CloseLauncherOnActivate = true;
-        StartWithWindows = false;
-        MinimizeToTray = true;
-        ActivationDelayIndex = 0;
-        DeactivationDelayIndex = 0;
-        DisplayModeIndex = 0;
-        AudioModeIndex = 0;
-        SteamEnabled = true;
-        CustomLauncherPath = null;
-        IsRefreshing = false;
+        _isLoadingSettings = true;
+        try
+        {
+            AutomationEnabled = false;
+            CloseLauncherOnActivate = true;
+            StartWithWindows = false;
+            MinimizeToTray = true;
+            ActivationDelayIndex = 0;
+            DeactivationDelayIndex = 0;
+            DisplayModeIndex = 0;
+            AudioModeIndex = 0;
+            SteamEnabled = true;
+            CustomLauncherPath = null;
+            IsRefreshing = false;
+        }
+        finally
+        {
+            _isLoadingSettings = false;
+        }
+
+        PersistSettings();
+        SyncAutomation();
     }
 
     partial void OnAutomationEnabledChanged(bool value)
     {
-        OnPropertyChanged(nameof(StatusText));
-        OnPropertyChanged(nameof(CurrentStatusTone));
+        PersistSettings();
+        SyncAutomation();
+    }
+
+    partial void OnCloseLauncherOnActivateChanged(bool value)
+    {
+        PersistSettings();
+        SyncAutomation();
+    }
+
+    partial void OnStartWithWindowsChanged(bool value) => PersistSettings();
+
+    partial void OnMinimizeToTrayChanged(bool value) => PersistSettings();
+
+    partial void OnActivationDelayIndexChanged(int value)
+    {
+        PersistSettings();
+        SyncAutomation();
+    }
+
+    partial void OnDeactivationDelayIndexChanged(int value)
+    {
+        PersistSettings();
+        SyncAutomation();
+    }
+
+    partial void OnDisplayModeIndexChanged(int value)
+    {
+        PersistSettings();
+        SyncAutomation();
+        OnPropertyChanged(nameof(DisplaySummary));
+    }
+
+    partial void OnAudioModeIndexChanged(int value)
+    {
+        PersistSettings();
+        SyncAutomation();
+        OnPropertyChanged(nameof(AudioSummary));
+    }
+
+    partial void OnSteamEnabledChanged(bool value)
+    {
+        OnPropertyChanged(nameof(LauncherSummary));
+        PersistSettings();
+    }
+
+    partial void OnCustomLauncherPathChanged(string? value)
+    {
+        OnPropertyChanged(nameof(CustomLauncherPathText));
+        OnPropertyChanged(nameof(LauncherSummary));
+        PersistSettings();
     }
 
     partial void OnIsRefreshingChanged(bool value)
@@ -173,13 +346,141 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(DisplayRefreshState));
     }
 
-    partial void OnSteamEnabledChanged(bool value) =>
-        OnPropertyChanged(nameof(LauncherSummary));
-
-    partial void OnCustomLauncherPathChanged(string? value)
+    private void LoadSettings()
     {
-        OnPropertyChanged(nameof(CustomLauncherPathText));
-        OnPropertyChanged(nameof(LauncherSummary));
+        var settings = _settings.Load();
+
+        _isLoadingSettings = true;
+        try
+        {
+            AutomationEnabled = settings.AutomationEnabled;
+            CloseLauncherOnActivate = settings.CloseLauncherOnActivate;
+            StartWithWindows = settings.StartWithWindows;
+            MinimizeToTray = settings.MinimizeToTray;
+            ActivationDelayIndex = Math.Clamp(
+                settings.ActivationDelayIndex, 0, DelayOptions.Values.Count - 1);
+            DeactivationDelayIndex = Math.Clamp(
+                settings.DeactivationDelayIndex, 0, DelayOptions.Values.Count - 1);
+            DisplayModeIndex = Math.Clamp(settings.DisplayModeIndex, 0, 2);
+            AudioModeIndex = Math.Clamp(settings.AudioModeIndex, 0, 1);
+            SteamEnabled = settings.SteamEnabled;
+            CustomLauncherPath = settings.CustomLauncherPath;
+        }
+        finally
+        {
+            _isLoadingSettings = false;
+        }
+    }
+
+    private AutomationSettings BuildAutomationSettings() => new()
+    {
+        Enabled = AutomationEnabled,
+        ActivationDelay = DelayOptions.FromIndex(ActivationDelayIndex),
+        DeactivationDelay = DelayOptions.FromIndex(DeactivationDelayIndex),
+        DisplayMode = DisplayModeIndex switch
+        {
+            1 => DisplayMode.Extend,
+            2 => DisplayMode.Mirror,
+            _ => DisplayMode.TvOnly,
+        },
+        AudioMode = AudioModeIndex == 1 ? AudioMode.KeepCurrent : AudioMode.MoveToHdmi,
+        CloseLauncherOnActivate = CloseLauncherOnActivate,
+    };
+
+    private void PersistSettings()
+    {
+        if (_isLoadingSettings)
+        {
+            return;
+        }
+
+        try
+        {
+            var current = _settings.Load();
+            _settings.Save(current with
+            {
+                AutomationEnabled = AutomationEnabled,
+                CloseLauncherOnActivate = CloseLauncherOnActivate,
+                StartWithWindows = StartWithWindows,
+                MinimizeToTray = MinimizeToTray,
+                ActivationDelayIndex = ActivationDelayIndex,
+                DeactivationDelayIndex = DeactivationDelayIndex,
+                DisplayModeIndex = DisplayModeIndex,
+                AudioModeIndex = AudioModeIndex,
+                SteamEnabled = SteamEnabled,
+                CustomLauncherPath = CustomLauncherPath,
+            });
+        }
+        catch
+        {
+            // Preferências não são críticas; a UI continua funcionando.
+        }
+    }
+
+    private void SyncAutomation()
+    {
+        if (_isLoadingSettings)
+        {
+            return;
+        }
+
+        _ = _coordinator.UpdateSettingsAsync(BuildAutomationSettings());
+    }
+
+    private async Task InitializeAutomationAsync()
+    {
+        await _coordinator.UpdateSettingsAsync(BuildAutomationSettings());
+
+        if (_gamepad.Current is { } device)
+        {
+            await _coordinator.GamepadConnectedAsync(device);
+        }
+    }
+
+    private async void OnGamepadConnectionChanged(
+        object? sender,
+        GamepadConnectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(IsGamepadConnected));
+        OnPropertyChanged(nameof(GamepadSummary));
+        OnPropertyChanged(nameof(GamepadActionText));
+        OnPropertyChanged(nameof(GamepadTone));
+
+        try
+        {
+            if (e.Device is null)
+            {
+                await _coordinator.GamepadDisconnectedAsync();
+            }
+            else
+            {
+                await _coordinator.GamepadConnectedAsync(e.Device);
+            }
+        }
+        catch
+        {
+            // O coordenador já converte falhas em estado Error.
+        }
+    }
+
+    private void OnAutomationStateChanged(object? sender, AutomationStateChangedEventArgs e)
+    {
+        void Notify()
+        {
+            OnPropertyChanged(nameof(StatusText));
+            OnPropertyChanged(nameof(CurrentStatusTone));
+            OnPropertyChanged(nameof(DisplaySummary));
+            OnPropertyChanged(nameof(AudioSummary));
+        }
+
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            Notify();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(Notify);
+        }
     }
 
     private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
@@ -191,6 +492,10 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(DisplayRefreshText));
         OnPropertyChanged(nameof(CustomLauncherPathText));
         OnPropertyChanged(nameof(LauncherSummary));
+        OnPropertyChanged(nameof(GamepadSummary));
+        OnPropertyChanged(nameof(GamepadActionText));
+        OnPropertyChanged(nameof(DisplaySummary));
+        OnPropertyChanged(nameof(AudioSummary));
         OnPropertyChanged(nameof(VersionText));
     }
 }

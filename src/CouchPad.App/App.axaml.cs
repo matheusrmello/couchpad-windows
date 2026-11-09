@@ -5,6 +5,7 @@ using Avalonia.Markup.Xaml;
 using CouchPad.App.Localization;
 using CouchPad.App.ViewModels;
 using CouchPad.App.Views;
+using CouchPad.Core.Automation;
 using CouchPad.Core.Localization;
 using CouchPad.Core.Settings;
 using CouchPad.Core.Storage;
@@ -24,14 +25,21 @@ public partial class App : Application
             var settingsPath = isSmoke
                 ? Path.Combine(Path.GetTempPath(), "couchpad-smoke", "settings.json")
                 : AppPaths.SettingsFile();
+            var journalPath = isSmoke
+                ? Path.Combine(Path.GetTempPath(), "couchpad-smoke", "state", "session.json")
+                : AppPaths.SessionJournalFile();
 
-            LocalizationService.Instance.Initialize(new JsonAppSettingsStore(settingsPath));
+            var settingsStore = new JsonAppSettingsStore(settingsPath);
+            LocalizationService.Instance.Initialize(settingsStore);
 
             Window window = isGallery
                 ? new ComponentGalleryWindow()
                 : new MainWindow
                 {
-                    DataContext = new MainWindowViewModel(LocalizationService.Instance),
+                    DataContext = new MainWindowViewModel(
+                        LocalizationService.Instance,
+                        settingsStore,
+                        new JsonSessionJournalStore(journalPath)),
                 };
 
             desktop.MainWindow = window;
