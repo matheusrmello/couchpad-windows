@@ -43,6 +43,13 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 & $dotnet src\CouchPad.App\bin\Debug\net10.0\CouchPad.dll --smoke
 ```
 
+## Agentes
+
+- **OpenCode**: selecione `orchestrator` em `/agents` para as fases P0–P3/P7a.
+- **Codex**: use `codex -p rea`, `codex -p hardware`, `codex -p release` ou
+  `codex -p review`. Os papéis ficam em `docs/agents/codex/roles/`.
+- **Skills**: `.opencode/skills/couchpad-*`.
+
 ## Escopo
 
 - **Tela**: identificar a TV, aplicar o modo escolhido e reverter em falha.

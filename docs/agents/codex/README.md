@@ -12,7 +12,7 @@ Os papéis são implementados por **perfil + prompt de papel + skill**.
 
 ## Instalação dos perfis
 
-Copie os arquivos para `C:\Users\Usuario\.codex\`:
+Já instalados em `C:\Users\Usuario\.codex\`:
 
 ```text
 rea.config.toml

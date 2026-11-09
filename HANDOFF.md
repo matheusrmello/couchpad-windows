@@ -826,6 +826,7 @@ públicas do Windows e em evidências estáticas do REA.
 | `dotnet CouchPad.dll --smoke` | janela 1020×780, pt-BR inicial, alternância pt/en, título CouchPad |
 | Skills | 5 detectadas em `.opencode/skills/` |
 | Agentes OpenCode | 6 em `.opencode/agents/` |
+| Codex `-p rea` | `gpt-6.1-terra`, effort `high`, resposta OK |
 | Bindings compilados | `AvaloniaUseCompiledBindingsByDefault=true`, 0 avisos |
 
 ### Revisão independente
