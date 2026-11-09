@@ -1,0 +1,12 @@
+{
+  "app.name": "CouchPad",
+  "app.tagline": "Control your display and audio",
+  "status.free": "Free",
+  "p0.title": "Initial structure ready",
+  "p0.body": "Theme, i18n and projects created. The full interface starts in P1.",
+  "language.label": "Language",
+  "language.ptbr": "Português (Brasil)",
+  "language.en": "English",
+  "footer.version": "Version {0}",
+  "footer.phase": "P0 · bootstrap"
+}

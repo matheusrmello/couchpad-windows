@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <Version>0.1.0</Version>
+    <Company>CouchPad</Company>
+    <Product>CouchPad</Product>
+    <Authors>Matheus Mello</Authors>
+    <Copyright>Copyright (c) 2026 Matheus Mello</Copyright>
+    <NeutralLanguage>en</NeutralLanguage>
+
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+</Project>

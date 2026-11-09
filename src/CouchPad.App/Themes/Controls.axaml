@@ -1,0 +1,26 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <Style Selector="TextBlock">
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.TextPrimary}" />
+    <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Body}" />
+  </Style>
+
+  <Style Selector="Button.secondary">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceRaised}" />
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.TextPrimary}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.Control}" />
+    <Setter Property="Padding" Value="14,7" />
+    <Setter Property="Height" Value="{DynamicResource CouchPad.ControlHeight}" />
+  </Style>
+
+  <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.Border}" />
+  </Style>
+
+  <Style Selector="Button.secondary:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.BorderStrong}" />
+  </Style>
+</Styles>

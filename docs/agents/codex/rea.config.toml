@@ -1,0 +1,4 @@
+# Perfil Codex: REA do ShiftPad 2.2.0
+# Uso: codex -p rea
+model = "gpt-6.1-terra"
+model_reasoning_effort = "high"

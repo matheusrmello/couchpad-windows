@@ -1,0 +1,4 @@
+# Perfil Codex: P7b, instalador, assinatura, release
+# Uso: codex -p release
+model = "gpt-6.1-terra"
+model_reasoning_effort = "medium"

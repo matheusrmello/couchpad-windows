@@ -1,0 +1,4 @@
+# Perfil Codex: display, áudio, HDR e rescue (P4–P6)
+# Uso: codex -p hardware
+model = "gpt-6.1-terra"
+model_reasoning_effort = "high"
