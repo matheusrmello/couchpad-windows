@@ -316,7 +316,7 @@ captura de combinação, bandeja, autostart e rescue no logon.
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: 142 aprovados — catálogos/i18n, composição do shell, temas,
+- Testes: 144 aprovados — catálogos/i18n, composição do shell, temas,
   estados da galeria, state machine, atrasos/cancelamento, journal, settings,
   composição Windows e guard.
 - Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em

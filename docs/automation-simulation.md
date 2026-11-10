@@ -342,7 +342,7 @@ journal antigo sem baseline (campos nulos).
 `JsonAppSettingsStoreTests` cobre os novos campos e a preservação de chaves
 desconhecidas.
 
-Total atual: **142 testes** (Core + App; P3 + guard + composição/UI).
+Total atual: **144 testes** (Core + App; P3 + guard + composição/UI).
 
 ---
 

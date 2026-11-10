@@ -6,7 +6,7 @@
 - Tag da origem: `v0.4.0-sim`
 - Contrato endurecido: `5f5c8c4` (v0.4.1), `DisplayMode.InternalOnly` (v0.4.2), guard de rescue no Core (v0.4.3)
 - Build: 0 avisos, 0 erros
-- Testes: 142 aprovados
+- Testes: 144 aprovados
 - Árvore: limpa (os arquivos de REA/P4 do Codex são commitados separadamente)
 - Aceite do usuário: 09/11/2026
 

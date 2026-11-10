@@ -23,6 +23,5 @@ public sealed record DisplayTargetOption(
         other is not null &&
         string.Equals(DevicePath, other.DevicePath, StringComparison.OrdinalIgnoreCase) &&
         EdidManufacturer == other.EdidManufacturer &&
-        EdidProduct == other.EdidProduct &&
-        string.Equals(FriendlyName, other.FriendlyName, StringComparison.OrdinalIgnoreCase);
+        EdidProduct == other.EdidProduct;
 }
