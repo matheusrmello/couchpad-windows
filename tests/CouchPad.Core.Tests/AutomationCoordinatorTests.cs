@@ -136,6 +136,23 @@ public sealed class AutomationCoordinatorTests
     }
 
     [Fact]
+    public async Task Journal_failure_before_reapply_keeps_existing_session_without_mutation()
+    {
+        var (coordinator, display, _, _, journal) = Create();
+        await coordinator.UpdateSettingsAsync(new AutomationSettings { Enabled = true, DisplayMode = DisplayMode.TvOnly });
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        var original = coordinator.Snapshot;
+        journal.FailOnSaveNumber = 3;
+
+        await coordinator.UpdateSettingsAsync(coordinator.Settings with { DisplayMode = DisplayMode.Extend });
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Single(display.Applied);
+        Assert.Equal(original, coordinator.Snapshot);
+        Assert.Equal(SessionJournalEntry.ActiveState, journal.Entry?.State);
+    }
+
+    [Fact]
     public async Task Topology_snapshot_is_persisted_in_the_journal()
     {
         const string topology = "{\"schema\":1,\"paths\":[]}";
@@ -295,6 +312,14 @@ public sealed class AutomationCoordinatorTests
 
         Assert.Single(display.Restored);
         Assert.Equal(baseline, display.Restored[0]);
+    }
+
+    [Fact]
+    public void Rescue_guard_requires_explicit_journal()
+    {
+        Assert.Throws<ArgumentException>(() => new AutomationCoordinator(
+            new FakeDisplayService(), new FakeAudioService(), new ManualDelayScheduler(),
+            rescueGuard: new FakeRescueGuard()));
     }
 
     [Fact]
@@ -500,6 +525,41 @@ public sealed class AutomationCoordinatorTests
     }
 
     [Fact]
+    public async Task Uncertain_commit_preserves_journal_and_blocks_further_mutations()
+    {
+        var guard = new FakeRescueGuard { CommitException = new RescueDecisionUncertainException("uncertain") };
+        var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Single(display.Applied);
+        Assert.Empty(display.Restored);
+        Assert.NotNull(journal.Entry);
+        await coordinator.SetEnabledAsync(false);
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Empty(display.Restored);
+        Assert.NotNull(journal.Entry);
+    }
+
+    [Fact]
+    public async Task Uncertain_abort_preserves_journal_and_blocks_further_mutations()
+    {
+        var guard = new FakeRescueGuard { AbortException = new RescueDecisionUncertainException("uncertain") };
+        var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
+        display.ApplyException = new InvalidOperationException("apply failed");
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Single(display.Restored);
+        Assert.NotNull(journal.Entry);
+        await coordinator.SetEnabledAsync(false);
+        Assert.Single(display.Restored);
+        Assert.NotNull(journal.Entry);
+    }
+
+    [Fact]
     public void Delay_options_map_indices_and_clamp()
     {
         Assert.Equal(TimeSpan.Zero, DelayOptions.FromIndex(0));
@@ -697,6 +757,8 @@ public sealed class AutomationCoordinatorTests
 
         public Exception? AbortException { get; set; }
 
+        public Exception? CommitException { get; set; }
+
         public bool FailImmediately { get; set; }
 
         public Task<IRescueLease> BeginAsync(
@@ -711,6 +773,7 @@ public sealed class AutomationCoordinatorTests
             var lease = new FakeRescueLease(operation)
             {
                 AbortException = AbortException,
+                CommitException = CommitException,
             };
 
             Leases.Add(lease);
@@ -746,9 +809,12 @@ public sealed class AutomationCoordinatorTests
 
         public Exception? AbortException { get; set; }
 
+        public Exception? CommitException { get; set; }
+
         public Task CommitAsync(CancellationToken cancellationToken = default)
         {
             Commits++;
+            if (CommitException is not null) throw CommitException;
             return Task.CompletedTask;
         }
 

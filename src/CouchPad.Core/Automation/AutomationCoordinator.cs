@@ -25,6 +25,7 @@ public sealed class AutomationCoordinator
     private AutomationSnapshot? _snapshot;
     private AutomationState _state = AutomationState.Idle;
     private string? _lastError;
+    private bool _recoveryUncertain;
 
     public AutomationCoordinator(
         IDisplayService display,
@@ -34,6 +35,8 @@ public sealed class AutomationCoordinator
         TimeProvider? timeProvider = null,
         IRescueGuard? rescueGuard = null)
     {
+        if (rescueGuard is not null && journal is null)
+            throw new ArgumentException("A rescue guard requires a journal.", nameof(journal));
         _display = display ?? throw new ArgumentNullException(nameof(display));
         _audio = audio ?? throw new ArgumentNullException(nameof(audio));
         _delay = delay ?? throw new ArgumentNullException(nameof(delay));
@@ -246,9 +249,8 @@ public sealed class AutomationCoordinator
             RestoreAudio = restoreAudio,
         };
 
-        // Fail-closed: sem journal não há rescue possível para uma mudança
-        // inicial. Em reaplicação, o journal ativo anterior já tem o baseline.
-        if (!TrySaveJournal(pending) && previousSnapshot is null)
+        // Every apply requires a confirmed pending journal, including reapply.
+        if (!TrySaveJournal(pending))
         {
             SetState(AutomationState.Error, "journal unavailable");
             return;
@@ -313,6 +315,12 @@ public sealed class AutomationCoordinator
 
             SetState(AutomationState.Active);
         }
+        catch (RescueDecisionUncertainException ex)
+        {
+            lease?.Abandon();
+            lock (_sync) { _recoveryUncertain = true; }
+            SetState(AutomationState.Error, ex.Message);
+        }
         catch (Exception ex) when (lease?.FailureToken.IsCancellationRequested == true)
         {
             await TryRestoreAsync(displayBefore, audioBefore);
@@ -320,6 +328,7 @@ public sealed class AutomationCoordinator
             lock (_sync)
             {
                 _snapshot = previousSnapshot;
+                _recoveryUncertain = true;
             }
             // Keep the recovery journal even when the immediate rollback succeeds.
             SetState(AutomationState.Error, ex.Message);
@@ -327,15 +336,16 @@ public sealed class AutomationCoordinator
         catch (OperationCanceledException)
         {
             var restored = await TryRestoreAsync(displayBefore, audioBefore);
-            await FinishLeaseAsync(lease, restored);
+            var released = await FinishLeaseAsync(lease, restored);
 
             lock (_sync)
             {
                 _snapshot = previousSnapshot;
             }
 
-            if (lease?.FailureToken.IsCancellationRequested == true)
+            if (lease?.FailureToken.IsCancellationRequested == true || !released)
             {
+                lock (_sync) { _recoveryUncertain = true; }
                 SetState(AutomationState.Error, "watchdog unavailable");
                 return;
             }
@@ -350,14 +360,19 @@ public sealed class AutomationCoordinator
         catch (Exception ex)
         {
             var restored = await TryRestoreAsync(displayBefore, audioBefore);
-            await FinishLeaseAsync(lease, restored);
+            var released = await FinishLeaseAsync(lease, restored);
 
             lock (_sync)
             {
                 _snapshot = previousSnapshot;
             }
 
-            if (restored && previousSnapshot is null && lease?.FailureToken.IsCancellationRequested != true)
+            if (!released || lease?.FailureToken.IsCancellationRequested == true)
+            {
+                lock (_sync) { _recoveryUncertain = true; }
+            }
+
+            if (restored && released && previousSnapshot is null && lease?.FailureToken.IsCancellationRequested != true)
             {
                 TryClearJournal();
             }
@@ -425,21 +440,36 @@ public sealed class AutomationCoordinator
 
             TryClearJournal();
         }
+        catch (RescueDecisionUncertainException ex)
+        {
+            lease?.Abandon();
+            lock (_sync) { _recoveryUncertain = true; }
+            SetState(AutomationState.Error, ex.Message);
+            return;
+        }
         catch (Exception ex) when (lease?.FailureToken.IsCancellationRequested == true)
         {
             await TryRestoreAsync(snapshot.RestoreDisplay, snapshot.RestoreAudio);
             lease.Abandon();
+            lock (_sync) { _recoveryUncertain = true; }
             SetState(AutomationState.Error, ex.Message);
             return;
         }
         catch (OperationCanceledException)
         {
             lease?.Abandon();
+            if (lease is not null)
+            {
+                lock (_sync) { _recoveryUncertain = true; }
+                SetState(AutomationState.Error, "recovery outcome uncertain");
+                return;
+            }
             throw;
         }
         catch (Exception ex)
         {
             lease?.Abandon();
+            if (lease is not null) lock (_sync) { _recoveryUncertain = true; }
             SetState(AutomationState.Error, ex.Message);
             return;
         }
@@ -466,6 +496,14 @@ public sealed class AutomationCoordinator
         {
             if (cts.IsCancellationRequested)
             {
+                return;
+            }
+
+            bool blocked;
+            lock (_sync) { blocked = _recoveryUncertain; }
+            if (blocked)
+            {
+                SetState(AutomationState.Error, "recovery outcome uncertain");
                 return;
             }
 
@@ -514,11 +552,11 @@ public sealed class AutomationCoordinator
         StateChanged?.Invoke(this, args);
     }
 
-    private static async Task FinishLeaseAsync(IRescueLease? lease, bool restored)
+    private static async Task<bool> FinishLeaseAsync(IRescueLease? lease, bool restored)
     {
         if (lease is null)
         {
-            return;
+            return true;
         }
 
         try
@@ -526,15 +564,18 @@ public sealed class AutomationCoordinator
             if (restored)
             {
                 await lease.AbortAsync(CancellationToken.None);
+                return true;
             }
             else
             {
                 lease.Abandon();
+                return false;
             }
         }
         catch
         {
             lease.Abandon();
+            return false;
         }
     }
 

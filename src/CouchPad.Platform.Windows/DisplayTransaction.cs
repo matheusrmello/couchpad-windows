@@ -1,3 +1,5 @@
+using CouchPad.Core.Automation;
+
 namespace CouchPad.Platform.Windows;
 
 /// <summary>Runs a display change with mandatory rollback after an attempted mutation.</summary>
@@ -19,9 +21,18 @@ public static class DisplayTransaction
             verify();
             cancellationToken.ThrowIfCancellationRequested();
         }
+        catch (RescueDecisionUncertainException)
+        {
+            // A different process may already own recovery; do not race it.
+            throw;
+        }
         catch (Exception original)
         {
             try { rollback(); }
+            catch (RescueDecisionUncertainException uncertain)
+            {
+                throw new RescueDecisionUncertainException("Rollback ownership is uncertain.", new AggregateException(original, uncertain));
+            }
             catch (Exception rollbackFailure) { throw new AggregateException("Display change and rollback failed.", original, rollbackFailure); }
             throw;
         }

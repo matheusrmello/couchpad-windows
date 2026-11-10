@@ -1,8 +1,11 @@
 using System.Text.Json;
 using CouchPad.Core.Display;
 using CouchPad.Platform.Windows;
-if (args.Length < 3) throw new ArgumentException("Usage: DisplayProbe <device-path> <edid-manufacturer> <edid-product> [exact-name] [--validate]");
-var options = new WindowsDisplayOptions(args[0], ushort.Parse(args[1]), ushort.Parse(args[2]), args.Length >= 4 && !args[3].StartsWith("--", StringComparison.Ordinal) ? args[3] : null);
+if (args.Length < 3) throw new ArgumentException("Usage: DisplayProbe <tv-path> <manufacturer> <product> --internal <monitor-path> <manufacturer> <product> [--validate] [--compare-current]");
+var internalIndex = Array.IndexOf(args, "--internal");
+if (internalIndex < 3 || internalIndex + 3 >= args.Length) throw new ArgumentException("An explicit internal display selector is required.");
+var internalSelector = new DisplaySelector(args[internalIndex + 1], ushort.Parse(args[internalIndex + 2]), ushort.Parse(args[internalIndex + 3]));
+var options = new WindowsDisplayOptions(args[0], ushort.Parse(args[1]), ushort.Parse(args[2]), InternalDisplay: internalSelector);
 var service = new WindowsDisplayService(options);
 var baseline = service.GetCurrent();
 var all = service.Capture(WindowsDisplayService.AllPaths);
@@ -11,8 +14,7 @@ var results = new Dictionary<string, int>();
 if (args.Contains("--validate"))
 {
     if (baseline.Mode != DisplayMode.InternalOnly) throw new InvalidOperationException("Validation requires the expected internal-only baseline.");
-    if (args.Length < 7) throw new ArgumentException("Validation needs internal path, manufacturer and product after --validate.");
-    var internalDisplay = WindowsDisplayService.SelectTarget(all.Targets, args[4], ushort.Parse(args[5]), ushort.Parse(args[6]));
+    var internalDisplay = WindowsDisplayService.SelectTarget(all.Targets, internalSelector.DevicePath, internalSelector.EdidManufacturer, internalSelector.EdidProduct);
     var snapshot = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(baseline.Topology!)!;
     foreach (var mode in new[] { DisplayMode.TvOnly, DisplayMode.Extend, DisplayMode.Mirror })
         results.Add(mode.ToString(), DisplayTopologyValidator.ValidateProposal(DisplayTopologyPlanner.Create(snapshot, all, selected, internalDisplay, mode)));

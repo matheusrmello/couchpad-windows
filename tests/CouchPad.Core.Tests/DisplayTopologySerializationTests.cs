@@ -1,6 +1,7 @@
 using System.Text.Json;
 using CouchPad.Platform.Windows;
 using CouchPad.Core.Display;
+using CouchPad.Core.Automation;
 
 namespace CouchPad.Core.Tests;
 
@@ -77,6 +78,13 @@ public class DisplayMappingTests
     public void Refuses_more_than_one_non_tv_target() => Assert.Throws<InvalidOperationException>(() => WindowsDisplayService.MapState(Snapshot(Path(0, 20), Path(1, 30)), Tv));
 
     [Fact]
+    public void Refuses_non_selected_internal_display()
+    {
+        var monitor = new WindowsDisplayService.Target(1, 0, 30, "monitor", "Monitor", 3, 4, 0);
+        Assert.Throws<InvalidOperationException>(() => WindowsDisplayService.MapState(Snapshot(Path(0, 20)), Tv, monitor));
+    }
+
+    [Fact]
     public void Writes_are_disabled_by_default()
     {
         var service = new WindowsDisplayService(new("tv", 1, 2));
@@ -131,6 +139,24 @@ public class DisplayTopologyPlannerTests
 
 public class DisplayTransactionTests
 {
+    [Fact]
+    public void Recovery_ownership_uncertain_does_not_start_competing_rollback()
+    {
+        var rolledBack = false;
+        Assert.Throws<RescueDecisionUncertainException>(() => DisplayTransaction.Execute(
+            () => { }, () => { }, () => throw new RescueDecisionUncertainException("uncertain"),
+            () => rolledBack = true, default));
+        Assert.False(rolledBack);
+    }
+
+    [Fact]
+    public void Uncertain_rollback_ownership_is_not_hidden_by_aggregate()
+    {
+        Assert.Throws<RescueDecisionUncertainException>(() => DisplayTransaction.Execute(
+            () => { }, () => throw new InvalidOperationException("apply"), () => { },
+            () => throw new RescueDecisionUncertainException("uncertain"), default));
+    }
+
     [Fact]
     public void Failure_after_apply_rolls_back()
     {
@@ -192,28 +218,28 @@ public class WindowsDisplayServiceFakeTests
         return new(new("tv", 1, 2, AllowWrites: true, InternalDisplay: new("internal", 3, 4)), flags => flags == 1 ? all : active, set);
     }
     [Fact]
-    public void Validation_failure_prevents_apply()
+    public async Task Validation_failure_prevents_apply()
     {
         var actions = new List<uint>();
         var service = Create((p, m, action) => { actions.Add(action); return 87; });
-        Assert.Throws<System.ComponentModel.Win32Exception>(() => { _ = service.ApplyAsync(DisplayMode.TvOnly); });
+        await Assert.ThrowsAsync<System.ComponentModel.Win32Exception>(() => service.ApplyAsync(DisplayMode.TvOnly));
         Assert.Equal(new uint[] { 0x40 }, actions);
     }
     [Fact]
-    public void Verification_failure_restores_baseline()
+    public async Task Verification_failure_restores_baseline()
     {
         var actions = new List<uint>();
         var service = Create((p, m, action) => { actions.Add(action); return 0; });
-        Assert.Throws<InvalidOperationException>(() => { _ = service.ApplyAsync(DisplayMode.TvOnly); });
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ApplyAsync(DisplayMode.TvOnly));
         Assert.Equal(new uint[] { 0x40, 0x80, 0x40, 0x80 }, actions);
     }
     [Fact]
-    public void Cancel_after_apply_restores_baseline()
+    public async Task Cancel_after_apply_restores_baseline()
     {
         using var source = new CancellationTokenSource();
         var actions = new List<uint>();
         var service = Create((p, m, action) => { actions.Add(action); if (actions.Count == 2) source.Cancel(); return 0; });
-        Assert.Throws<OperationCanceledException>(() => { _ = service.ApplyAsync(DisplayMode.TvOnly, source.Token); });
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.ApplyAsync(DisplayMode.TvOnly, source.Token));
         Assert.Equal(new uint[] { 0x40, 0x80, 0x40, 0x80 }, actions);
     }
 }
@@ -272,6 +298,28 @@ public class DisplaySnapshotComparerTests
         Assert.False(DisplaySnapshotComparer.SemanticallyEqual(expected, expected with { ModesBase64 = Convert.ToBase64String(modes) }));
         BitConverter.GetBytes(11u).CopyTo(paths, 28);
         Assert.Throws<InvalidOperationException>(() => DisplaySnapshotComparer.SemanticallyEqual(expected, expected with { PathsBase64 = Convert.ToBase64String(paths) }));
+    }
+
+    [Fact]
+    public void Normalizes_equivalent_target_frequencies_and_reserved_bits()
+    {
+        var expected = Create();
+        var first = Convert.FromBase64String(expected.ModesBase64);
+        BitConverter.GetBytes(60000u).CopyTo(first, 88);
+        BitConverter.GetBytes(1000u).CopyTo(first, 92);
+        BitConverter.GetBytes(120000u).CopyTo(first, 96);
+        BitConverter.GetBytes(2000u).CopyTo(first, 100);
+        var second = (byte[])first.Clone();
+        BitConverter.GetBytes(60u).CopyTo(second, 88);
+        BitConverter.GetBytes(1u).CopyTo(second, 92);
+        BitConverter.GetBytes(60u).CopyTo(second, 96);
+        BitConverter.GetBytes(1u).CopyTo(second, 100);
+        BitConverter.GetBytes(0xFFC00000u).CopyTo(second, 120);
+        var left = expected with { ModesBase64 = Convert.ToBase64String(first) };
+        var right = expected with { ModesBase64 = Convert.ToBase64String(second) };
+        Assert.True(DisplaySnapshotComparer.SemanticallyEqual(left, right));
+        BitConverter.GetBytes(59u).CopyTo(second, 96);
+        Assert.False(DisplaySnapshotComparer.SemanticallyEqual(left, right with { ModesBase64 = Convert.ToBase64String(second) }));
     }
 }
 

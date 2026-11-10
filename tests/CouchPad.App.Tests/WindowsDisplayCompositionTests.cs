@@ -32,6 +32,10 @@ public class WindowsDisplayCompositionTests
             Assert.Equal("monitor-path", options.InternalDisplay!.DevicePath);
             Assert.Equal(journal, typeof(WindowsRescueGuard).GetField("_journal", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(windowsGuard));
             Assert.False((bool)typeof(WindowsRescueGuard).GetField("_allowRecovery", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(windowsGuard)!);
+            var displayContext = typeof(WindowsDisplayService).GetField("_transaction", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(windowsDisplay);
+            var guardContext = typeof(WindowsRescueGuard).GetField("_transaction", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(windowsGuard);
+            Assert.NotNull(displayContext);
+            Assert.Same(displayContext, guardContext);
         }
         finally { File.Delete(rescue); }
     }

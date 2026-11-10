@@ -96,6 +96,9 @@ public partial class App : Application
         if (!File.Exists(rescuePath)) throw new FileNotFoundException("Rescue executable is unavailable.", rescuePath);
         var options = new WindowsDisplayOptions(args[i + 1], tvManufacturer, tvProduct,
             AllowWrites: false, InternalDisplay: new DisplaySelector(args[i + 4], monitorManufacturer, monitorProduct));
-        return (new WindowsDisplayService(options), new WindowsRescueGuard(rescuePath, journalPath, TimeSpan.FromSeconds(60)));
+        var stateDirectory = Path.GetDirectoryName(Path.GetFullPath(journalPath))!;
+        var transaction = new RescueTransactionContext(stateDirectory);
+        return (new WindowsDisplayService(options, transaction),
+            new WindowsRescueGuard(rescuePath, journalPath, TimeSpan.FromSeconds(60), transaction: transaction));
     }
 }

@@ -12,14 +12,17 @@ public sealed class WindowsRescueGuard : IRescueGuard
     private readonly string _journal;
     private readonly TimeSpan _timeout;
     private readonly bool _allowRecovery;
+    private readonly RescueTransactionContext? _transaction;
 
-    public WindowsRescueGuard(string executable, string journal, TimeSpan timeout, bool allowRecovery = false)
+    public WindowsRescueGuard(string executable, string journal, TimeSpan timeout, bool allowRecovery = false,
+        RescueTransactionContext? transaction = null)
     {
         _executable = Path.GetFullPath(executable);
         _journal = Path.GetFullPath(journal);
         if (timeout < TimeSpan.FromSeconds(5) || timeout > TimeSpan.FromMinutes(10)) throw new ArgumentOutOfRangeException(nameof(timeout));
         _timeout = timeout;
         _allowRecovery = allowRecovery;
+        _transaction = transaction;
     }
 
     public async Task<IRescueLease> BeginAsync(string operation, CancellationToken cancellationToken = default)
@@ -28,9 +31,20 @@ public sealed class WindowsRescueGuard : IRescueGuard
         cancellationToken.ThrowIfCancellationRequested();
         if (!_allowRecovery) throw new NotSupportedException("Display recovery is disabled.");
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
+        var journal = new JsonSessionJournalStore(_journal).Load()
+            ?? throw new InvalidDataException("Recovery journal is unavailable.");
+        if (journal.State is not (SessionJournalEntry.PendingState or SessionJournalEntry.ActiveState))
+            throw new InvalidDataException("Recovery journal has an invalid state.");
+        var baselineHash = RescueDecisionStore.ComputeBaselineSha256(journal);
+        var transactionId = Guid.NewGuid();
+        var decisionPath = Path.Combine(Path.GetDirectoryName(_journal)!, "rescue-decisions", transactionId.ToString("N") + ".json");
+        var decisions = new RescueDecisionStore(decisionPath);
+        var armed = await decisions.InitializeAsync(transactionId, baselineHash, cancellationToken).ConfigureAwait(false);
+        if (armed.State != RescueDecisionState.Armed) throw new InvalidDataException("Rescue decision is not armed.");
         var pipeName = "CouchPad-rescue-" + Guid.NewGuid().ToString("N");
         var pipe = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
         Process? child = null;
+        var bound = false;
         try
         {
             using var parent = Process.GetCurrentProcess();
@@ -40,6 +54,9 @@ public sealed class WindowsRescueGuard : IRescueGuard
             info.ArgumentList.Add(parent.Id.ToString(System.Globalization.CultureInfo.InvariantCulture));
             info.ArgumentList.Add(parent.StartTime.ToUniversalTime().Ticks.ToString(System.Globalization.CultureInfo.InvariantCulture));
             info.ArgumentList.Add(((int)_timeout.TotalMilliseconds).ToString(System.Globalization.CultureInfo.InvariantCulture));
+            info.ArgumentList.Add(transactionId.ToString("D"));
+            info.ArgumentList.Add(baselineHash);
+            info.ArgumentList.Add(decisionPath);
             child = Process.Start(info) ?? throw new InvalidOperationException("Rescue process did not start.");
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             deadline.CancelAfter(TimeSpan.FromSeconds(10));
@@ -47,12 +64,21 @@ public sealed class WindowsRescueGuard : IRescueGuard
             var reader = new StreamReader(pipe, new UTF8Encoding(false), false, 1024, leaveOpen: true);
             var writer = new StreamWriter(pipe, new UTF8Encoding(false), 1024, leaveOpen: true) { AutoFlush = true };
             if (await reader.ReadLineAsync(deadline.Token).ConfigureAwait(false) != "READY") throw new InvalidOperationException("Rescue did not become ready.");
-            return new Lease(pipe, reader, writer, child);
+            var afterReady = await decisions.ReadAsync(transactionId, baselineHash, deadline.Token).ConfigureAwait(false);
+            if (afterReady?.State != RescueDecisionState.Armed)
+                throw new RescueDecisionUncertainException("Rescue is no longer armed.");
+            _transaction?.Bind(decisionPath, transactionId, baselineHash);
+            bound = _transaction is not null;
+            return new Lease(pipe, reader, writer, child, decisions, transactionId, baselineHash, _transaction);
         }
-        catch
+        catch (Exception ex)
         {
             pipe.Dispose();
+            var childStarted = child is not null;
             child?.Dispose();
+            if (bound) _transaction!.Release(transactionId);
+            if (childStarted)
+                throw new RescueDecisionUncertainException("Rescue startup outcome is uncertain.", ex);
             throw;
         }
     }
@@ -63,13 +89,20 @@ public sealed class WindowsRescueGuard : IRescueGuard
         private readonly StreamReader _reader;
         private readonly StreamWriter _writer;
         private readonly Process _child;
+        private readonly RescueDecisionStore _decisions;
+        private readonly Guid _transactionId;
+        private readonly string _baselineHash;
+        private readonly RescueTransactionContext? _transaction;
         private readonly SemaphoreSlim _gate = new(1, 1);
         private readonly CancellationTokenSource _failure = new();
         private int _releaseStarted;
         private bool _finished, _abandoned, _disposed;
-        public Lease(NamedPipeServerStream pipe, StreamReader reader, StreamWriter writer, Process child)
+        public Lease(NamedPipeServerStream pipe, StreamReader reader, StreamWriter writer, Process child,
+            RescueDecisionStore decisions, Guid transactionId, string baselineHash, RescueTransactionContext? transaction)
         {
             _pipe = pipe; _reader = reader; _writer = writer; _child = child;
+            _decisions = decisions; _transactionId = transactionId; _baselineHash = baselineHash;
+            _transaction = transaction;
             _ = MonitorChildAsync();
         }
         public CancellationToken FailureToken => _failure.Token;
@@ -103,13 +136,43 @@ public sealed class WindowsRescueGuard : IRescueGuard
                 token.ThrowIfCancellationRequested();
                 ThrowIfUnavailable();
                 Interlocked.Exchange(ref _releaseStarted, 1);
-                using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-                await _writer.WriteLineAsync(command.AsMemory(), deadline.Token).ConfigureAwait(false);
-                await _writer.FlushAsync(deadline.Token).ConfigureAwait(false);
-                if (await _reader.ReadLineAsync(deadline.Token).ConfigureAwait(false) != "ACK") throw new IOException("Rescue did not acknowledge completion.");
-                _finished = true;
+                var desired = command == "COMMIT" ? RescueDecisionState.Committed : RescueDecisionState.Aborted;
+                try
+                {
+                    using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                    await _writer.WriteLineAsync(command.AsMemory(), deadline.Token).ConfigureAwait(false);
+                    await _writer.FlushAsync(deadline.Token).ConfigureAwait(false);
+                    if (await _reader.ReadLineAsync(deadline.Token).ConfigureAwait(false) != "ACK") throw new IOException("Rescue did not acknowledge completion.");
+                    if (!await IsDecisionAsync(desired).ConfigureAwait(false)) throw new InvalidDataException("Rescue acknowledgement has no matching decision.");
+                    Finish();
+                }
+                catch (Exception ex)
+                {
+                    // Delivery can succeed even if the response was lost. Reconcile
+                    // with the durable decision rather than initiating a second mutation.
+                    try
+                    {
+                        if (await IsDecisionAsync(desired).ConfigureAwait(false)) { Finish(); return; }
+                    }
+                    catch (Exception readError)
+                    {
+                        throw new RescueDecisionUncertainException("Rescue decision could not be read.", new AggregateException(ex, readError));
+                    }
+                    throw new RescueDecisionUncertainException("Rescue decision is not confirmed.", ex);
+                }
             }
             finally { _gate.Release(); }
+        }
+        private async Task<bool> IsDecisionAsync(RescueDecisionState desired)
+        {
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var record = await _decisions.ReadAsync(_transactionId, _baselineHash, deadline.Token).ConfigureAwait(false);
+            return record?.State == desired;
+        }
+        private void Finish()
+        {
+            _transaction?.Release(_transactionId);
+            _finished = true;
         }
         public void Abandon() => _abandoned = true;
         public ValueTask DisposeAsync()

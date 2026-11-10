@@ -41,6 +41,9 @@
 | D032 | 2026-11-10 | `IRescueGuard`/`IRescueLease` no Core: begin após journal pending, commit após apply/verify, abort após rollback, abandon quando o rollback falha; `NoopRescueGuard` na simulação; processo real é da P4/Codex | Falhar fechado e permitir watchdog independente sem acoplar Core à plataforma |
 | D033 | 2026-11-10 | A raiz de composição do App pode referenciar Platform.Windows para criar, em conjunto, `WindowsDisplayService` e `WindowsRescueGuard` após seleção explícita; ambos permanecem com escrita e recuperação desabilitadas por padrão | Injetar implementações sem levar Win32, COM ou decisões de fluxo para a UI |
 | D034 | 2026-11-10 | `IRescueLease` expõe sinal de falha e verificação de disponibilidade; o coordenador vincula o sinal ao cancelamento da transição e mantém o journal se o watchdog falhar | Detectar perda do processo de rescue durante mudanças sem acoplar o Core a processos ou APIs Windows |
+| D035 | 2026-11-10 | Um `AutomationCoordinator` configurado com `IRescueGuard` exige um journal explícito; sem guard, a simulação pode continuar sem journal | Evitar iniciar um guard real sem baseline persistido para recuperação |
+| D036 | 2026-11-10 | Cada apply, inclusive reaplicação, exige gravação bem-sucedida do journal `pending`; em falha, preservar o snapshot e o journal anteriores e não alterar hardware | Não supor que uma gravação anterior permanece disponível após uma falha de persistência |
+| D037 | 2026-11-10 | Resultado de rescue indeterminado bloqueia novas transições na sessão e preserva o journal, sem iniciar rollback concorrente; a plataforma deve reconciliar decisões duráveis antes de informar o resultado | Não executar uma segunda alteração enquanto o watchdog pode estar restaurando |
 
 ## Pendentes
 

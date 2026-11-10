@@ -11,13 +11,17 @@ if (!OperatingSystem.IsWindows()) return 2;
 var executable = Environment.ProcessPath ?? throw new InvalidOperationException("Missing apphost path.");
 var childExecutable = Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") ?? executable;
 var marker = Environment.GetEnvironmentVariable("COUCHPAD_TEST_MARKER") ?? throw new InvalidOperationException("Missing isolated test marker.");
-if (args.Length == 5 && args[0].StartsWith("CouchPad-rescue-", StringComparison.Ordinal))
+if (args.Length == 8 && args[0].StartsWith("CouchPad-rescue-", StringComparison.Ordinal))
 {
+    var transactionId = Guid.Parse(args[5]);
+    var decisions = new RescueDecisionStore(args[7]);
+    if ((await decisions.ReadAsync(transactionId, args[6]))?.State != RescueDecisionState.Armed) return 4;
     using var pipe = new NamedPipeClientStream(".", args[0], PipeDirection.InOut, PipeOptions.Asynchronous);
     using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     await pipe.ConnectAsync(deadline.Token);
     using var reader = new StreamReader(pipe, new UTF8Encoding(false), false, 1024, true);
     var writer = new StreamWriter(pipe, new UTF8Encoding(false), 1024, true) { AutoFlush = true };
+    if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_EXIT_BEFORE_READY") == "1") return 18;
     using var parent = Process.GetProcessById(int.Parse(args[2]));
     var dead = parent.WaitForExitAsync();
     await writer.WriteLineAsync("READY");
@@ -26,16 +30,28 @@ if (args.Length == 5 && args[0].StartsWith("CouchPad-rescue-", StringComparison.
     await Task.WhenAny(input, dead, timeout);
     if (!dead.IsCompleted && !timeout.IsCompleted && input.IsCompletedSuccessfully && input.Result is "COMMIT" or "ABORT")
     {
+        if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_EXIT_BEFORE_DECISION") == "1") return 19;
+        var state = input.Result == "COMMIT" ? RescueDecisionState.Committed : RescueDecisionState.Aborted;
+        if (!await decisions.TryTransitionAsync(transactionId, args[6], RescueDecisionState.Armed, state)) return 5;
         await File.WriteAllTextAsync(marker, input.Result);
+        if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_DROP_ACK") == "1") return 0;
         await writer.WriteLineAsync("ACK");
     }
-    else await File.WriteAllTextAsync(marker, "RESTORE");
+    else
+    {
+        if (!await decisions.TryTransitionAsync(transactionId, args[6], RescueDecisionState.Armed, RescueDecisionState.RecoveryRequested)) return 5;
+        await File.WriteAllTextAsync(marker, "RESTORE");
+        if (!await decisions.TryTransitionAsync(transactionId, args[6], RescueDecisionState.RecoveryRequested, RescueDecisionState.Recovered)) return 5;
+    }
     return 0;
 }
 if (args.Length == 1 && args[0] is "--parent-die-before" or "--parent-die-after")
 {
-    var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(8), allowRecovery: true);
+    var stateDirectory = Path.GetDirectoryName(Path.GetFullPath(marker + ".journal"))!;
+    var transaction = new RescueTransactionContext(stateDirectory);
+    var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(8), allowRecovery: true, transaction: transaction);
     _ = await guard.BeginAsync("test");
+    await using var mutation = await DisplayMutationLock.AcquireAsync(transaction.MutationLockPath);
     if (args[0] == "--parent-die-after") await File.WriteAllTextAsync(marker + ".applied", "fake apply");
     await File.WriteAllTextAsync(marker + ".ready", "ready");
     await Task.Delay(Timeout.InfiniteTimeSpan);
@@ -54,6 +70,19 @@ var entry = new SessionJournalEntry(SessionJournalEntry.PendingState, DisplayMod
     RestoreDisplay = new DisplayState(DisplayMode.InternalOnly, true, false) { Topology = JsonSerializer.Serialize(snapshot) }
 };
 new JsonSessionJournalStore(marker + ".journal").Save(entry);
+
+async Task<(RescueDecisionStore Store, Guid Id, string Hash)> AddDecisionArguments(ProcessStartInfo info)
+{
+    var id = Guid.NewGuid();
+    var hash = RescueDecisionStore.ComputeBaselineSha256(entry);
+    var decisionPath = Path.Combine(Path.GetDirectoryName(marker + ".journal")!, "rescue-decisions", id.ToString("N") + ".json");
+    var store = new RescueDecisionStore(decisionPath);
+    await store.InitializeAsync(id, hash);
+    info.ArgumentList.Add(id.ToString("D"));
+    info.ArgumentList.Add(hash);
+    info.ArgumentList.Add(decisionPath);
+    return (store, id, hash);
+}
 
 async Task<string> WaitMarker(string file, TimeSpan limit)
 {
@@ -91,6 +120,70 @@ foreach (var mode in new[] { "COMMIT", "ABORT", "ABANDON", "TIMEOUT", "DISPOSE" 
         if (observed != (mode is "COMMIT" or "ABORT" ? mode : "RESTORE")) throw new InvalidOperationException(mode + ": " + observed);
     }
     Console.WriteLine(mode + ": PASS");
+}
+foreach (var signal in new[] { "COMMIT", "ABORT" })
+{
+    Reset();
+    Environment.SetEnvironmentVariable("COUCHPAD_TEST_DROP_ACK", "1");
+    try
+    {
+        var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(8), allowRecovery: true);
+        await using var lease = await guard.BeginAsync("test-dropped-ack");
+        if (signal == "COMMIT") await lease.CommitAsync(); else await lease.AbortAsync();
+        if (await WaitMarker(marker, TimeSpan.FromSeconds(5)) != signal) throw new InvalidOperationException("Terminal decision was not preserved.");
+        await Task.Delay(250);
+        Console.WriteLine("LOST_" + signal + "_ACK_RECONCILED: PASS");
+    }
+    finally { Environment.SetEnvironmentVariable("COUCHPAD_TEST_DROP_ACK", null); }
+}
+Reset();
+Environment.SetEnvironmentVariable("COUCHPAD_TEST_EXIT_BEFORE_DECISION", "1");
+try
+{
+    var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(8), allowRecovery: true);
+    await using var lease = await guard.BeginAsync("test-uncertain-decision");
+    try { await lease.CommitAsync(); throw new InvalidOperationException("Unconfirmed decision was accepted."); }
+    catch (RescueDecisionUncertainException) { }
+    Console.WriteLine("DEATH_BEFORE_DECISION_UNCERTAIN: PASS");
+}
+finally { Environment.SetEnvironmentVariable("COUCHPAD_TEST_EXIT_BEFORE_DECISION", null); }
+Reset();
+Environment.SetEnvironmentVariable("COUCHPAD_TEST_EXIT_BEFORE_READY", "1");
+try
+{
+    var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(8), allowRecovery: true);
+    try { _ = await guard.BeginAsync("test-startup-exit"); throw new InvalidOperationException("Uncertain startup was accepted."); }
+    catch (RescueDecisionUncertainException) { }
+    Console.WriteLine("EXIT_BEFORE_READY_UNCERTAIN: PASS");
+}
+finally { Environment.SetEnvironmentVariable("COUCHPAD_TEST_EXIT_BEFORE_READY", null); }
+if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
+{
+    Reset();
+    var stateDirectory = Path.GetDirectoryName(Path.GetFullPath(marker + ".journal"))!;
+    var transaction = new RescueTransactionContext(stateDirectory);
+    var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(5),
+        allowRecovery: true, transaction: transaction);
+    await using var lease = await guard.BeginAsync("test-timeout-during-apply");
+    await using (var held = await DisplayMutationLock.AcquireAsync(transaction.MutationLockPath))
+    {
+        var timer = Stopwatch.StartNew();
+        var recoveryRequested = false;
+        while (timer.Elapsed < TimeSpan.FromSeconds(9))
+        {
+            try { await transaction.RequireAsync(RescueDecisionState.Armed); }
+            catch (RescueDecisionUncertainException) { recoveryRequested = true; break; }
+            await Task.Delay(50);
+        }
+        if (!recoveryRequested) throw new TimeoutException("Recovery was not requested.");
+        if (File.Exists(marker)) throw new InvalidOperationException("Restore ran concurrently with the simulated apply.");
+    }
+    if (await WaitMarker(marker, TimeSpan.FromSeconds(10)) != "RESTORE") throw new InvalidOperationException("Restore did not run after the lock was released.");
+    using var waitForExit = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+    using var observed = CancellationTokenSource.CreateLinkedTokenSource(lease.FailureToken, waitForExit.Token);
+    try { await Task.Delay(Timeout.InfiniteTimeSpan, observed.Token); } catch (OperationCanceledException) { }
+    if (!lease.FailureToken.IsCancellationRequested) throw new TimeoutException("Watchdog did not exit after recovery.");
+    Console.WriteLine("TIMEOUT_WAITS_FOR_APPLY_LOCK: PASS");
 }
 if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
 {
@@ -144,6 +237,7 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
     var info = new ProcessStartInfo(childExecutable) { UseShellExecute = false, CreateNoWindow = true };
     info.ArgumentList.Add("CouchPad-rescue-" + Guid.NewGuid().ToString("N")); info.ArgumentList.Add(marker + ".journal");
     info.ArgumentList.Add(currentForLock.Id.ToString()); info.ArgumentList.Add(currentForLock.StartTime.ToUniversalTime().Ticks.ToString()); info.ArgumentList.Add("5000");
+    await AddDecisionArguments(info);
     using var duplicate = Process.Start(info) ?? throw new InvalidOperationException("Duplicate process failed to start.");
     using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     await duplicate.WaitForExitAsync(limit.Token);
@@ -163,6 +257,7 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
     info.Environment["COUCHPAD_TEST_ACK_GATE"] = ackGate;
     info.ArgumentList.Add(brokenName); info.ArgumentList.Add(marker + ".journal"); info.ArgumentList.Add(current.Id.ToString());
     info.ArgumentList.Add(current.StartTime.ToUniversalTime().Ticks.ToString()); info.ArgumentList.Add("5000");
+    var decision = await AddDecisionArguments(info);
     using var child = Process.Start(info) ?? throw new InvalidOperationException("ACK test child failed to start.");
     using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     await server.WaitForConnectionAsync(limit.Token);
@@ -174,10 +269,12 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
     server.Disconnect();
     await File.WriteAllTextAsync(ackGate + ".release", "release");
     await child.WaitForExitAsync(limit.Token);
-    if (child.ExitCode != 0 || await File.ReadAllTextAsync(marker) != "RESTORE") throw new InvalidOperationException("Failed ACK did not restore.");
+    if (child.ExitCode != 0 || await File.ReadAllTextAsync(marker) != "COMMIT" ||
+        (await decision.Store.ReadAsync(decision.Id, decision.Hash))?.State != RescueDecisionState.Committed)
+        throw new InvalidOperationException("Committed decision was not retained after ACK loss.");
     if (File.Exists(ackGate + ".waiting")) File.Delete(ackGate + ".waiting");
     if (File.Exists(ackGate + ".release")) File.Delete(ackGate + ".release");
-    Console.WriteLine("ACK_PIPE_BREAK: PASS");
+    Console.WriteLine("ACK_PIPE_BREAK_AFTER_COMMIT: PASS");
 }
 Reset();
 await Task.Delay(200);
@@ -188,6 +285,7 @@ using (var current = Process.GetCurrentProcess())
     var info = new ProcessStartInfo(childExecutable) { UseShellExecute = false, CreateNoWindow = true };
     info.ArgumentList.Add(pipeName); info.ArgumentList.Add(marker + ".journal");
     info.ArgumentList.Add(current.Id.ToString()); info.ArgumentList.Add(current.StartTime.ToUniversalTime().Ticks.ToString()); info.ArgumentList.Add("5000");
+    var decision = await AddDecisionArguments(info);
     using var child = Process.Start(info) ?? throw new InvalidOperationException("Pipe-break child failed to start.");
     using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
     await server.WaitForConnectionAsync(deadline.Token);
@@ -197,6 +295,7 @@ using (var current = Process.GetCurrentProcess())
     if (await WaitMarker(marker, TimeSpan.FromSeconds(10)) != "RESTORE") throw new InvalidOperationException("Pipe break did not restore.");
     await child.WaitForExitAsync(deadline.Token);
     if (child.ExitCode != 0) throw new InvalidOperationException("Pipe-break child failed.");
+    if ((await decision.Store.ReadAsync(decision.Id, decision.Hash))?.State != RescueDecisionState.Recovered) throw new InvalidOperationException("Pipe-break recovery decision missing.");
     Console.WriteLine("PIPE_BREAK: PASS");
 }
 foreach (var stage in new[] { "before", "after" })

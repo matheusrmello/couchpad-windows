@@ -37,9 +37,28 @@ public static class DisplaySnapshotComparer
         if (U32(modes, offset) != type || U32(modes, offset + 4) != U32(paths, p + idOffset + 8) ||
             U32(modes, offset + 8) != U32(paths, p + idOffset) || U32(modes, offset + 12) != U32(paths, p + idOffset + 4))
             throw new InvalidOperationException("Mode identity does not match path.");
-        // Source: dimensions, pixel format, position. Target: signal timing and dimensions.
-        var count = type == 1 ? 5 : 12;
-        return string.Join(':', Enumerable.Range(0, count).Select(i => U32(modes, offset + 16 + i * 4).ToString("X8")));
+        if (type == 1)
+            return string.Join(':', Enumerable.Range(0, 5).Select(i => U32(modes, offset + 16 + i * 4).ToString("X8")));
+
+        // Target mode supplies the effective sync rates and scan-line ordering;
+        // represent equivalent rational frequencies identically and ignore the
+        // reserved high bits of AdditionalSignalInfo.
+        return string.Join(':',
+            U32(modes, offset + 16).ToString("X8"), U32(modes, offset + 20).ToString("X8"),
+            Rational(U32(modes, offset + 24), U32(modes, offset + 28)),
+            Rational(U32(modes, offset + 32), U32(modes, offset + 36)),
+            U32(modes, offset + 40).ToString("X8"), U32(modes, offset + 44).ToString("X8"),
+            U32(modes, offset + 48).ToString("X8"), U32(modes, offset + 52).ToString("X8"),
+            (U32(modes, offset + 56) & 0x003fffff).ToString("X8"), U32(modes, offset + 60).ToString("X8"));
+    }
+
+    private static string Rational(uint numerator, uint denominator)
+    {
+        if (denominator == 0) return $"{numerator}/0";
+        var a = numerator;
+        var b = denominator;
+        while (b != 0) (a, b) = (b, a % b);
+        return $"{numerator / a}/{denominator / a}";
     }
     private static uint U32(byte[] b, int offset) => BinaryPrimitives.ReadUInt32LittleEndian(b.AsSpan(offset, 4));
 }

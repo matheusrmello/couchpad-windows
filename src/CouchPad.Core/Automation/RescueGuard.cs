@@ -1,5 +1,9 @@
 namespace CouchPad.Core.Automation;
 
+/// <summary>The rescue decision cannot be safely determined; no additional mutation is allowed.</summary>
+public sealed class RescueDecisionUncertainException(string message, Exception? innerException = null)
+    : InvalidOperationException(message, innerException);
+
 /// <summary>
 /// Guarda transacional para operações que alteram display/áudio.
 /// A implementação de plataforma inicia um watchdog independente; o Core só
