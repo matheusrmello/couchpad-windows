@@ -1139,3 +1139,7 @@ O probe CCD consulta separadamente paths ativos e todos os paths. Na sessão con
 ### P4 — planejador de topologia, 2026-11-10
 
 Adicionado planejador puro para propor paths de TV-only, extensão e clone com TV inicialmente inativa; não chama `SetDisplayConfig` nem altera hardware. Exige um único target não TV ativo e não garante suporte: a validação pelo Windows permanece pendente. Build 0 avisos/erros e 77 testes aprovados. Escrita, verificação e rollback continuam não implementados e bloqueados.
+
+### P4 — validação sem mudança, 2026-11-10
+
+`DisplayTopologyValidator` executa apenas `SDC_VALIDATE | SDC_USE_SUPPLIED_DISPLAY_CONFIG`. Na sessão local, as propostas TvOnly, Extend e Mirror retornaram 0 com AOC ativo e Samsung selecionada inativa. Isto não prova apply nem rollback. Build 0 avisos/erros, 77 testes e smoke aprovados. A escrita continua não implementada.

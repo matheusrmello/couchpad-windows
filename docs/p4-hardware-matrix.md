@@ -39,3 +39,7 @@ O probe somente leitura, configurado com path/EDID da Samsung, retornou `Interna
 ## Planejamento CCD — 2026-11-10
 
 `DisplayTopologyPlanner` constrói, sem chamar APIs Windows, uma proposta de paths para `TvOnly`, `Extend` ou `Mirror` a partir do baseline ativo e dos paths enumerados. Exige exatamente um target não TV ativo; seleciona o primeiro path CCD disponível para a TV com source igual (clone/TV-only) ou diferente (extensão), preservando a ordem enumerada. Índices de modos são marcados inválidos para que uma etapa posterior possa pedir ao Windows que determine os modos. A proposta não foi validada, aplicada ou testada em hardware; `AllowWrites` continua sem habilitar escrita. A validação, verificação e rollback permanecem pendentes.
+
+## Validação CCD sem alteração — 2026-11-10
+
+Na sessão local, baseline `InternalOnly`: AOC 27G2G4 ativo; Samsung SAM7167 selecionada por path/EDID e inativa. `SDC_VALIDATE | SDC_USE_SUPPLIED_DISPLAY_CONFIG` com índices de modo inválidos retornou `ERROR_SUCCESS (0)` para cada proposta: `TvOnly`, `Extend` e `Mirror`. Nenhum `SDC_APPLY` foi chamado; validação não comprova imagem visível ou rollback. Operador: Codex; conexões físicas e verificação visual ainda não observadas. Build sem avisos/erros; 77 testes e smoke aprovados.
