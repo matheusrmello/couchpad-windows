@@ -67,7 +67,8 @@ public partial class MainWindowViewModel : ObservableObject
         IGamepadWatcher? gamepadWatcher = null,
         IDisplayService? displayService = null,
         IAudioService? audioService = null,
-        IDelayScheduler? delayScheduler = null)
+        IDelayScheduler? delayScheduler = null,
+        IRescueGuard? rescueGuard = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
@@ -79,7 +80,8 @@ public partial class MainWindowViewModel : ObservableObject
             displayService ?? new SimulatedDisplayService(),
             audioService ?? new SimulatedAudioService(),
             delayScheduler ?? new SystemDelayScheduler(),
-            journalStore ?? new JsonSessionJournalStore());
+            journalStore ?? new JsonSessionJournalStore(),
+            rescueGuard: rescueGuard);
 
         _coordinator.StateChanged += OnAutomationStateChanged;
         _gamepad.ConnectionChanged += OnGamepadConnectionChanged;

@@ -6,7 +6,7 @@
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
 
-    <Version>0.4.2</Version>
+    <Version>0.4.3</Version>
     <Company>CouchPad</Company>
     <Product>CouchPad</Product>
     <Authors>Matheus Mello</Authors>

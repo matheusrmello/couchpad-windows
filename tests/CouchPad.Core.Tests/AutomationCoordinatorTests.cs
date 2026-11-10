@@ -298,6 +298,128 @@ public sealed class AutomationCoordinatorTests
     }
 
     [Fact]
+    public async Task Guarded_activation_commits_after_success()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, _, _, _, _) = Create(rescueGuard: guard);
+        await coordinator.SetEnabledAsync(true);
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        var lease = Assert.Single(guard.Leases);
+        Assert.Equal("display apply", lease.Operation);
+        Assert.Equal(1, lease.Commits);
+        Assert.Equal(0, lease.Aborts);
+        Assert.Equal(0, lease.Abandons);
+        Assert.Equal(1, lease.Disposals);
+    }
+
+    [Fact]
+    public async Task Guarded_activation_failure_aborts_after_restore()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, display, _, _, _) = Create(rescueGuard: guard);
+        display.ApplyException = new InvalidOperationException("apply failed");
+        await coordinator.SetEnabledAsync(true);
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        var lease = Assert.Single(guard.Leases);
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Equal(0, lease.Commits);
+        Assert.Equal(1, lease.Aborts);
+        Assert.Equal(0, lease.Abandons);
+        Assert.Single(display.Restored);
+    }
+
+    [Fact]
+    public async Task Guarded_activation_abandons_when_rollback_fails()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, display, _, _, _) = Create(rescueGuard: guard);
+        display.ApplyException = new InvalidOperationException("apply failed");
+        display.RestoreException = new InvalidOperationException("restore failed");
+        await coordinator.SetEnabledAsync(true);
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        var lease = Assert.Single(guard.Leases);
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Equal(0, lease.Commits);
+        Assert.Equal(0, lease.Aborts);
+        Assert.Equal(1, lease.Abandons);
+    }
+
+    [Fact]
+    public async Task Guarded_deactivation_commits_after_restore()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, _, _, _, _) = Create(rescueGuard: guard);
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        await coordinator.SetEnabledAsync(false);
+
+        Assert.Equal(2, guard.Leases.Count);
+        Assert.Equal(1, guard.Leases[0].Commits);
+        Assert.Equal(1, guard.Leases[1].Commits);
+        Assert.Equal(0, guard.Leases[1].Abandons);
+    }
+
+    [Fact]
+    public async Task Guarded_deactivation_abandons_when_restore_fails()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, display, _, _, _) = Create(rescueGuard: guard);
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        display.RestoreException = new InvalidOperationException("restore failed");
+
+        await coordinator.SetEnabledAsync(false);
+
+        Assert.Equal(2, guard.Leases.Count);
+        Assert.Equal(1, guard.Leases[1].Abandons);
+        Assert.Equal(AutomationState.Error, coordinator.State);
+    }
+
+    [Fact]
+    public async Task Guard_begin_failure_prevents_apply()
+    {
+        var guard = new FakeRescueGuard
+        {
+            BeginException = new InvalidOperationException("watchdog unavailable"),
+        };
+        var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
+        await coordinator.SetEnabledAsync(true);
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Empty(display.Applied);
+        Assert.Empty(guard.Leases);
+        Assert.Null(journal.Entry);
+    }
+
+    [Fact]
+    public async Task Guard_abort_failure_falls_back_to_abandon()
+    {
+        var guard = new FakeRescueGuard
+        {
+            AbortException = new InvalidOperationException("abort failed"),
+        };
+        var (coordinator, display, _, _, _) = Create(rescueGuard: guard);
+        display.ApplyException = new InvalidOperationException("apply failed");
+        await coordinator.SetEnabledAsync(true);
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        var lease = Assert.Single(guard.Leases);
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Equal(1, lease.Aborts);
+        Assert.Equal(1, lease.Abandons);
+    }
+
+    [Fact]
     public void Delay_options_map_indices_and_clamp()
     {
         Assert.Equal(TimeSpan.Zero, DelayOptions.FromIndex(0));
@@ -334,7 +456,9 @@ public sealed class AutomationCoordinatorTests
         FakeDisplayService Display,
         FakeAudioService Audio,
         ManualDelayScheduler Delay,
-        FakeJournal Journal) Create(DisplayState? baseline = null)
+        FakeJournal Journal) Create(
+        DisplayState? baseline = null,
+        IRescueGuard? rescueGuard = null)
     {
         var display = new FakeDisplayService();
         if (baseline is not null)
@@ -345,7 +469,12 @@ public sealed class AutomationCoordinatorTests
         var audio = new FakeAudioService();
         var delay = new ManualDelayScheduler();
         var journal = new FakeJournal();
-        var coordinator = new AutomationCoordinator(display, audio, delay, journal);
+        var coordinator = new AutomationCoordinator(
+            display,
+            audio,
+            delay,
+            journal,
+            rescueGuard: rescueGuard);
 
         return (coordinator, display, audio, delay, journal);
     }
@@ -360,6 +489,8 @@ public sealed class AutomationCoordinatorTests
         public List<DisplayState> Restored { get; } = new();
 
         public Exception? ApplyException { get; set; }
+
+        public Exception? RestoreException { get; set; }
 
         public DisplayState GetCurrent() => Current;
 
@@ -390,6 +521,12 @@ public sealed class AutomationCoordinatorTests
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (RestoreException is not null)
+            {
+                throw RestoreException;
+            }
+
             Restored.Add(state);
             Current = state;
             return Task.CompletedTask;
@@ -460,6 +597,76 @@ public sealed class AutomationCoordinatorTests
             }
 
             throw new InvalidOperationException("Nenhum atraso pendente.");
+        }
+    }
+
+    private sealed class FakeRescueGuard : IRescueGuard
+    {
+        public List<FakeRescueLease> Leases { get; } = new();
+
+        public Exception? BeginException { get; set; }
+
+        public Exception? AbortException { get; set; }
+
+        public Task<IRescueLease> BeginAsync(
+            string operation,
+            CancellationToken cancellationToken = default)
+        {
+            if (BeginException is not null)
+            {
+                throw BeginException;
+            }
+
+            var lease = new FakeRescueLease(operation)
+            {
+                AbortException = AbortException,
+            };
+
+            Leases.Add(lease);
+            return Task.FromResult<IRescueLease>(lease);
+        }
+    }
+
+    private sealed class FakeRescueLease : IRescueLease
+    {
+        public FakeRescueLease(string operation) => Operation = operation;
+
+        public string Operation { get; }
+
+        public int Commits { get; private set; }
+
+        public int Aborts { get; private set; }
+
+        public int Abandons { get; private set; }
+
+        public int Disposals { get; private set; }
+
+        public Exception? AbortException { get; set; }
+
+        public Task CommitAsync(CancellationToken cancellationToken = default)
+        {
+            Commits++;
+            return Task.CompletedTask;
+        }
+
+        public Task AbortAsync(CancellationToken cancellationToken = default)
+        {
+            Aborts++;
+
+            if (AbortException is not null)
+            {
+                throw AbortException;
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public void Abandon() => Abandons++;
+
+        public ValueTask DisposeAsync()
+        {
+            Disposals++;
+            return ValueTask.CompletedTask;
         }
     }
 

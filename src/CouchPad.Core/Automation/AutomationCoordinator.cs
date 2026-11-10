@@ -15,6 +15,7 @@ public sealed class AutomationCoordinator
     private readonly IAudioService _audio;
     private readonly IDelayScheduler _delay;
     private readonly ISessionJournalStore? _journal;
+    private readonly IRescueGuard? _rescueGuard;
     private readonly TimeProvider _time;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _sync = new();
@@ -30,13 +31,15 @@ public sealed class AutomationCoordinator
         IAudioService audio,
         IDelayScheduler delay,
         ISessionJournalStore? journal = null,
-        TimeProvider? timeProvider = null)
+        TimeProvider? timeProvider = null,
+        IRescueGuard? rescueGuard = null)
     {
         _display = display ?? throw new ArgumentNullException(nameof(display));
         _audio = audio ?? throw new ArgumentNullException(nameof(audio));
         _delay = delay ?? throw new ArgumentNullException(nameof(delay));
         _journal = journal;
         _time = timeProvider ?? TimeProvider.System;
+        _rescueGuard = rescueGuard;
     }
 
     public AutomationSettings Settings { get; private set; } = new();
@@ -251,10 +254,17 @@ public sealed class AutomationCoordinator
             return;
         }
 
-        SetState(AutomationState.Applying);
+        IRescueLease? lease = null;
 
         try
         {
+            if (_rescueGuard is not null)
+            {
+                lease = await _rescueGuard.BeginAsync("display apply", cancellationToken);
+            }
+
+            SetState(AutomationState.Applying);
+
             await _display.ApplyAsync(settings.DisplayMode, cancellationToken);
             var audio = await _audio.ApplyAsync(settings.AudioMode, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
@@ -285,11 +295,18 @@ public sealed class AutomationCoordinator
             // Se esta gravação falhar, o pending anterior ainda contém o
             // baseline e serve para o rescue da P6.
             TrySaveJournal(active);
+
+            if (lease is not null)
+            {
+                await lease.CommitAsync(cancellationToken);
+            }
+
             SetState(AutomationState.Active);
         }
         catch (OperationCanceledException)
         {
             var restored = await TryRestoreAsync(displayBefore, audioBefore);
+            await FinishLeaseAsync(lease, restored);
 
             lock (_sync)
             {
@@ -306,6 +323,7 @@ public sealed class AutomationCoordinator
         catch (Exception ex)
         {
             var restored = await TryRestoreAsync(displayBefore, audioBefore);
+            await FinishLeaseAsync(lease, restored);
 
             lock (_sync)
             {
@@ -318,6 +336,10 @@ public sealed class AutomationCoordinator
             }
 
             SetState(AutomationState.Error, ex.Message);
+        }
+        finally
+        {
+            await DisposeLeaseAsync(lease);
         }
     }
 
@@ -339,10 +361,18 @@ public sealed class AutomationCoordinator
         }
 
         cancellationToken.ThrowIfCancellationRequested();
-        SetState(AutomationState.Applying);
+
+        IRescueLease? lease = null;
 
         try
         {
+            if (_rescueGuard is not null)
+            {
+                lease = await _rescueGuard.BeginAsync("display restore", cancellationToken);
+            }
+
+            SetState(AutomationState.Applying);
+
             await _display.RestoreAsync(snapshot.RestoreDisplay, cancellationToken);
             await _audio.RestoreAsync(snapshot.RestoreAudio, cancellationToken);
 
@@ -352,15 +382,26 @@ public sealed class AutomationCoordinator
             }
 
             TryClearJournal();
+
+            if (lease is not null)
+            {
+                await lease.CommitAsync(cancellationToken);
+            }
         }
         catch (OperationCanceledException)
         {
+            lease?.Abandon();
             throw;
         }
         catch (Exception ex)
         {
+            lease?.Abandon();
             SetState(AutomationState.Error, ex.Message);
             return;
+        }
+        finally
+        {
+            await DisposeLeaseAsync(lease);
         }
 
         SetState(settings.Enabled ? AutomationState.WaitingForGamepad : AutomationState.Idle);
@@ -427,6 +468,47 @@ public sealed class AutomationCoordinator
         }
 
         StateChanged?.Invoke(this, args);
+    }
+
+    private static async Task FinishLeaseAsync(IRescueLease? lease, bool restored)
+    {
+        if (lease is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (restored)
+            {
+                await lease.AbortAsync(CancellationToken.None);
+            }
+            else
+            {
+                lease.Abandon();
+            }
+        }
+        catch
+        {
+            lease.Abandon();
+        }
+    }
+
+    private static async Task DisposeLeaseAsync(IRescueLease? lease)
+    {
+        if (lease is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await lease.DisposeAsync();
+        }
+        catch
+        {
+            // Dispose do lease não pode mascarar o resultado da operação.
+        }
     }
 
     private async Task<bool> TryRestoreAsync(DisplayState display, AudioOutput audio)

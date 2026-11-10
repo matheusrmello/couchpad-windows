@@ -180,6 +180,48 @@ Mudar modo enquanto `Pending`/`Applying` vale para o próximo ciclo: a
 transição corrente usa a cópia imutável de `AutomationSettings` capturada no
 início. Com `Active`, a troca de modo reaplica imediatamente.
 
+### 4.5 Guard de rescue (P4)
+
+O Core expõe `IRescueGuard`/`IRescueLease` para proteger operações que mudam
+display/áudio:
+
+- `BeginAsync(operation)` é chamado **depois** do journal `pending` e antes do
+  apply/restore;
+- `CommitAsync` sinaliza que apply/verify ou restore/verify terminaram; o
+  watchdog pode encerrar sem restaurar;
+- `AbortAsync` sinaliza que o rollback terminou com sucesso; o watchdog pode
+  encerrar;
+- `Abandon` sinaliza que o rollback falhou ou é incerto; o watchdog deve
+  restaurar o baseline ao expirar.
+
+`NoopRescueGuard` é usado na simulação. O coordenador usa o guard em
+`ActivateAsync` e `DeactivateAsync`. O Core **não** inicia processo: a
+implementação real (processo separado + journal + timeout) é da P4/Codex em
+`Platform.Windows`.
+
+Sequência normal:
+
+```text
+journal pending
+  → BeginAsync
+  → apply + verify
+  → journal active
+  → CommitAsync
+  → Dispose
+```
+
+Falha:
+
+```text
+apply/verify falha
+  → rollback do baseline
+  → AbortAsync (rollback ok) ou Abandon (rollback falhou/incerto)
+  → o watchdog restaura se o processo morrer antes do sinal
+```
+
+Testes cobrem: commit após sucesso, abort após rollback, abandon em falha de
+rollback, begin falhando antes do apply, desativação e fallback de abort.
+
 ---
 
 ## 5. Atrasos
@@ -300,7 +342,7 @@ journal antigo sem baseline (campos nulos).
 `JsonAppSettingsStoreTests` cobre os novos campos e a preservação de chaves
 desconhecidas.
 
-Total na P3: **66 testes**.
+Total atual: **104 testes** (P3 + guard de rescue da P4).
 
 ---
 

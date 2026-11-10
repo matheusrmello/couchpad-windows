@@ -1,0 +1,60 @@
+namespace CouchPad.Core.Automation;
+
+/// <summary>
+/// Guarda transacional para operações que alteram display/áudio.
+/// A implementação de plataforma inicia um watchdog independente; o Core só
+/// orquestra begin/commit/abort/abandon.
+/// </summary>
+public interface IRescueGuard
+{
+    Task<IRescueLease> BeginAsync(
+        string operation,
+        CancellationToken cancellationToken = default);
+}
+
+public interface IRescueLease : IAsyncDisposable
+{
+    /// <summary>Operação aplicada e verificada; o watchdog pode encerrar.</summary>
+    Task CommitAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Rollback concluído; o watchdog pode encerrar sem restaurar.</summary>
+    Task AbortAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Não foi possível garantir o rollback. Deixe o watchdog restaurar o
+    /// baseline ao expirar.
+    /// </summary>
+    void Abandon();
+}
+
+/// <summary>Usado na simulação: não inicia processo nem altera nada.</summary>
+public sealed class NoopRescueGuard : IRescueGuard
+{
+    public static NoopRescueGuard Instance { get; } = new();
+
+    private NoopRescueGuard()
+    {
+    }
+
+    public Task<IRescueLease> BeginAsync(
+        string operation,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IRescueLease>(NoopRescueLease.Instance);
+
+    private sealed class NoopRescueLease : IRescueLease
+    {
+        public static NoopRescueLease Instance { get; } = new();
+
+        public Task CommitAsync(CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task AbortAsync(CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public void Abandon()
+        {
+        }
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+    }
+}

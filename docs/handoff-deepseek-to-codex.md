@@ -4,9 +4,9 @@
 - Origem: P3 — serviço simulado, state machine, atrasos, journal e persistência
 - Destino: REA 2.2.0 + P4 — display real
 - Tag da origem: `v0.4.0-sim`
-- Contrato endurecido: commit `fix(P3): topologia e journal antes do apply` (versão 0.4.1); `DisplayMode.InternalOnly` na versão 0.4.2
+- Contrato endurecido: `5f5c8c4` (v0.4.1), `DisplayMode.InternalOnly` (v0.4.2), guard de rescue no Core (v0.4.3)
 - Build: 0 avisos, 0 erros
-- Testes: 66 aprovados
+- Testes: 104 aprovados
 - Árvore: limpa (os arquivos de REA/P4 do Codex são commitados separadamente)
 - Aceite do usuário: 09/11/2026
 
@@ -34,6 +34,9 @@ Em `src/CouchPad.Core`:
   - state machine e orquestração.
 - `Automation/SessionJournalEntry.cs` + `JsonSessionJournalStore.cs`
   - journal atômico com baseline de restauração.
+- `Automation/RescueGuard.cs`
+  - `IRescueGuard`/`IRescueLease` e `NoopRescueGuard`; o coordenador já
+    executa begin/commit/abort/abandon.
 - `Automation/AutomationSnapshot.cs`
   - baseline separado do modo aplicado.
 
@@ -76,6 +79,12 @@ Em `src/CouchPad.Core`:
    `src/CouchPad.Platform.Windows/**`.
 10. **i18n**: nada de texto visível fora dos catálogos; se a P4 adicionar
     estados, use chaves nos dois idiomas e atualize o teste de XAML.
+11. **Watchdog/rescue**: implemente `IRescueGuard` em `Platform.Windows` com
+    processo separado. `BeginAsync` é chamado depois do journal `pending` e
+    antes do apply; `CommitAsync` após apply/verify; `AbortAsync` após rollback
+    bem-sucedido; `Abandon` quando o rollback falhar. O watchdog deve ler o
+    journal e restaurar o baseline se o processo pai morrer/timeout. O Core já
+    chama esse contrato e usa `NoopRescueGuard` na simulação.
 
 ---
 
