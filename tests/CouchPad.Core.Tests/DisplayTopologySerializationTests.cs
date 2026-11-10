@@ -170,11 +170,21 @@ public class WindowsDisplayServiceFakeTests
         BitConverter.GetBytes(source).CopyTo(bytes, 8);
         BitConverter.GetBytes(1u).CopyTo(bytes, 20);
         BitConverter.GetBytes(target).CopyTo(bytes, 28);
+        BitConverter.GetBytes(1u).CopyTo(bytes, 32);
         BitConverter.GetBytes(1u).CopyTo(bytes, 60);
         BitConverter.GetBytes(1u).CopyTo(bytes, 68);
         return bytes;
     }
-    private static WindowsDisplayService.Snapshot Snapshot(uint flags, params byte[][] paths) => new(1, flags, 72, 64, Convert.ToBase64String(paths.SelectMany(p => p).ToArray()), Convert.ToBase64String(new byte[64]), [new(1, 0, 10, "tv", "TV", 1, 2, 0), new(1, 0, 20, "internal", "Monitor", 3, 4, 0)]);
+    private static WindowsDisplayService.Snapshot Snapshot(uint flags, params byte[][] paths)
+    {
+        var modes = new byte[128];
+        BitConverter.GetBytes(1u).CopyTo(modes, 0);
+        BitConverter.GetBytes(1u).CopyTo(modes, 8);
+        BitConverter.GetBytes(2u).CopyTo(modes, 64);
+        BitConverter.GetBytes(20u).CopyTo(modes, 68);
+        BitConverter.GetBytes(1u).CopyTo(modes, 72);
+        return new(1, flags, 72, 64, Convert.ToBase64String(paths.SelectMany(p => p).ToArray()), Convert.ToBase64String(modes), [new(1, 0, 10, "tv", "TV", 1, 2, 0), new(1, 0, 20, "internal", "Monitor", 3, 4, 0)]);
+    }
     private static WindowsDisplayService Create(Func<byte[], byte[], uint, int> set)
     {
         var active = Snapshot(2, Path(0, 20));
@@ -236,5 +246,31 @@ public class DisplayTopologyFromEveryBaselineTests
         Assert.Equal(requested == DisplayMode.TvOnly ? 72 : 144, result.Paths.Length);
         if (requested != DisplayMode.TvOnly)
             Assert.Equal(requested == DisplayMode.Mirror, BitConverter.ToUInt32(result.Paths, 8) == BitConverter.ToUInt32(result.Paths, 80));
+    }
+}
+
+public class DisplaySnapshotComparerTests
+{
+    private static WindowsDisplayService.Snapshot Create()
+    {
+        var path = new byte[72]; var modes = new byte[128];
+        BitConverter.GetBytes(1u).CopyTo(path, 0); BitConverter.GetBytes(7u).CopyTo(path, 8);
+        BitConverter.GetBytes(1u).CopyTo(path, 20); BitConverter.GetBytes(10u).CopyTo(path, 28);
+        BitConverter.GetBytes(1u).CopyTo(path, 32); BitConverter.GetBytes(1u).CopyTo(path, 68);
+        BitConverter.GetBytes(1u).CopyTo(modes, 0); BitConverter.GetBytes(7u).CopyTo(modes, 4); BitConverter.GetBytes(1u).CopyTo(modes, 8);
+        BitConverter.GetBytes(1920u).CopyTo(modes, 16);
+        BitConverter.GetBytes(2u).CopyTo(modes, 64); BitConverter.GetBytes(10u).CopyTo(modes, 68); BitConverter.GetBytes(1u).CopyTo(modes, 72);
+        return new(1, 2, 72, 64, Convert.ToBase64String(path), Convert.ToBase64String(modes), []);
+    }
+    [Fact]
+    public void Ignores_status_but_detects_mode_and_identity_changes()
+    {
+        var expected = Create(); var paths = Convert.FromBase64String(expected.PathsBase64);
+        BitConverter.GetBytes(99u).CopyTo(paths, 16);
+        Assert.True(DisplaySnapshotComparer.SemanticallyEqual(expected, expected with { PathsBase64 = Convert.ToBase64String(paths) }));
+        var modes = Convert.FromBase64String(expected.ModesBase64); BitConverter.GetBytes(1280u).CopyTo(modes, 16);
+        Assert.False(DisplaySnapshotComparer.SemanticallyEqual(expected, expected with { ModesBase64 = Convert.ToBase64String(modes) }));
+        BitConverter.GetBytes(11u).CopyTo(paths, 28);
+        Assert.Throws<InvalidOperationException>(() => DisplaySnapshotComparer.SemanticallyEqual(expected, expected with { PathsBase64 = Convert.ToBase64String(paths) }));
     }
 }

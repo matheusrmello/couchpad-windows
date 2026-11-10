@@ -1159,3 +1159,11 @@ No HEAD `cc4d6c3`, build 0 avisos/erros, 84 testes e smoke passaram; probe de va
 ### P4 — planejador com monitor explícito, 2026-11-10
 
 Planejador atualizado para usar seletores explícitos e QDC_ALL_PATHS, incluindo origem TvOnly; doze combinações sintéticas passaram. Build 0 avisos/erros, 96 testes e smoke aprovados. Não executar SDC_APPLY antes de implementar e testar watchdog independente; restauração ainda compara bytes exatos. Matriz real pendente.
+
+### P4 — comparação semântica inicial, 2026-11-10
+
+A verificação de restore compara identidades CCD e campos de modos em vez dos buffers inteiros. Build 0 avisos/erros, 97 testes e smoke passaram. Sem watchdog independente e sem testes reais; nenhuma alteração de topologia. P4 não aceita.
+
+### P4 — contrato rescue e comparação semântica, 2026-11-10
+
+O Core/App recebeu em `0281b7d` o contrato `IRescueGuard`/`IRescueLease`: begin após journal pending, commit após apply/verify, abort após rollback bem-sucedido e abandon quando incerto. A implementação Windows independente permanece pendente; a simulação mantém o guard noop. O comparador semântico está em desenvolvimento e não foi validado contra normalizações reais do driver. Build 0 avisos/erros, 104 testes e smoke aprovados. Não executar SDC_APPLY até o watchdog real e seus testes de crash estarem verdes.

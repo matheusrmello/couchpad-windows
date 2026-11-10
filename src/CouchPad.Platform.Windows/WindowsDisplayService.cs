@@ -158,10 +158,8 @@ public sealed class WindowsDisplayService : IDisplayService
     private void VerifySnapshot(Snapshot expected)
     {
         var actual = Capture(ActivePaths);
-        var (expectedPaths, expectedModes) = DecodeSnapshot(expected);
-        var (actualPaths, actualModes) = DecodeSnapshot(actual);
-        if (!expectedPaths.AsSpan().SequenceEqual(actualPaths) || !expectedModes.AsSpan().SequenceEqual(actualModes))
-            throw new InvalidOperationException("Restored display configuration could not be verified exactly.");
+        if (!DisplaySnapshotComparer.SemanticallyEqual(expected, actual))
+            throw new InvalidOperationException("Restored display configuration could not be verified.");
     }
 
     private static (byte[] Paths, byte[] Modes) DecodeSnapshot(Snapshot snapshot)

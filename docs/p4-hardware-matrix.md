@@ -59,3 +59,11 @@ Build do HEAD `cc4d6c3`: 0 avisos/0 erros; 84 testes aprovados; smoke OK. O prob
 ### P4 — planejador com seletor explícito, 2026-11-10
 
 O planejador recebe targets explícitos de TV e monitor interno e considera paths disponíveis mesmo quando o monitor interno está inativo. Doze combinações sintéticas cobrem os quatro estados de origem e os três destinos. Build 0 avisos/erros, 96 testes e smoke aprovados. Estas propostas não foram validadas novamente com o driver. O watchdog independente, verificação semântica e matriz real continuam pendentes; nenhuma topologia foi modificada.
+
+### P4 — comparação semântica inicial, 2026-11-10
+
+A restauração compara identities de sources/targets, orientação, escala e campos dos modos explicitamente referenciados; ignora ordem dos arrays e campos de status dos paths. Snapshot inválido ou índice de modo ausente é rejeitado. Testes sintéticos cobrem status alterado e alteração de resolução/identidade; ainda não há evidência de normalizações reais do driver. Build 0 avisos/erros, 97 testes e smoke passaram. Watchdog independente e sua integração permanecem pendentes. Nenhum apply real foi executado.
+
+### P4 — contrato do rescue guard, 2026-11-10
+
+Core/App no commit `0281b7d`: contrato de guard e lease com testes simulados; 104 testes aprovados no estado atual. A implementação do watchdog Windows ainda não foi concluída. O comparador semântico não comprova normalizações reais. Nenhuma alteração de topologia foi executada.
