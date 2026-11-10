@@ -12,11 +12,38 @@ public sealed class WindowsDisplayService : IDisplayService
     public const uint AllPaths = 1;
     private const int PathSize = 72, ModeSize = 64, InsufficientBuffer = 122;
 
+    private readonly WindowsDisplayOptions _options;
+
+    public WindowsDisplayService(WindowsDisplayOptions options) => _options = options ?? throw new ArgumentNullException(nameof(options));
+
     public DisplayState GetCurrent()
     {
-        var snapshot = Capture(ActivePaths);
-        // Não integrar à automação até mapear os campos abstratos corretamente.
-        return new DisplayState(DisplayMode.Extend, true, false) { Topology = JsonSerializer.Serialize(snapshot) };
+        var all = Capture(AllPaths);
+        var target = SelectTarget(all.Targets, _options.DevicePath, _options.EdidManufacturer, _options.EdidProduct, _options.ExactName);
+        return MapState(Capture(ActivePaths), target);
+    }
+
+    public static DisplayState MapState(Snapshot snapshot, Target tv)
+    {
+        if (snapshot.SchemaVersion != 1 || snapshot.QueryFlags != ActivePaths || snapshot.PathSize != PathSize || snapshot.ModeSize != ModeSize)
+            throw new InvalidOperationException("Unsupported display snapshot.");
+        var paths = Convert.FromBase64String(snapshot.PathsBase64);
+        var modes = Convert.FromBase64String(snapshot.ModesBase64);
+        if (paths.Length == 0 || paths.Length % PathSize != 0 || modes.Length % ModeSize != 0)
+            throw new InvalidOperationException("Invalid display snapshot.");
+        var active = new List<(uint Low, int High, uint Source, bool Tv)>();
+        for (var offset = 0; offset < paths.Length; offset += PathSize)
+        {
+            var isTv = BitConverter.ToUInt32(paths, offset + 20) == tv.AdapterLow && BitConverter.ToInt32(paths, offset + 24) == tv.AdapterHigh && BitConverter.ToUInt32(paths, offset + 28) == tv.Id;
+            active.Add((BitConverter.ToUInt32(paths, offset), BitConverter.ToInt32(paths, offset + 4), BitConverter.ToUInt32(paths, offset + 8), isTv));
+        }
+        var tvPaths = active.Where(x => x.Tv).ToArray();
+        var primaryPaths = active.Where(x => !x.Tv).ToArray();
+        if (tvPaths.Length > 1 || primaryPaths.Length > 1 || (tvPaths.Length == 0 && primaryPaths.Length == 0))
+            throw new InvalidOperationException("Unsupported or ambiguous active display topology.");
+        var mode = tvPaths.Length == 0 ? DisplayMode.InternalOnly : primaryPaths.Length == 0 ? DisplayMode.TvOnly :
+            (tvPaths[0].Low, tvPaths[0].High, tvPaths[0].Source) == (primaryPaths[0].Low, primaryPaths[0].High, primaryPaths[0].Source) ? DisplayMode.Mirror : DisplayMode.Extend;
+        return new DisplayState(mode, primaryPaths.Length == 1, tvPaths.Length == 1) { Topology = JsonSerializer.Serialize(snapshot) };
     }
 
     public Snapshot Capture(uint queryFlags)
@@ -67,8 +94,8 @@ public sealed class WindowsDisplayService : IDisplayService
         return matches.Length == 1 ? matches[0] : throw new InvalidOperationException("Display identity missing or ambiguous.");
     }
 
-    public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default) => throw new NotSupportedException("Display writes are disabled.");
-    public Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default) => throw new NotSupportedException("Display writes are disabled.");
+    public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default) => throw new NotSupportedException(_options.AllowWrites ? "Display writes are not implemented." : "Display writes are disabled.");
+    public Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default) => throw new NotSupportedException(_options.AllowWrites ? "Display writes are not implemented." : "Display writes are disabled.");
     private static void Check(int error) { if (error != 0) throw new Win32Exception(error); }
     public sealed record Target(uint AdapterLow, int AdapterHigh, uint Id, string? DevicePath, string? FriendlyName, ushort? EdidManufacturer, ushort? EdidProduct, int Status);
     public sealed record Snapshot(int SchemaVersion, uint QueryFlags, int PathSize, int ModeSize, string PathsBase64, string ModesBase64, List<Target> Targets);
@@ -78,3 +105,5 @@ public sealed class WindowsDisplayService : IDisplayService
     [DllImport("user32.dll")] private static extern int QueryDisplayConfig(uint flags, ref uint paths, IntPtr pathInfo, ref uint modes, IntPtr modeInfo, IntPtr topology);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int DisplayConfigGetDeviceInfo(ref TargetName request);
 }
+
+public sealed record WindowsDisplayOptions(string DevicePath, ushort EdidManufacturer, ushort EdidProduct, string? ExactName = null, bool AllowWrites = false);

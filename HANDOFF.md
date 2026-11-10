@@ -1131,3 +1131,11 @@ Nenhum bloqueador restante.
 ### P4 — slice somente leitura em 2026-11-10
 
 O probe CCD consulta separadamente paths ativos e todos os paths. Na sessão consultada, identificou AOC ativo e Samsung SAM7167 inativa por path e EDID. A seleção não usa ordem dos monitores. Escrita permanece bloqueada. O contrato agora dispõe de `DisplayMode.InternalOnly` (v0.4.2), mas o serviço ainda precisa mapear `Mode`/`PrimaryActive`/`TvActive` e implementar apply, verificação e rollback; o serviço não está integrado à automação. Build sem avisos/erros e 66 testes aprovados; nenhuma mudança de topologia foi executada.
+
+### P4 — mapeamento do baseline, 2026-11-10
+
+`WindowsDisplayOptions` recebe o seletor de TV; `GetCurrent` identifica o target em todos os paths e mapeia o snapshot ativo em `InternalOnly`, `TvOnly`, `Extend` ou `Mirror` quando inequívoco. O probe confirmou `InternalOnly` com AOC ativo e Samsung selecionada inativa. Build 0 avisos/erros; 72 testes aprovados. Escritas não foram implementadas e seguem bloqueadas mesmo com `AllowWrites=true`; não integrar o serviço à automação. Apply, validação, verificação, rollback e testes de hardware de alteração continuam pendentes.
+
+### P4 — planejador de topologia, 2026-11-10
+
+Adicionado planejador puro para propor paths de TV-only, extensão e clone com TV inicialmente inativa; não chama `SetDisplayConfig` nem altera hardware. Exige um único target não TV ativo e não garante suporte: a validação pelo Windows permanece pendente. Build 0 avisos/erros e 77 testes aprovados. Escrita, verificação e rollback continuam não implementados e bloqueados.

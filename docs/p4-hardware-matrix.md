@@ -29,3 +29,13 @@ O slice é incompleto: o estado abstrato Mode/PrimaryActive/TvActive ainda não 
 Consulta somente leitura: baseline `QDC_ONLY_ACTIVE_PATHS` contém um path ativo para AOC 27G2G4, target 24646. A consulta separada `QDC_ALL_PATHS` encontrou a Samsung `SAMSUNG`, target 41015, fabricante EDID 11596, produto 29031 e o caminho SAM7167 informado. A seleção por caminho e EDID encontrou um único target, apesar de múltiplos paths candidatos. A Samsung não apareceu no baseline ativo. Nenhuma topologia foi modificada.
 
 O serviço permanece **sem integração à automação**: os campos abstratos do `DisplayState` ainda são placeholders e não devem ser consumidos como estado real. Escritas são sempre recusadas. A implementação futura precisa construir e validar paths que ativem o target inativo, verificar a configuração e restaurar o baseline; a matriz de mudança requer sessão e autorização separadas.
+
+## Mapeamento de baseline — 2026-11-10
+
+O probe somente leitura, configurado com path/EDID da Samsung, retornou `InternalOnly`, `PrimaryActive=true`, `TvActive=false`, com Samsung target 41015 selecionada. Testes sintéticos cobrem os quatro resumos e recusa de mais de um target não TV. O mapeamento trata o único target ativo diferente da TV como interno; mais de um é recusado. O snapshot ativo continua sendo a fonte serializada de topologia.
+
+**Pendente:** implementação de apply e restore, validação de modos, ativação do target inativo, verificação pós-apply e rollback. `AllowWrites` é falso por padrão; mesmo se verdadeiro, os métodos atualmente recusam a operação. Nenhuma alteração de topologia foi executada. A matriz de mudanças permanece pendente e exige autorização separada.
+
+## Planejamento CCD — 2026-11-10
+
+`DisplayTopologyPlanner` constrói, sem chamar APIs Windows, uma proposta de paths para `TvOnly`, `Extend` ou `Mirror` a partir do baseline ativo e dos paths enumerados. Exige exatamente um target não TV ativo; seleciona o primeiro path CCD disponível para a TV com source igual (clone/TV-only) ou diferente (extensão), preservando a ordem enumerada. Índices de modos são marcados inválidos para que uma etapa posterior possa pedir ao Windows que determine os modos. A proposta não foi validada, aplicada ou testada em hardware; `AllowWrites` continua sem habilitar escrita. A validação, verificação e rollback permanecem pendentes.
