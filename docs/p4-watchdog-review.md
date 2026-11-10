@@ -15,3 +15,10 @@ Data: 2026-11-10. Escopo: leitura do código, testes de processo com backend fal
 4. **Falha do rescue:** o filho retorna código 1 sem registrar diagnóstico local durável; após morte do pai, não há observador que apresente a falha ou garanta nova tentativa. A recuperação no logon pertence à P6 e ainda não está implementada.
 
 Não habilitar `AllowWrites`/`allowRecovery` na composição enquanto essas pendências não forem resolvidas e exercitadas com backend falso. Depois, realizar a matriz com operador presente e recuperação independente comprovada. A comparação semântica de restore também precisa ser confrontada com normalizações reais do driver.
+
+## Acompanhamento — 2026-11-10
+
+- ACK: após iniciar o envio de commit/abort, o cancelamento do chamador não interrompe a espera pelo ACK; existe prazo próprio. Se o envio do ACK pelo filho falhar com erro de pipe, ele tenta restaurar. Testes com backend falso cobriram cancelamento após envio e quebra antes do ACK. Timeout/perda de ACK após aceitação continua com resultado potencialmente incerto; o protocolo ainda não está liberado para escrita.
+- Diagnóstico: falhas tratadas pelo rescue geram registro local em `%LOCALAPPDATA%\CouchPad\logs\rescue-failures.log` com estágio, tipo e HRESULT, sem mensagem ou caminho da exceção. O journal é preservado; nova tentativa no logon continua pendente da P6.
+- Comparador: duas capturas consecutivas do driver, com AOC ativo e Samsung inativa, foram consideradas equivalentes. Isso não testa normalização depois de um restore real.
+- Morte do watchdog após READY e concorrência de timeout com apply continuam sem correção. `AllowWrites` e `allowRecovery` continuam desabilitados na composição. Nenhum SDC_APPLY foi executado.

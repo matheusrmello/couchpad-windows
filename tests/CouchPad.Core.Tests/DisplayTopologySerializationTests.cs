@@ -308,3 +308,23 @@ public class RescueWatchdogLoopTests
         Assert.True(restored);
     }
 }
+
+public class RescueFailureLogTests
+{
+    [Fact]
+    public void Writes_local_stage_without_exception_message_or_unknown_stage()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "couchpad-rescue-test-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            RescueFailureLog.TryWrite(directory, "restore", new InvalidOperationException("private payload"));
+            RescueFailureLog.TryWrite(directory, "untrusted text", new IOException("private payload"));
+            var log = File.ReadAllText(Path.Combine(directory, "rescue-failures.log"));
+            Assert.Contains("stage=restore", log);
+            Assert.Contains("stage=unknown", log);
+            Assert.DoesNotContain("private payload", log);
+            Assert.DoesNotContain("untrusted text", log);
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
+    }
+}

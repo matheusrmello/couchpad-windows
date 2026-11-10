@@ -1189,3 +1189,7 @@ Build 0 avisos/erros, 114 testes unitários e smoke passaram; o executável copi
 ### P4 — revisão do watchdog e publicação, 2026-11-10
 
 A revisão `docs/p4-watchdog-review.md` identificou pendências impeditivas: morte do watchdog após READY, concorrência timeout/apply, ACK de commit incerto e diagnóstico/retry de falha do rescue. Escrita segue desabilitada. Publicação Release win-x64 self-contained inicialmente omitiu a DLL do rescue; após correção, exe/DLL/deps/runtimeconfig estavam presentes e o executável sem argumentos retornou 2. Build 0 avisos/erros, 114 testes e smoke passaram. Sem SDC_APPLY; P4 não aceita.
+
+### P4 — acompanhamento de ACK e diagnóstico, 2026-11-10
+
+Cancelamento após o envio do sinal não interrompe a espera por ACK; falha de pipe ao enviar ACK leva o filho a tentar restore. Testes de processo com backend falso passaram para esses cenários. Rescue grava falhas tratadas localmente sem mensagem de exceção; retry no logon permanece P6. Duas capturas CCD consecutivas foram semanticamente equivalentes, sem mudança de topologia. Morte do watchdog após READY, concorrência timeout/apply e resultado incerto de ACK continuam pendentes; não habilitar escrita. Build 0 avisos/erros; 115 testes e smoke passaram.

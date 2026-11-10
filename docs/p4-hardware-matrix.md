@@ -89,3 +89,7 @@ Composição opt-in cria serviço Windows e guard em conjunto, ambos sem permiss
 ### P4 — revisão do watchdog e publicação, 2026-11-10
 
 Revisão em `docs/p4-watchdog-review.md`: há corridas impeditivas na vida do watchdog, timeout e ACK. A publicação win-x64 self-contained foi corrigida e testada com o rescue presente. Build 0 avisos/erros, 114 testes e smoke passaram. Nenhum apply de hardware foi executado; matriz real pendente.
+
+### P4 — acompanhamento sem apply, 2026-11-10
+
+Testes fake: cancelamento após envio e quebra de pipe antes do ACK passaram. Duas capturas do estado `InternalOnly` atual foram consideradas semanticamente iguais; não houve restore nem mudança de topologia. Concorrência timeout/apply e morte do watchdog após READY seguem pendentes. Build 0 avisos/erros; 115 testes e smoke passaram.

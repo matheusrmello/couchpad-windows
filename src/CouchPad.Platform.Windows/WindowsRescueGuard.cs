@@ -75,9 +75,13 @@ public sealed class WindowsRescueGuard : IRescueGuard
             try
             {
                 if (_disposed || _abandoned || _finished) throw new InvalidOperationException("Rescue lease is not active.");
-                await _writer.WriteLineAsync(command.AsMemory(), token).ConfigureAwait(false);
-                await _writer.FlushAsync(token).ConfigureAwait(false);
-                if (await _reader.ReadLineAsync(token).ConfigureAwait(false) != "ACK") throw new IOException("Rescue did not acknowledge completion.");
+                // Once delivery starts, caller cancellation cannot make the outcome
+                // ambiguous by interrupting the ACK read halfway through the signal.
+                token.ThrowIfCancellationRequested();
+                using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                await _writer.WriteLineAsync(command.AsMemory(), deadline.Token).ConfigureAwait(false);
+                await _writer.FlushAsync(deadline.Token).ConfigureAwait(false);
+                if (await _reader.ReadLineAsync(deadline.Token).ConfigureAwait(false) != "ACK") throw new IOException("Rescue did not acknowledge completion.");
                 _finished = true;
             }
             finally { _gate.Release(); }

@@ -90,6 +90,31 @@ foreach (var mode in new[] { "COMMIT", "ABORT", "ABANDON", "TIMEOUT", "DISPOSE" 
 if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
 {
     Reset();
+    var ackGate = marker + ".ack";
+    Environment.SetEnvironmentVariable("COUCHPAD_TEST_ACK_GATE", ackGate);
+    try
+    {
+        var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(8), allowRecovery: true);
+        await using var lease = await guard.BeginAsync("test-cancel-ack");
+        using var cancel = new CancellationTokenSource();
+        var commit = lease.CommitAsync(cancel.Token);
+        await WaitMarker(ackGate + ".waiting", TimeSpan.FromSeconds(5));
+        cancel.Cancel();
+        await File.WriteAllTextAsync(ackGate + ".release", "release");
+        await commit;
+        if (await WaitMarker(marker, TimeSpan.FromSeconds(5)) != "COMMIT") throw new InvalidOperationException("Commit acknowledgement failed.");
+        Console.WriteLine("ACK_CANCELLATION_AFTER_SEND: PASS");
+    }
+    finally
+    {
+        Environment.SetEnvironmentVariable("COUCHPAD_TEST_ACK_GATE", null);
+        if (File.Exists(ackGate + ".waiting")) File.Delete(ackGate + ".waiting");
+        if (File.Exists(ackGate + ".release")) File.Delete(ackGate + ".release");
+    }
+}
+if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
+{
+    Reset();
     var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(8), allowRecovery: true);
     await using var first = await guard.BeginAsync("test-lock");
     using var currentForLock = Process.GetCurrentProcess();
@@ -102,6 +127,34 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
     if (duplicate.ExitCode != 3) throw new InvalidOperationException("Duplicate watchdog was not refused: " + duplicate.ExitCode);
     await first.AbortAsync();
     Console.WriteLine("SINGLE_INSTANCE: PASS");
+}
+if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
+{
+    Reset();
+    await Task.Delay(200);
+    var ackGate = marker + ".broken";
+    var brokenName = "CouchPad-rescue-" + Guid.NewGuid().ToString("N");
+    using var server = new NamedPipeServerStream(brokenName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+    using var current = Process.GetCurrentProcess();
+    var info = new ProcessStartInfo(childExecutable) { UseShellExecute = false, CreateNoWindow = true };
+    info.Environment["COUCHPAD_TEST_ACK_GATE"] = ackGate;
+    info.ArgumentList.Add(brokenName); info.ArgumentList.Add(marker + ".journal"); info.ArgumentList.Add(current.Id.ToString());
+    info.ArgumentList.Add(current.StartTime.ToUniversalTime().Ticks.ToString()); info.ArgumentList.Add("5000");
+    using var child = Process.Start(info) ?? throw new InvalidOperationException("ACK test child failed to start.");
+    using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+    await server.WaitForConnectionAsync(limit.Token);
+    var reader = new StreamReader(server, Encoding.UTF8, false, 1024, true);
+    var writer = new StreamWriter(server, new UTF8Encoding(false), 1024, true) { AutoFlush = true };
+    if (await reader.ReadLineAsync(limit.Token) != "READY") throw new InvalidOperationException("Missing READY.");
+    await writer.WriteLineAsync("COMMIT");
+    await WaitMarker(ackGate + ".waiting", TimeSpan.FromSeconds(5));
+    server.Disconnect();
+    await File.WriteAllTextAsync(ackGate + ".release", "release");
+    await child.WaitForExitAsync(limit.Token);
+    if (child.ExitCode != 0 || await File.ReadAllTextAsync(marker) != "RESTORE") throw new InvalidOperationException("Failed ACK did not restore.");
+    if (File.Exists(ackGate + ".waiting")) File.Delete(ackGate + ".waiting");
+    if (File.Exists(ackGate + ".release")) File.Delete(ackGate + ".release");
+    Console.WriteLine("ACK_PIPE_BREAK: PASS");
 }
 Reset();
 await Task.Delay(200);
