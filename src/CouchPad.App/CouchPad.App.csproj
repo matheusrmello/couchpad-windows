@@ -32,4 +32,12 @@
     </ItemGroup>
     <Copy SourceFiles="@(_RescueArtifact)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+  <Target Name="IncludeRescueAssemblyInPublish" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.dll">
+        <RelativePath>CouchPad.Rescue.dll</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 </Project>

@@ -85,3 +85,7 @@ Estes resultados não demonstram restauração no driver, kill durante apply rea
 ### P4 — composição do guard, 2026-11-10
 
 Composição opt-in cria serviço Windows e guard em conjunto, ambos sem permissão de escrita/recuperação. O guard desabilitado recusa iniciar processo, evitando um restore involuntário após um apply recusado. Build 0 avisos/erros; 114 testes unitários e smoke passaram. O rescue inicia da saída Debug; empacotamento e matriz real ainda não validados. Nenhum SDC_APPLY foi executado.
+
+### P4 — revisão do watchdog e publicação, 2026-11-10
+
+Revisão em `docs/p4-watchdog-review.md`: há corridas impeditivas na vida do watchdog, timeout e ACK. A publicação win-x64 self-contained foi corrigida e testada com o rescue presente. Build 0 avisos/erros, 114 testes e smoke passaram. Nenhum apply de hardware foi executado; matriz real pendente.
