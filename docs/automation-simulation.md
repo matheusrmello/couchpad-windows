@@ -147,15 +147,31 @@ Idle ─────────────────────────
 `AutomationSnapshot` guarda:
 
 - `RestoreDisplay` e `RestoreAudio`: **baseline anterior**, alvo da restauração.
-- `DisplayMode` e `AudioMode`: modo aplicado.
-- `AppliedAudio`: saída aplicada.
 - `RestoreDisplay.Topology`: snapshot **opaco** da topologia completa,
   serializado pela implementação de plataforma (schema/versão próprio). O
   Core não interpreta o conteúdo; ele persiste e devolve no restore.
+- `DisplayMode` e `AudioMode`: modo aplicado.
+- `AppliedAudio`: saída aplicada.
 
 Reaplicar um modo enquanto `Active` (ex.: trocar TV-only por estender) usa o
 baseline original do snapshot anterior, não o estado aplicado. Isso evita
 restaurar “TV-only” quando o baseline era “estender”.
+
+### 4.4 Mapeamento do estado real
+
+`DisplayState` é um resumo; `Topology` é a fonte de verdade para restore.
+
+| Situação real | `Mode` | `PrimaryActive` | `TvActive` |
+|---|---|---|---|
+| só o monitor interno ativo | `InternalOnly` | `true` | `false` |
+| só a TV ativa | `TvOnly` | `false` | `true` |
+| TV + interno com sources/modos distintos | `Extend` | `true` | `true` |
+| TV + interno clonados (mesmo source/modo) | `Mirror` | `true` | `true` |
+
+A implementação de plataforma deve preencher esse resumo a partir dos paths
+ativos e do seletor de TV; a UI não deve inferir a TV pela ordem dos paths.
+`DisplayState.Topology` continua sendo o snapshot completo usado por
+`RestoreAsync` e pelo journal.
 
 Se uma reaplicação falhar, o snapshot anterior é mantido, o journal continua
 válido e o estado vira `Error`; desligar/redefinir ainda restaura o baseline.
@@ -284,7 +300,7 @@ journal antigo sem baseline (campos nulos).
 `JsonAppSettingsStoreTests` cobre os novos campos e a preservação de chaves
 desconhecidas.
 
-Total na P3: **59 testes**.
+Total na P3: **66 testes**.
 
 ---
 

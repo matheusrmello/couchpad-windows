@@ -4,9 +4,9 @@
 - Origem: P3 — serviço simulado, state machine, atrasos, journal e persistência
 - Destino: REA 2.2.0 + P4 — display real
 - Tag da origem: `v0.4.0-sim`
-- Contrato endurecido: commit `fix(P3): topologia e journal antes do apply` (versão 0.4.1)
+- Contrato endurecido: commit `fix(P3): topologia e journal antes do apply` (versão 0.4.1); `DisplayMode.InternalOnly` na versão 0.4.2
 - Build: 0 avisos, 0 erros
-- Testes: 59 aprovados
+- Testes: 66 aprovados
 - Árvore: limpa (os arquivos de REA/P4 do Codex são commitados separadamente)
 - Aceite do usuário: 09/11/2026
 
@@ -51,6 +51,14 @@ Em `src/CouchPad.Core`:
    `GetCurrent()`/`ApplyAsync` com o snapshot completo da topologia CCD
    (paths, modes, flags e versão do schema). O Core não interpreta o conteúdo;
    `RestoreAsync` o consome.
+   - `Mode` é um resumo, não a fonte de verdade:
+     - só interno ativo → `InternalOnly`;
+     - só TV ativa → `TvOnly`;
+     - TV + interno com sources/modos distintos → `Extend`;
+     - TV + interno clonados (mesmo source/modo) → `Mirror`.
+   - `PrimaryActive`/`TvActive` vêm dos paths ativos e do seletor de TV.
+   - Seletor: EDID + target path/UID primeiro; nome exato como fallback;
+     ambiguidade recusa. Não inferir a TV pela ordem dos paths.
 4. **Journal**: mantenha `state` (`pending`/`active`), `displayMode`,
    `audioMode`, `updatedAt`, `restoreDisplay` (com `Topology`), `restoreAudio`
    e `appliedAudio`. O `pending` é gravado **antes** do apply; o `active`

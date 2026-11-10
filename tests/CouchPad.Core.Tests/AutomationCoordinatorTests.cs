@@ -78,7 +78,7 @@ public sealed class AutomationCoordinatorTests
         Assert.Equal(2, journal.Saves);
         Assert.Equal(SessionJournalEntry.PendingState, journal.Saved[0].State);
         Assert.Equal(SessionJournalEntry.ActiveState, journal.Entry!.State);
-        Assert.Equal(new DisplayState(DisplayMode.Extend, true, false), journal.Entry.RestoreDisplay);
+        Assert.Equal(new DisplayState(DisplayMode.InternalOnly, true, false), journal.Entry.RestoreDisplay);
         Assert.Equal(AudioOutput.Default, journal.Entry.RestoreAudio);
         Assert.Equal(AudioOutput.Hdmi, journal.Entry.AppliedAudio);
     }
@@ -132,14 +132,14 @@ public sealed class AutomationCoordinatorTests
         Assert.Single(display.Applied);
         Assert.Equal(1, journal.Saves);
         Assert.Equal(SessionJournalEntry.PendingState, journal.Entry!.State);
-        Assert.Equal(new DisplayState(DisplayMode.Extend, true, false), journal.Entry.RestoreDisplay);
+        Assert.Equal(new DisplayState(DisplayMode.InternalOnly, true, false), journal.Entry.RestoreDisplay);
     }
 
     [Fact]
     public async Task Topology_snapshot_is_persisted_in_the_journal()
     {
         const string topology = "{\"schema\":1,\"paths\":[]}";
-        var baseline = new DisplayState(DisplayMode.Extend, PrimaryActive: true, TvActive: false)
+        var baseline = new DisplayState(DisplayMode.InternalOnly, PrimaryActive: true, TvActive: false)
         {
             Topology = topology,
         };
@@ -281,7 +281,7 @@ public sealed class AutomationCoordinatorTests
     public async Task Reapply_keeps_the_original_restore_baseline()
     {
         var (coordinator, display, _, _, _) = Create();
-        var baseline = new DisplayState(DisplayMode.Extend, PrimaryActive: true, TvActive: false);
+        var baseline = new DisplayState(DisplayMode.InternalOnly, PrimaryActive: true, TvActive: false);
         var settings = new AutomationSettings
         {
             Enabled = true,
@@ -353,7 +353,7 @@ public sealed class AutomationCoordinatorTests
     private sealed class FakeDisplayService : IDisplayService
     {
         public DisplayState Current { get; set; } =
-            new(DisplayMode.Extend, PrimaryActive: true, TvActive: false);
+            new(DisplayMode.InternalOnly, PrimaryActive: true, TvActive: false);
 
         public List<DisplayMode> Applied { get; } = new();
 

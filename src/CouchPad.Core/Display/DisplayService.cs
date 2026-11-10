@@ -5,6 +5,9 @@ public enum DisplayMode
     TvOnly,
     Extend,
     Mirror,
+
+    /// <summary>Baseline sem a TV: apenas o monitor interno está ativo.</summary>
+    InternalOnly,
 }
 
 /// <summary>Estado abstrato do display, sem P/Invoke e sem nomes de tela.</summary>
@@ -39,7 +42,7 @@ public sealed class SimulatedDisplayService : IDisplayService
         _latency = latency is { } value && value > TimeSpan.Zero ? value : TimeSpan.Zero;
 
     public DisplayState Current { get; private set; } =
-        new(DisplayMode.Extend, PrimaryActive: true, TvActive: false);
+        new(DisplayMode.InternalOnly, PrimaryActive: true, TvActive: false);
 
     public DisplayState GetCurrent() => Current;
 
@@ -53,6 +56,7 @@ public sealed class SimulatedDisplayService : IDisplayService
         {
             DisplayMode.TvOnly => new DisplayState(DisplayMode.TvOnly, PrimaryActive: false, TvActive: true),
             DisplayMode.Mirror => new DisplayState(DisplayMode.Mirror, PrimaryActive: true, TvActive: true),
+            DisplayMode.InternalOnly => new DisplayState(DisplayMode.InternalOnly, PrimaryActive: true, TvActive: false),
             _ => new DisplayState(DisplayMode.Extend, PrimaryActive: true, TvActive: true),
         };
 
