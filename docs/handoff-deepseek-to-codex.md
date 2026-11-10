@@ -186,6 +186,7 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 - O smoke imprime uma linha e fecha.
 - A galeria é o catálogo visual dos componentes (P2), sem hardware.
 - O fluxo P3 está documentado em `docs/automation-simulation.md`.
+- O runbook da matriz P4 está em `docs/p4-runbook.md`.
 - Capturas do fluxo: `p3-01-idle.png` … `p3-06-restored.png` em
   `C:\Users\Usuario\AppData\Local\Temp\opencode\`.
 
