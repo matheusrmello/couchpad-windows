@@ -1228,3 +1228,5 @@ Fluxo desejado pelo usuário: conectar controle → contagem configurável padr�
 O card localizado “Contagem regressiva” reúne os seletores independentes de ativação e desativação, preservando os valores salvos e as opções imediato/1/2/3/5 segundos. O layout responsivo inclui o novo card nas três larguras. Build Release 0 avisos/erros, 167 testes e smoke passaram; nenhuma alteração de hardware foi executada.
 
 O usuário forneceu `shiftpad_preview.png` e solicitou seu uso como imagem e ícone do aplicativo (D045). O arquivo está em `src/CouchPad.App/Assets/couchpad.png`, com conversão para ICO multirresolução no mesmo diretório; a marca no cabeçalho, o ícone da janela e o executável usam esses recursos. Build Release, 167 testes e smoke passaram; o ícone do executável foi extraído com sucesso. Nenhuma alteração de hardware foi executada.
+
+Por solicitação do usuário, a imagem gerada com fundo transparente substituiu o PNG e o ICO multirresolução. O canto do PNG tem alpha zero; build Debug, 167 testes e smoke passaram. A instância Release aberta bloqueou a recompilação Release e conserva a imagem anterior até ser fechada e recompilada.
