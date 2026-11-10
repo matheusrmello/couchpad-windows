@@ -20,6 +20,43 @@ public sealed class JsonSessionJournalStoreTests : IDisposable
     }
 
     [Fact]
+    public void Inspect_missing_file_is_distinct_from_present_journal()
+    {
+        var store = new JsonSessionJournalStore(JournalPath);
+        Assert.Equal(SessionJournalStatus.Missing, store.Inspect().Status);
+        var expected = new SessionJournalEntry(SessionJournalEntry.PendingState, DisplayMode.TvOnly, AudioMode.KeepCurrent, DateTimeOffset.UtcNow);
+        store.Save(expected);
+        var inspection = store.Inspect();
+        Assert.Equal(SessionJournalStatus.Present, inspection.Status);
+        Assert.Equal(expected, inspection.Entry);
+    }
+
+    [Theory]
+    [InlineData("{ invalid")]
+    [InlineData("null")]
+    public void Inspect_corrupt_or_null_json_preserves_original(string contents)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(JournalPath)!);
+        File.WriteAllText(JournalPath, contents);
+        var inspection = new JsonSessionJournalStore(JournalPath).Inspect();
+        Assert.Equal(SessionJournalStatus.Unreadable, inspection.Status);
+        Assert.Equal(contents, File.ReadAllText(JournalPath));
+        Assert.False(File.Exists(JournalPath + ".bak"));
+    }
+
+    [Fact]
+    public void Inspect_locked_file_is_unreadable_not_missing()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        Directory.CreateDirectory(Path.GetDirectoryName(JournalPath)!);
+        File.WriteAllText(JournalPath, "{}");
+        using var held = new FileStream(JournalPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var inspection = new JsonSessionJournalStore(JournalPath).Inspect();
+        Assert.Equal(SessionJournalStatus.Unreadable, inspection.Status);
+        Assert.True(File.Exists(JournalPath));
+    }
+
+    [Fact]
     public void Save_then_load_roundtrips()
     {
         var store = new JsonSessionJournalStore(JournalPath);
@@ -94,6 +131,17 @@ public sealed class JsonSessionJournalStoreTests : IDisposable
 
         Assert.False(File.Exists(JournalPath));
         Assert.Null(store.Load());
+    }
+
+    [Fact]
+    public void Clear_propagates_sharing_failure()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var store = new JsonSessionJournalStore(JournalPath);
+        store.Save(new SessionJournalEntry(SessionJournalEntry.ActiveState, DisplayMode.TvOnly, AudioMode.KeepCurrent, DateTimeOffset.UtcNow));
+        using var held = new FileStream(JournalPath, FileMode.Open, FileAccess.Read, FileShare.None);
+        Assert.ThrowsAny<IOException>(() => store.Clear());
+        Assert.True(File.Exists(JournalPath));
     }
 
     [Fact]

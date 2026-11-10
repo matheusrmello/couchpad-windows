@@ -98,3 +98,7 @@ Testes fake: cancelamento após envio e quebra de pipe antes do ACK passaram. Du
 ### P4 — monitoração do watchdog, 2026-11-10
 
 Com backend falso, perda do watchdog antes/durante/depois de apply provocou erro e preservou o journal; uma chamada falsa não cancelável terminou antes do rollback. Um processo rescue de teste saiu após READY e sua perda foi sinalizada; liberações normais não foram classificadas como falha. Build 0 avisos/erros, 120 testes e smoke passaram. Sem apply real; matriz de hardware e corridas timeout/ACK pendentes.
+
+### P4 — testes de processo e isolamento, 2026-11-10
+
+Com o código do rescue em processo separado e backend falso, passaram commit, abort, abandon, timeout, dispose, perda de ACK, pipe quebrado, morte do pai antes/depois do apply simulado, saída após READY, instância única e timeout aguardando lock de mutação. Testes unitários cobrem barreira entre decisão e chamada, journal prévio/ilegível, falha de limpeza e revogação de escrita; 162 testes passaram, build sem avisos/erros e smoke OK. A revisão independente detectou conflito entre instâncias simulada e real pelo journal; ambas agora obtêm o mesmo lock antes da inspeção. Nenhum SDC_APPLY real foi executado nesta rodada. A chamada CCD é síncrona e, se travar, pode impedir o watchdog de obter o lock até o processo encerrar; timeout não garante recuperação em prazo fixo. A matriz real e confirmação visual pelo operador continuam pendentes.

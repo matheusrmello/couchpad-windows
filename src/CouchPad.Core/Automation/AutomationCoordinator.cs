@@ -43,6 +43,15 @@ public sealed class AutomationCoordinator
         _journal = journal;
         _time = timeProvider ?? TimeProvider.System;
         _rescueGuard = rescueGuard;
+
+        if (journal is not null)
+        {
+            // Never overwrite a previous session merely because its journal
+            // cannot be read. Recovery or explicit reconciliation must happen first.
+            try { _recoveryUncertain = journal.Inspect()?.Status != SessionJournalStatus.Missing; }
+            catch (Exception) { _recoveryUncertain = true; }
+            if (_recoveryUncertain) _state = AutomationState.RescuePending;
+        }
     }
 
     public AutomationSettings Settings { get; private set; } = new();
@@ -167,6 +176,11 @@ public sealed class AutomationCoordinator
         lock (_sync)
         {
             _gamepad = device;
+        }
+
+        if (IsRecoveryUncertain)
+        {
+            return;
         }
 
         var settings = Settings;
@@ -354,7 +368,7 @@ public sealed class AutomationCoordinator
                 _snapshot = previousSnapshot;
             }
 
-            if (lease?.FailureToken.IsCancellationRequested == true || !released)
+            if (lease?.FailureToken.IsCancellationRequested == true || !released || !restored)
             {
                 lock (_sync) { _recoveryUncertain = true; }
                 SetState(AutomationState.Error, "watchdog unavailable");
@@ -363,7 +377,12 @@ public sealed class AutomationCoordinator
 
             if (restored && previousSnapshot is null)
             {
-                TryClearJournal();
+                if (!TryClearJournal())
+                {
+                    lock (_sync) { _recoveryUncertain = true; }
+                    SetState(AutomationState.Error, "journal cleanup failed");
+                    return;
+                }
             }
 
             throw;
@@ -378,14 +397,14 @@ public sealed class AutomationCoordinator
                 _snapshot = previousSnapshot;
             }
 
-            if (!released || lease?.FailureToken.IsCancellationRequested == true)
+            if (!restored || !released || lease?.FailureToken.IsCancellationRequested == true)
             {
                 lock (_sync) { _recoveryUncertain = true; }
             }
 
             if (restored && released && previousSnapshot is null && lease?.FailureToken.IsCancellationRequested != true)
             {
-                TryClearJournal();
+                if (!TryClearJournal()) lock (_sync) { _recoveryUncertain = true; }
             }
 
             SetState(AutomationState.Error, ex.Message);
@@ -444,12 +463,17 @@ public sealed class AutomationCoordinator
                 await lease.CommitAsync(guardedToken);
             }
 
+            if (!TryClearJournal())
+            {
+                lock (_sync) { _recoveryUncertain = true; }
+                SetState(AutomationState.Error, "journal cleanup failed");
+                return;
+            }
+
             lock (_sync)
             {
                 _snapshot = null;
             }
-
-            TryClearJournal();
         }
         catch (RescueDecisionUncertainException ex)
         {
@@ -645,20 +669,21 @@ public sealed class AutomationCoordinator
         }
     }
 
-    private void TryClearJournal()
+    private bool TryClearJournal()
     {
         if (_journal is null)
         {
-            return;
+            return true;
         }
 
         try
         {
             _journal.Clear();
+            return true;
         }
         catch
         {
-            // Limpeza é melhor esforço.
+            return false;
         }
     }
 }

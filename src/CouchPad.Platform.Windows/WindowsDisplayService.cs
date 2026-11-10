@@ -7,7 +7,7 @@ using CouchPad.Core.Automation;
 namespace CouchPad.Platform.Windows;
 
 /// <summary>Serviço CCD; escrita opt-in, ainda requer validação em hardware.</summary>
-public sealed class WindowsDisplayService : IDisplayService
+public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteControl
 {
     private const uint ActivePaths = 2;
     public const uint AllPaths = 1;
@@ -16,6 +16,7 @@ public sealed class WindowsDisplayService : IDisplayService
     private readonly WindowsDisplayOptions _options;
     private readonly RescueTransactionContext? _transaction;
     private readonly bool _recoveryWriter;
+    private readonly CancellationTokenSource _writesRevoked = new();
     private readonly Func<uint, Snapshot>? _captureOverride;
     private readonly Func<byte[], byte[], uint, int>? _setOverride;
 
@@ -132,8 +133,19 @@ public sealed class WindowsDisplayService : IDisplayService
     public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default)
     {
         if (!_options.AllowWrites) throw new NotSupportedException("Display writes are disabled.");
+        if (_writesRevoked.IsCancellationRequested) throw new NotSupportedException("Display writes are disabled for this session.");
         if (_setOverride is null && _transaction is null) throw new RescueDecisionUncertainException("A guarded transaction is required.");
-        return ApplyCoreAsync(mode, cancellationToken);
+        return ApplyWithRevocationAsync(mode, cancellationToken);
+    }
+
+    public bool CanApply => _options.AllowWrites && !_writesRevoked.IsCancellationRequested;
+
+    public void DisableNewWrites() => _writesRevoked.Cancel();
+
+    private async Task<DisplayState> ApplyWithRevocationAsync(DisplayMode mode, CancellationToken cancellationToken)
+    {
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _writesRevoked.Token);
+        return await ApplyCoreAsync(mode, linked.Token).ConfigureAwait(false);
     }
 
     private async Task<DisplayState> ApplyCoreAsync(DisplayMode mode, CancellationToken cancellationToken)
@@ -222,7 +234,19 @@ public sealed class WindowsDisplayService : IDisplayService
 
     private void SetConfiguration(byte[] paths, byte[] modes, uint action)
     {
+        if (action == 0x80 && _transaction is not null)
+        {
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            _transaction.ExecuteIfStateAsync(_recoveryWriter ? RescueDecisionState.RecoveryRequested : RescueDecisionState.Armed,
+                () => SetConfigurationCore(paths, modes, action), deadline.Token).GetAwaiter().GetResult();
+            return;
+        }
         if (action == 0x80) EnsureMutationAllowed();
+        SetConfigurationCore(paths, modes, action);
+    }
+
+    private void SetConfigurationCore(byte[] paths, byte[] modes, uint action)
+    {
         if (_setOverride is not null) { Check(_setOverride(paths, modes, action)); return; }
         var pathPin = GCHandle.Alloc(paths, GCHandleType.Pinned);
         var modePin = GCHandle.Alloc(modes, GCHandleType.Pinned);

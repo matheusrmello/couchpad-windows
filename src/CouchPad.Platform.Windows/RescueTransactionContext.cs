@@ -49,5 +49,21 @@ public sealed class RescueTransactionContext
         catch (Exception ex) { throw new RescueDecisionUncertainException("Rescue decision could not be verified.", ex); }
     }
 
+    internal async Task ExecuteIfStateAsync(RescueDecisionState expected, Action action, CancellationToken cancellationToken = default)
+    {
+        Binding binding;
+        lock (_sync) { binding = _binding ?? throw new RescueDecisionUncertainException("No rescue transaction is bound."); }
+        var started = false;
+        try
+        {
+            await binding.Store.ExecuteIfStateAsync(binding.TransactionId, binding.BaselineSha256, expected,
+                () => { started = true; action(); }, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (!started && ex is not RescueDecisionUncertainException)
+        {
+            throw new RescueDecisionUncertainException("Rescue decision could not be verified.", ex);
+        }
+    }
+
     private sealed record Binding(RescueDecisionStore Store, Guid TransactionId, string BaselineSha256);
 }

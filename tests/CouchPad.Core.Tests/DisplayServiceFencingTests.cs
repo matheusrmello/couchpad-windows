@@ -20,10 +20,8 @@ public sealed class DisplayServiceFencingTests : IDisposable
         1, flags, 72, 64, Convert.ToBase64String(paths.SelectMany(p => p).ToArray()), Convert.ToBase64String(new byte[64]),
         [new(1, 0, 10, "tv", "TV", 1, 2, 0), new(1, 0, 20, "monitor", "Monitor", 3, 4, 0)]);
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task Recovery_request_fences_normal_writer_without_competing_rollback(bool requestDuringApply)
+    [Fact]
+    public async Task Recovery_request_fences_normal_writer_before_apply()
     {
         if (!OperatingSystem.IsWindows()) return;
         var decisionPath = Path.Combine(_directory, "decision.json");
@@ -32,8 +30,7 @@ public sealed class DisplayServiceFencingTests : IDisposable
         await store.InitializeAsync(id, Hash);
         var context = new RescueTransactionContext(_directory);
         context.Bind(decisionPath, id, Hash);
-        if (!requestDuringApply)
-            await store.TryTransitionAsync(id, Hash, RescueDecisionState.Armed, RescueDecisionState.RecoveryRequested);
+        await store.TryTransitionAsync(id, Hash, RescueDecisionState.Armed, RescueDecisionState.RecoveryRequested);
         var active = Snapshot(2, PathFor(0, 20));
         var all = Snapshot(1, PathFor(0, 20), PathFor(0, 10), PathFor(1, 10));
         var actions = new List<uint>();
@@ -43,13 +40,11 @@ public sealed class DisplayServiceFencingTests : IDisposable
             (paths, modes, action) =>
             {
                 actions.Add(action);
-                if (action == 0x80 && requestDuringApply)
-                    store.TryTransitionAsync(id, Hash, RescueDecisionState.Armed, RescueDecisionState.RecoveryRequested).GetAwaiter().GetResult();
                 return 0;
             }, context);
 
         await Assert.ThrowsAsync<RescueDecisionUncertainException>(() => service.ApplyAsync(DisplayMode.TvOnly));
-        Assert.Equal(requestDuringApply ? new uint[] { 0x40, 0x80 } : Array.Empty<uint>(), actions);
+        Assert.Empty(actions);
     }
 
     public void Dispose()

@@ -218,6 +218,17 @@ public class WindowsDisplayServiceFakeTests
         return new(new("tv", 1, 2, AllowWrites: true, InternalDisplay: new("internal", 3, 4)), flags => flags == 1 ? all : active, set);
     }
     [Fact]
+    public async Task Revocation_during_apply_rolls_back_and_blocks_further_applies()
+    {
+        var actions = new List<uint>();
+        WindowsDisplayService? service = null;
+        service = Create((p, m, action) => { actions.Add(action); if (actions.Count == 2) service!.DisableNewWrites(); return 0; });
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.ApplyAsync(DisplayMode.TvOnly));
+        Assert.Equal(new uint[] { 0x40, 0x80, 0x40, 0x80 }, actions);
+        Assert.False(service.CanApply);
+        await Assert.ThrowsAsync<NotSupportedException>(() => service.ApplyAsync(DisplayMode.TvOnly));
+    }
+    [Fact]
     public async Task Validation_failure_prevents_apply()
     {
         var actions = new List<uint>();

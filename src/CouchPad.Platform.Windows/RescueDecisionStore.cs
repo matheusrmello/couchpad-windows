@@ -80,6 +80,27 @@ public sealed class RescueDecisionStore
     }
 
     /// <summary>
+    /// Executes a synchronous action only while the identified decision is in
+    /// the required state. The decision lock remains held until the action
+    /// returns, preventing a competing transition between the check and the
+    /// action. The action must not re-enter this store and cannot be cancelled
+    /// once started. Callers must acquire the CCD mutation lock first.
+    /// </summary>
+    public async Task ExecuteIfStateAsync(Guid transactionId, string baselineSha256,
+        RescueDecisionState expected, Action action, CancellationToken cancellationToken = default)
+    {
+        ValidateIdentity(transactionId, baselineSha256);
+        if (!Enum.IsDefined(expected)) throw new ArgumentOutOfRangeException(nameof(expected));
+        ArgumentNullException.ThrowIfNull(action);
+        await using var held = await AcquireAsync(cancellationToken).ConfigureAwait(false);
+        var current = ReadLocked() ?? throw new RescueDecisionUncertainException("Rescue decision is missing.");
+        EnsureIdentity(current, transactionId, baselineSha256);
+        if (current.State != expected) throw new RescueDecisionUncertainException("Rescue transaction does not permit display mutation.");
+        cancellationToken.ThrowIfCancellationRequested();
+        action();
+    }
+
+    /// <summary>
     /// Returns false when another decision won. Retrying the same transition
     /// after its successful write returns true without rewriting the record.
     /// </summary>

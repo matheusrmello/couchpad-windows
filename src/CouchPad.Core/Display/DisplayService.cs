@@ -30,6 +30,13 @@ public interface IDisplayService
     Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Revokes new display applies for the remainder of this process; restores remain available.</summary>
+public interface IDisplayWriteControl
+{
+    bool CanApply { get; }
+    void DisableNewWrites();
+}
+
 /// <summary>
 /// Simulação: aplica o modo depois de uma latência curta para a UI mostrar
 /// o estado "Aplicando". Nenhuma chamada CCD acontece aqui.

@@ -26,6 +26,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IGamepadWatcher _gamepad;
     private readonly ISimulatedGamepad? _gamepadSimulator;
     private readonly AutomationCoordinator _coordinator;
+    private readonly IDisplayWriteControl? _displayWriteControl;
     private readonly Func<IReadOnlyList<DisplayTargetOption>>? _discoverTargets;
     private bool _isLoadingSettings;
 
@@ -90,6 +91,7 @@ public partial class MainWindowViewModel : ObservableObject
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         _discoverTargets = discoverTargets;
+        _displayWriteControl = displayService as IDisplayWriteControl;
         _localization.PropertyChanged += OnLocalizationChanged;
 
         _gamepad = gamepadWatcher ?? new SimulatedGamepadWatcher();
@@ -360,6 +362,7 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     private void Reset()
     {
+        _displayWriteControl?.DisableNewWrites();
         _isLoadingSettings = true;
         try
         {
@@ -390,6 +393,11 @@ public partial class MainWindowViewModel : ObservableObject
 
     partial void OnAutomationEnabledChanged(bool value)
     {
+        if (value && _displayWriteControl is { CanApply: false })
+        {
+            AutomationEnabled = false;
+            return;
+        }
         PersistSettings();
         SyncAutomation();
     }
@@ -443,7 +451,15 @@ public partial class MainWindowViewModel : ObservableObject
         PersistSettings();
     }
 
-    partial void OnAllowDisplayWritesChanged(bool value) => PersistSettings();
+    partial void OnAllowDisplayWritesChanged(bool value)
+    {
+        if (!_isLoadingSettings && !value)
+        {
+            _displayWriteControl?.DisableNewWrites();
+            if (AutomationEnabled) AutomationEnabled = false;
+        }
+        PersistSettings();
+    }
 
     partial void OnSelectedTvTargetChanged(DisplayTargetOption? value) => PersistSettings();
 

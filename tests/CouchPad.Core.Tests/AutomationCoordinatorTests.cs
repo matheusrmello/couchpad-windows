@@ -7,6 +7,72 @@ namespace CouchPad.Core.Tests;
 
 public sealed class AutomationCoordinatorTests
 {
+    [Theory]
+    [InlineData(SessionJournalEntry.PendingState)]
+    [InlineData(SessionJournalEntry.ActiveState)]
+    public async Task Previous_journal_blocks_startup_and_is_never_overwritten(string state)
+    {
+        var guard = new FakeRescueGuard();
+        var journal = new FakeJournal();
+        var original = new SessionJournalEntry(state, DisplayMode.TvOnly, AudioMode.MoveToHdmi, DateTimeOffset.UtcNow)
+        {
+            RestoreDisplay = new DisplayState(DisplayMode.InternalOnly, true, false) { Topology = "baseline" },
+            RestoreAudio = AudioOutput.Default,
+        };
+        journal.Saved.Add(original);
+        var (coordinator, display, _, _, _) = Create(rescueGuard: guard, journal: journal);
+
+        Assert.Equal(AutomationState.RescuePending, coordinator.State);
+        Assert.True(coordinator.IsRecoveryUncertain);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Equal(AutomationState.RescuePending, coordinator.State);
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        await coordinator.ResetAsync();
+
+        Assert.True(coordinator.IsRecoveryUncertain);
+        Assert.Empty(display.Applied);
+        Assert.Empty(display.Restored);
+        Assert.Empty(guard.Leases);
+        Assert.Equal(0, journal.SaveAttempts);
+        Assert.Equal(0, journal.Clears);
+        Assert.Same(original, journal.Entry);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Unreadable_or_throwing_inspection_blocks_every_mutation(bool throws)
+    {
+        var guard = new FakeRescueGuard();
+        var journal = new FakeJournal
+        {
+            StartupStatus = SessionJournalStatus.Unreadable,
+            InspectException = throws ? new IOException("read failed") : null,
+        };
+        var (coordinator, display, _, _, _) = Create(rescueGuard: guard, journal: journal);
+
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        await coordinator.ResetAsync();
+
+        Assert.True(coordinator.IsRecoveryUncertain);
+        Assert.Empty(display.Applied);
+        Assert.Empty(display.Restored);
+        Assert.Empty(guard.Leases);
+        Assert.Equal(0, journal.SaveAttempts);
+        Assert.Equal(0, journal.Clears);
+    }
+
+    [Fact]
+    public void Legacy_null_load_does_not_prove_the_journal_is_missing()
+    {
+        var coordinator = new AutomationCoordinator(new FakeDisplayService(), new FakeAudioService(),
+            new ManualDelayScheduler(), new LegacyNullJournal());
+        Assert.True(coordinator.IsRecoveryUncertain);
+        Assert.Equal(AutomationState.RescuePending, coordinator.State);
+    }
+
     [Fact]
     public async Task Disabled_gamepad_connect_stays_idle()
     {
@@ -133,6 +199,22 @@ public sealed class AutomationCoordinatorTests
         Assert.Equal(1, journal.Saves);
         Assert.Equal(SessionJournalEntry.PendingState, journal.Entry!.State);
         Assert.Equal(new DisplayState(DisplayMode.InternalOnly, true, false), journal.Entry.RestoreDisplay);
+    }
+
+    [Fact]
+    public async Task Journal_clear_failure_after_restore_blocks_session_and_keeps_snapshot()
+    {
+        var (coordinator, _, _, _, journal) = Create();
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        journal.FailOnClear = true;
+
+        await coordinator.SetEnabledAsync(false);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.True(coordinator.IsRecoveryUncertain);
+        Assert.NotNull(coordinator.Snapshot);
+        Assert.NotNull(journal.Entry);
     }
 
     [Fact]
@@ -428,6 +510,22 @@ public sealed class AutomationCoordinatorTests
     }
 
     [Fact]
+    public async Task Guard_begin_and_restore_failure_preserves_journal_and_blocks_retry()
+    {
+        var guard = new FakeRescueGuard { BeginException = new InvalidOperationException("watchdog unavailable") };
+        var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
+        display.RestoreException = new InvalidOperationException("restore failed");
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Equal(SessionJournalEntry.PendingState, journal.Entry?.State);
+        guard.BeginException = null;
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Empty(display.Applied);
+        Assert.Empty(guard.Leases);
+    }
+
+    [Fact]
     public async Task Watchdog_loss_before_apply_prevents_mutation_and_keeps_journal()
     {
         var guard = new FakeRescueGuard { FailImmediately = true };
@@ -600,7 +698,8 @@ public sealed class AutomationCoordinatorTests
         ManualDelayScheduler Delay,
         FakeJournal Journal) Create(
         DisplayState? baseline = null,
-        IRescueGuard? rescueGuard = null)
+        IRescueGuard? rescueGuard = null,
+        FakeJournal? journal = null)
     {
         var display = new FakeDisplayService();
         if (baseline is not null)
@@ -610,7 +709,7 @@ public sealed class AutomationCoordinatorTests
 
         var audio = new FakeAudioService();
         var delay = new ManualDelayScheduler();
-        var journal = new FakeJournal();
+        journal ??= new FakeJournal();
         var coordinator = new AutomationCoordinator(
             display,
             audio,
@@ -856,6 +955,18 @@ public sealed class AutomationCoordinatorTests
         /// <summary>Número da tentativa (1-based) que deve falhar; 0 = nunca.</summary>
         public int FailOnSaveNumber { get; set; }
 
+        public bool FailOnClear { get; set; }
+
+        public SessionJournalStatus? StartupStatus { get; set; }
+
+        public Exception? InspectException { get; set; }
+
+        public SessionJournalInspection Inspect()
+        {
+            if (InspectException is not null) throw InspectException;
+            return new(StartupStatus ?? (Entry is null ? SessionJournalStatus.Missing : SessionJournalStatus.Present), Entry);
+        }
+
         public SessionJournalEntry? Load() => Entry;
 
         public void Save(SessionJournalEntry entry)
@@ -872,8 +983,16 @@ public sealed class AutomationCoordinatorTests
 
         public void Clear()
         {
+            if (FailOnClear) throw new IOException("journal cleanup failed");
             Saved.Clear();
             Clears++;
         }
+    }
+
+    private sealed class LegacyNullJournal : ISessionJournalStore
+    {
+        public SessionJournalEntry? Load() => null;
+        public void Save(SessionJournalEntry entry) => throw new InvalidOperationException("Must not save.");
+        public void Clear() => throw new InvalidOperationException("Must not clear.");
     }
 }

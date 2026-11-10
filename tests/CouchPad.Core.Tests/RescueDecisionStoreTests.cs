@@ -1,4 +1,5 @@
 using CouchPad.Platform.Windows;
+using CouchPad.Core.Automation;
 
 namespace CouchPad.Core.Tests;
 
@@ -77,6 +78,62 @@ public sealed class RescueDecisionStoreTests : IDisposable
             await Assert.ThrowsAnyAsync<OperationCanceledException>(() => store.TryTransitionAsync(id, Digest, RescueDecisionState.Armed, RescueDecisionState.Committed, cancellation.Token));
         }
         Assert.Equal(RescueDecisionState.Armed, (await store.ReadAsync(id, Digest))!.State);
+    }
+
+    [Fact]
+    public async Task Guarded_action_blocks_recovery_transition_until_action_finishes()
+    {
+        var store = new RescueDecisionStore(DecisionPath);
+        var competing = new RescueDecisionStore(DecisionPath);
+        var id = Guid.NewGuid();
+        await store.InitializeAsync(id, Digest);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var release = new ManualResetEventSlim();
+        var running = Task.Run(() => store.ExecuteIfStateAsync(id, Digest, RescueDecisionState.Armed, () =>
+        {
+            entered.SetResult();
+            if (!release.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException("Action was not released.");
+        }));
+
+        try
+        {
+            await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => competing.TryTransitionAsync(
+                id, Digest, RescueDecisionState.Armed, RescueDecisionState.RecoveryRequested, timeout.Token));
+            Assert.False(running.IsCompleted);
+        }
+        finally
+        {
+            release.Set();
+            await running;
+        }
+
+        Assert.True(await competing.TryTransitionAsync(id, Digest, RescueDecisionState.Armed, RescueDecisionState.RecoveryRequested));
+    }
+
+    [Fact]
+    public async Task Guarded_action_does_not_run_after_recovery_is_requested()
+    {
+        var store = new RescueDecisionStore(DecisionPath);
+        var id = Guid.NewGuid();
+        await store.InitializeAsync(id, Digest);
+        Assert.True(await store.TryTransitionAsync(id, Digest, RescueDecisionState.Armed, RescueDecisionState.RecoveryRequested));
+        var called = false;
+        await Assert.ThrowsAsync<RescueDecisionUncertainException>(() =>
+            store.ExecuteIfStateAsync(id, Digest, RescueDecisionState.Armed, () => called = true));
+        Assert.False(called);
+    }
+
+    [Fact]
+    public async Task Guarded_action_exception_releases_decision_lock()
+    {
+        var store = new RescueDecisionStore(DecisionPath);
+        var id = Guid.NewGuid();
+        await store.InitializeAsync(id, Digest);
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            store.ExecuteIfStateAsync(id, Digest, RescueDecisionState.Armed, () => throw new InvalidOperationException()));
+        Assert.True(await store.TryTransitionAsync(id, Digest, RescueDecisionState.Armed, RescueDecisionState.RecoveryRequested));
     }
 
     public void Dispose()

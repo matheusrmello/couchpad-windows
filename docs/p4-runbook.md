@@ -81,7 +81,7 @@ falhar.
 | 5 | Modo indisponível | Forçar modo não suportado (se aplicável) | recusa antes de mudar |
 | 6 | Sem TV/ambíguo | Remover/ambiguar seletor | nenhuma alteração |
 | 7 | Falha/cancelamento | Cancelar/desligar durante apply | rollback confirmado |
-| 8 | Kill durante apply | `Stop-Process -Name CouchPad -Force` durante o apply | watchdog restaura o baseline |
+| 8 | Kill durante apply | Encerrar apenas o PID do processo CouchPad iniciado para este teste, durante o apply | watchdog restaura o baseline |
 | 9 | Reinício com journal pendente | Deixar journal `pending` e reiniciar/logon | evidência P6; registrar separadamente |
 
 Cenário 8: faça apenas depois dos cenários 1–7 verdes. O watchdog tem timeout

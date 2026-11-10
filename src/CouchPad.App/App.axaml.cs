@@ -16,6 +16,9 @@ namespace CouchPad.App;
 
 public partial class App : Application
 {
+    // Held until process exit, including shutdown while a watchdog is active.
+    private DisplaySessionOwner? _displaySessionOwner;
+
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
     public override void OnFrameworkInitializationCompleted()
@@ -38,6 +41,7 @@ public partial class App : Application
             var (displayService, rescueGuard) = CreateWindowsDisplayServices(
                 desktop.Args ?? [], journalPath, isSmoke || isGallery,
                 Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"), appSettings);
+            _displaySessionOwner = isGallery ? null : AcquireDisplayOwner(journalPath);
             Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets =
                 isSmoke || isGallery || !OperatingSystem.IsWindows()
                     ? null
@@ -84,6 +88,9 @@ public partial class App : Application
 
         base.OnFrameworkInitializationCompleted();
     }
+
+    internal static DisplaySessionOwner? AcquireDisplayOwner(string journalPath) =>
+        OperatingSystem.IsWindows() ? DisplaySessionOwner.Acquire(journalPath) : null;
 
     internal static (IDisplayService? Display, IRescueGuard? Guard) CreateWindowsDisplayServices(
         string[] args, string journalPath, bool simulationOnly, string rescuePath,

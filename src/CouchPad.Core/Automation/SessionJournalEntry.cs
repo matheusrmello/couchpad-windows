@@ -34,7 +34,23 @@ public interface ISessionJournalStore
 {
     SessionJournalEntry? Load();
 
+    /// <summary>
+    /// A null Load result alone cannot prove absence; implementations that can
+    /// distinguish a missing file should override this conservative default.
+    /// </summary>
+    SessionJournalInspection Inspect()
+    {
+        var entry = Load();
+        return entry is null
+            ? new(SessionJournalStatus.Unreadable, null)
+            : new(SessionJournalStatus.Present, entry);
+    }
+
     void Save(SessionJournalEntry entry);
 
     void Clear();
 }
+
+public enum SessionJournalStatus { Missing, Present, Unreadable }
+
+public sealed record SessionJournalInspection(SessionJournalStatus Status, SessionJournalEntry? Entry);

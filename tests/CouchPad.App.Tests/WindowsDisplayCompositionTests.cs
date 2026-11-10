@@ -10,6 +10,22 @@ public class WindowsDisplayCompositionTests
     private static readonly string[] Arguments = ["--windows-display", "tv-path", "12", "34", "monitor-path", "56", "78"];
 
     [Fact]
+    public void Real_display_session_is_exclusive_before_the_view_model_is_created()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var directory = Path.Combine(Path.GetTempPath(), "couchpad-app-owner-" + Guid.NewGuid().ToString("N"));
+        var journal = Path.Combine(directory, "session.json");
+        try
+        {
+            using (App.AcquireDisplayOwner(journal))
+                Assert.Throws<IOException>(() => App.AcquireDisplayOwner(journal));
+            using var next = App.AcquireDisplayOwner(journal);
+            Assert.NotNull(next);
+        }
+        finally { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
+    }
+
+    [Fact]
     public void Defaults_and_smoke_use_simulation()
     {
         Assert.Equal((null, null), App.CreateWindowsDisplayServices([], "journal", false, "missing"));

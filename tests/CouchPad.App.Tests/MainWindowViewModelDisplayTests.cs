@@ -72,6 +72,30 @@ public sealed class MainWindowViewModelDisplayTests
         Assert.Null(store.Current.InternalDevicePath);
     }
 
+    [Fact]
+    public void Disabling_writes_revokes_the_session_and_cannot_reenable_automation()
+    {
+        var store = new FakeSettingsStore { Current = new AppSettings { AllowDisplayWrites = true } };
+        LocalizationService.Instance.Initialize(store);
+        var display = new RevocableDisplay();
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            displayService: display, audioService: new SimulatedAudioService(TimeSpan.Zero), discoverTargets: Discover);
+        vm.AllowDisplayWrites = false;
+        Assert.False(display.CanApply);
+        vm.AllowDisplayWrites = true;
+        vm.AutomationEnabled = true;
+        Assert.False(vm.AutomationEnabled);
+    }
+
+    private sealed class RevocableDisplay : IDisplayService, IDisplayWriteControl
+    {
+        public bool CanApply { get; private set; } = true;
+        public void DisableNewWrites() => CanApply = false;
+        public DisplayState GetCurrent() => new(DisplayMode.InternalOnly, true, false);
+        public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
     private static IReadOnlyList<DisplayTargetOption> Discover() =>
         new[]
         {
@@ -91,6 +115,8 @@ public sealed class MainWindowViewModelDisplayTests
     private sealed class FakeJournal : ISessionJournalStore
     {
         public SessionJournalEntry? Load() => null;
+
+        public SessionJournalInspection Inspect() => new(SessionJournalStatus.Missing, null);
 
         public void Save(SessionJournalEntry entry)
         {

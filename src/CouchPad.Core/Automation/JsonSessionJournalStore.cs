@@ -6,7 +6,7 @@ namespace CouchPad.Core.Automation;
 
 /// <summary>
 /// Journal atômico em %LOCALAPPDATA%\CouchPad\state\session.json.
-/// Falha de leitura/escrita nunca derruba o fluxo de automação.
+/// A inspeção distingue ausência de erro; falhas de escrita e limpeza são propagadas.
 /// </summary>
 public sealed class JsonSessionJournalStore : ISessionJournalStore
 {
@@ -29,6 +29,27 @@ public sealed class JsonSessionJournalStore : ISessionJournalStore
 
     public JsonSessionJournalStore(string path) =>
         _path = path ?? throw new ArgumentNullException(nameof(path));
+
+    /// <summary>Distinguishes missing from unreadable without modifying the journal.</summary>
+    public SessionJournalInspection Inspect()
+    {
+        try
+        {
+            // File.Exists suppresses access errors; read directly so an unreadable
+            // recovery record is never mistaken for an absent one.
+            var json = File.ReadAllText(_path);
+            var entry = JsonSerializer.Deserialize<SessionJournalEntry>(json, SerializerOptions);
+            return entry is null
+                ? new(SessionJournalStatus.Unreadable, null)
+                : new(SessionJournalStatus.Present, entry);
+        }
+        catch (FileNotFoundException) { return new(SessionJournalStatus.Missing, null); }
+        catch (DirectoryNotFoundException) { return new(SessionJournalStatus.Missing, null); }
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException)
+        {
+            return new(SessionJournalStatus.Unreadable, null);
+        }
+    }
 
     public SessionJournalEntry? Load()
     {
@@ -72,17 +93,9 @@ public sealed class JsonSessionJournalStore : ISessionJournalStore
 
     public void Clear()
     {
-        try
-        {
-            if (File.Exists(_path))
-            {
-                File.Delete(_path);
-            }
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // Limpeza é melhor esforço; o rescue da P6 lida com estado obsoleto.
-        }
+        // File.Delete already succeeds if the file does not exist. Do not use
+        // File.Exists: it can turn access errors into a false success.
+        File.Delete(_path);
     }
 
     private void TryBackupCorruptFile()
