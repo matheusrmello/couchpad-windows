@@ -401,6 +401,86 @@ public sealed class AutomationCoordinatorTests
     }
 
     [Fact]
+    public async Task Watchdog_loss_before_apply_prevents_mutation_and_keeps_journal()
+    {
+        var guard = new FakeRescueGuard { FailImmediately = true };
+        var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Empty(display.Applied);
+        Assert.Equal(SessionJournalEntry.PendingState, journal.Entry?.State);
+        Assert.Equal(1, Assert.Single(guard.Leases).Abandons);
+    }
+
+    [Fact]
+    public async Task Watchdog_loss_during_non_cancellable_apply_waits_then_restores()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        display.DuringApply = async () => { entered.SetResult(); await release.Task; };
+        await coordinator.SetEnabledAsync(true);
+        var activation = coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.Single(guard.Leases).Fail();
+        Assert.Empty(display.Restored);
+        release.SetResult();
+        await activation;
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Single(display.Restored);
+        Assert.Equal(SessionJournalEntry.PendingState, journal.Entry?.State);
+        Assert.Equal(1, guard.Leases[0].Abandons);
+    }
+
+    [Fact]
+    public async Task Watchdog_loss_after_apply_restores_and_keeps_journal()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
+        display.AfterApply = () => Assert.Single(guard.Leases).Fail();
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Single(display.Restored);
+        Assert.Equal(SessionJournalEntry.PendingState, journal.Entry?.State);
+    }
+
+    [Fact]
+    public async Task Watchdog_loss_during_rollback_keeps_journal()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
+        display.ApplyException = new InvalidOperationException("apply failed");
+        display.AfterRestore = () => Assert.Single(guard.Leases).Fail();
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Equal(SessionJournalEntry.PendingState, journal.Entry?.State);
+    }
+
+    [Fact]
+    public async Task Watchdog_loss_before_deactivation_keeps_snapshot_and_journal()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, _, _, _, journal) = Create(rescueGuard: guard);
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        guard.FailImmediately = true;
+        await coordinator.SetEnabledAsync(false);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.NotNull(coordinator.Snapshot);
+        Assert.NotNull(journal.Entry);
+        Assert.Equal(1, guard.Leases[1].Abandons);
+    }
+
+    [Fact]
     public async Task Guard_abort_failure_falls_back_to_abandon()
     {
         var guard = new FakeRescueGuard
@@ -492,9 +572,15 @@ public sealed class AutomationCoordinatorTests
 
         public Exception? RestoreException { get; set; }
 
+        public Func<Task>? DuringApply { get; set; }
+
+        public Action? AfterApply { get; set; }
+
+        public Action? AfterRestore { get; set; }
+
         public DisplayState GetCurrent() => Current;
 
-        public Task<DisplayState> ApplyAsync(
+        public async Task<DisplayState> ApplyAsync(
             DisplayMode mode,
             CancellationToken cancellationToken = default)
         {
@@ -513,7 +599,9 @@ public sealed class AutomationCoordinatorTests
                 _ => new DisplayState(DisplayMode.Extend, true, true),
             };
 
-            return Task.FromResult(Current);
+            if (DuringApply is not null) await DuringApply();
+            AfterApply?.Invoke();
+            return Current;
         }
 
         public Task RestoreAsync(
@@ -529,6 +617,7 @@ public sealed class AutomationCoordinatorTests
 
             Restored.Add(state);
             Current = state;
+            AfterRestore?.Invoke();
             return Task.CompletedTask;
         }
     }
@@ -608,6 +697,8 @@ public sealed class AutomationCoordinatorTests
 
         public Exception? AbortException { get; set; }
 
+        public bool FailImmediately { get; set; }
+
         public Task<IRescueLease> BeginAsync(
             string operation,
             CancellationToken cancellationToken = default)
@@ -623,6 +714,7 @@ public sealed class AutomationCoordinatorTests
             };
 
             Leases.Add(lease);
+            if (FailImmediately) lease.Fail();
             return Task.FromResult<IRescueLease>(lease);
         }
     }
@@ -632,6 +724,17 @@ public sealed class AutomationCoordinatorTests
         public FakeRescueLease(string operation) => Operation = operation;
 
         public string Operation { get; }
+
+        private readonly CancellationTokenSource _failure = new();
+
+        public CancellationToken FailureToken => _failure.Token;
+
+        public void Fail() => _failure.Cancel();
+
+        public void ThrowIfUnavailable()
+        {
+            if (_failure.IsCancellationRequested) throw new InvalidOperationException("watchdog unavailable");
+        }
 
         public int Commits { get; private set; }
 

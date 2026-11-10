@@ -14,6 +14,12 @@ public interface IRescueGuard
 
 public interface IRescueLease : IAsyncDisposable
 {
+    /// <summary>Sinalizado se o watchdog parar inesperadamente antes da liberação.</summary>
+    CancellationToken FailureToken { get; }
+
+    /// <summary>Verifica também a disponibilidade imediatamente, sem esperar o monitor assíncrono.</summary>
+    void ThrowIfUnavailable();
+
     /// <summary>Operação aplicada e verificada; o watchdog pode encerrar.</summary>
     Task CommitAsync(CancellationToken cancellationToken = default);
 
@@ -44,6 +50,10 @@ public sealed class NoopRescueGuard : IRescueGuard
     private sealed class NoopRescueLease : IRescueLease
     {
         public static NoopRescueLease Instance { get; } = new();
+
+        public CancellationToken FailureToken => CancellationToken.None;
+
+        public void ThrowIfUnavailable() { }
 
         public Task CommitAsync(CancellationToken cancellationToken = default) =>
             Task.CompletedTask;

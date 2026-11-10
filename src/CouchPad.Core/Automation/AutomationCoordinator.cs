@@ -263,11 +263,20 @@ public sealed class AutomationCoordinator
                 lease = await _rescueGuard.BeginAsync("display apply", cancellationToken);
             }
 
+            lease?.ThrowIfUnavailable();
+            using var guardedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken, lease?.FailureToken ?? CancellationToken.None);
+            var guardedToken = guardedCancellation.Token;
             SetState(AutomationState.Applying);
 
-            await _display.ApplyAsync(settings.DisplayMode, cancellationToken);
-            var audio = await _audio.ApplyAsync(settings.AudioMode, cancellationToken);
-            cancellationToken.ThrowIfCancellationRequested();
+            guardedToken.ThrowIfCancellationRequested();
+            lease?.ThrowIfUnavailable();
+            await _display.ApplyAsync(settings.DisplayMode, guardedToken);
+            lease?.ThrowIfUnavailable();
+            guardedToken.ThrowIfCancellationRequested();
+            var audio = await _audio.ApplyAsync(settings.AudioMode, guardedToken);
+            lease?.ThrowIfUnavailable();
+            guardedToken.ThrowIfCancellationRequested();
 
             var snapshot = new AutomationSnapshot(
                 restoreDisplay,
@@ -298,10 +307,22 @@ public sealed class AutomationCoordinator
 
             if (lease is not null)
             {
-                await lease.CommitAsync(cancellationToken);
+                lease.ThrowIfUnavailable();
+                await lease.CommitAsync(guardedToken);
             }
 
             SetState(AutomationState.Active);
+        }
+        catch (Exception ex) when (lease?.FailureToken.IsCancellationRequested == true)
+        {
+            await TryRestoreAsync(displayBefore, audioBefore);
+            lease.Abandon();
+            lock (_sync)
+            {
+                _snapshot = previousSnapshot;
+            }
+            // Keep the recovery journal even when the immediate rollback succeeds.
+            SetState(AutomationState.Error, ex.Message);
         }
         catch (OperationCanceledException)
         {
@@ -311,6 +332,12 @@ public sealed class AutomationCoordinator
             lock (_sync)
             {
                 _snapshot = previousSnapshot;
+            }
+
+            if (lease?.FailureToken.IsCancellationRequested == true)
+            {
+                SetState(AutomationState.Error, "watchdog unavailable");
+                return;
             }
 
             if (restored && previousSnapshot is null)
@@ -330,7 +357,7 @@ public sealed class AutomationCoordinator
                 _snapshot = previousSnapshot;
             }
 
-            if (restored && previousSnapshot is null)
+            if (restored && previousSnapshot is null && lease?.FailureToken.IsCancellationRequested != true)
             {
                 TryClearJournal();
             }
@@ -371,10 +398,25 @@ public sealed class AutomationCoordinator
                 lease = await _rescueGuard.BeginAsync("display restore", cancellationToken);
             }
 
+            lease?.ThrowIfUnavailable();
+            using var guardedCancellation = CancellationTokenSource.CreateLinkedTokenSource(
+                cancellationToken, lease?.FailureToken ?? CancellationToken.None);
+            var guardedToken = guardedCancellation.Token;
             SetState(AutomationState.Applying);
 
-            await _display.RestoreAsync(snapshot.RestoreDisplay, cancellationToken);
-            await _audio.RestoreAsync(snapshot.RestoreAudio, cancellationToken);
+            guardedToken.ThrowIfCancellationRequested();
+            lease?.ThrowIfUnavailable();
+            await _display.RestoreAsync(snapshot.RestoreDisplay, guardedToken);
+            lease?.ThrowIfUnavailable();
+            guardedToken.ThrowIfCancellationRequested();
+            await _audio.RestoreAsync(snapshot.RestoreAudio, guardedToken);
+            lease?.ThrowIfUnavailable();
+            guardedToken.ThrowIfCancellationRequested();
+
+            if (lease is not null)
+            {
+                await lease.CommitAsync(guardedToken);
+            }
 
             lock (_sync)
             {
@@ -382,11 +424,13 @@ public sealed class AutomationCoordinator
             }
 
             TryClearJournal();
-
-            if (lease is not null)
-            {
-                await lease.CommitAsync(cancellationToken);
-            }
+        }
+        catch (Exception ex) when (lease?.FailureToken.IsCancellationRequested == true)
+        {
+            await TryRestoreAsync(snapshot.RestoreDisplay, snapshot.RestoreAudio);
+            lease.Abandon();
+            SetState(AutomationState.Error, ex.Message);
+            return;
         }
         catch (OperationCanceledException)
         {

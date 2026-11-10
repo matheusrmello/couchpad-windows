@@ -22,3 +22,8 @@ Não habilitar `AllowWrites`/`allowRecovery` na composição enquanto essas pend
 - Diagnóstico: falhas tratadas pelo rescue geram registro local em `%LOCALAPPDATA%\CouchPad\logs\rescue-failures.log` com estágio, tipo e HRESULT, sem mensagem ou caminho da exceção. O journal é preservado; nova tentativa no logon continua pendente da P6.
 - Comparador: duas capturas consecutivas do driver, com AOC ativo e Samsung inativa, foram consideradas equivalentes. Isso não testa normalização depois de um restore real.
 - Morte do watchdog após READY e concorrência de timeout com apply continuam sem correção. `AllowWrites` e `allowRecovery` continuam desabilitados na composição. Nenhum SDC_APPLY foi executado.
+
+
+## Monitoração do watchdog — 2026-11-10
+
+A pendência 1 foi tratada para a fase anterior à liberação: o lease monitora a saída do processo e disponibiliza token de falha e consulta imediata; o Core verifica a disponibilidade e cancela a transição vinculada, tentando rollback depois que a chamada em curso retornar e preservando o journal. O teste de processo com backend falso confirmou saída após READY; testes puros cobrem perda antes/durante/depois do apply. Depois que o envio de commit/abort começa, o resultado do ACK continua sendo tratado pela pendência 3. Uma chamada nativa bloqueada não é interrompida, e morte simultânea do App e watchdog ainda exige recuperação persistente no logon. As pendências 2 e 3 permanecem abertas; escrita real continua desativada.

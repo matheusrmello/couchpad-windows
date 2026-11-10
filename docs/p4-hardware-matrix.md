@@ -93,3 +93,8 @@ Revisão em `docs/p4-watchdog-review.md`: há corridas impeditivas na vida do wa
 ### P4 — acompanhamento sem apply, 2026-11-10
 
 Testes fake: cancelamento após envio e quebra de pipe antes do ACK passaram. Duas capturas do estado `InternalOnly` atual foram consideradas semanticamente iguais; não houve restore nem mudança de topologia. Concorrência timeout/apply e morte do watchdog após READY seguem pendentes. Build 0 avisos/erros; 115 testes e smoke passaram.
+
+
+### P4 — monitoração do watchdog, 2026-11-10
+
+Com backend falso, perda do watchdog antes/durante/depois de apply provocou erro e preservou o journal; uma chamada falsa não cancelável terminou antes do rollback. Um processo rescue de teste saiu após READY e sua perda foi sinalizada; liberações normais não foram classificadas como falha. Build 0 avisos/erros, 120 testes e smoke passaram. Sem apply real; matriz de hardware e corridas timeout/ACK pendentes.

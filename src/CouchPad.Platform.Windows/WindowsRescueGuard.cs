@@ -64,9 +64,32 @@ public sealed class WindowsRescueGuard : IRescueGuard
         private readonly StreamWriter _writer;
         private readonly Process _child;
         private readonly SemaphoreSlim _gate = new(1, 1);
+        private readonly CancellationTokenSource _failure = new();
+        private int _releaseStarted;
         private bool _finished, _abandoned, _disposed;
         public Lease(NamedPipeServerStream pipe, StreamReader reader, StreamWriter writer, Process child)
-        { _pipe = pipe; _reader = reader; _writer = writer; _child = child; }
+        {
+            _pipe = pipe; _reader = reader; _writer = writer; _child = child;
+            _ = MonitorChildAsync();
+        }
+        public CancellationToken FailureToken => _failure.Token;
+        public void ThrowIfUnavailable()
+        {
+            if (_child.HasExited) _failure.Cancel();
+            if (_failure.IsCancellationRequested) throw new InvalidOperationException("Rescue watchdog unavailable.");
+        }
+        private async Task MonitorChildAsync()
+        {
+            try
+            {
+                await _child.WaitForExitAsync().ConfigureAwait(false);
+                if (Volatile.Read(ref _releaseStarted) == 0) _failure.Cancel();
+            }
+            catch (Exception)
+            {
+                if (Volatile.Read(ref _releaseStarted) == 0) _failure.Cancel();
+            }
+        }
         public Task CommitAsync(CancellationToken cancellationToken = default) => SignalAsync("COMMIT", cancellationToken);
         public Task AbortAsync(CancellationToken cancellationToken = default) => SignalAsync("ABORT", cancellationToken);
         private async Task SignalAsync(string command, CancellationToken token)
@@ -78,6 +101,8 @@ public sealed class WindowsRescueGuard : IRescueGuard
                 // Once delivery starts, caller cancellation cannot make the outcome
                 // ambiguous by interrupting the ACK read halfway through the signal.
                 token.ThrowIfCancellationRequested();
+                ThrowIfUnavailable();
+                Interlocked.Exchange(ref _releaseStarted, 1);
                 using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
                 await _writer.WriteLineAsync(command.AsMemory(), deadline.Token).ConfigureAwait(false);
                 await _writer.FlushAsync(deadline.Token).ConfigureAwait(false);

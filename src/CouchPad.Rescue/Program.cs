@@ -38,6 +38,9 @@ try
     using var reader = new StreamReader(pipe, new UTF8Encoding(false), false, 1024, leaveOpen: true);
     var writer = new StreamWriter(pipe, new UTF8Encoding(false), 1024, leaveOpen: true) { AutoFlush = true };
     await writer.WriteLineAsync("READY");
+#if RESCUE_TEST_BACKEND
+    if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_EXIT_AFTER_READY") == "1") return 17;
+#endif
     stage = "protocol";
     var signal = reader.ReadLineAsync();
     var parentExit = parent.WaitForExitAsync();

@@ -1193,3 +1193,8 @@ A revisão `docs/p4-watchdog-review.md` identificou pendências impeditivas: mor
 ### P4 — acompanhamento de ACK e diagnóstico, 2026-11-10
 
 Cancelamento após o envio do sinal não interrompe a espera por ACK; falha de pipe ao enviar ACK leva o filho a tentar restore. Testes de processo com backend falso passaram para esses cenários. Rescue grava falhas tratadas localmente sem mensagem de exceção; retry no logon permanece P6. Duas capturas CCD consecutivas foram semanticamente equivalentes, sem mudança de topologia. Morte do watchdog após READY, concorrência timeout/apply e resultado incerto de ACK continuam pendentes; não habilitar escrita. Build 0 avisos/erros; 115 testes e smoke passaram.
+
+
+### P4 — monitoração do watchdog, 2026-11-10
+
+O lease sinaliza falha do processo antes da liberação e oferece verificação imediata; o coordenador vincula o sinal ao token da transição, verifica antes/depois das operações e preserva o journal em perda do watchdog (D034). Testes cobrem perda antes, durante e depois do apply falso, inclusive chamada não cancelável, e perda durante rollback/desativação. O processo rescue com backend falso foi encerrado após READY e a falha foi detectada; commit/abort normais não sinalizaram falha. Build 0 avisos/erros, 120 testes e smoke passaram. Timeout concorrente com apply e ACK incerto continuam pendentes; sem SDC_APPLY real.

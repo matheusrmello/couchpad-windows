@@ -75,6 +75,11 @@ foreach (var mode in new[] { "COMMIT", "ABORT", "ABANDON", "TIMEOUT", "DISPOSE" 
     {
         if (mode == "COMMIT") await lease.CommitAsync();
         if (mode == "ABORT") await lease.AbortAsync();
+        if (mode is "COMMIT" or "ABORT")
+        {
+            await Task.Delay(250);
+            if (lease.FailureToken.IsCancellationRequested) throw new InvalidOperationException("Normal release reported watchdog failure.");
+        }
         if (mode == "ABANDON") lease.Abandon();
         if (mode == "DISPOSE")
         {
@@ -86,6 +91,24 @@ foreach (var mode in new[] { "COMMIT", "ABORT", "ABANDON", "TIMEOUT", "DISPOSE" 
         if (observed != (mode is "COMMIT" or "ABORT" ? mode : "RESTORE")) throw new InvalidOperationException(mode + ": " + observed);
     }
     Console.WriteLine(mode + ": PASS");
+}
+if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
+{
+    Reset();
+    Environment.SetEnvironmentVariable("COUCHPAD_TEST_EXIT_AFTER_READY", "1");
+    try
+    {
+        var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(8), allowRecovery: true);
+        await using var lease = await guard.BeginAsync("test-watchdog-exit");
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        using var observed = CancellationTokenSource.CreateLinkedTokenSource(lease.FailureToken, deadline.Token);
+        try { await Task.Delay(Timeout.InfiniteTimeSpan, observed.Token); } catch (OperationCanceledException) { }
+        if (!lease.FailureToken.IsCancellationRequested) throw new InvalidOperationException("Watchdog exit was not signaled.");
+        try { lease.ThrowIfUnavailable(); throw new InvalidOperationException("Watchdog was reported available."); }
+        catch (InvalidOperationException ex) when (ex.Message == "Rescue watchdog unavailable.") { }
+        Console.WriteLine("WATCHDOG_EXIT_AFTER_READY: PASS");
+    }
+    finally { Environment.SetEnvironmentVariable("COUCHPAD_TEST_EXIT_AFTER_READY", null); }
 }
 if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
 {
