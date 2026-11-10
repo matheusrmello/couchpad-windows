@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CouchPad.Core\CouchPad.Core.csproj" />
+    <ProjectReference Include="..\CouchPad.Platform.Windows\CouchPad.Platform.Windows.csproj" />
+    <ProjectReference Include="..\CouchPad.Rescue\CouchPad.Rescue.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,4 +26,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <Target Name="CopyRescueArtifacts" AfterTargets="Build">
+    <ItemGroup>
+      <_RescueArtifact Include="$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.exe;$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.dll;$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.deps.json;$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.runtimeconfig.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_RescueArtifact)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

@@ -1171,3 +1171,17 @@ O Core/App recebeu em `0281b7d` o contrato `IRescueGuard`/`IRescueLease`: begin 
 ### P4 — laço de decisão do watchdog, 2026-11-10
 
 Laço puro e testes simulam commit/abort, morte do pai, timeout, abandon e concorrência entre commit e morte; 110 testes e smoke passaram. Isso ainda não implementa processo separado, IPC, leitura do journal, lease nem composição do guard Windows. A escrita real não foi executada; manter `AllowWrites=false` e não usar o laço isolado como rescue.
+
+### P4 — watchdog em implementação, 2026-11-10
+
+`f9ab5ff` registra o laço puro e seus testes. Há trabalho não commitado para processo separado e `WindowsRescueGuard`, ainda sem testes de processo ou composição no App. O projeto rescue compilou antes da última revisão; a compilação e os testes posteriores não foram executados porque a revisão automática de permissão atingiu o limite de uso. O protocolo, a recuperação após queda e a exclusão mútua não foram comprovados. Nenhum SDC_APPLY foi executado; não habilitar o serviço real antes de validação completa.
+
+### P4 — testes de processo fake do watchdog, 2026-11-10
+
+Passaram commit, abort, abandon, timeout, dispose, pipe quebrado e morte do pai antes/depois de apply simulado, tanto com filho fake quanto com o código rescue compilado com backend fake; single instance também passou no segundo. Build da solução 0 avisos/erros, 110 testes unitários e smoke passaram. Sem SDC_APPLY; integração ao App, revisão do protocolo e testes reais continuam pendentes. Alterações sem commit.
+
+### P4 — composição do guard, 2026-11-10
+
+A composição do App continua em simulação por padrão (inclusive smoke/galeria). A opção técnica `--windows-display <tv-path> <tv-manufacturer> <tv-product> <monitor-path> <monitor-manufacturer> <monitor-product>` cria conjuntamente `WindowsDisplayService` e `WindowsRescueGuard` com o mesmo journal. Ambos ficam impedidos de escrever por padrão: `AllowWrites=false` e `allowRecovery=false`; o guard recusa iniciar o filho nesse estado, evitando restore pelo timeout quando nenhum apply ocorreu. O build copia o executável e arquivos de runtime do rescue para a saída Debug; empacotamento de publicação ainda não foi validado. D033 registra a referência da raiz de composição à plataforma.
+
+Build 0 avisos/erros, 114 testes unitários e smoke passaram; o executável copiado iniciou e recusou argumentos ausentes. Testes de processo com backend falso passaram novamente após o gate. A composição e o guard ainda não foram validados em hardware, nem se deve habilitar escrita ou declarar P4 aceita.

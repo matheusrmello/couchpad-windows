@@ -39,6 +39,7 @@
 | D030 | 2026-11-09 | Suprimir somente `NU1900` quando a fonte de auditoria do NuGet estiver indisponível; a auditoria permanece habilitada quando houver rede | Manter build reproduzível offline com 0 avisos sem esconder vulnerabilidades reais |
 | D031 | 2026-11-10 | `DisplayMode.InternalOnly` representa o baseline sem TV; `DisplayState.Mode` é resumo e `Topology` é a fonte de verdade para restore; mapeamento de `Extend` vs `Mirror` vem de sources/modos dos paths ativos | Mapear o estado real sem inferir TV pela ordem dos paths |
 | D032 | 2026-11-10 | `IRescueGuard`/`IRescueLease` no Core: begin após journal pending, commit após apply/verify, abort após rollback, abandon quando o rollback falha; `NoopRescueGuard` na simulação; processo real é da P4/Codex | Falhar fechado e permitir watchdog independente sem acoplar Core à plataforma |
+| D033 | 2026-11-10 | A raiz de composição do App pode referenciar Platform.Windows para criar, em conjunto, `WindowsDisplayService` e `WindowsRescueGuard` após seleção explícita; ambos permanecem com escrita e recuperação desabilitadas por padrão | Injetar implementações sem levar Win32, COM ou decisões de fluxo para a UI |
 
 ## Pendentes
 

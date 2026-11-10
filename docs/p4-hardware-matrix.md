@@ -71,3 +71,17 @@ Core/App no commit `0281b7d`: contrato de guard e lease com testes simulados; 10
 ### P4 — laço puro do watchdog
 
 Testes simulados do laço de decisão passaram (110 testes totais, build 0 avisos/erros). Processo, IPC, journal e crash real ainda não foram testados ou implementados. Nenhum SDC_APPLY foi executado.
+
+### Watchdog em implementação, 2026-11-10
+
+Processo separado e guard em rascunho, sem testes de processo, crash ou integração. A última revisão ainda não foi compilada: a revisão automática de permissão atingiu o limite de uso. Nenhum SDC_APPLY foi executado. Matriz real permanece pendente.
+
+### P4 — testes de processo do watchdog, 2026-11-10
+
+O harness `tools/RescueProcessTests` executou processos separados com filho falso e com o código do executável rescue compilado em `tools/RescueDryRun` usando backend de restauração falso (`RESCUE_TEST_BACKEND`). Passaram: commit, abort, abandon, timeout, dispose sem sinal imediato, quebra do pipe e morte de processo-pai criado pelo teste antes e após um apply **simulado**. No código rescue com backend falso, passou também a recusa de segunda instância. O teste encerra apenas o processo de teste que ele próprio criou; nenhum SDC_APPLY foi chamado.
+
+Estes resultados não demonstram restauração no driver, kill durante apply real, nem integração do guard ao App; o watchdog ainda não está pronto para hardware. Build completo: 0 avisos/erros; 110 testes unitários e smoke passaram. Implementação e testes estão sem commit.
+
+### P4 — composição do guard, 2026-11-10
+
+Composição opt-in cria serviço Windows e guard em conjunto, ambos sem permissão de escrita/recuperação. O guard desabilitado recusa iniciar processo, evitando um restore involuntário após um apply recusado. Build 0 avisos/erros; 114 testes unitários e smoke passaram. O rescue inicia da saída Debug; empacotamento e matriz real ainda não validados. Nenhum SDC_APPLY foi executado.

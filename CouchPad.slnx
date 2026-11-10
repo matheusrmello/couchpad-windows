@@ -3,8 +3,10 @@
     <Project Path="src/CouchPad.App/CouchPad.App.csproj" />
     <Project Path="src/CouchPad.Core/CouchPad.Core.csproj" />
     <Project Path="src/CouchPad.Platform.Windows/CouchPad.Platform.Windows.csproj" />
+    <Project Path="src/CouchPad.Rescue/CouchPad.Rescue.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/CouchPad.App.Tests/CouchPad.App.Tests.csproj" />
     <Project Path="tests/CouchPad.Core.Tests/CouchPad.Core.Tests.csproj" />
   </Folder>
 </Solution>
