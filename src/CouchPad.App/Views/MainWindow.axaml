@@ -226,11 +226,42 @@
           </StackPanel>
         </controls:Card>
 
-        <!-- Parâmetros -->
-        <controls:Card x:Name="SettingsCard"
+        <!-- Contagem regressiva -->
+        <controls:Card x:Name="CountdownCard"
                        Grid.Row="1"
                        Grid.Column="2"
-                       Grid.RowSpan="2"
+                       Title="{loc:Tr section.countdown}">
+          <StackPanel Spacing="10">
+            <TextBlock Classes="hint" Text="{loc:Tr countdown.help}" TextWrapping="Wrap" />
+            <StackPanel Spacing="4">
+              <TextBlock Classes="caption" Text="{loc:Tr settings.activation_delay}" />
+              <ComboBox SelectedIndex="{Binding ActivationDelayIndex, Mode=TwoWay}"
+                        AutomationProperties.Name="{loc:Tr settings.activation_delay}">
+                <ComboBoxItem Content="{loc:Tr delay.immediate}" />
+                <ComboBoxItem Content="{loc:Tr delay.1s}" />
+                <ComboBoxItem Content="{loc:Tr delay.2s}" />
+                <ComboBoxItem Content="{loc:Tr delay.3s}" />
+                <ComboBoxItem Content="{loc:Tr delay.5s}" />
+              </ComboBox>
+            </StackPanel>
+            <StackPanel Spacing="4">
+              <TextBlock Classes="caption" Text="{loc:Tr settings.deactivation_delay}" />
+              <ComboBox SelectedIndex="{Binding DeactivationDelayIndex, Mode=TwoWay}"
+                        AutomationProperties.Name="{loc:Tr settings.deactivation_delay}">
+                <ComboBoxItem Content="{loc:Tr delay.immediate}" />
+                <ComboBoxItem Content="{loc:Tr delay.1s}" />
+                <ComboBoxItem Content="{loc:Tr delay.2s}" />
+                <ComboBoxItem Content="{loc:Tr delay.3s}" />
+                <ComboBoxItem Content="{loc:Tr delay.5s}" />
+              </ComboBox>
+            </StackPanel>
+          </StackPanel>
+        </controls:Card>
+
+        <!-- Parâmetros -->
+        <controls:Card x:Name="SettingsCard"
+                       Grid.Row="2"
+                       Grid.Column="2"
                        Title="{loc:Tr section.settings}">
           <StackPanel Spacing="10">
             <StackPanel Spacing="6">
@@ -260,30 +291,6 @@
                               AutomationProperties.HelpText="{loc:Tr settings.allow_display_writes_help}" />
               </Grid>
               <TextBlock Classes="hint" Text="{loc:Tr settings.allow_display_writes_help}" />
-            </StackPanel>
-
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr settings.activation_delay}" />
-              <ComboBox SelectedIndex="{Binding ActivationDelayIndex, Mode=TwoWay}"
-                        AutomationProperties.Name="{loc:Tr settings.activation_delay}">
-                <ComboBoxItem Content="{loc:Tr delay.immediate}" />
-                <ComboBoxItem Content="{loc:Tr delay.1s}" />
-                <ComboBoxItem Content="{loc:Tr delay.2s}" />
-                <ComboBoxItem Content="{loc:Tr delay.3s}" />
-                <ComboBoxItem Content="{loc:Tr delay.5s}" />
-              </ComboBox>
-            </StackPanel>
-
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr settings.deactivation_delay}" />
-              <ComboBox SelectedIndex="{Binding DeactivationDelayIndex, Mode=TwoWay}"
-                        AutomationProperties.Name="{loc:Tr settings.deactivation_delay}">
-                <ComboBoxItem Content="{loc:Tr delay.immediate}" />
-                <ComboBoxItem Content="{loc:Tr delay.1s}" />
-                <ComboBoxItem Content="{loc:Tr delay.2s}" />
-                <ComboBoxItem Content="{loc:Tr delay.3s}" />
-                <ComboBoxItem Content="{loc:Tr delay.5s}" />
-              </ComboBox>
             </StackPanel>
 
             <TextBlock Classes="hint" Text="{loc:Tr settings.help}" />

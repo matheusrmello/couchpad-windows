@@ -26,6 +26,7 @@ public sealed class UiLocalizationTests
         "GamepadCard",
         "ComboCard",
         "SettingsCard",
+        "CountdownCard",
         "TransitionCard",
         "LaunchersCard",
     };

@@ -19,6 +19,8 @@
   "section.gamepad": "Gamepad",
   "section.combo": "Combo",
   "section.settings": "Settings",
+  "section.countdown": "Countdown",
+  "countdown.help": "Choose how long to wait when the controller connects and disconnects.",
   "section.transition": "Transition",
   "section.launchers": "Launchers",
 

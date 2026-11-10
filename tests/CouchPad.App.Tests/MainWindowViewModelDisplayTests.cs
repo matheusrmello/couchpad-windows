@@ -10,6 +10,20 @@ namespace CouchPad.App.Tests;
 public sealed class MainWindowViewModelDisplayTests
 {
     [Fact]
+    public void Countdown_delays_are_saved_independently()
+    {
+        var store = new FakeSettingsStore();
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            displayService: new SimulatedDisplayService(TimeSpan.Zero),
+            audioService: new SimulatedAudioService(TimeSpan.Zero), discoverTargets: Discover);
+        vm.ActivationDelayIndex = 1;
+        vm.DeactivationDelayIndex = 4;
+        Assert.Equal(1, store.Current.ActivationDelayIndex);
+        Assert.Equal(4, store.Current.DeactivationDelayIndex);
+    }
+
+    [Fact]
     public void Legacy_mirror_setting_disables_automation_and_uses_default_mode()
     {
         var store = new FakeSettingsStore { Current = new AppSettings { DisplayModeIndex = 2, AutomationEnabled = true } };
