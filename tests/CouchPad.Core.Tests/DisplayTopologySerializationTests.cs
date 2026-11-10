@@ -101,6 +101,8 @@ public class DisplayTopologyPlannerTests
     private static WindowsDisplayService.Snapshot Snapshot(uint flags, params byte[][] paths) => new(1, flags, 72, 64, Convert.ToBase64String(paths.SelectMany(x => x).ToArray()), "", []);
     private static WindowsDisplayService.Target Tv => new(1, 0, 10, "tv", "TV", 1, 2, 0);
 
+    private static WindowsDisplayService.Target Internal => new(1, 0, 20, "internal", "Monitor", 3, 4, 0);
+
     [Theory]
     [InlineData(DisplayMode.TvOnly, 1, 0)]
     [InlineData(DisplayMode.Mirror, 2, 0)]
@@ -109,7 +111,7 @@ public class DisplayTopologyPlannerTests
     {
         var baseline = Snapshot(2, Path(0, 20));
         var all = Snapshot(1, Path(0, 20), Path(0, 10), Path(1, 10));
-        var result = DisplayTopologyPlanner.Create(baseline, all, Tv, mode);
+        var result = DisplayTopologyPlanner.Create(baseline, all, Tv, Internal, mode);
         Assert.Equal(72 * count, result.Paths.Length);
         var last = (count - 1) * 72;
         Assert.Equal(tvSource, BitConverter.ToUInt32(result.Paths, last + 8));
@@ -121,10 +123,10 @@ public class DisplayTopologyPlannerTests
     }
 
     [Fact]
-    public void Rejects_unavailable_target() => Assert.Throws<InvalidOperationException>(() => DisplayTopologyPlanner.Create(Snapshot(2, Path(0, 20)), Snapshot(1, Path(0, 10, false)), Tv, DisplayMode.Mirror));
+    public void Rejects_unavailable_target() => Assert.Throws<InvalidOperationException>(() => DisplayTopologyPlanner.Create(Snapshot(2, Path(0, 20)), Snapshot(1, Path(0, 20), Path(0, 10, false)), Tv, Internal, DisplayMode.Mirror));
 
     [Fact]
-    public void Rejects_missing_distinct_source_for_extend() => Assert.Throws<InvalidOperationException>(() => DisplayTopologyPlanner.Create(Snapshot(2, Path(0, 20)), Snapshot(1, Path(0, 10)), Tv, DisplayMode.Extend));
+    public void Rejects_missing_distinct_source_for_extend() => Assert.Throws<InvalidOperationException>(() => DisplayTopologyPlanner.Create(Snapshot(2, Path(0, 20)), Snapshot(1, Path(0, 20), Path(0, 10)), Tv, Internal, DisplayMode.Extend));
 }
 
 public class DisplayTransactionTests
@@ -172,12 +174,12 @@ public class WindowsDisplayServiceFakeTests
         BitConverter.GetBytes(1u).CopyTo(bytes, 68);
         return bytes;
     }
-    private static WindowsDisplayService.Snapshot Snapshot(uint flags, params byte[][] paths) => new(1, flags, 72, 64, Convert.ToBase64String(paths.SelectMany(p => p).ToArray()), Convert.ToBase64String(new byte[64]), [new(1, 0, 10, "tv", "TV", 1, 2, 0)]);
+    private static WindowsDisplayService.Snapshot Snapshot(uint flags, params byte[][] paths) => new(1, flags, 72, 64, Convert.ToBase64String(paths.SelectMany(p => p).ToArray()), Convert.ToBase64String(new byte[64]), [new(1, 0, 10, "tv", "TV", 1, 2, 0), new(1, 0, 20, "internal", "Monitor", 3, 4, 0)]);
     private static WindowsDisplayService Create(Func<byte[], byte[], uint, int> set)
     {
         var active = Snapshot(2, Path(0, 20));
         var all = Snapshot(1, Path(0, 20), Path(0, 10), Path(1, 10));
-        return new(new("tv", 1, 2, AllowWrites: true), flags => flags == 1 ? all : active, set);
+        return new(new("tv", 1, 2, AllowWrites: true, InternalDisplay: new("internal", 3, 4)), flags => flags == 1 ? all : active, set);
     }
     [Fact]
     public void Validation_failure_prevents_apply()
@@ -203,5 +205,36 @@ public class WindowsDisplayServiceFakeTests
         var service = Create((p, m, action) => { actions.Add(action); if (actions.Count == 2) source.Cancel(); return 0; });
         Assert.Throws<OperationCanceledException>(() => { _ = service.ApplyAsync(DisplayMode.TvOnly, source.Token); });
         Assert.Equal(new uint[] { 0x40, 0x80, 0x40, 0x80 }, actions);
+    }
+}
+
+public class DisplayTopologyFromEveryBaselineTests
+{
+    private static byte[] Path(uint source, uint target)
+    {
+        var b = new byte[72];
+        BitConverter.GetBytes(1u).CopyTo(b, 0);
+        BitConverter.GetBytes(source).CopyTo(b, 8);
+        BitConverter.GetBytes(1u).CopyTo(b, 20);
+        BitConverter.GetBytes(target).CopyTo(b, 28);
+        BitConverter.GetBytes(1u).CopyTo(b, 60);
+        return b;
+    }
+    private static WindowsDisplayService.Snapshot Snapshot(uint flags, params byte[][] paths) => new(1, flags, 72, 64, Convert.ToBase64String(paths.SelectMany(x => x).ToArray()), "", []);
+    [Theory]
+    [InlineData(0, DisplayMode.TvOnly)] [InlineData(0, DisplayMode.Extend)] [InlineData(0, DisplayMode.Mirror)]
+    [InlineData(1, DisplayMode.TvOnly)] [InlineData(1, DisplayMode.Extend)] [InlineData(1, DisplayMode.Mirror)]
+    [InlineData(2, DisplayMode.TvOnly)] [InlineData(2, DisplayMode.Extend)] [InlineData(2, DisplayMode.Mirror)]
+    [InlineData(3, DisplayMode.TvOnly)] [InlineData(3, DisplayMode.Extend)] [InlineData(3, DisplayMode.Mirror)]
+    public void Plans_from_any_baseline(int baselineMode, DisplayMode requested)
+    {
+        var current = baselineMode switch { 0 => new[] { Path(0, 20) }, 1 => new[] { Path(0, 10) }, 2 => new[] { Path(0, 20), Path(1, 10) }, _ => new[] { Path(0, 20), Path(0, 10) } };
+        var all = Snapshot(1, Path(0, 20), Path(1, 20), Path(0, 10), Path(1, 10));
+        var tv = new WindowsDisplayService.Target(1, 0, 10, "tv", "TV", 1, 2, 0);
+        var monitor = new WindowsDisplayService.Target(1, 0, 20, "monitor", "Monitor", 3, 4, 0);
+        var result = DisplayTopologyPlanner.Create(Snapshot(2, current), all, tv, monitor, requested);
+        Assert.Equal(requested == DisplayMode.TvOnly ? 72 : 144, result.Paths.Length);
+        if (requested != DisplayMode.TvOnly)
+            Assert.Equal(requested == DisplayMode.Mirror, BitConverter.ToUInt32(result.Paths, 8) == BitConverter.ToUInt32(result.Paths, 80));
     }
 }

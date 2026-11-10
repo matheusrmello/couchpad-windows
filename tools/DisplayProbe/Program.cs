@@ -11,8 +11,10 @@ var results = new Dictionary<string, int>();
 if (args.Contains("--validate"))
 {
     if (baseline.Mode != DisplayMode.InternalOnly) throw new InvalidOperationException("Validation requires the expected internal-only baseline.");
+    if (args.Length < 7) throw new ArgumentException("Validation needs internal path, manufacturer and product after --validate.");
+    var internalDisplay = WindowsDisplayService.SelectTarget(all.Targets, args[4], ushort.Parse(args[5]), ushort.Parse(args[6]));
     var snapshot = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(baseline.Topology!)!;
     foreach (var mode in new[] { DisplayMode.TvOnly, DisplayMode.Extend, DisplayMode.Mirror })
-        results.Add(mode.ToString(), DisplayTopologyValidator.ValidateProposal(DisplayTopologyPlanner.Create(snapshot, all, selected, mode)));
+        results.Add(mode.ToString(), DisplayTopologyValidator.ValidateProposal(DisplayTopologyPlanner.Create(snapshot, all, selected, internalDisplay, mode)));
 }
 Console.WriteLine(JsonSerializer.Serialize(new { State = new { baseline.Mode, baseline.PrimaryActive, baseline.TvActive }, Baseline = JsonSerializer.Deserialize<JsonElement>(baseline.Topology!), AllPaths = all, Selected = selected, Validation = results }));

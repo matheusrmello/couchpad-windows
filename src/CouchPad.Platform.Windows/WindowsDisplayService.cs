@@ -114,7 +114,9 @@ public sealed class WindowsDisplayService : IDisplayService
             var all = Capture(AllPaths);
             var tv = SelectTarget(all.Targets, _options.DevicePath, _options.EdidManufacturer, _options.EdidProduct, _options.ExactName);
             var before = Capture(ActivePaths);
-            var proposal = DisplayTopologyPlanner.Create(before, all, tv, mode);
+            var selector = _options.InternalDisplay ?? throw new InvalidOperationException("Internal display selector is required.");
+            var internalDisplay = SelectTarget(all.Targets, selector.DevicePath, selector.EdidManufacturer, selector.EdidProduct, selector.ExactName);
+            var proposal = DisplayTopologyPlanner.Create(before, all, tv, internalDisplay, mode);
             DisplayState? after = null;
             DisplayTransaction.Execute(
                 () => SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x40),
@@ -194,4 +196,5 @@ public sealed class WindowsDisplayService : IDisplayService
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int DisplayConfigGetDeviceInfo(ref TargetName request);
 }
 
-public sealed record WindowsDisplayOptions(string DevicePath, ushort EdidManufacturer, ushort EdidProduct, string? ExactName = null, bool AllowWrites = false);
+public sealed record WindowsDisplayOptions(string DevicePath, ushort EdidManufacturer, ushort EdidProduct, string? ExactName = null, bool AllowWrites = false, DisplaySelector? InternalDisplay = null);
+public sealed record DisplaySelector(string DevicePath, ushort EdidManufacturer, ushort EdidProduct, string? ExactName = null);

@@ -55,3 +55,7 @@ Testes com backend CCD falso verificam que falha de validação impede apply e q
 ## Revalidação sem apply — 2026-11-10
 
 Build do HEAD `cc4d6c3`: 0 avisos/0 erros; 84 testes aprovados; smoke OK. O probe `SDC_VALIDATE` retornou 0 para TvOnly, Extend e Mirror; o target selecionado foi Samsung 41015 com EDID 11596/29031, e o baseline consultado era InternalOnly. O probe usa o conjunto read-only/validador, sem exercitar o caminho `ApplyAsync` do HEAD. Nenhuma alteração de topologia foi realizada. A matriz de apply, imagem visível e rollback permanece não executada; sem recuperação independente do processo, não há evidência suficiente para considerar o teste destrutivo seguro ou P4 aceita.
+
+### P4 — planejador com seletor explícito, 2026-11-10
+
+O planejador recebe targets explícitos de TV e monitor interno e considera paths disponíveis mesmo quando o monitor interno está inativo. Doze combinações sintéticas cobrem os quatro estados de origem e os três destinos. Build 0 avisos/erros, 96 testes e smoke aprovados. Estas propostas não foram validadas novamente com o driver. O watchdog independente, verificação semântica e matriz real continuam pendentes; nenhuma topologia foi modificada.

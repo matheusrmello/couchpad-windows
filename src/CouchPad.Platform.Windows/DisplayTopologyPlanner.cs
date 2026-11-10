@@ -13,27 +13,41 @@ public static class DisplayTopologyPlanner
     private readonly record struct TargetKey(uint Low, int High, uint Id);
     public sealed record Proposal(DisplayMode Mode, byte[] Paths);
 
-    public static Proposal Create(WindowsDisplayService.Snapshot baseline, WindowsDisplayService.Snapshot available, WindowsDisplayService.Target tv, DisplayMode mode)
+    public static Proposal Create(WindowsDisplayService.Snapshot baseline, WindowsDisplayService.Snapshot available, WindowsDisplayService.Target tv, WindowsDisplayService.Target internalDisplay, DisplayMode mode)
     {
         ArgumentNullException.ThrowIfNull(baseline);
         ArgumentNullException.ThrowIfNull(available);
         ArgumentNullException.ThrowIfNull(tv);
+        ArgumentNullException.ThrowIfNull(internalDisplay);
         if (mode is not (DisplayMode.TvOnly or DisplayMode.Extend or DisplayMode.Mirror))
             throw new ArgumentOutOfRangeException(nameof(mode));
         var current = ReadPaths(baseline, 2);
         var candidates = ReadPaths(available, 1);
         var tvKey = new TargetKey(tv.AdapterLow, tv.AdapterHigh, tv.Id);
-        var internalPaths = current.Where(p => TargetOf(p) != tvKey).ToArray();
-        if (internalPaths.Length != 1 || current.Count(p => TargetOf(p) == tvKey) > 1)
-            throw new InvalidOperationException("Exactly one active non-TV display is required.");
-        var internalPath = internalPaths[0];
-        var source = SourceOf(internalPath);
-        var possible = candidates.Where(p => TargetOf(p) == tvKey && Read(p, 60) != 0)
-            .Where(p => mode == DisplayMode.Extend ? SourceOf(p) != source : SourceOf(p) == source)
-            .ToArray();
-        if (possible.Length == 0)
-            throw new InvalidOperationException("No available TV path for this topology was found.");
-        var selected = mode == DisplayMode.TvOnly ? new[] { possible[0] } : new[] { internalPath, possible[0] };
+        var internalKey = new TargetKey(internalDisplay.AdapterLow, internalDisplay.AdapterHigh, internalDisplay.Id);
+        if (internalKey == tvKey) throw new InvalidOperationException("Display identities must differ.");
+        if (current.Any(p => TargetOf(p) != internalKey && TargetOf(p) != tvKey))
+            throw new InvalidOperationException("Unexpected active display.");
+        var internalCandidates = candidates.Where(p => TargetOf(p) == internalKey && Read(p, 60) != 0).ToArray();
+        var tvCandidates = candidates.Where(p => TargetOf(p) == tvKey && Read(p, 60) != 0).ToArray();
+        if (internalCandidates.Length == 0 || tvCandidates.Length == 0) throw new InvalidOperationException("Selected display is unavailable.");
+        // Prefer the currently active source for each selected target, then CCD enumeration order.
+        var activeInternal = current.FirstOrDefault(p => TargetOf(p) == internalKey);
+        var activeTv = current.FirstOrDefault(p => TargetOf(p) == tvKey);
+        var orderedInternal = internalCandidates.OrderByDescending(p => activeInternal is not null && SourceOf(p) == SourceOf(activeInternal)).ToArray();
+        var orderedTv = tvCandidates.OrderByDescending(p => activeTv is not null && SourceOf(p) == SourceOf(activeTv)).ToArray();
+        byte[][] selected;
+        if (mode == DisplayMode.TvOnly)
+        {
+            selected = [orderedTv[0]];
+        }
+        else
+        {
+            var pairs = from primary in orderedInternal from target in orderedTv
+                where (SourceOf(primary) == SourceOf(target)) == (mode == DisplayMode.Mirror)
+                select new[] { primary, target };
+            selected = pairs.FirstOrDefault() ?? throw new InvalidOperationException("No available path pair for this topology.");
+        }
         var output = new byte[selected.Length * PathSize];
         for (var i = 0; i < selected.Length; i++)
         {

@@ -1155,3 +1155,7 @@ Backend CCD injetável internamente para testes; 84 testes aprovados e smoke OK.
 ### P4 — revalidação sem apply, 2026-11-10
 
 No HEAD `cc4d6c3`, build 0 avisos/erros, 84 testes e smoke passaram; probe de validação CCD retornou 0 nos três modos com Samsung inativa. A P4 não foi aceita: apply e rollback no driver não foram testados, e falta recuperação independente de falha do processo.
+
+### P4 — planejador com monitor explícito, 2026-11-10
+
+Planejador atualizado para usar seletores explícitos e QDC_ALL_PATHS, incluindo origem TvOnly; doze combinações sintéticas passaram. Build 0 avisos/erros, 96 testes e smoke aprovados. Não executar SDC_APPLY antes de implementar e testar watchdog independente; restauração ainda compara bytes exatos. Matriz real pendente.
