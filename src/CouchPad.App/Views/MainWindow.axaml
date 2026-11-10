@@ -6,6 +6,7 @@
         x:Class="CouchPad.App.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{loc:Tr app.name}"
+        Icon="avares://CouchPad/Assets/couchpad.ico"
         Width="1020"
         Height="780"
         MinWidth="640"
@@ -21,17 +22,9 @@
     <!-- Cabeçalho -->
     <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="0,0,0,12">
       <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-        <Border Width="34"
-                Height="34"
-                CornerRadius="{DynamicResource CouchPad.Radius.Control}"
-                Background="{DynamicResource CouchPad.AccentMuted}">
-          <TextBlock Text="{loc:Tr app.mark}"
-                     FontSize="18"
-                     FontWeight="SemiBold"
-                     Foreground="{DynamicResource CouchPad.Accent}"
-                     HorizontalAlignment="Center"
-                     VerticalAlignment="Center" />
-        </Border>
+        <Image Width="34" Height="34"
+               Source="avares://CouchPad/Assets/couchpad.png"
+               Stretch="Uniform" />
         <StackPanel VerticalAlignment="Center">
           <TextBlock Text="{loc:Tr app.name}"
                      FontSize="{DynamicResource CouchPad.FontSize.H1}"

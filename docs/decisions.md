@@ -53,6 +53,7 @@
 | D042 | 2026-11-10 | O contrato de display pode sinalizar que um apply falhou comprovadamente antes de qualquer tentativa de mutação; o coordenador dispensa restore somente nesse caso ou antes de chamar apply | Impedir SDC_APPLY de rollback após recusa de validação ou cancelamento prévio, preservando rollback conservador quando houve tentativa ou há dúvida |
 | D043 | 2026-11-10 | Espelhamento deixa de ser modo selecionável ou aplicável, inclusive na simulação; modo e snapshot espelhados existentes permanecem legíveis e restauráveis. Configuração antiga de espelhamento volta ao padrão com automação desligada | Atender à decisão do usuário sem prejudicar a recuperação de uma topologia anterior |
 | D044 | 2026-11-10 | Novas configurações e redefinição usam atraso de ativação de 2 segundos, com contagem regressiva localizada; valores já salvos continuam respeitados | Dar tempo ao usuário antes de mudar a tela, mantendo o atraso configurável |
+| D045 | 2026-11-10 | Usar a imagem fornecida explicitamente pelo usuário como marca no cabeçalho e ícone da janela e executável; o ICO contém tamanhos para Windows | Atender à escolha de imagem feita pelo usuário; preservar a origem do arquivo fornecido |
 
 ## Pendentes
 
