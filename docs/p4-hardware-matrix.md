@@ -43,3 +43,11 @@ O probe somente leitura, configurado com path/EDID da Samsung, retornou `Interna
 ## Validação CCD sem alteração — 2026-11-10
 
 Na sessão local, baseline `InternalOnly`: AOC 27G2G4 ativo; Samsung SAM7167 selecionada por path/EDID e inativa. `SDC_VALIDATE | SDC_USE_SUPPLIED_DISPLAY_CONFIG` com índices de modo inválidos retornou `ERROR_SUCCESS (0)` para cada proposta: `TvOnly`, `Extend` e `Mirror`. Nenhum `SDC_APPLY` foi chamado; validação não comprova imagem visível ou rollback. Operador: Codex; conexões físicas e verificação visual ainda não observadas. Build sem avisos/erros; 77 testes e smoke aprovados.
+
+## Implementação inicial de escrita — 2026-11-10
+
+`ApplyAsync` valida a proposta CCD, captura o baseline, aplica somente com `AllowWrites=true`, consulta o estado resultante e tenta restaurar o snapshot em falha ou cancelamento. `RestoreAsync` valida e aplica o snapshot; falhas também tentam retornar ao estado anterior. Erros do rollback são preservados junto ao erro original. A verificação de restore compara os bytes de paths e modes integralmente; o driver pode retornar dados equivalentes com diferenças, portanto há risco de falso negativo. O planejador ainda exige um display não TV ativo; transições a partir de `TvOnly` podem ser recusadas. Não há watchdog independente nem rescue de logon implementado. Nenhuma mudança de topologia foi realizada nesta etapa. Testes unitários cobrem a sequência de transação, não o driver nem a matriz de hardware.
+
+### P4 — backend falso, 2026-11-10
+
+Testes com backend CCD falso verificam que falha de validação impede apply e que falha de verificação ou cancelamento após apply tenta restaurar o baseline. Build 0 avisos/erros; 84 testes e smoke aprovados. São testes de fluxo: não comprovam rollback no driver ou imagem visível. Recuperação independente em falha de processo e matriz real permanecem pendentes; não houve alteração de topologia.

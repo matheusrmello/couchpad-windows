@@ -5,7 +5,7 @@ using CouchPad.Core.Display;
 
 namespace CouchPad.Platform.Windows;
 
-/// <summary>Leitura CCD. Escrita permanece indisponível até implementação e validação em hardware.</summary>
+/// <summary>Serviço CCD; escrita opt-in, ainda requer validação em hardware.</summary>
 public sealed class WindowsDisplayService : IDisplayService
 {
     private const uint ActivePaths = 2;
@@ -13,8 +13,16 @@ public sealed class WindowsDisplayService : IDisplayService
     private const int PathSize = 72, ModeSize = 64, InsufficientBuffer = 122;
 
     private readonly WindowsDisplayOptions _options;
+    private readonly Func<uint, Snapshot>? _captureOverride;
+    private readonly Func<byte[], byte[], uint, int>? _setOverride;
 
     public WindowsDisplayService(WindowsDisplayOptions options) => _options = options ?? throw new ArgumentNullException(nameof(options));
+
+    internal WindowsDisplayService(WindowsDisplayOptions options, Func<uint, Snapshot> capture, Func<byte[], byte[], uint, int> set) : this(options)
+    {
+        _captureOverride = capture ?? throw new ArgumentNullException(nameof(capture));
+        _setOverride = set ?? throw new ArgumentNullException(nameof(set));
+    }
 
     public DisplayState GetCurrent()
     {
@@ -49,6 +57,7 @@ public sealed class WindowsDisplayService : IDisplayService
     public Snapshot Capture(uint queryFlags)
     {
         if (queryFlags is not (ActivePaths or AllPaths)) throw new ArgumentOutOfRangeException(nameof(queryFlags));
+        if (_captureOverride is not null) return _captureOverride(queryFlags);
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
         for (var attempt = 0; attempt < 5; attempt++)
         {
@@ -94,8 +103,87 @@ public sealed class WindowsDisplayService : IDisplayService
         return matches.Length == 1 ? matches[0] : throw new InvalidOperationException("Display identity missing or ambiguous.");
     }
 
-    public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default) => throw new NotSupportedException(_options.AllowWrites ? "Display writes are not implemented." : "Display writes are disabled.");
-    public Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default) => throw new NotSupportedException(_options.AllowWrites ? "Display writes are not implemented." : "Display writes are disabled.");
+    private readonly object _writeLock = new();
+
+    public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default)
+    {
+        if (!_options.AllowWrites) throw new NotSupportedException("Display writes are disabled.");
+        lock (_writeLock)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var all = Capture(AllPaths);
+            var tv = SelectTarget(all.Targets, _options.DevicePath, _options.EdidManufacturer, _options.EdidProduct, _options.ExactName);
+            var before = Capture(ActivePaths);
+            var proposal = DisplayTopologyPlanner.Create(before, all, tv, mode);
+            DisplayState? after = null;
+            DisplayTransaction.Execute(
+                () => SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x40),
+                () => SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x80),
+                () => { after = GetCurrent(); if (after.Mode != mode) throw new InvalidOperationException("Display verification failed."); },
+                () => RestoreSnapshot(before), cancellationToken);
+            return Task.FromResult(after!);
+        }
+    }
+
+    public Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        if (!_options.AllowWrites) throw new NotSupportedException("Display writes are disabled.");
+        var target = JsonSerializer.Deserialize<Snapshot>(state.Topology ?? throw new InvalidOperationException("Missing display topology."))
+            ?? throw new InvalidOperationException("Invalid display topology.");
+        lock (_writeLock)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var before = Capture(ActivePaths);
+            var (paths, modes) = DecodeSnapshot(target);
+            DisplayTransaction.Execute(
+                () => SetConfiguration(paths, modes, 0x40),
+                () => SetConfiguration(paths, modes, 0x80),
+                () => VerifySnapshot(target),
+                () => RestoreSnapshot(before), cancellationToken);
+        }
+        return Task.CompletedTask;
+    }
+
+    private void RestoreSnapshot(Snapshot snapshot)
+    {
+        var (paths, modes) = DecodeSnapshot(snapshot);
+        SetConfiguration(paths, modes, 0x40);
+        SetConfiguration(paths, modes, 0x80);
+        VerifySnapshot(snapshot);
+    }
+
+    private void VerifySnapshot(Snapshot expected)
+    {
+        var actual = Capture(ActivePaths);
+        var (expectedPaths, expectedModes) = DecodeSnapshot(expected);
+        var (actualPaths, actualModes) = DecodeSnapshot(actual);
+        if (!expectedPaths.AsSpan().SequenceEqual(actualPaths) || !expectedModes.AsSpan().SequenceEqual(actualModes))
+            throw new InvalidOperationException("Restored display configuration could not be verified exactly.");
+    }
+
+    private static (byte[] Paths, byte[] Modes) DecodeSnapshot(Snapshot snapshot)
+    {
+        if (snapshot.SchemaVersion != 1 || snapshot.QueryFlags != ActivePaths || snapshot.PathSize != PathSize || snapshot.ModeSize != ModeSize)
+            throw new InvalidOperationException("Unsupported display snapshot.");
+        var paths = Convert.FromBase64String(snapshot.PathsBase64);
+        var modes = Convert.FromBase64String(snapshot.ModesBase64);
+        if (paths.Length == 0 || paths.Length % PathSize != 0 || modes.Length == 0 || modes.Length % ModeSize != 0)
+            throw new InvalidOperationException("Invalid display snapshot.");
+        return (paths, modes);
+    }
+
+    private void SetConfiguration(byte[] paths, byte[] modes, uint action)
+    {
+        if (_setOverride is not null) { Check(_setOverride(paths, modes, action)); return; }
+        var pathPin = GCHandle.Alloc(paths, GCHandleType.Pinned);
+        var modePin = GCHandle.Alloc(modes, GCHandleType.Pinned);
+        try { Check(SetDisplayConfig((uint)(paths.Length / PathSize), pathPin.AddrOfPinnedObject(), (uint)(modes.Length / ModeSize), modes.Length == 0 ? IntPtr.Zero : modePin.AddrOfPinnedObject(), action | 0x20)); }
+        finally { pathPin.Free(); modePin.Free(); }
+    }
+
+    [DllImport("user32.dll")]
+    private static extern int SetDisplayConfig(uint pathCount, IntPtr paths, uint modeCount, IntPtr modes, uint flags);
     private static void Check(int error) { if (error != 0) throw new Win32Exception(error); }
     public sealed record Target(uint AdapterLow, int AdapterHigh, uint Id, string? DevicePath, string? FriendlyName, ushort? EdidManufacturer, ushort? EdidProduct, int Status);
     public sealed record Snapshot(int SchemaVersion, uint QueryFlags, int PathSize, int ModeSize, string PathsBase64, string ModesBase64, List<Target> Targets);

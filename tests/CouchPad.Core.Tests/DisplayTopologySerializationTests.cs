@@ -126,3 +126,82 @@ public class DisplayTopologyPlannerTests
     [Fact]
     public void Rejects_missing_distinct_source_for_extend() => Assert.Throws<InvalidOperationException>(() => DisplayTopologyPlanner.Create(Snapshot(2, Path(0, 20)), Snapshot(1, Path(0, 10)), Tv, DisplayMode.Extend));
 }
+
+public class DisplayTransactionTests
+{
+    [Fact]
+    public void Failure_after_apply_rolls_back()
+    {
+        var steps = new List<string>();
+        Assert.Throws<InvalidOperationException>(() => DisplayTransaction.Execute(() => steps.Add("validate"), () => steps.Add("apply"), () => throw new InvalidOperationException(), () => steps.Add("rollback"), default));
+        Assert.Equal(new[] { "validate", "apply", "rollback" }, steps);
+    }
+    [Fact]
+    public void Validation_failure_does_not_mutate_or_rollback()
+    {
+        var steps = new List<string>();
+        Assert.Throws<InvalidOperationException>(() => DisplayTransaction.Execute(() => throw new InvalidOperationException(), () => steps.Add("apply"), () => { }, () => steps.Add("rollback"), default));
+        Assert.Empty(steps);
+    }
+    [Fact]
+    public void Cancellation_after_apply_rolls_back()
+    {
+        using var source = new CancellationTokenSource();
+        var rolledBack = false;
+        Assert.Throws<OperationCanceledException>(() => DisplayTransaction.Execute(() => { }, source.Cancel, () => { }, () => rolledBack = true, source.Token));
+        Assert.True(rolledBack);
+    }
+    [Fact]
+    public void Rollback_failure_preserves_both_errors()
+    {
+        var error = Assert.Throws<AggregateException>(() => DisplayTransaction.Execute(() => { }, () => throw new InvalidOperationException("apply"), () => { }, () => throw new InvalidOperationException("rollback"), default));
+        Assert.Equal(2, error.InnerExceptions.Count);
+    }
+}
+
+public class WindowsDisplayServiceFakeTests
+{
+    private static byte[] Path(uint source, uint target)
+    {
+        var bytes = new byte[72];
+        BitConverter.GetBytes(1u).CopyTo(bytes, 0);
+        BitConverter.GetBytes(source).CopyTo(bytes, 8);
+        BitConverter.GetBytes(1u).CopyTo(bytes, 20);
+        BitConverter.GetBytes(target).CopyTo(bytes, 28);
+        BitConverter.GetBytes(1u).CopyTo(bytes, 60);
+        BitConverter.GetBytes(1u).CopyTo(bytes, 68);
+        return bytes;
+    }
+    private static WindowsDisplayService.Snapshot Snapshot(uint flags, params byte[][] paths) => new(1, flags, 72, 64, Convert.ToBase64String(paths.SelectMany(p => p).ToArray()), Convert.ToBase64String(new byte[64]), [new(1, 0, 10, "tv", "TV", 1, 2, 0)]);
+    private static WindowsDisplayService Create(Func<byte[], byte[], uint, int> set)
+    {
+        var active = Snapshot(2, Path(0, 20));
+        var all = Snapshot(1, Path(0, 20), Path(0, 10), Path(1, 10));
+        return new(new("tv", 1, 2, AllowWrites: true), flags => flags == 1 ? all : active, set);
+    }
+    [Fact]
+    public void Validation_failure_prevents_apply()
+    {
+        var actions = new List<uint>();
+        var service = Create((p, m, action) => { actions.Add(action); return 87; });
+        Assert.Throws<System.ComponentModel.Win32Exception>(() => { _ = service.ApplyAsync(DisplayMode.TvOnly); });
+        Assert.Equal(new uint[] { 0x40 }, actions);
+    }
+    [Fact]
+    public void Verification_failure_restores_baseline()
+    {
+        var actions = new List<uint>();
+        var service = Create((p, m, action) => { actions.Add(action); return 0; });
+        Assert.Throws<InvalidOperationException>(() => { _ = service.ApplyAsync(DisplayMode.TvOnly); });
+        Assert.Equal(new uint[] { 0x40, 0x80, 0x40, 0x80 }, actions);
+    }
+    [Fact]
+    public void Cancel_after_apply_restores_baseline()
+    {
+        using var source = new CancellationTokenSource();
+        var actions = new List<uint>();
+        var service = Create((p, m, action) => { actions.Add(action); if (actions.Count == 2) source.Cancel(); return 0; });
+        Assert.Throws<OperationCanceledException>(() => { _ = service.ApplyAsync(DisplayMode.TvOnly, source.Token); });
+        Assert.Equal(new uint[] { 0x40, 0x80, 0x40, 0x80 }, actions);
+    }
+}

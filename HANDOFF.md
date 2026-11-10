@@ -1143,3 +1143,11 @@ Adicionado planejador puro para propor paths de TV-only, extensão e clone com T
 ### P4 — validação sem mudança, 2026-11-10
 
 `DisplayTopologyValidator` executa apenas `SDC_VALIDATE | SDC_USE_SUPPLIED_DISPLAY_CONFIG`. Na sessão local, as propostas TvOnly, Extend e Mirror retornaram 0 com AOC ativo e Samsung selecionada inativa. Isto não prova apply nem rollback. Build 0 avisos/erros, 77 testes e smoke aprovados. A escrita continua não implementada.
+
+### P4 — fluxo inicial de escrita, 2026-11-10
+
+Fluxo opt-in de apply/restore e helper de transação com rollback adicionados, ainda não validados em hardware nem integrados à UI. Falta tratar transições a partir de TV-only, revisão da comparação exata do snapshot, testes com backend CCD fake e matriz de hardware; não considerar P4 aceita. Build 0 avisos/erros; 81 testes e smoke aprovados. Sem mudança de topologia real.
+
+### P4 — testes do backend falso, 2026-11-10
+
+Backend CCD injetável internamente para testes; 84 testes aprovados e smoke OK. A P4 continua sem aceite: rollback independente de falha do processo, transições a partir de TvOnly e matriz em hardware permanecem pendentes. Sem alteração real de topologia.
