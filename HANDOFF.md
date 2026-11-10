@@ -1167,3 +1167,7 @@ A verificação de restore compara identidades CCD e campos de modos em vez dos 
 ### P4 — contrato rescue e comparação semântica, 2026-11-10
 
 O Core/App recebeu em `0281b7d` o contrato `IRescueGuard`/`IRescueLease`: begin após journal pending, commit após apply/verify, abort após rollback bem-sucedido e abandon quando incerto. A implementação Windows independente permanece pendente; a simulação mantém o guard noop. O comparador semântico está em desenvolvimento e não foi validado contra normalizações reais do driver. Build 0 avisos/erros, 104 testes e smoke aprovados. Não executar SDC_APPLY até o watchdog real e seus testes de crash estarem verdes.
+
+### P4 — laço de decisão do watchdog, 2026-11-10
+
+Laço puro e testes simulam commit/abort, morte do pai, timeout, abandon e concorrência entre commit e morte; 110 testes e smoke passaram. Isso ainda não implementa processo separado, IPC, leitura do journal, lease nem composição do guard Windows. A escrita real não foi executada; manter `AllowWrites=false` e não usar o laço isolado como rescue.

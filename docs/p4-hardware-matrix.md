@@ -67,3 +67,7 @@ A restauração compara identities de sources/targets, orientação, escala e ca
 ### P4 — contrato do rescue guard, 2026-11-10
 
 Core/App no commit `0281b7d`: contrato de guard e lease com testes simulados; 104 testes aprovados no estado atual. A implementação do watchdog Windows ainda não foi concluída. O comparador semântico não comprova normalizações reais. Nenhuma alteração de topologia foi executada.
+
+### P4 — laço puro do watchdog
+
+Testes simulados do laço de decisão passaram (110 testes totais, build 0 avisos/erros). Processo, IPC, journal e crash real ainda não foram testados ou implementados. Nenhum SDC_APPLY foi executado.

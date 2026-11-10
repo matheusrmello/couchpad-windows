@@ -274,3 +274,37 @@ public class DisplaySnapshotComparerTests
         Assert.Throws<InvalidOperationException>(() => DisplaySnapshotComparer.SemanticallyEqual(expected, expected with { PathsBase64 = Convert.ToBase64String(paths) }));
     }
 }
+
+public class RescueWatchdogLoopTests
+{
+    [Theory]
+    [InlineData(RescueWatchdogLoop.Signal.Commit)]
+    [InlineData(RescueWatchdogLoop.Signal.Abort)]
+    public async Task Release_signal_does_not_restore(RescueWatchdogLoop.Signal signal)
+    {
+        var pending = new TaskCompletionSource(); var restored = false;
+        var outcome = await RescueWatchdogLoop.RunAsync(pending.Task, pending.Task, Task.FromResult(signal), () => { restored = true; return Task.CompletedTask; });
+        Assert.Equal(RescueWatchdogLoop.Outcome.Released, outcome);
+        Assert.False(restored);
+    }
+    [Theory]
+    [InlineData(0)] [InlineData(1)] [InlineData(2)]
+    public async Task Death_timeout_or_abandon_restores(int condition)
+    {
+        var pending = new TaskCompletionSource(); var signal = new TaskCompletionSource<RescueWatchdogLoop.Signal>(); var restored = 0;
+        var parent = condition == 0 ? Task.CompletedTask : pending.Task;
+        var timeout = condition == 1 ? Task.CompletedTask : pending.Task;
+        if (condition == 2) signal.SetResult(RescueWatchdogLoop.Signal.Abandon);
+        var outcome = await RescueWatchdogLoop.RunAsync(parent, timeout, signal.Task, () => { restored++; return Task.CompletedTask; });
+        Assert.Equal(RescueWatchdogLoop.Outcome.Restored, outcome);
+        Assert.Equal(1, restored);
+    }
+    [Fact]
+    public async Task Simultaneous_death_and_commit_fails_closed()
+    {
+        var restored = false;
+        var outcome = await RescueWatchdogLoop.RunAsync(Task.CompletedTask, new TaskCompletionSource().Task, Task.FromResult(RescueWatchdogLoop.Signal.Commit), () => { restored = true; return Task.CompletedTask; });
+        Assert.Equal(RescueWatchdogLoop.Outcome.Restored, outcome);
+        Assert.True(restored);
+    }
+}
