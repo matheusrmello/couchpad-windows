@@ -51,3 +51,7 @@ Na sessão local, baseline `InternalOnly`: AOC 27G2G4 ativo; Samsung SAM7167 sel
 ### P4 — backend falso, 2026-11-10
 
 Testes com backend CCD falso verificam que falha de validação impede apply e que falha de verificação ou cancelamento após apply tenta restaurar o baseline. Build 0 avisos/erros; 84 testes e smoke aprovados. São testes de fluxo: não comprovam rollback no driver ou imagem visível. Recuperação independente em falha de processo e matriz real permanecem pendentes; não houve alteração de topologia.
+
+## Revalidação sem apply — 2026-11-10
+
+Build do HEAD `cc4d6c3`: 0 avisos/0 erros; 84 testes aprovados; smoke OK. O probe `SDC_VALIDATE` retornou 0 para TvOnly, Extend e Mirror; o target selecionado foi Samsung 41015 com EDID 11596/29031, e o baseline consultado era InternalOnly. O probe usa o conjunto read-only/validador, sem exercitar o caminho `ApplyAsync` do HEAD. Nenhuma alteração de topologia foi realizada. A matriz de apply, imagem visível e rollback permanece não executada; sem recuperação independente do processo, não há evidência suficiente para considerar o teste destrutivo seguro ou P4 aceita.

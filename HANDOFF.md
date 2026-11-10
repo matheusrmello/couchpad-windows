@@ -1151,3 +1151,7 @@ Fluxo opt-in de apply/restore e helper de transação com rollback adicionados, 
 ### P4 — testes do backend falso, 2026-11-10
 
 Backend CCD injetável internamente para testes; 84 testes aprovados e smoke OK. A P4 continua sem aceite: rollback independente de falha do processo, transições a partir de TvOnly e matriz em hardware permanecem pendentes. Sem alteração real de topologia.
+
+### P4 — revalidação sem apply, 2026-11-10
+
+No HEAD `cc4d6c3`, build 0 avisos/erros, 84 testes e smoke passaram; probe de validação CCD retornou 0 nos três modos com Samsung inativa. A P4 não foi aceita: apply e rollback no driver não foram testados, e falta recuperação independente de falha do processo.
