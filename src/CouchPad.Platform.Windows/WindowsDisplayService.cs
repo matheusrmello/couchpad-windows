@@ -132,6 +132,12 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
 
     public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default)
     {
+        if (mode == DisplayMode.Mirror)
+        {
+            var error = new NotSupportedException("Applying mirrored displays is disabled.");
+            DisplayApplyFailure.MarkUnchanged(error);
+            throw error;
+        }
         if (!_options.AllowWrites || _writesRevoked.IsCancellationRequested)
         {
             var error = new NotSupportedException("Display writes are disabled for this session.");

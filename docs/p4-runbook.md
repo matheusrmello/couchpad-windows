@@ -77,7 +77,7 @@ falhar.
 | 1 | TvOnly | Modo de tela = Somente TV; conectar gamepad simulado; automação ligada | imagem só na Samsung; AOC desligado; estado `Ativo` |
 | 2 | Rollback TvOnly | Desconectar gamepad ou desligar automação | AOC volta; baseline restaurado; estado de espera/idle |
 | 3 | Extend | Com automação ativa, modo = Estender | AOC + Samsung ativos; área estendida; depois rollback |
-| 4 | Mirror | Com automação ativa, modo = Espelhar | mesma imagem nos dois; depois rollback |
+| 4 | Espelhamento | Fora do escopo por decisão do usuário | Não executar |
 | 5 | Modo indisponível | Forçar modo não suportado (se aplicável) | recusa antes de mudar |
 | 6 | Sem TV/ambíguo | Remover/ambiguar seletor | nenhuma alteração |
 | 7 | Falha/cancelamento | Cancelar/desligar durante apply | rollback confirmado |
@@ -108,7 +108,7 @@ Uma falha de rollback não pode ser tratada como aprovação.
 
 ## 6. Critério de aceite P4
 
-- TvOnly, Extend e Mirror com imagem visível e rollback;
+- TvOnly e Extend com imagem visível e rollback;
 - falha/cancelamento sem tela preta;
 - kill durante apply com restore do watchdog;
 - comparador semântico sem falso negativo no driver real;

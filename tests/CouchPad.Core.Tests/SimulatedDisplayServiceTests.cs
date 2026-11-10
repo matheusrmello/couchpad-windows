@@ -36,10 +36,8 @@ public sealed class SimulatedDisplayServiceTests
         Assert.True(extend.PrimaryActive);
         Assert.True(extend.TvActive);
 
-        var mirror = await service.ApplyAsync(DisplayMode.Mirror);
-        Assert.Equal(DisplayMode.Mirror, mirror.Mode);
-        Assert.True(mirror.PrimaryActive);
-        Assert.True(mirror.TvActive);
+        var error = await Assert.ThrowsAsync<NotSupportedException>(() => service.ApplyAsync(DisplayMode.Mirror));
+        Assert.True(DisplayApplyFailure.IsUnchanged(error));
     }
 
     [Fact]
@@ -54,6 +52,15 @@ public sealed class SimulatedDisplayServiceTests
         await service.ApplyAsync(DisplayMode.TvOnly);
         await service.RestoreAsync(baseline);
 
+        Assert.Equal(baseline, service.GetCurrent());
+    }
+
+    [Fact]
+    public async Task Mirrored_baseline_can_still_be_restored()
+    {
+        var service = new SimulatedDisplayService(TimeSpan.Zero);
+        var baseline = new DisplayState(DisplayMode.Mirror, true, true) { Topology = "baseline" };
+        await service.RestoreAsync(baseline);
         Assert.Equal(baseline, service.GetCurrent());
     }
 }

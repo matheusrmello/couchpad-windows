@@ -481,7 +481,7 @@ public partial class MainWindowViewModel : ObservableObject
         _isLoadingSettings = true;
         try
         {
-            AutomationEnabled = settings.AutomationEnabled;
+            AutomationEnabled = settings.DisplayModeIndex is 0 or 1 && settings.AutomationEnabled;
             CloseLauncherOnActivate = settings.CloseLauncherOnActivate;
             StartWithWindows = settings.StartWithWindows;
             MinimizeToTray = settings.MinimizeToTray;
@@ -489,7 +489,7 @@ public partial class MainWindowViewModel : ObservableObject
                 settings.ActivationDelayIndex, 0, DelayOptions.Values.Count - 1);
             DeactivationDelayIndex = Math.Clamp(
                 settings.DeactivationDelayIndex, 0, DelayOptions.Values.Count - 1);
-            DisplayModeIndex = Math.Clamp(settings.DisplayModeIndex, 0, 2);
+            DisplayModeIndex = settings.DisplayModeIndex is 0 or 1 ? settings.DisplayModeIndex : 0;
             AudioModeIndex = Math.Clamp(settings.AudioModeIndex, 0, 1);
             SteamEnabled = settings.SteamEnabled;
             CustomLauncherPath = settings.CustomLauncherPath;
@@ -533,7 +533,6 @@ public partial class MainWindowViewModel : ObservableObject
         DisplayMode = DisplayModeIndex switch
         {
             1 => DisplayMode.Extend,
-            2 => DisplayMode.Mirror,
             _ => DisplayMode.TvOnly,
         },
         AudioMode = AudioModeIndex == 1 ? AudioMode.KeepCurrent : AudioMode.MoveToHdmi,

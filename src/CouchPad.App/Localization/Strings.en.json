@@ -81,7 +81,6 @@
 
   "display_mode.tv_only": "TV only",
   "display_mode.extend": "Extend",
-  "display_mode.mirror": "Mirror",
 
   "audio_mode.move": "Move to HDMI",
   "audio_mode.keep": "Keep current",

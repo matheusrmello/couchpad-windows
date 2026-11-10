@@ -9,7 +9,7 @@ Consulta WMI somente leitura detectou dois monitores ativos, IDs de produto `SAM
 | Identificação | target path e IDs EDID válidos; fallback por nome inequívoco; ambiguidade recusa | Pendente |
 | TvOnly | Somente alvo escolhido ativo, saída visível e baseline restaurado | Não executado |
 | Extend | Alvos esperados ativos e área estendida; baseline restaurado | Não executado |
-| Mirror | Alvos esperados compartilham origem e imagem visível; baseline restaurado | Não executado |
+| Mirror | Removido do escopo por decisão do usuário; snapshots espelhados continuam restauráveis | Não aplicável |
 | Modo indisponível | Validação recusa antes da mudança | Não executado |
 | Sem TV / alvo ambíguo | Nenhuma alteração | Não executado |
 | Falha ou cancelamento após alteração | Rollback e confirmação da topologia anterior | Não executado |
@@ -114,3 +114,7 @@ Operadores: Codex na interface e usuário na observação física. A partir de `
 O usuário esclareceu que a mudança anterior para o AOC foi feita por configurações do Windows/Win+P. Em seguida, o controle simulado foi desconectado pelo CouchPad: o App voltou a aguardar gamepad, o journal foi removido e o CCD confirmou `InternalOnly`. Como o Windows já havia retornado ao AOC, isso não comprova restore a partir de `TvOnly`.
 
 Na sequência, `Extend` partiu de `InternalOnly`; CCD reportou `Extend` com AOC e Samsung ativos, e o usuário confirmou imagens em áreas diferentes. Ao desconectar no CouchPad, o CCD voltou a `InternalOnly` e o journal foi limpo. Em `Mirror`, partindo novamente de `InternalOnly`, o App mostrou **Erro**. A causa e a etapa da falha não foram identificadas; não há prova de que o modo espelhado tenha sido aplicado nem de rollback pós-apply. Após o erro, CCD reportou `InternalOnly`, journal ausente e o usuário confirmou imagem normal no AOC. Matriz interrompida às 16:52 UTC-3; não executar novos cenários até apurar o erro. Sem evidência de Mirror, kill durante apply ou demais falhas reais, P4 permanece não aceita.
+
+### Alteração de escopo — 2026-11-10
+
+O usuário retirou a função de espelhamento. D043 remove a opção e recusa sua aplicação antes de qualquer escrita, mantendo leitura e restore de baseline espelhado. A falha observada fica registrada como evidência histórica; os cenários restantes da P4 são TvOnly com restore direto, falhas/cancelamento, alvo indisponível ou ambíguo e crash com watchdog. Não foram executadas novas alterações de topologia nesta alteração de escopo.

@@ -65,12 +65,17 @@ public sealed class SimulatedDisplayService : IDisplayService
         DisplayMode mode,
         CancellationToken cancellationToken = default)
     {
+        if (mode == DisplayMode.Mirror)
+        {
+            var error = new NotSupportedException("Applying mirrored displays is disabled.");
+            DisplayApplyFailure.MarkUnchanged(error);
+            throw error;
+        }
         await DelayAsync(cancellationToken);
 
         Current = mode switch
         {
             DisplayMode.TvOnly => new DisplayState(DisplayMode.TvOnly, PrimaryActive: false, TvActive: true),
-            DisplayMode.Mirror => new DisplayState(DisplayMode.Mirror, PrimaryActive: true, TvActive: true),
             DisplayMode.InternalOnly => new DisplayState(DisplayMode.InternalOnly, PrimaryActive: true, TvActive: false),
             _ => new DisplayState(DisplayMode.Extend, PrimaryActive: true, TvActive: true),
         };

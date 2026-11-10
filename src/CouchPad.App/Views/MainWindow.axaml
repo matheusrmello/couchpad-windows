@@ -302,7 +302,6 @@
                         AutomationProperties.Name="{loc:Tr transition.display_mode}">
                 <ComboBoxItem Content="{loc:Tr display_mode.tv_only}" />
                 <ComboBoxItem Content="{loc:Tr display_mode.extend}" />
-                <ComboBoxItem Content="{loc:Tr display_mode.mirror}" />
               </ComboBox>
             </StackPanel>
 

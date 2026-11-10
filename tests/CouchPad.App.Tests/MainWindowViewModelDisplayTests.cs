@@ -10,6 +10,18 @@ namespace CouchPad.App.Tests;
 public sealed class MainWindowViewModelDisplayTests
 {
     [Fact]
+    public void Legacy_mirror_setting_disables_automation_and_uses_default_mode()
+    {
+        var store = new FakeSettingsStore { Current = new AppSettings { DisplayModeIndex = 2, AutomationEnabled = true } };
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            displayService: new SimulatedDisplayService(TimeSpan.Zero),
+            audioService: new SimulatedAudioService(TimeSpan.Zero), discoverTargets: Discover);
+        Assert.Equal(0, vm.DisplayModeIndex);
+        Assert.False(vm.AutomationEnabled);
+    }
+
+    [Fact]
     public void Display_selection_and_write_opt_in_are_persisted()
     {
         var store = new FakeSettingsStore();

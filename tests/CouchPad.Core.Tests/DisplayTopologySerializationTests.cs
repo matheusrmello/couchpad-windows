@@ -238,6 +238,15 @@ public class WindowsDisplayServiceFakeTests
         Assert.Equal(new uint[] { 0x40 }, actions);
     }
     [Fact]
+    public async Task Mirror_apply_is_refused_without_calling_backend()
+    {
+        var actions = new List<uint>();
+        var service = Create((p, m, action) => { actions.Add(action); return 0; });
+        var error = await Assert.ThrowsAsync<NotSupportedException>(() => service.ApplyAsync(DisplayMode.Mirror));
+        Assert.True(DisplayApplyFailure.IsUnchanged(error));
+        Assert.Empty(actions);
+    }
+    [Fact]
     public async Task Verification_failure_restores_baseline()
     {
         var actions = new List<uint>();

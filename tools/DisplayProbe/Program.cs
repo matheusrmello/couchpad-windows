@@ -16,7 +16,7 @@ if (args.Contains("--validate"))
     if (baseline.Mode != DisplayMode.InternalOnly) throw new InvalidOperationException("Validation requires the expected internal-only baseline.");
     var internalDisplay = WindowsDisplayService.SelectTarget(all.Targets, internalSelector.DevicePath, internalSelector.EdidManufacturer, internalSelector.EdidProduct);
     var snapshot = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(baseline.Topology!)!;
-    foreach (var mode in new[] { DisplayMode.TvOnly, DisplayMode.Extend, DisplayMode.Mirror })
+    foreach (var mode in new[] { DisplayMode.TvOnly, DisplayMode.Extend })
         results.Add(mode.ToString(), DisplayTopologyValidator.ValidateProposal(DisplayTopologyPlanner.Create(snapshot, all, selected, internalDisplay, mode)));
 }
 bool? comparison = null;
