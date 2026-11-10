@@ -1122,3 +1122,7 @@ Nenhum bloqueador restante.
 - P4 ainda não implementada ou aceita. O contrato de topologia/journal foi endurecido no commit `5f5c8c4` (v0.4.1); a implementação CCD, o rollback e os testes de hardware continuam pendentes.
 - `docs/p4-hardware-matrix.md` registra a consulta somente leitura e os cenários não executados; dois monitores ativos não demonstram identificação de TV nem aprovação da matriz.
 - Build serial passou com zero avisos/erros; 59 testes passaram; smoke abriu e fechou normalmente. Nenhuma topologia foi alterada.
+
+### P4 — slice somente leitura em 2026-11-10
+
+O probe CCD consulta separadamente paths ativos e todos os paths. Na sessão consultada, identificou AOC ativo e Samsung SAM7167 inativa por path e EDID. A seleção não usa ordem dos monitores. Escrita permanece bloqueada; `DisplayState` abstrato ainda usa placeholders e o serviço não está integrado à automação. Apply, verificação e rollback permanecem pendentes. Build sem avisos/erros e 63 testes aprovados; nenhuma mudança de topologia foi executada.

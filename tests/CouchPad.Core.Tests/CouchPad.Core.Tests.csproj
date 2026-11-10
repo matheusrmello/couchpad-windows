@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CouchPad.Core\CouchPad.Core.csproj" />
+    <ProjectReference Include="..\..\src\CouchPad.Platform.Windows\CouchPad.Platform.Windows.csproj" />
   </ItemGroup>
 
 </Project>
