@@ -37,6 +37,14 @@ public interface IDisplayWriteControl
     void DisableNewWrites();
 }
 
+/// <summary>Identifies a failed apply that the platform proves never reached a display mutation.</summary>
+public static class DisplayApplyFailure
+{
+    private const string UnchangedKey = "CouchPad.DisplayApply.Unchanged";
+    public static void MarkUnchanged(Exception exception) => exception.Data[UnchangedKey] = true;
+    public static bool IsUnchanged(Exception exception) => exception.Data[UnchangedKey] is true;
+}
+
 /// <summary>
 /// Simulação: aplica o modo depois de uma latência curta para a UI mostrar
 /// o estado "Aplicando". Nenhuma chamada CCD acontece aqui.

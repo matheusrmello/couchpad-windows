@@ -50,6 +50,7 @@
 | D039 | 2026-11-10 | Toda instância Windows do App que usa o journal adquire posse exclusiva antes de criar o coordenador e mantém a posse até o processo terminar; o coordenador bloqueia a automação ao encontrar journal anterior ou não inspecionável | Evitar sobrescrever baseline pendente entre instâncias, inclusive simuladas, ou após falha anterior |
 | D040 | 2026-11-10 | Falha ao limpar journal é observável e mantém o coordenador em recuperação incerta, sem descartar o snapshot | Evitar tratar como encerrada uma sessão cujo registro de recuperação ainda existe |
 | D041 | 2026-11-10 | Desligar o opt-in de escrita revoga novos applies imediatamente e cancela o apply corrente; restores continuam disponíveis, e reativar a escrita exige reinício | Impedir que um serviço já composto continue aplicando mudanças após o usuário desligar a opção |
+| D042 | 2026-11-10 | O contrato de display pode sinalizar que um apply falhou comprovadamente antes de qualquer tentativa de mutação; o coordenador dispensa restore somente nesse caso ou antes de chamar apply | Impedir SDC_APPLY de rollback após recusa de validação ou cancelamento prévio, preservando rollback conservador quando houve tentativa ou há dúvida |
 
 ## Pendentes
 

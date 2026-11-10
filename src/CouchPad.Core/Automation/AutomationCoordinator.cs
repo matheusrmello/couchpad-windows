@@ -282,6 +282,7 @@ public sealed class AutomationCoordinator
         }
 
         IRescueLease? lease = null;
+        var mutationStarted = false;
 
         try
         {
@@ -298,7 +299,13 @@ public sealed class AutomationCoordinator
 
             guardedToken.ThrowIfCancellationRequested();
             lease?.ThrowIfUnavailable();
-            await _display.ApplyAsync(settings.DisplayMode, guardedToken);
+            mutationStarted = true;
+            try { await _display.ApplyAsync(settings.DisplayMode, guardedToken); }
+            catch (Exception ex) when (DisplayApplyFailure.IsUnchanged(ex))
+            {
+                mutationStarted = false;
+                throw;
+            }
             lease?.ThrowIfUnavailable();
             guardedToken.ThrowIfCancellationRequested();
             var audio = await _audio.ApplyAsync(settings.AudioMode, guardedToken);
@@ -348,7 +355,7 @@ public sealed class AutomationCoordinator
         }
         catch (Exception ex) when (lease?.FailureToken.IsCancellationRequested == true)
         {
-            await TryRestoreAsync(displayBefore, audioBefore);
+            if (mutationStarted) await TryRestoreAsync(displayBefore, audioBefore);
             lease.Abandon();
             lock (_sync)
             {
@@ -360,7 +367,7 @@ public sealed class AutomationCoordinator
         }
         catch (OperationCanceledException)
         {
-            var restored = await TryRestoreAsync(displayBefore, audioBefore);
+            var restored = !mutationStarted || await TryRestoreAsync(displayBefore, audioBefore);
             var released = await FinishLeaseAsync(lease, restored);
 
             lock (_sync)
@@ -389,7 +396,7 @@ public sealed class AutomationCoordinator
         }
         catch (Exception ex)
         {
-            var restored = await TryRestoreAsync(displayBefore, audioBefore);
+            var restored = !mutationStarted || await TryRestoreAsync(displayBefore, audioBefore);
             var released = await FinishLeaseAsync(lease, restored);
 
             lock (_sync)

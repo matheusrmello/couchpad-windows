@@ -233,7 +233,8 @@ public class WindowsDisplayServiceFakeTests
     {
         var actions = new List<uint>();
         var service = Create((p, m, action) => { actions.Add(action); return 87; });
-        await Assert.ThrowsAsync<System.ComponentModel.Win32Exception>(() => service.ApplyAsync(DisplayMode.TvOnly));
+        var error = await Assert.ThrowsAsync<System.ComponentModel.Win32Exception>(() => service.ApplyAsync(DisplayMode.TvOnly));
+        Assert.True(DisplayApplyFailure.IsUnchanged(error));
         Assert.Equal(new uint[] { 0x40 }, actions);
     }
     [Fact]

@@ -132,8 +132,12 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
 
     public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default)
     {
-        if (!_options.AllowWrites) throw new NotSupportedException("Display writes are disabled.");
-        if (_writesRevoked.IsCancellationRequested) throw new NotSupportedException("Display writes are disabled for this session.");
+        if (!_options.AllowWrites || _writesRevoked.IsCancellationRequested)
+        {
+            var error = new NotSupportedException("Display writes are disabled for this session.");
+            DisplayApplyFailure.MarkUnchanged(error);
+            throw error;
+        }
         if (_setOverride is null && _transaction is null) throw new RescueDecisionUncertainException("A guarded transaction is required.");
         return ApplyWithRevocationAsync(mode, cancellationToken);
     }
@@ -145,10 +149,16 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private async Task<DisplayState> ApplyWithRevocationAsync(DisplayMode mode, CancellationToken cancellationToken)
     {
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _writesRevoked.Token);
-        return await ApplyCoreAsync(mode, linked.Token).ConfigureAwait(false);
+        var attempted = false;
+        try { return await ApplyCoreAsync(mode, linked.Token, () => attempted = true).ConfigureAwait(false); }
+        catch (Exception ex) when (!attempted && ex is not RescueDecisionUncertainException)
+        {
+            DisplayApplyFailure.MarkUnchanged(ex);
+            throw;
+        }
     }
 
-    private async Task<DisplayState> ApplyCoreAsync(DisplayMode mode, CancellationToken cancellationToken)
+    private async Task<DisplayState> ApplyCoreAsync(DisplayMode mode, CancellationToken cancellationToken, Action markAttempted)
     {
         await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -167,7 +177,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             DisplayState? after = null;
             DisplayTransaction.Execute(
                 () => SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x40),
-                () => { SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x80); EnsureMutationAllowed(); },
+                () => { markAttempted(); SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x80); EnsureMutationAllowed(); },
                 () => { after = GetCurrent(); if (after.Mode != mode) throw new InvalidOperationException("Display verification failed."); EnsureMutationAllowed(); },
                 () => RestoreSnapshot(before), cancellationToken);
             return after!;

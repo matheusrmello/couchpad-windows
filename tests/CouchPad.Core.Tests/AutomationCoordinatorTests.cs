@@ -510,7 +510,7 @@ public sealed class AutomationCoordinatorTests
     }
 
     [Fact]
-    public async Task Guard_begin_and_restore_failure_preserves_journal_and_blocks_retry()
+    public async Task Guard_begin_failure_does_not_attempt_restore_before_apply()
     {
         var guard = new FakeRescueGuard { BeginException = new InvalidOperationException("watchdog unavailable") };
         var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
@@ -518,11 +518,26 @@ public sealed class AutomationCoordinatorTests
         await coordinator.SetEnabledAsync(true);
         await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
         Assert.Equal(AutomationState.Error, coordinator.State);
-        Assert.Equal(SessionJournalEntry.PendingState, journal.Entry?.State);
-        guard.BeginException = null;
-        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Null(journal.Entry);
         Assert.Empty(display.Applied);
+        Assert.Empty(display.Restored);
         Assert.Empty(guard.Leases);
+    }
+
+    [Fact]
+    public async Task Proven_unchanged_apply_failure_does_not_restore_display()
+    {
+        var guard = new FakeRescueGuard();
+        var (coordinator, display, _, _, journal) = Create(rescueGuard: guard);
+        var failure = new InvalidOperationException("validation failed");
+        DisplayApplyFailure.MarkUnchanged(failure);
+        display.ApplyException = failure;
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Empty(display.Restored);
+        Assert.Null(journal.Entry);
+        Assert.Equal(1, Assert.Single(guard.Leases).Aborts);
     }
 
     [Fact]

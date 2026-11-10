@@ -188,6 +188,34 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
 if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
 {
     Reset();
+    var stateDirectory = Path.GetDirectoryName(Path.GetFullPath(marker + ".journal"))!;
+    var transaction = new RescueTransactionContext(stateDirectory);
+    var guard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(5),
+        allowRecovery: true, transaction: transaction);
+    await using var lease = await guard.BeginAsync("test-timeout-during-decision-lock");
+    await using (var held = await DisplayMutationLock.AcquireAsync(transaction.MutationLockPath))
+    {
+        using var entered = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        var apply = Task.Run(async () => await transaction.ExecuteIfStateAsync(RescueDecisionState.Armed, () =>
+        {
+            entered.Set();
+            if (!release.Wait(TimeSpan.FromSeconds(12))) throw new TimeoutException("Fake apply gate timed out.");
+        }));
+        if (!entered.Wait(TimeSpan.FromSeconds(5))) throw new TimeoutException("Fake apply did not enter decision lock.");
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(6));
+            if (File.Exists(marker)) throw new InvalidOperationException("Restore ran while fake apply held the decision lock.");
+        }
+        finally { release.Set(); await apply; }
+    }
+    if (await WaitMarker(marker, TimeSpan.FromSeconds(10)) != "RESTORE") throw new InvalidOperationException("Restore did not run after the decision lock was released.");
+    Console.WriteLine("TIMEOUT_WAITS_FOR_DECISION_LOCK: PASS");
+}
+if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
+{
+    Reset();
     Environment.SetEnvironmentVariable("COUCHPAD_TEST_EXIT_AFTER_READY", "1");
     try
     {
