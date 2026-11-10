@@ -15,5 +15,10 @@
 
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
+
+    <!-- NU1900 = fonte de auditoria do NuGet indisponível (ambiente offline).
+         Não é uma vulnerabilidade; a auditoria continua ativa quando a fonte
+         estiver acessível. Ver D030 em docs/decisions.md. -->
+    <NoWarn>$(NoWarn);NU1900</NoWarn>
   </PropertyGroup>
 </Project>
