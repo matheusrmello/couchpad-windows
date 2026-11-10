@@ -351,6 +351,7 @@ public sealed class AutomationCoordinatorTests
 
         var lease = Assert.Single(guard.Leases);
         Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.False(coordinator.IsRecoveryUncertain);
         Assert.Equal(0, lease.Commits);
         Assert.Equal(1, lease.Aborts);
         Assert.Equal(0, lease.Abandons);
@@ -370,6 +371,7 @@ public sealed class AutomationCoordinatorTests
 
         var lease = Assert.Single(guard.Leases);
         Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.True(coordinator.IsRecoveryUncertain);
         Assert.Equal(0, lease.Commits);
         Assert.Equal(0, lease.Aborts);
         Assert.Equal(1, lease.Abandons);

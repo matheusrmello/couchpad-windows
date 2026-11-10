@@ -28,6 +28,15 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
         Assert.Equal(0, settings.DeactivationDelayIndex);
         Assert.Equal(0, settings.DisplayModeIndex);
         Assert.Equal(0, settings.AudioModeIndex);
+        Assert.False(settings.AllowDisplayWrites);
+        Assert.Null(settings.TvDevicePath);
+        Assert.Null(settings.TvEdidManufacturer);
+        Assert.Null(settings.TvEdidProduct);
+        Assert.Null(settings.TvExactName);
+        Assert.Null(settings.InternalDevicePath);
+        Assert.Null(settings.InternalEdidManufacturer);
+        Assert.Null(settings.InternalEdidProduct);
+        Assert.Null(settings.InternalExactName);
     }
 
     [Fact]
@@ -47,6 +56,15 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
             DeactivationDelayIndex = 3,
             DisplayModeIndex = 1,
             AudioModeIndex = 1,
+            AllowDisplayWrites = true,
+            TvDevicePath = @"\\?\DISPLAY#SAM7167#tv",
+            TvEdidManufacturer = 11596,
+            TvEdidProduct = 29031,
+            TvExactName = "SAMSUNG",
+            InternalDevicePath = @"\\?\DISPLAY#AOC2702#monitor",
+            InternalEdidManufacturer = 58117,
+            InternalEdidProduct = 9986,
+            InternalExactName = "27G2G4",
         };
 
         store.Save(expected);

@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reflection;
 using Avalonia.Threading;
@@ -25,6 +26,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IGamepadWatcher _gamepad;
     private readonly ISimulatedGamepad? _gamepadSimulator;
     private readonly AutomationCoordinator _coordinator;
+    private readonly Func<IReadOnlyList<DisplayTargetOption>>? _discoverTargets;
     private bool _isLoadingSettings;
 
     [ObservableProperty]
@@ -60,6 +62,20 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private bool _isRefreshing;
 
+    [ObservableProperty]
+    private bool _allowDisplayWrites;
+
+    [ObservableProperty]
+    private DisplayTargetOption? _selectedTvTarget;
+
+    [ObservableProperty]
+    private DisplayTargetOption? _selectedInternalTarget;
+
+    [ObservableProperty]
+    private string? _displayTargetsError;
+
+    public ObservableCollection<DisplayTargetOption> DisplayTargets { get; } = new();
+
     public MainWindowViewModel(
         LocalizationService localization,
         IAppSettingsStore settingsStore,
@@ -68,10 +84,12 @@ public partial class MainWindowViewModel : ObservableObject
         IDisplayService? displayService = null,
         IAudioService? audioService = null,
         IDelayScheduler? delayScheduler = null,
-        IRescueGuard? rescueGuard = null)
+        IRescueGuard? rescueGuard = null,
+        Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
+        _discoverTargets = discoverTargets;
         _localization.PropertyChanged += OnLocalizationChanged;
 
         _gamepad = gamepadWatcher ?? new SimulatedGamepadWatcher();
@@ -87,6 +105,7 @@ public partial class MainWindowViewModel : ObservableObject
         _gamepad.ConnectionChanged += OnGamepadConnectionChanged;
 
         LoadSettings();
+        RefreshDisplayTargets();
         _ = InitializeAutomationAsync();
     }
 
@@ -114,6 +133,10 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     public string StatusText => _localization[StatusKey];
+
+    public bool IsRecoveryUncertain => _coordinator.IsRecoveryUncertain;
+
+    public string RecoveryHelpText => _localization["recovery.help"];
 
     public StatusTone CurrentStatusTone => _coordinator.State switch
     {
@@ -174,6 +197,10 @@ public partial class MainWindowViewModel : ObservableObject
     public string DisplayRefreshText =>
         _localization[IsRefreshing ? "display.refreshing" : "display.refresh"];
 
+    public string DisplayTargetHint => _localization["display.target_hint"];
+
+    public bool HasDisplayTargetsError => !string.IsNullOrEmpty(DisplayTargetsError);
+
     public ActionState DisplayRefreshState =>
         IsRefreshing ? ActionState.Loading : ActionState.Idle;
 
@@ -218,6 +245,76 @@ public partial class MainWindowViewModel : ObservableObject
         AutomationState.RescuePending => "status.rescue_pending",
         _ => "status.idle",
     };
+
+    [RelayCommand]
+    private void RefreshDisplayTargets()
+    {
+        if (_discoverTargets is null)
+        {
+            return;
+        }
+
+        var tv = SelectedTvTarget;
+        var internalDisplay = SelectedInternalTarget;
+        _isLoadingSettings = true;
+
+        try
+        {
+            DisplayTargets.Clear();
+            foreach (var target in _discoverTargets())
+            {
+                AddTarget(target);
+            }
+
+            tv = EnsureTarget(tv);
+            internalDisplay = EnsureTarget(internalDisplay);
+            SelectedTvTarget = tv;
+            SelectedInternalTarget = internalDisplay;
+            DisplayTargetsError = null;
+        }
+        catch
+        {
+            DisplayTargetsError = _localization["display.targets_error"];
+        }
+        finally
+        {
+            _isLoadingSettings = false;
+        }
+    }
+
+    private DisplayTargetOption? EnsureTarget(DisplayTargetOption? target)
+    {
+        if (target is null)
+        {
+            return null;
+        }
+
+        var existing = DisplayTargets.FirstOrDefault(item => item.Matches(target));
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        AddTarget(target);
+        return target;
+    }
+
+    private void AddTarget(DisplayTargetOption target)
+    {
+        if (!DisplayTargets.Any(item => item.Matches(target)))
+        {
+            DisplayTargets.Add(target);
+        }
+    }
+
+    private static DisplayTargetOption? CreateSavedTarget(
+        string? devicePath,
+        ushort? manufacturer,
+        ushort? product,
+        string? exactName) =>
+        string.IsNullOrWhiteSpace(devicePath)
+            ? null
+            : new DisplayTargetOption(devicePath, manufacturer, product, exactName);
 
     [RelayCommand]
     private void ToggleGamepad()
@@ -276,6 +373,10 @@ public partial class MainWindowViewModel : ObservableObject
             AudioModeIndex = 0;
             SteamEnabled = true;
             CustomLauncherPath = null;
+            AllowDisplayWrites = false;
+            SelectedTvTarget = null;
+            SelectedInternalTarget = null;
+            DisplayTargetsError = null;
             IsRefreshing = false;
         }
         finally
@@ -342,6 +443,15 @@ public partial class MainWindowViewModel : ObservableObject
         PersistSettings();
     }
 
+    partial void OnAllowDisplayWritesChanged(bool value) => PersistSettings();
+
+    partial void OnSelectedTvTargetChanged(DisplayTargetOption? value) => PersistSettings();
+
+    partial void OnSelectedInternalTargetChanged(DisplayTargetOption? value) => PersistSettings();
+
+    partial void OnDisplayTargetsErrorChanged(string? value) =>
+        OnPropertyChanged(nameof(HasDisplayTargetsError));
+
     partial void OnIsRefreshingChanged(bool value)
     {
         OnPropertyChanged(nameof(DisplayRefreshText));
@@ -367,6 +477,31 @@ public partial class MainWindowViewModel : ObservableObject
             AudioModeIndex = Math.Clamp(settings.AudioModeIndex, 0, 1);
             SteamEnabled = settings.SteamEnabled;
             CustomLauncherPath = settings.CustomLauncherPath;
+            AllowDisplayWrites = settings.AllowDisplayWrites;
+
+            var tv = CreateSavedTarget(
+                settings.TvDevicePath,
+                settings.TvEdidManufacturer,
+                settings.TvEdidProduct,
+                settings.TvExactName);
+            var internalDisplay = CreateSavedTarget(
+                settings.InternalDevicePath,
+                settings.InternalEdidManufacturer,
+                settings.InternalEdidProduct,
+                settings.InternalExactName);
+
+            if (tv is not null)
+            {
+                AddTarget(tv);
+            }
+
+            if (internalDisplay is not null)
+            {
+                AddTarget(internalDisplay);
+            }
+
+            SelectedTvTarget = tv;
+            SelectedInternalTarget = internalDisplay;
         }
         finally
         {
@@ -411,6 +546,15 @@ public partial class MainWindowViewModel : ObservableObject
                 AudioModeIndex = AudioModeIndex,
                 SteamEnabled = SteamEnabled,
                 CustomLauncherPath = CustomLauncherPath,
+                AllowDisplayWrites = AllowDisplayWrites,
+                TvDevicePath = SelectedTvTarget?.DevicePath,
+                TvEdidManufacturer = SelectedTvTarget?.EdidManufacturer,
+                TvEdidProduct = SelectedTvTarget?.EdidProduct,
+                TvExactName = SelectedTvTarget?.FriendlyName,
+                InternalDevicePath = SelectedInternalTarget?.DevicePath,
+                InternalEdidManufacturer = SelectedInternalTarget?.EdidManufacturer,
+                InternalEdidProduct = SelectedInternalTarget?.EdidProduct,
+                InternalExactName = SelectedInternalTarget?.FriendlyName,
             });
         }
         catch
@@ -473,6 +617,8 @@ public partial class MainWindowViewModel : ObservableObject
             OnPropertyChanged(nameof(CurrentStatusTone));
             OnPropertyChanged(nameof(DisplaySummary));
             OnPropertyChanged(nameof(AudioSummary));
+            OnPropertyChanged(nameof(IsRecoveryUncertain));
+            OnPropertyChanged(nameof(RecoveryHelpText));
         }
 
         if (Dispatcher.UIThread.CheckAccess())
@@ -498,6 +644,13 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(GamepadActionText));
         OnPropertyChanged(nameof(DisplaySummary));
         OnPropertyChanged(nameof(AudioSummary));
+        OnPropertyChanged(nameof(RecoveryHelpText));
+        OnPropertyChanged(nameof(DisplayTargetHint));
+        if (DisplayTargetsError is not null)
+        {
+            DisplayTargetsError = _localization["display.targets_error"];
+        }
+
         OnPropertyChanged(nameof(VersionText));
     }
 }

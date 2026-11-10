@@ -1,5 +1,6 @@
 using System.Reflection;
 using CouchPad.App;
+using CouchPad.Core.Settings;
 using CouchPad.Platform.Windows;
 
 namespace CouchPad.App.Tests;
@@ -54,5 +55,68 @@ public class WindowsDisplayCompositionTests
     {
         var guard = new WindowsRescueGuard("unused.exe", "unused.json", TimeSpan.FromSeconds(60));
         await Assert.ThrowsAsync<NotSupportedException>(() => guard.BeginAsync("test"));
+    }
+
+    [Fact]
+    public void Settings_can_enable_writes_and_selectors_without_cli_args()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var rescue = Path.GetTempFileName();
+        try
+        {
+            var journal = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "couchpad-composition-settings.json"));
+            var settings = new AppSettings
+            {
+                AllowDisplayWrites = true,
+                TvDevicePath = "tv-path",
+                TvEdidManufacturer = 12,
+                TvEdidProduct = 34,
+                TvExactName = "SAMSUNG",
+                InternalDevicePath = "monitor-path",
+                InternalEdidManufacturer = 56,
+                InternalEdidProduct = 78,
+                InternalExactName = "AOC",
+            };
+
+            var (display, guard) = App.CreateWindowsDisplayServices(
+                [], journal, false, rescue, settings);
+
+            var windowsDisplay = Assert.IsType<WindowsDisplayService>(display);
+            var windowsGuard = Assert.IsType<WindowsRescueGuard>(guard);
+            var options = (WindowsDisplayOptions)typeof(WindowsDisplayService)
+                .GetField("_options", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(windowsDisplay)!;
+            Assert.True(options.AllowWrites);
+            Assert.Equal("tv-path", options.DevicePath);
+            Assert.Equal("SAMSUNG", options.ExactName);
+            Assert.Equal("monitor-path", options.InternalDisplay!.DevicePath);
+            Assert.True((bool)typeof(WindowsRescueGuard)
+                .GetField("_allowRecovery", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .GetValue(windowsGuard)!);
+        }
+        finally
+        {
+            File.Delete(rescue);
+        }
+    }
+
+    [Fact]
+    public void Allow_writes_without_selectors_stays_in_simulation()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var rescue = Path.GetTempFileName();
+        try
+        {
+            var journal = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "couchpad-composition-missing.json"));
+            var (display, guard) = App.CreateWindowsDisplayServices(
+                [], journal, false, rescue, new AppSettings { AllowDisplayWrites = true });
+
+            Assert.Null(display);
+            Assert.Null(guard);
+        }
+        finally
+        {
+            File.Delete(rescue);
+        }
     }
 }

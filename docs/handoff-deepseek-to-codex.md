@@ -6,7 +6,7 @@
 - Tag da origem: `v0.4.0-sim`
 - Contrato endurecido: `5f5c8c4` (v0.4.1), `DisplayMode.InternalOnly` (v0.4.2), guard de rescue no Core (v0.4.3)
 - Build: 0 avisos, 0 erros
-- Testes: 104 aprovados
+- Testes: 142 aprovados
 - Árvore: limpa (os arquivos de REA/P4 do Codex são commitados separadamente)
 - Aceite do usuário: 09/11/2026
 
@@ -85,6 +85,15 @@ Em `src/CouchPad.Core`:
     bem-sucedido; `Abandon` quando o rollback falhar. O watchdog deve ler o
     journal e restaurar o baseline se o processo pai morrer/timeout. O Core já
     chama esse contrato e usa `NoopRescueGuard` na simulação.
+12. **Opt-in de escrita**: a UI grava `AllowDisplayWrites` e os seletores de TV
+    e monitor interno em `settings.json`. O App só cria `WindowsDisplayService`
+    com `AllowWrites=true` e `WindowsRescueGuard` com `allowRecovery=true`
+    quando o opt-in e os seletores estão completos; o padrão é simulação.
+    Após alterar o seletor/opt-in, reinicie o app. Para a matriz, use a UI ou a
+    configuração explícita; nunca habilite por padrão.
+13. **Recuperação incerta**: se o coordenador marcar
+    `recoveryUncertain`, a UI mostra um aviso e desabilita o toggle de
+    automação; só reiniciar destrava. Não tente outra mutação.
 
 ---
 

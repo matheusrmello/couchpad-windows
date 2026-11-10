@@ -31,6 +31,28 @@ public sealed record AppSettings
     public int AudioModeIndex { get; init; }
 
     /// <summary>
+    /// Opt-in explícito para escrita de display. Desligado por padrão; quando
+    /// ligado, a composição também habilita o rescue guard.
+    /// </summary>
+    public bool AllowDisplayWrites { get; init; }
+
+    public string? TvDevicePath { get; init; }
+
+    public ushort? TvEdidManufacturer { get; init; }
+
+    public ushort? TvEdidProduct { get; init; }
+
+    public string? TvExactName { get; init; }
+
+    public string? InternalDevicePath { get; init; }
+
+    public ushort? InternalEdidManufacturer { get; init; }
+
+    public ushort? InternalEdidProduct { get; init; }
+
+    public string? InternalExactName { get; init; }
+
+    /// <summary>
     /// Preserva chaves desconhecidas ao regravar o arquivo, para não perder
     /// configurações de versões futuras ou de outros componentes.
     /// </summary>

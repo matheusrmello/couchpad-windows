@@ -69,6 +69,17 @@ public sealed class AutomationCoordinator
         }
     }
 
+    public bool IsRecoveryUncertain
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _recoveryUncertain;
+            }
+        }
+    }
+
     public AutomationSnapshot? Snapshot
     {
         get
@@ -538,15 +549,9 @@ public sealed class AutomationCoordinator
 
         lock (_sync)
         {
-            var effectiveError = state == AutomationState.Error ? error : null;
-            if (_state == state && _lastError == effectiveError)
-            {
-                return;
-            }
-
             _state = state;
-            _lastError = effectiveError;
-            args = new AutomationStateChangedEventArgs(state, effectiveError);
+            _lastError = state == AutomationState.Error ? error : null;
+            args = new AutomationStateChangedEventArgs(state, _lastError, _recoveryUncertain);
         }
 
         StateChanged?.Invoke(this, args);

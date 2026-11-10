@@ -1,13 +1,15 @@
-# CouchPad — Especificação de UI (P1–P3)
+# CouchPad — Especificação de UI (P1–P4)
 
-- Data: 2026-11-09
-- Fases: P1 (shell), P2 (componentes) e P3 (automação simulada), sem hardware
+- Data: 2026-11-10
+- Fases: P1 (shell), P2 (componentes), P3 (automação simulada) e superfície P4
+  (seletores/opt-in de display), sem alterar hardware por padrão
 - Base visual: referência do ShiftPad 2.2.0, recriada com identidade própria
 - Plataforma: Avalonia 12.1.4 / .NET 10 (`net10.0`)
 
-> Esta spec descreve o shell e a automação simulada entregues até a P3. Ela
-> não copia ícones, textos, imagens, XAML ou código do ShiftPad. Todos os
-> textos visíveis vêm de `Strings.pt-BR.json` e `Strings.en.json`.
+> Esta spec descreve o shell, a automação simulada e a superfície de
+> configuração de display até a P4. Ela não copia ícones, textos, imagens, XAML
+> ou código do ShiftPad. Todos os textos visíveis vêm de
+> `Strings.pt-BR.json` e `Strings.en.json`.
 
 ---
 
@@ -19,7 +21,8 @@
 4. Layout responsivo em três breakpoints, com rolagem vertical quando o
    conteúdo não couber.
 5. Nenhuma chamada real de tela, áudio, HDR ou gamepad nas P1–P3; a P3 usa
-   serviços simulados no Core.
+   serviços simulados no Core. Na P4, a leitura/seleção é real, mas a escrita
+   depende de opt-in explícito e do watchdog.
 6. Toda ação destrutiva ou incerta fica desabilitada até a fase que a
    implementa.
 
@@ -94,7 +97,14 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 - Colunas `Atual` e `Destino`:
   - `Atual` usa `DisplaySummary` (modo aplicado quando `Active`);
   - `Destino` usa `display.target_value` (TV · HDMI, em acento).
-- Nenhuma chamada CCD até a P4.
+- Seletores P4:
+  - `display.tv_target` lista os targets CCD descobertos;
+  - `display.internal_target` lista o monitor interno;
+  - `display.targets_refresh` atualiza a descoberta;
+  - `display.target_hint` lembra que é preciso reiniciar para aplicar;
+  - erro de descoberta usa `display.targets_error`.
+- A descoberta é read-only; nada muda até `AllowDisplayWrites` e os seletores
+  serem salvos e o app reiniciado.
 
 ### 3.4 Card Gamepad
 
@@ -118,7 +128,10 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 
 - Título `section.settings`.
 - Toggles: fechar launcher ao ativar, iniciar com o Windows, minimizar para a
-  bandeja.
+  bandeja e **permitir escrita de display** (`settings.allow_display_writes`,
+  padrão desligado).
+- `settings.allow_display_writes_help` avisa que é avançado, habilita CCD +
+  watchdog e exige reinício.
 - Selects: atraso ao ativar e ao desativar (Imediato, 1 s, 2 s, 3 s, 5 s).
 - Ajuda `settings.help`.
 - A P3 persiste todos esses valores em `%LOCALAPPDATA%\CouchPad\settings.json`.
@@ -269,6 +282,8 @@ Grupos de chaves: `app.*`, `status.*`, `section.*`, `automation.*`,
 - Foco visível: anel de acento no toggle; borda `TextPrimary` de 2 px nos
   `ActionButton`; foco padrão do Fluent nos demais.
 - Status anunciado com `LiveSetting=Polite`.
+- Recuperação incerta mostra `recovery.help` no card Automação, em perigo, e
+  desabilita o toggle até reiniciar.
 - Nunca usar só cor: todo dot tem texto ao lado.
 - Textos longos usam `TextWrapping`/`TextTrimming`.
 
@@ -301,8 +316,9 @@ captura de combinação, bandeja, autostart e rescue no logon.
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: 66 aprovados — catálogos/i18n, composição do shell, temas,
-  estados da galeria, state machine, atrasos/cancelamento, journal e settings.
+- Testes: 142 aprovados — catálogos/i18n, composição do shell, temas,
+  estados da galeria, state machine, atrasos/cancelamento, journal, settings,
+  composição Windows e guard.
 - Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em
   telas 720p), troca pt/en, título `CouchPad`.
 - Galeria: `CouchPad.dll --gallery` abre em `1100 × 720`; todos os estados
@@ -314,7 +330,8 @@ captura de combinação, bandeja, autostart e rescue no logon.
   - `p2-main-pt.png`, `p2-main-en.png` (shell 3 colunas);
   - `p2-main-pt-2col.png`, `p2-main-pt-640.png` (2 e 1 coluna);
   - `p2-refresh-loading.png` (ActionButton em loading no shell);
-  - `p3-01-idle.png` … `p3-06-restored.png` (fluxo simulado completo).
+  - `p3-01-idle.png` … `p3-06-restored.png` (fluxo simulado completo);
+  - `p2-main-pt.png` atualizado com seletores TV/monitor e opt-in de escrita.
 - As capturas definitivas dos 3 breakpoints × 2 idiomas serão versionadas na
   P7a em `docs/screenshots/`.
 
@@ -355,3 +372,12 @@ captura de combinação, bandeja, autostart e rescue no logon.
 - [x] Settings persistem toggles, atrasos, modos, launcher e idioma.
 - [x] Nenhum hardware real, P/Invoke ou COM novo.
 - [x] Aceite do usuário para avançar à P4/REA.
+
+### Checklist da superfície P4 (DeepSeek)
+
+- [x] Seletores de TV e monitor interno com descoberta read-only.
+- [x] Seletores e `AllowDisplayWrites` persistidos em settings.
+- [x] App só compõe display real + rescue com opt-in e seletores completos.
+- [x] Aviso de recuperação incerta e toggle de automação bloqueado.
+- [x] Testes de composição/settings sem hardware.
+- [ ] Matriz real de TvOnly/Extend/Mirror + rollback (Codex/usuário).

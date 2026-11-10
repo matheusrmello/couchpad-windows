@@ -724,6 +724,10 @@ separados.
 | 09/11/2026 | D029 | `DisplayState.Topology` opaco e journal `pending` antes do apply; falha inicial aborta | Fechar janela de crash e permitir rescue fiel |
 | 09/11/2026 | D030 | Suprimir só `NU1900` quando a auditoria NuGet estiver offline | Build 0 avisos sem esconder vulnerabilidades |
 | 10/11/2026 | D031 | `DisplayMode.InternalOnly` para baseline sem TV; `Mode` é resumo; `Topology` é a fonte de restore | Mapear o estado real sem inferir TV pela ordem |
+| 10/11/2026 | D032 | `IRescueGuard`/`IRescueLease` no Core; begin/commit/abort/abandon; `NoopRescueGuard` na simulação | Watchdog independente sem acoplar Core à plataforma |
+| 10/11/2026 | D033 | App referencia `Platform.Windows` só na raiz de composição; serviço real opt-in | UI testável e padrão seguro |
+| 10/11/2026 | D034 | Perda do watchdog antes da liberação marca `recoveryUncertain` e bloqueia mutações até reiniciar | Não mudar sem saber o estado |
+| 10/11/2026 | D035 | Seletores de TV/monitor + `AllowDisplayWrites` padrão falso; App compõe real só com opt-in e seletores; banner de recuperação incerta | Matriz configurável sem escrita acidental |
 
 ---
 
@@ -1100,6 +1104,10 @@ Nenhum bloqueador restante.
 - D029: `DisplayState.Topology` opaco e journal `pending` antes do apply.
 - D030: supressão pontual de `NU1900` em ambiente offline.
 - D031: `DisplayMode.InternalOnly` e mapeamento do estado real.
+- D032: `IRescueGuard`/`IRescueLease` no Core.
+- D033: composição Windows opt-in na raiz do App.
+- D034: `recoveryUncertain` bloqueia novas mutações.
+- D035: seletores de display + `AllowDisplayWrites` falso por padrão.
 
 ### Fora do escopo (por desenho)
 
@@ -1198,3 +1206,7 @@ Cancelamento após o envio do sinal não interrompe a espera por ACK; falha de p
 ### P4 — monitoração do watchdog, 2026-11-10
 
 O lease sinaliza falha do processo antes da liberação e oferece verificação imediata; o coordenador vincula o sinal ao token da transição, verifica antes/depois das operações e preserva o journal em perda do watchdog (D034). Testes cobrem perda antes, durante e depois do apply falso, inclusive chamada não cancelável, e perda durante rollback/desativação. O processo rescue com backend falso foi encerrado após READY e a falha foi detectada; commit/abort normais não sinalizaram falha. Build 0 avisos/erros, 120 testes e smoke passaram. Timeout concorrente com apply e ACK incerto continuam pendentes; sem SDC_APPLY real.
+
+### P4 — seletores e opt-in de display (DeepSeek), 2026-11-10
+
+A UI agora descobre targets CCD em modo read-only, permite escolher TV e monitor interno, persiste path/EDID em settings e adiciona o toggle avançado `AllowDisplayWrites` (padrão falso). O App só compõe `WindowsDisplayService` com escrita e `WindowsRescueGuard` com recovery quando o opt-in e os dois seletores estão completos; caso contrário continua em simulação. O banner `recovery.help` aparece quando o coordenador marca `recoveryUncertain` e o toggle de automação fica bloqueado até reiniciar. Build 0 avisos/erros, 142 testes (Core + App), smoke OK; nenhum `SDC_APPLY` executado. A matriz real P4 continua pendente e é do Codex/usuário.

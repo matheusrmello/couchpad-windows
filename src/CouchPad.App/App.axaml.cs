@@ -33,10 +33,15 @@ public partial class App : Application
 
             var settingsStore = new JsonAppSettingsStore(settingsPath);
             LocalizationService.Instance.Initialize(settingsStore);
+            var appSettings = settingsStore.Load();
 
             var (displayService, rescueGuard) = CreateWindowsDisplayServices(
                 desktop.Args ?? [], journalPath, isSmoke || isGallery,
-                Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"));
+                Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"), appSettings);
+            Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets =
+                isSmoke || isGallery || !OperatingSystem.IsWindows()
+                    ? null
+                    : DiscoverDisplayTargets;
 
             Window window = isGallery
                 ? new ComponentGalleryWindow()
@@ -47,7 +52,8 @@ public partial class App : Application
                         settingsStore,
                         new JsonSessionJournalStore(journalPath),
                         displayService: displayService,
-                        rescueGuard: rescueGuard),
+                        rescueGuard: rescueGuard,
+                        discoverTargets: discoverTargets),
                 };
 
             desktop.MainWindow = window;
@@ -80,25 +86,96 @@ public partial class App : Application
     }
 
     internal static (IDisplayService? Display, IRescueGuard? Guard) CreateWindowsDisplayServices(
-        string[] args, string journalPath, bool simulationOnly, string rescuePath)
+        string[] args, string journalPath, bool simulationOnly, string rescuePath,
+        AppSettings? settings = null)
     {
+        if (simulationOnly) return (null, null);
+        var allowWrites = settings?.AllowDisplayWrites == true;
         const string flag = "--windows-display";
         var positions = args.Select((value, index) => (value, index))
             .Where(item => string.Equals(item.value, flag, StringComparison.Ordinal)).ToArray();
-        if (positions.Length == 0 || simulationOnly) return (null, null);
-        if (!OperatingSystem.IsWindows() || positions.Length != 1 || positions[0].index + 6 >= args.Length)
-            throw new ArgumentException("Invalid Windows display configuration.");
-        var i = positions[0].index;
-        if (string.IsNullOrWhiteSpace(args[i + 1]) || string.IsNullOrWhiteSpace(args[i + 4]) ||
-            !ushort.TryParse(args[i + 2], out var tvManufacturer) || !ushort.TryParse(args[i + 3], out var tvProduct) ||
-            !ushort.TryParse(args[i + 5], out var monitorManufacturer) || !ushort.TryParse(args[i + 6], out var monitorProduct))
-            throw new ArgumentException("Invalid Windows display selector.");
+        if (!OperatingSystem.IsWindows()) return (null, null);
+        if (positions.Length == 0 && !allowWrites) return (null, null);
+        if (positions.Length > 1) throw new ArgumentException("Invalid Windows display configuration.");
+
+        var tvPath = settings?.TvDevicePath;
+        var tvManufacturer = settings?.TvEdidManufacturer;
+        var tvProduct = settings?.TvEdidProduct;
+        var internalPath = settings?.InternalDevicePath;
+        var internalManufacturer = settings?.InternalEdidManufacturer;
+        var internalProduct = settings?.InternalEdidProduct;
+
+        if (!IsComplete(tvPath, tvManufacturer, tvProduct) ||
+            !IsComplete(internalPath, internalManufacturer, internalProduct))
+        {
+            if (positions.Length == 0) return (null, null);
+            if (positions[0].index + 6 >= args.Length)
+                throw new ArgumentException("Invalid Windows display configuration.");
+
+            var i = positions[0].index;
+            tvPath = args[i + 1];
+            internalPath = args[i + 4];
+            if (string.IsNullOrWhiteSpace(tvPath) || string.IsNullOrWhiteSpace(internalPath) ||
+                !ushort.TryParse(args[i + 2], out var tvEdidManufacturer) ||
+                !ushort.TryParse(args[i + 3], out var tvEdidProduct) ||
+                !ushort.TryParse(args[i + 5], out var internalEdidManufacturer) ||
+                !ushort.TryParse(args[i + 6], out var internalEdidProduct))
+            {
+                throw new ArgumentException("Invalid Windows display selector.");
+            }
+
+            tvManufacturer = tvEdidManufacturer;
+            tvProduct = tvEdidProduct;
+            internalManufacturer = internalEdidManufacturer;
+            internalProduct = internalEdidProduct;
+        }
+
+        if (!IsComplete(tvPath, tvManufacturer, tvProduct) ||
+            !IsComplete(internalPath, internalManufacturer, internalProduct))
+        {
+            return (null, null);
+        }
+
         if (!File.Exists(rescuePath)) throw new FileNotFoundException("Rescue executable is unavailable.", rescuePath);
-        var options = new WindowsDisplayOptions(args[i + 1], tvManufacturer, tvProduct,
-            AllowWrites: false, InternalDisplay: new DisplaySelector(args[i + 4], monitorManufacturer, monitorProduct));
+        var options = new WindowsDisplayOptions(
+            tvPath!, tvManufacturer!.Value, tvProduct!.Value, settings?.TvExactName,
+            AllowWrites: allowWrites,
+            InternalDisplay: new DisplaySelector(
+                internalPath!, internalManufacturer!.Value, internalProduct!.Value,
+                settings?.InternalExactName));
         var stateDirectory = Path.GetDirectoryName(Path.GetFullPath(journalPath))!;
         var transaction = new RescueTransactionContext(stateDirectory);
         return (new WindowsDisplayService(options, transaction),
-            new WindowsRescueGuard(rescuePath, journalPath, TimeSpan.FromSeconds(60), transaction: transaction));
+            new WindowsRescueGuard(rescuePath, journalPath, TimeSpan.FromSeconds(60),
+                allowRecovery: allowWrites, transaction: transaction));
     }
+
+    internal static IReadOnlyList<DisplayTargetOption> DiscoverDisplayTargets()
+    {
+        if (!OperatingSystem.IsWindows()) return Array.Empty<DisplayTargetOption>();
+
+        try
+        {
+            var service = new WindowsDisplayService(new WindowsDisplayOptions("", 0, 0));
+            var snapshot = service.Capture(WindowsDisplayService.AllPaths);
+            return snapshot.Targets
+                .Where(target => target.Status == 0 && !string.IsNullOrWhiteSpace(target.DevicePath))
+                .DistinctBy(target => (target.AdapterLow, target.AdapterHigh, target.Id))
+                .Select(target => new DisplayTargetOption(
+                    target.DevicePath!,
+                    target.EdidManufacturer,
+                    target.EdidProduct,
+                    target.FriendlyName))
+                .OrderBy(target => target.FriendlyName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(target => target.DevicePath, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+        catch
+        {
+            return Array.Empty<DisplayTargetOption>();
+        }
+    }
+
+    private static bool IsComplete(string? path, ushort? manufacturer, ushort? product) =>
+        !string.IsNullOrWhiteSpace(path) && manufacturer.HasValue && product.HasValue;
 }
