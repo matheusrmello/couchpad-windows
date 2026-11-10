@@ -52,6 +52,7 @@
 | D041 | 2026-11-10 | Desligar o opt-in de escrita revoga novos applies imediatamente e cancela o apply corrente; restores continuam disponíveis, e reativar a escrita exige reinício | Impedir que um serviço já composto continue aplicando mudanças após o usuário desligar a opção |
 | D042 | 2026-11-10 | O contrato de display pode sinalizar que um apply falhou comprovadamente antes de qualquer tentativa de mutação; o coordenador dispensa restore somente nesse caso ou antes de chamar apply | Impedir SDC_APPLY de rollback após recusa de validação ou cancelamento prévio, preservando rollback conservador quando houve tentativa ou há dúvida |
 | D043 | 2026-11-10 | Espelhamento deixa de ser modo selecionável ou aplicável, inclusive na simulação; modo e snapshot espelhados existentes permanecem legíveis e restauráveis. Configuração antiga de espelhamento volta ao padrão com automação desligada | Atender à decisão do usuário sem prejudicar a recuperação de uma topologia anterior |
+| D044 | 2026-11-10 | Novas configurações e redefinição usam atraso de ativação de 2 segundos, com contagem regressiva localizada; valores já salvos continuam respeitados | Dar tempo ao usuário antes de mudar a tela, mantendo o atraso configurável |
 
 ## Pendentes
 

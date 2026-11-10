@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reflection;
+using System.Diagnostics;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -29,6 +30,8 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IDisplayWriteControl? _displayWriteControl;
     private readonly Func<IReadOnlyList<DisplayTargetOption>>? _discoverTargets;
     private bool _isLoadingSettings;
+    private readonly DispatcherTimer _countdownTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
+    private long _countdownDeadline;
 
     [ObservableProperty]
     private bool _automationEnabled;
@@ -43,7 +46,7 @@ public partial class MainWindowViewModel : ObservableObject
     private bool _minimizeToTray = true;
 
     [ObservableProperty]
-    private int _activationDelayIndex;
+    private int _activationDelayIndex = 2;
 
     [ObservableProperty]
     private int _deactivationDelayIndex;
@@ -89,6 +92,7 @@ public partial class MainWindowViewModel : ObservableObject
         Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
+        _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
         _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         _discoverTargets = discoverTargets;
         _displayWriteControl = displayService as IDisplayWriteControl;
@@ -134,7 +138,9 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    public string StatusText => _localization[StatusKey];
+    public string StatusText => _coordinator.State == AutomationState.Pending && _countdownDeadline != 0
+        ? string.Format(_localization["status.countdown"], Math.Max(0, (int)Math.Ceiling((double)(_countdownDeadline - Stopwatch.GetTimestamp()) / Stopwatch.Frequency)))
+        : _localization[StatusKey];
 
     public bool IsRecoveryUncertain => _coordinator.IsRecoveryUncertain;
 
@@ -370,7 +376,7 @@ public partial class MainWindowViewModel : ObservableObject
             CloseLauncherOnActivate = true;
             StartWithWindows = false;
             MinimizeToTray = true;
-            ActivationDelayIndex = 0;
+            ActivationDelayIndex = 2;
             DeactivationDelayIndex = 0;
             DisplayModeIndex = 0;
             AudioModeIndex = 0;
@@ -628,6 +634,14 @@ public partial class MainWindowViewModel : ObservableObject
     {
         void Notify()
         {
+            _countdownTimer.Stop();
+            _countdownDeadline = 0;
+            if (e.State == AutomationState.Pending && _coordinator.State == AutomationState.Pending)
+            {
+                var duration = IsGamepadConnected ? _coordinator.Settings.ActivationDelay : _coordinator.Settings.DeactivationDelay;
+                _countdownDeadline = Stopwatch.GetTimestamp() + (long)(duration.TotalSeconds * Stopwatch.Frequency);
+                _countdownTimer.Start();
+            }
             OnPropertyChanged(nameof(StatusText));
             OnPropertyChanged(nameof(CurrentStatusTone));
             OnPropertyChanged(nameof(DisplaySummary));

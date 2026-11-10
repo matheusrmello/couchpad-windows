@@ -22,7 +22,7 @@ public sealed record AppSettings
 
     public string? CustomLauncherPath { get; init; }
 
-    public int ActivationDelayIndex { get; init; }
+    public int ActivationDelayIndex { get; init; } = 2;
 
     public int DeactivationDelayIndex { get; init; }
 

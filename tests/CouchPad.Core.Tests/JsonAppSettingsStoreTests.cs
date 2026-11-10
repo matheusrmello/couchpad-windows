@@ -24,7 +24,7 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
         Assert.True(settings.CloseLauncherOnActivate);
         Assert.True(settings.SteamEnabled);
         Assert.Null(settings.CustomLauncherPath);
-        Assert.Equal(0, settings.ActivationDelayIndex);
+        Assert.Equal(2, settings.ActivationDelayIndex);
         Assert.Equal(0, settings.DeactivationDelayIndex);
         Assert.Equal(0, settings.DisplayModeIndex);
         Assert.Equal(0, settings.AudioModeIndex);
