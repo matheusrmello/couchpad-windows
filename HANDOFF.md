@@ -1270,3 +1270,5 @@ Revisão final para aceite: não foram encontrados `cdb`, `windbg`, `procdump`, 
 O usuário dispensou o teste de HDR da etapa atual e pediu registrar o tema para implementações futuras. O cenário está adiado, não aprovado; requisitos e validação de áudio da P5 permanecem. Ver `docs/p5-audio-hdr.md`.
 
 Na primeira revalidação de áudio somente leitura, o probe compilou sem avisos/erros e reportou oito endpoints, um ativo, IDs únicos e padrões dos três papéis estáveis em duas leituras; PnP identificou o dispositivo presente como AOC 27G2G4. Nenhum áudio foi alterado e o endpoint da Samsung não foi identificado. Testes de troca/restauração e som real continuam pendentes de implementação.
+
+As pendências de áudio foram listadas em ordem de implementação e validação em `docs/p5-audio-hdr.md`. Conforme regra do projeto e solicitação do usuário, concluir e registrar cada item antes de iniciar o próximo; HDR segue adiado.

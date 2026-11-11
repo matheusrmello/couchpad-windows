@@ -13,3 +13,19 @@ Build do probe: zero avisos e erros. Na topologia atual foram enumerados oito en
 ## HDR adiado por solicitação do usuário
 
 Em 2026-11-11, o usuário solicitou ignorar o teste de HDR nesta etapa e registrar o assunto para implementações futuras. Não executar a matriz de hardware de HDR como requisito da P5 atual nem registrá-la como aprovada. A implementação e a futura validação devem considerar detecção de suporte, captura do estado anterior, reaplicação e recuperação segura, sem forçar HDR em display incompatível. A alteração não dispensa os requisitos e testes de áudio.
+
+## Pendências de áudio — ordem sequencial
+
+Concluir e registrar cada item antes do próximo, conforme `AGENTS.md`; continuar sem pedidos repetidos. Não confundir inventário somente leitura com troca/restauração real. Parar se uma recuperação de hardware falhar ou a tela ficar preta.
+
+1. **Identificação da TV:** expor nome e propriedades necessários para identificar o endpoint Samsung, observar seu aparecimento quando a TV fica ativa e verificar seleção inequívoca; testar ausência e ambiguidade. Pendente.
+2. **Contrato e baseline:** registrar decisão e ampliar o Core e o journal para preservar os IDs padrão por papel e os estados de volume/mudo pertinentes, com compatibilidade e testes de serialização. Pendente.
+3. **Recuperação independente:** vincular o baseline completo ao watchdog e restaurar áudio com segurança em morte/timeout; validar com backend falso e processos, inclusive falhas e decisões incertas. Pendente.
+4. **Implementação de áudio Windows:** seleção por identidade, espera/retry limitado pelo endpoint HDMI, troca por papel, verificação e rollback fail-closed; manter escrita desabilitada por padrão. Pendente.
+5. **Integração e testes puros:** coordenar display → áudio → restauração com falha/cancelamento e testes de ausência, indisponibilidade, ambiguidade e papéis distintos. Pendente.
+6. **Matriz real:** capturar baseline dos papéis, volume e mudo; ativar TV e confirmar áudio audível na Samsung; desconectar e comprovar restauração anterior; verificar endpoint ausente/tardio, cancelamento, falha e recuperação independente com usuário presente. Pendente.
+7. **Fechamento:** build sem avisos/erros, testes, smoke, revisão independente, documentação e commit; pedir aceite do usuário. Pendente. HDR está adiado e não é contado como aprovado.
+
+### Item 1 — preparação
+
+O inventário agora lê `PKEY_Device_FriendlyName` em modo somente leitura. Na topologia `InternalOnly`, foram observados dois registros Samsung com estado `not present` e um AOC ativo; escolher simplesmente por nome seria ambíguo. Foi preparado um instrumento de teste que ativa TvOnly com watchdog, aguarda, consulta nomes/estados dos endpoints e restaura o baseline por falha de áudio simulada. Este instrumento não altera diretamente o padrão de áudio. A disponibilidade e a seleção inequívoca ainda serão verificadas com a TV ativa.
