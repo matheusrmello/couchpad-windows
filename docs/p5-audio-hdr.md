@@ -61,3 +61,5 @@ A documentação da Microsoft encontrada descreve [`GetDefaultAudioEndpoint`](ht
 O usuário autorizou a exceção `IPolicyConfig`, registrada em D047. Existe agora um backend Windows isolado, com escrita desabilitada por padrão, ainda não integrado ao rescue de produção. O teste do gate prova recusa antes de acessar dispositivos; não prova a compatibilidade da interface não documentada, nem substitui recuperação de áudio real. O item 3 continua pendente.
 
 Probe somente leitura, 11/11/2026: `--policy-probe` ativou e liberou a interface COM nesta máquina, sem chamar método de escrita; `--backend-read` conferiu os três papéis e volume/mudo contra o baseline capturado. A ativação não testa a assinatura ou a execução da operação de escrita, tampouco sua compatibilidade em outras versões do Windows.
+
+A restauração simulada agora espera por tempo limitado os endpoints do baseline reaparecerem antes de qualquer escrita. Testes com backend falso cobrem reaparecimento e timeout sem escrita; o rescue de teste usa essa sequência. Isso é relevante porque o AOC só retomou o endpoint cerca de dois segundos depois da restauração da tela nesta máquina.

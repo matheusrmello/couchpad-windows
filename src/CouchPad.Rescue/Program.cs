@@ -125,7 +125,8 @@ static async Task Restore(SessionJournalEntry journal, string decisionPath, Guid
     await File.WriteAllTextAsync(marker, journal.RestoreAudioBaseline is null ? "RESTORE" : "RESTORE_DISPLAY");
     if (journal.RestoreAudioBaseline is not null)
     {
-        AudioRecoveryTransaction.Restore(journal.RestoreAudioBaseline, new FakeAudioRecoveryBackend());
+        await AudioRecoveryTransaction.RestoreWhenAvailableAsync(journal.RestoreAudioBaseline, new FakeAudioRecoveryBackend(),
+            TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(50));
         await File.AppendAllTextAsync(marker, "+AUDIO");
     }
 #else
