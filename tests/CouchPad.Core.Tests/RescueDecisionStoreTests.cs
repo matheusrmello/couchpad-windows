@@ -22,7 +22,10 @@ public sealed class RescueDecisionStoreTests : IDisposable
         var original = RescueDecisionStore.ComputeBaselineSha256(entry);
         var changed = RescueDecisionStore.ComputeBaselineSha256(entry with { RestoreAudioBaseline = audio with { MultimediaEndpointId = "other" } });
         Assert.NotEqual(original, changed);
-        Assert.NotEqual(original, RescueDecisionStore.ComputeBaselineSha256(entry with { RestoreAudioBaseline = null }));
+        var legacy = entry with { RestoreAudioBaseline = null };
+        var legacyBytes = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { Display = legacy.RestoreDisplay, Audio = legacy.RestoreAudio });
+        Assert.Equal(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(legacyBytes)), RescueDecisionStore.ComputeBaselineSha256(legacy));
+        Assert.NotEqual(original, RescueDecisionStore.ComputeBaselineSha256(legacy));
     }
 
     [Fact]

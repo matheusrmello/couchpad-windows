@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using CouchPad.Core.Audio;
 
 namespace CouchPad.Platform.Windows;
 
@@ -50,6 +51,46 @@ public static class WindowsAudioProbe
         finally { Marshal.ReleaseComObject(enumerator); }
     }
 
+    /// <summary>Captures all default roles and master volume/mute without changing them.</summary>
+    public static AudioBaseline CaptureBaseline()
+    {
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
+        var inventory = Capture();
+        if (inventory.Console is null || inventory.Multimedia is null || inventory.Communications is null)
+            throw new InvalidOperationException("A default audio endpoint is missing.");
+        var enumerator = (IMMDeviceEnumerator)new MMDeviceEnumerator();
+        try
+        {
+            var endpoints = new List<AudioEndpointBaseline>();
+            foreach (var id in new[] { inventory.Console, inventory.Multimedia, inventory.Communications }.Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                SelectActiveById(inventory.Endpoints, id);
+                Check(enumerator.GetDevice(id, out var device));
+                try
+                {
+                    var iid = new Guid("5CDF2C82-841E-4546-9722-0CF74078229A");
+                    Check(device.Activate(ref iid, 23, IntPtr.Zero, out var instance));
+                    try
+                    {
+                        var volume = (IAudioEndpointVolume)instance;
+                        Check(volume.GetMasterVolumeLevelScalar(out var level));
+                        Check(volume.GetMute(out var muted));
+                        endpoints.Add(new AudioEndpointBaseline(id, level, muted));
+                    }
+                    finally { Marshal.ReleaseComObject(instance); }
+                }
+                finally { Marshal.ReleaseComObject(device); }
+            }
+            var after = Capture();
+            if (!string.Equals(inventory.Console, after.Console, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(inventory.Multimedia, after.Multimedia, StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(inventory.Communications, after.Communications, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Default audio endpoints changed during capture.");
+            return new AudioBaseline(1, inventory.Console, inventory.Multimedia, inventory.Communications, endpoints);
+        }
+        finally { Marshal.ReleaseComObject(enumerator); }
+    }
+
     private static string? GetDefault(IMMDeviceEnumerator enumerator, int role)
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
@@ -89,6 +130,7 @@ public static class WindowsAudioProbe
     {
         [PreserveSig] int EnumAudioEndpoints(int flow, uint states, out IMMDeviceCollection devices);
         [PreserveSig] int GetDefaultAudioEndpoint(int flow, int role, out IMMDevice device);
+        [PreserveSig] int GetDevice([MarshalAs(UnmanagedType.LPWStr)] string id, out IMMDevice device);
     }
     [ComImport, Guid("0BD7A1BE-7A1A-44DB-8397-CC5392387B5E"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IMMDeviceCollection
@@ -99,7 +141,7 @@ public static class WindowsAudioProbe
     [ComImport, Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     private interface IMMDevice
     {
-        [PreserveSig] int Activate();
+        [PreserveSig] int Activate(ref Guid iid, uint context, IntPtr activationParams, [MarshalAs(UnmanagedType.IUnknown)] out object instance);
         [PreserveSig] int OpenPropertyStore(uint access, out IPropertyStore store);
         [PreserveSig] int GetId([MarshalAs(UnmanagedType.LPWStr)] out string id);
         [PreserveSig] int GetState(out uint state);
@@ -110,5 +152,22 @@ public static class WindowsAudioProbe
         [PreserveSig] int GetCount(out uint count);
         [PreserveSig] int GetAt(uint index, out PropertyKey key);
         [PreserveSig] int GetValue(ref PropertyKey key, out PropVariant value);
+    }
+    [ComImport, Guid("5CDF2C82-841E-4546-9722-0CF74078229A"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    private interface IAudioEndpointVolume
+    {
+        [PreserveSig] int RegisterControlChangeNotify(IntPtr callback);
+        [PreserveSig] int UnregisterControlChangeNotify(IntPtr callback);
+        [PreserveSig] int GetChannelCount(out uint count);
+        [PreserveSig] int SetMasterVolumeLevel(float value, IntPtr context);
+        [PreserveSig] int SetMasterVolumeLevelScalar(float value, IntPtr context);
+        [PreserveSig] int GetMasterVolumeLevel(out float value);
+        [PreserveSig] int GetMasterVolumeLevelScalar(out float value);
+        [PreserveSig] int SetChannelVolumeLevel(uint channel, float value, IntPtr context);
+        [PreserveSig] int SetChannelVolumeLevelScalar(uint channel, float value, IntPtr context);
+        [PreserveSig] int GetChannelVolumeLevel(uint channel, out float value);
+        [PreserveSig] int GetChannelVolumeLevelScalar(uint channel, out float value);
+        [PreserveSig] int SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, IntPtr context);
+        [PreserveSig] int GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
     }
 }
