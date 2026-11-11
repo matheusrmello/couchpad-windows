@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**Atualização P5, 11/11/2026:** recuperação de áudio em processo separado foi testada com backend falso, inclusive falha que preserva `RecoveryRequested`; 178 testes automatizados passaram. O guard e o rescue de produção ainda recusam baseline de áudio, pois falta recuperação Windows real. Nenhuma escrita de áudio está habilitada. Evidências e pendências sequenciais em `docs/p5-audio-hdr.md`; HDR adiado.
+
 > Documento único de contexto para iniciar o trabalho no OpenCode (DeepSeek)
 > e continuar no Codex sem perder decisões, evidências ou pendências.
 >

@@ -31,8 +31,10 @@ using (instanceLock)
         var journal = new JsonSessionJournalStore(journalPath).Load();
         if (journal is null || (journal.State != SessionJournalEntry.PendingState && journal.State != SessionJournalEntry.ActiveState) || journal.RestoreDisplay?.Topology is null)
             throw new InvalidDataException("Recovery journal is unavailable.");
+#if !RESCUE_TEST_BACKEND
         if (journal.RestoreAudioBaseline is not null)
             throw new NotSupportedException("This rescue process cannot yet restore real audio.");
+#endif
         var actualHash = RescueDecisionStore.ComputeBaselineSha256(journal);
         if (!string.Equals(actualHash, baselineHash, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Recovery baseline does not match transaction.");
         var snapshot = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(journal.RestoreDisplay.Topology);
@@ -119,9 +121,32 @@ static async Task Restore(SessionJournalEntry journal, string decisionPath, Guid
 #if RESCUE_TEST_BACKEND
     await using var mutation = await DisplayMutationLock.AcquireAsync(transaction.MutationLockPath);
     await transaction.RequireAsync(RescueDecisionState.RecoveryRequested);
-    await File.WriteAllTextAsync(Environment.GetEnvironmentVariable("COUCHPAD_TEST_MARKER")!, "RESTORE");
+    var marker = Environment.GetEnvironmentVariable("COUCHPAD_TEST_MARKER")!;
+    await File.WriteAllTextAsync(marker, journal.RestoreAudioBaseline is null ? "RESTORE" : "RESTORE_DISPLAY");
+    if (journal.RestoreAudioBaseline is not null)
+    {
+        AudioRecoveryTransaction.Restore(journal.RestoreAudioBaseline, new FakeAudioRecoveryBackend());
+        await File.AppendAllTextAsync(marker, "+AUDIO");
+    }
 #else
     var display = WindowsDisplayService.ForRecovery(new WindowsDisplayOptions("", 0, 0, AllowWrites: true), transaction);
     await display.RestoreAsync(journal.RestoreDisplay!, CancellationToken.None);
 #endif
 }
+
+#if RESCUE_TEST_BACKEND
+sealed class FakeAudioRecoveryBackend : IAudioRecoveryBackend
+{
+    private readonly Dictionary<AudioRole, string> _roles = new();
+    private readonly Dictionary<string, (float Volume, bool Muted)> _volumes = new();
+    public bool IsActive(string endpointId) => true;
+    public void SetDefault(string endpointId, AudioRole role)
+    {
+        if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_AUDIO_FAIL") == "1") throw new InvalidOperationException("Injected audio recovery failure.");
+        _roles[role] = endpointId;
+    }
+    public string? GetDefault(AudioRole role) => _roles.GetValueOrDefault(role);
+    public void SetVolumeAndMute(string endpointId, float volume, bool muted) => _volumes[endpointId] = (volume, muted);
+    public (float Volume, bool Muted) GetVolumeAndMute(string endpointId) => _volumes[endpointId];
+}
+#endif

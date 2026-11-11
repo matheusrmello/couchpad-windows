@@ -71,10 +71,10 @@ var entry = new SessionJournalEntry(SessionJournalEntry.PendingState, DisplayMod
 };
 new JsonSessionJournalStore(marker + ".journal").Save(entry);
 
-async Task<(RescueDecisionStore Store, Guid Id, string Hash)> AddDecisionArguments(ProcessStartInfo info)
+async Task<(RescueDecisionStore Store, Guid Id, string Hash)> AddDecisionArguments(ProcessStartInfo info, SessionJournalEntry? journalEntry = null)
 {
     var id = Guid.NewGuid();
-    var hash = RescueDecisionStore.ComputeBaselineSha256(entry);
+    var hash = RescueDecisionStore.ComputeBaselineSha256(journalEntry ?? entry);
     var decisionPath = Path.Combine(Path.GetDirectoryName(marker + ".journal")!, "rescue-decisions", id.ToString("N") + ".json");
     var store = new RescueDecisionStore(decisionPath);
     await store.InitializeAsync(id, hash);
@@ -325,6 +325,37 @@ using (var current = Process.GetCurrentProcess())
     if (child.ExitCode != 0) throw new InvalidOperationException("Pipe-break child failed.");
     if ((await decision.Store.ReadAsync(decision.Id, decision.Hash))?.State != RescueDecisionState.Recovered) throw new InvalidOperationException("Pipe-break recovery decision missing.");
     Console.WriteLine("PIPE_BREAK: PASS");
+}
+if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
+{
+    foreach (var fail in new[] { false, true })
+    {
+        Reset();
+        var audioEntry = entry with { RestoreAudioBaseline = new CouchPad.Core.Audio.AudioBaseline(1, "a", "b", "a", [new("a", 0.5f, false), new("b", 0.2f, true)]) };
+        new JsonSessionJournalStore(marker + ".journal").Save(audioEntry);
+        var testPipe = "CouchPad-rescue-" + Guid.NewGuid().ToString("N");
+        using var server = new NamedPipeServerStream(testPipe, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        using var current = Process.GetCurrentProcess();
+        var info = new ProcessStartInfo(childExecutable) { UseShellExecute = false, CreateNoWindow = true };
+        if (fail) info.Environment["COUCHPAD_TEST_AUDIO_FAIL"] = "1";
+        info.ArgumentList.Add(testPipe); info.ArgumentList.Add(marker + ".journal");
+        info.ArgumentList.Add(current.Id.ToString()); info.ArgumentList.Add(current.StartTime.ToUniversalTime().Ticks.ToString()); info.ArgumentList.Add("5000");
+        var decision = await AddDecisionArguments(info, audioEntry);
+        using var child = Process.Start(info) ?? throw new InvalidOperationException("Audio recovery test failed to start.");
+        using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        await server.WaitForConnectionAsync(limit.Token);
+        using var reader = new StreamReader(server, Encoding.UTF8, false, 1024, true);
+        if (await reader.ReadLineAsync(limit.Token) != "READY") throw new InvalidOperationException("Missing audio recovery READY.");
+        server.Disconnect();
+        await child.WaitForExitAsync(limit.Token);
+        var observed = await WaitMarker(marker, TimeSpan.FromSeconds(5));
+        var state = (await decision.Store.ReadAsync(decision.Id, decision.Hash))?.State;
+        if (fail ? child.ExitCode == 0 || observed != "RESTORE_DISPLAY" || state != RescueDecisionState.RecoveryRequested
+                 : child.ExitCode != 0 || observed != "RESTORE_DISPLAY+AUDIO" || state != RescueDecisionState.Recovered)
+            throw new InvalidOperationException("Unexpected audio recovery outcome.");
+        Console.WriteLine(fail ? "AUDIO_FAILURE_REMAINS_PENDING: PASS" : "AUDIO_RECOVERY_FAKE: PASS");
+    }
+    new JsonSessionJournalStore(marker + ".journal").Save(entry);
 }
 foreach (var stage in new[] { "before", "after" })
 {
