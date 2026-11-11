@@ -356,7 +356,8 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
     Reset();
     var guardAudioEntry = entry with { RestoreAudioBaseline = new CouchPad.Core.Audio.AudioBaseline(1, "a", "b", "a", [new("a", 0.5f, false), new("b", 0.2f, true)]) };
     new JsonSessionJournalStore(marker + ".journal").Save(guardAudioEntry);
-    var audioGuard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(5), allowRecovery: true, allowExperimentalAudioRecovery: true);
+    var audioGuard = new WindowsAudioRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(5),
+        new RescueTransactionContext(Path.GetDirectoryName(Path.GetFullPath(marker + ".journal"))!), allowRecovery: true);
     await using (var lease = await audioGuard.BeginAsync("experimental audio test"))
     {
         await lease.AbortAsync();

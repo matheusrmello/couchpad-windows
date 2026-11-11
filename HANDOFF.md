@@ -1,6 +1,6 @@
 # CouchPad Windows — Handoff e Bootstrap
 
-**Atualização P5, 11/11/2026:** recuperação de áudio em processo separado passou com backend falso e com crash real a partir de TvOnly no hardware observado; D047 registra a exceção `IPolicyConfig`. O rescue de produção contém agora o mesmo caminho de recuperação, mas o guard ainda exige opção experimental explícita e não declara `IAudioRescueGuard`; nenhum serviço real de áudio está integrado no app. Teste físico do binário de produção ainda pendente. Evidências e pendências sequenciais em `docs/p5-audio-hdr.md`; HDR adiado.
+**Atualização P5, 11/11/2026:** recuperação de áudio em processo separado passou com backend falso e com crash real a partir de TvOnly usando o rescue de produção; D047 registra a exceção `IPolicyConfig`. `WindowsAudioRescueGuard` é opt-in, declara `IAudioRescueGuard` e teve READY/Abort validado com o rescue real. Nenhum serviço real de áudio ou guard de áudio está integrado no app. Evidências e pendências sequenciais em `docs/p5-audio-hdr.md`; HDR adiado.
 
 > Documento único de contexto para iniciar o trabalho no OpenCode (DeepSeek)
 > e continuar no Codex sem perder decisões, evidências ou pendências.

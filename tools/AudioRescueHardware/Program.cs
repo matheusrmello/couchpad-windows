@@ -10,7 +10,7 @@ using CouchPad.Platform.Windows;
 
 // Explicit, operator-present hardware experiment: restore the current baseline,
 // without first changing the display or audio selection. Keep journal on failure.
-if (!OperatingSystem.IsWindows() || args.Length != 2 || args[0] != "--current-baseline-confirmed") return 2;
+if (!OperatingSystem.IsWindows() || args.Length != 2 || args[0] is not ("--current-baseline-confirmed" or "--guard-handshake")) return 2;
 var rescuePath = Path.GetFullPath(args[1]);
 var journalPath = AppPaths.SessionJournalFile();
 using var owner = DisplaySessionOwner.Acquire(journalPath);
@@ -29,6 +29,17 @@ var entry = new SessionJournalEntry(SessionJournalEntry.PendingState, DisplayMod
     RestoreAudioBaseline = audio
 };
 journal.Save(entry);
+if (args[0] == "--guard-handshake")
+{
+    var transaction = new RescueTransactionContext(Path.GetDirectoryName(journalPath)!);
+    var guard = new WindowsAudioRescueGuard(rescuePath, journalPath, TimeSpan.FromSeconds(30), transaction, allowRecovery: true);
+    await using var lease = await guard.BeginAsync("audio rescue handshake");
+    lease.ThrowIfUnavailable();
+    await lease.AbortAsync();
+    journal.Clear();
+    Console.WriteLine("AUDIO_GUARD_HANDSHAKE_OK (no hardware writes)");
+    return 0;
+}
 var transactionId = Guid.NewGuid();
 var hash = RescueDecisionStore.ComputeBaselineSha256(entry);
 var decisionPath = Path.Combine(Path.GetDirectoryName(journalPath)!, "rescue-decisions", transactionId.ToString("N") + ".json");
