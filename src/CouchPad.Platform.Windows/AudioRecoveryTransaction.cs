@@ -21,6 +21,13 @@ public static class AudioRecoveryTransaction
     public static async Task RestoreWhenAvailableAsync(AudioBaseline baseline, IAudioRecoveryBackend backend,
         TimeSpan timeout, TimeSpan pollInterval, CancellationToken cancellationToken = default)
     {
+        await WaitForEndpointsAsync(baseline, backend, timeout, pollInterval, cancellationToken).ConfigureAwait(false);
+        Restore(baseline, backend, cancellationToken);
+    }
+
+    public static async Task WaitForEndpointsAsync(AudioBaseline baseline, IAudioRecoveryBackend backend,
+        TimeSpan timeout, TimeSpan pollInterval, CancellationToken cancellationToken = default)
+    {
         ArgumentNullException.ThrowIfNull(baseline);
         ArgumentNullException.ThrowIfNull(backend);
         if (timeout <= TimeSpan.Zero || pollInterval <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout));
@@ -33,7 +40,6 @@ public static class AudioRecoveryTransaction
             if (endpoints.Keys.All(backend.IsActive)) break;
             await Task.Delay(pollInterval, deadline.Token).ConfigureAwait(false);
         }
-        Restore(baseline, backend, deadline.Token);
     }
 
     public static void Restore(AudioBaseline baseline, IAudioRecoveryBackend backend, CancellationToken cancellationToken = default)

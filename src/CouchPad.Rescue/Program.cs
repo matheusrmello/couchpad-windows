@@ -119,14 +119,15 @@ static async Task Restore(SessionJournalEntry journal, string decisionPath, Guid
     var transaction = new RescueTransactionContext(stateDirectory);
     transaction.Bind(decisionPath, id, baselineHash);
 #if RESCUE_TEST_BACKEND
-    await using var mutation = await DisplayMutationLock.AcquireAsync(transaction.MutationLockPath);
-    await transaction.RequireAsync(RescueDecisionState.RecoveryRequested);
     var marker = Environment.GetEnvironmentVariable("COUCHPAD_TEST_MARKER")!;
-    await File.WriteAllTextAsync(marker, journal.RestoreAudioBaseline is null ? "RESTORE" : "RESTORE_DISPLAY");
+    await using (var mutation = await DisplayMutationLock.AcquireAsync(transaction.MutationLockPath))
+    {
+        await transaction.RequireAsync(RescueDecisionState.RecoveryRequested);
+        await File.WriteAllTextAsync(marker, journal.RestoreAudioBaseline is null ? "RESTORE" : "RESTORE_DISPLAY");
+    }
     if (journal.RestoreAudioBaseline is not null)
     {
-        await AudioRecoveryTransaction.RestoreWhenAvailableAsync(journal.RestoreAudioBaseline, new FakeAudioRecoveryBackend(),
-            TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(50));
+        await GuardedAudioRecovery.RestoreAsync(journal.RestoreAudioBaseline, new FakeAudioRecoveryBackend(), transaction, TimeSpan.FromSeconds(5));
         await File.AppendAllTextAsync(marker, "+AUDIO");
     }
 #else

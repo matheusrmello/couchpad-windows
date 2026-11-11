@@ -63,3 +63,5 @@ O usuário autorizou a exceção `IPolicyConfig`, registrada em D047. Existe ago
 Probe somente leitura, 11/11/2026: `--policy-probe` ativou e liberou a interface COM nesta máquina, sem chamar método de escrita; `--backend-read` conferiu os três papéis e volume/mudo contra o baseline capturado. A ativação não testa a assinatura ou a execução da operação de escrita, tampouco sua compatibilidade em outras versões do Windows.
 
 A restauração simulada agora espera por tempo limitado os endpoints do baseline reaparecerem antes de qualquer escrita. Testes com backend falso cobrem reaparecimento e timeout sem escrita; o rescue de teste usa essa sequência. Isso é relevante porque o AOC só retomou o endpoint cerca de dois segundos depois da restauração da tela nesta máquina.
+
+O caminho de áudio no rescue de teste também adquiriu o lock compartilhado de mutação e executou a restauração sob a decisão `RecoveryRequested`. A suíte de processo passou novamente com sucesso e falha de áudio falsos, e a suíte automatizada passou com 181 testes. A interação de concorrência específica de áudio e o backend real ainda precisam de validação; o gate de produção segue fechado.
