@@ -167,10 +167,14 @@ public partial class App : Application
     }
 
     internal static (IAudioService? Audio, IRescueGuard? Guard) CreateWindowsAudioServices(
-        IDisplayService? display, AppSettings settings, RescueTransactionContext transaction, string rescuePath, string journalPath)
+        IDisplayService? display, AppSettings settings, RescueTransactionContext transaction, string rescuePath, string journalPath,
+        string? hostPath = null)
     {
         if (!OperatingSystem.IsWindows() || display is not WindowsDisplayService || !settings.AllowDisplayWrites) return (null, null);
-        if (!settings.AllowAudioWrites || string.IsNullOrWhiteSpace(settings.TvAudioEndpointId)) return (new UnavailableAudioService(), null);
+        var expectedHost = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(rescuePath))!, "CouchPad.exe"));
+        var actualHost = hostPath ?? Environment.ProcessPath;
+        if (!settings.AllowAudioWrites || string.IsNullOrWhiteSpace(settings.TvAudioEndpointId) || string.IsNullOrEmpty(actualHost) ||
+            !string.Equals(Path.GetFullPath(actualHost), expectedHost, StringComparison.OrdinalIgnoreCase)) return (new UnavailableAudioService(), null);
         return (new WindowsAudioService(new WindowsAudioOptions(settings.TvAudioEndpointId, AllowWrites: true), transaction),
             new WindowsAudioRescueGuard(rescuePath, journalPath, TimeSpan.FromSeconds(60), transaction, allowRecovery: true));
     }

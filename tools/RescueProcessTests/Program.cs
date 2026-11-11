@@ -11,6 +11,11 @@ if (!OperatingSystem.IsWindows()) return 2;
 var executable = Environment.ProcessPath ?? throw new InvalidOperationException("Missing apphost path.");
 var childExecutable = Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") ?? executable;
 var marker = Environment.GetEnvironmentVariable("COUCHPAD_TEST_MARKER") ?? throw new InvalidOperationException("Missing isolated test marker.");
+if (args.Length == 1 && args[0] == "--audio-victim")
+{
+    await Task.Delay(Timeout.InfiniteTimeSpan);
+    return 0;
+}
 if (args.Length == 8 && args[0].StartsWith("CouchPad-rescue-", StringComparison.Ordinal))
 {
     var transactionId = Guid.Parse(args[5]);
@@ -57,7 +62,7 @@ if (args.Length == 1 && args[0] is "--parent-die-before" or "--parent-die-after"
     await Task.Delay(Timeout.InfiniteTimeSpan);
     return 0;
 }
-if (args.Length == 1 && args[0] == "--audio-parent-die")
+if (args.Length == 1 && args[0] is "--audio-parent-die" or "--audio-parent-timeout")
 {
     var journalPath = marker + ".journal";
     var journal = new JsonSessionJournalStore(journalPath).Load() ?? throw new InvalidDataException("Missing fake audio journal.");
@@ -70,7 +75,7 @@ if (args.Length == 1 && args[0] == "--audio-parent-die")
     using var server = new NamedPipeServerStream(audioPipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
     using var self = Process.GetCurrentProcess();
     var info = new ProcessStartInfo(childExecutable) { UseShellExecute = false, CreateNoWindow = true };
-    foreach (var argument in new[] { audioPipeName, journalPath, self.Id.ToString(), self.StartTime.ToUniversalTime().Ticks.ToString(), "8000", id.ToString("D"), hash, decisionPath })
+    foreach (var argument in new[] { audioPipeName, journalPath, self.Id.ToString(), self.StartTime.ToUniversalTime().Ticks.ToString(), "5000", id.ToString("D"), hash, decisionPath })
         info.ArgumentList.Add(argument);
     using var child = Process.Start(info) ?? throw new InvalidOperationException("Audio rescue failed to start.");
     using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(10));
@@ -78,8 +83,11 @@ if (args.Length == 1 && args[0] == "--audio-parent-die")
     using var reader = new StreamReader(server, Encoding.UTF8, false, 1024, true);
     if (await reader.ReadLineAsync(deadline.Token) != "READY") throw new InvalidOperationException("Audio rescue was not ready.");
     await using var mutation = await DisplayMutationLock.AcquireAsync(Path.Combine(stateDirectory, "display-mutation.lock"));
-    await File.WriteAllTextAsync(marker + ".ready", decisionPath + "|" + id.ToString("D") + "|" + hash);
-    await Task.Delay(Timeout.InfiniteTimeSpan);
+    await new RescueDecisionStore(decisionPath).ExecuteIfStateAsync(id, hash, RescueDecisionState.Armed, () =>
+    {
+        File.WriteAllText(marker + ".ready", decisionPath + "|" + id.ToString("D") + "|" + hash);
+        Thread.Sleep(Timeout.Infinite);
+    });
     return 0;
 }
 if (args.Length != 0) return 2;
@@ -364,7 +372,7 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
         if (await WaitMarker(marker, TimeSpan.FromSeconds(5)) != "ABORT") throw new InvalidOperationException("Audio guard abort failed.");
     }
     Console.WriteLine("AUDIO_GUARD_READY_ABORT: PASS");
-    foreach (var scenario in new[] { "success", "failure", "lock" })
+    foreach (var scenario in new[] { "success", "failure", "lock", "exit-race" })
     {
         var fail = scenario == "failure";
         Reset();
@@ -372,13 +380,16 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
         new JsonSessionJournalStore(marker + ".journal").Save(audioEntry);
         var testPipe = "CouchPad-rescue-" + Guid.NewGuid().ToString("N");
         using var server = new NamedPipeServerStream(testPipe, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
-        using var current = Process.GetCurrentProcess();
+        var victimInfo = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true };
+        victimInfo.ArgumentList.Add("--audio-victim");
+        using var victim = Process.Start(victimInfo) ?? throw new InvalidOperationException("Audio test parent failed to start.");
         var info = new ProcessStartInfo(childExecutable) { UseShellExecute = false, CreateNoWindow = true };
         if (fail) info.Environment["COUCHPAD_TEST_AUDIO_FAIL"] = "1";
+        if (scenario == "exit-race") info.Environment["COUCHPAD_TEST_PARENT_EXIT_RACE"] = "1";
         var audioGate = marker + ".audio-gate";
         if (scenario == "lock") info.Environment["COUCHPAD_TEST_AUDIO_GATE"] = audioGate;
         info.ArgumentList.Add(testPipe); info.ArgumentList.Add(marker + ".journal");
-        info.ArgumentList.Add(current.Id.ToString()); info.ArgumentList.Add(current.StartTime.ToUniversalTime().Ticks.ToString()); info.ArgumentList.Add("5000");
+        info.ArgumentList.Add(victim.Id.ToString()); info.ArgumentList.Add(victim.StartTime.ToUniversalTime().Ticks.ToString()); info.ArgumentList.Add("5000");
         var decision = await AddDecisionArguments(info, audioEntry);
         using var child = Process.Start(info) ?? throw new InvalidOperationException("Audio recovery test failed to start.");
         using var limit = new CancellationTokenSource(TimeSpan.FromSeconds(15));
@@ -399,25 +410,27 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
             }
         }
         await child.WaitForExitAsync(limit.Token);
+        if (!victim.HasExited) { victim.Kill(entireProcessTree: false); await victim.WaitForExitAsync(); }
         var observed = await WaitMarker(marker, TimeSpan.FromSeconds(5));
         var state = (await decision.Store.ReadAsync(decision.Id, decision.Hash))?.State;
         if (fail ? child.ExitCode == 0 || observed != "RESTORE_DISPLAY" || state != RescueDecisionState.RecoveryRequested
                  : child.ExitCode != 0 || observed != "RESTORE_DISPLAY+AUDIO" || state != RescueDecisionState.Recovered)
             throw new InvalidOperationException("Unexpected audio recovery outcome.");
-        Console.WriteLine(fail ? "AUDIO_FAILURE_REMAINS_PENDING: PASS" : scenario == "lock" ? "AUDIO_WAITS_FOR_MUTATION_LOCK: PASS" : "AUDIO_RECOVERY_FAKE: PASS");
+        Console.WriteLine(fail ? "AUDIO_FAILURE_REMAINS_PENDING: PASS" : scenario == "lock" ? "AUDIO_WAITS_FOR_MUTATION_LOCK: PASS" : scenario == "exit-race" ? "AUDIO_PARENT_EXIT_RACE: PASS" : "AUDIO_RECOVERY_FAKE: PASS");
     }
-    Reset();
-    var crashAudioEntry = entry with { RestoreAudioBaseline = new CouchPad.Core.Audio.AudioBaseline(1, "a", "b", "a", [new("a", 0.5f, false), new("b", 0.2f, true)]) };
-    new JsonSessionJournalStore(marker + ".journal").Save(crashAudioEntry);
-    var crashInfo = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true };
-    crashInfo.ArgumentList.Add("--audio-parent-die");
-    using (var parent = Process.Start(crashInfo) ?? throw new InvalidOperationException("Audio parent failed to start."))
+    foreach (var scenario in new[] { "die", "timeout" })
     {
+        Reset();
+        var crashAudioEntry = entry with { RestoreAudioBaseline = new CouchPad.Core.Audio.AudioBaseline(1, "a", "b", "a", [new("a", 0.5f, false), new("b", 0.2f, true)]) };
+        new JsonSessionJournalStore(marker + ".journal").Save(crashAudioEntry);
+        var crashInfo = new ProcessStartInfo(executable) { UseShellExecute = false, CreateNoWindow = true };
+        crashInfo.ArgumentList.Add("--audio-parent-" + scenario);
+        using var parent = Process.Start(crashInfo) ?? throw new InvalidOperationException("Audio parent failed to start.");
         try
         {
             var decisionDetails = (await WaitMarker(marker + ".ready", TimeSpan.FromSeconds(10))).Split('|');
-            parent.Kill(entireProcessTree: false);
-            await parent.WaitForExitAsync();
+            if (scenario == "die") parent.Kill(entireProcessTree: false);
+            await parent.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(12));
             var timer = Stopwatch.StartNew();
             while (timer.Elapsed < TimeSpan.FromSeconds(10))
             {
@@ -434,7 +447,7 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
                 await Task.Delay(50);
             if ((await decisions.ReadAsync(decisionId, decisionDetails[2]))?.State != RescueDecisionState.Recovered)
                 throw new InvalidOperationException("Audio recovery was not recorded after parent death.");
-            Console.WriteLine("AUDIO_PARENT_DEATH: PASS");
+            Console.WriteLine(scenario == "die" ? "AUDIO_PARENT_DEATH: PASS" : "AUDIO_TIMEOUT_RELEASES_PARENT_LOCK: PASS");
         }
         finally { if (!parent.HasExited) { parent.Kill(entireProcessTree: false); await parent.WaitForExitAsync(); } }
     }

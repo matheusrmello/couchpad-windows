@@ -92,6 +92,7 @@
 
   "audio_mode.move": "Move to HDMI",
   "audio_mode.keep": "Keep current",
+  "audio.restore_help": "On exit, the previous output and volume are restored, even if changed during the session.",
 
   "audio.active.hdmi": "TV · HDMI",
 

@@ -43,6 +43,18 @@ public sealed class AutomationCoordinatorTests
     }
 
     [Fact]
+    public async Task Keep_current_still_restores_original_audio_baseline_after_display_session()
+    {
+        var audio = new BaselineAudio();
+        var coordinator = new AutomationCoordinator(new FakeDisplayService(), audio, new ManualDelayScheduler(),
+            new FakeJournal(), rescueGuard: new AudioCapableGuard());
+        await coordinator.UpdateSettingsAsync(new AutomationSettings { Enabled = true, AudioMode = AudioMode.KeepCurrent });
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        await coordinator.SetEnabledAsync(false);
+        Assert.Equal(audio.Baseline, audio.Restored);
+    }
+
+    [Fact]
     public async Task Audio_apply_failure_restores_display_and_complete_audio_baseline_before_abort()
     {
         var display = new FakeDisplayService();

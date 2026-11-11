@@ -117,6 +117,14 @@
 - Impacto: a escolha é específica para a topologia configurada; endpoint ausente ou ambíguo deve falhar fechado. A configuração é per-user, sem API Windows no Core; a seleção automática CCD↔áudio continua não comprovada.
 - Evidência: inventários e testes físicos em `docs/p5-audio-hdr.md`.
 
+## D049 — Liberar locks se áudio travar durante transação
+
+- Data: 2026-11-11
+- Decisão: em uma transação com baseline de áudio, se ocorrer timeout ou quebra do pipe sem decisão, o watchdog pode encerrar apenas o processo pai identificado como `CouchPad.exe` no mesmo diretório do rescue antes de recuperar; valida PID, horário de início e caminho. Não encerra a árvore de processos nem aplicativos de terceiros.
+- Motivo: chamadas COM síncronas podem prender os locks de decisão e mutação; cancelar uma task não interrompe uma chamada nativa travada, impedindo a recuperação do display.
+- Impacto: o App pode ser encerrado para recuperar a sessão; o journal permanece até recuperação confirmada. Um pai de caminho não reconhecido não é encerrado e o watchdog reporta falha em vez de tocar outro processo; o App não habilita áudio real quando executado via `dotnet.exe`. A conclusão de chamadas no serviço de áudio do Windows após término do App não é garantida e segue como limitação a avaliar.
+- Evidência: revisão independente P5 e teste de processo falso com pai mantendo os dois locks.
+
 ## Formato de nova decisão
 
 ```md

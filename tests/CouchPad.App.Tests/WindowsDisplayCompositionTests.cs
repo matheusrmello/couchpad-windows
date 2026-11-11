@@ -21,9 +21,15 @@ public class WindowsDisplayCompositionTests
         Assert.Null(noGuard);
         await Assert.ThrowsAsync<InvalidOperationException>(() => blocked.ApplyAsync(CouchPad.Core.Audio.AudioMode.MoveToHdmi));
         var (audio, guard) = App.CreateWindowsAudioServices(display,
-            settings with { AllowAudioWrites = true, TvAudioEndpointId = "tv-id" }, context, "unused", "journal");
+            settings with { AllowAudioWrites = true, TvAudioEndpointId = "tv-id" }, context, "unused", "journal",
+            Path.Combine(Environment.CurrentDirectory, "CouchPad.exe"));
         Assert.IsType<WindowsAudioService>(audio);
         Assert.IsType<WindowsAudioRescueGuard>(guard);
+        var (unsupportedHost, unsupportedGuard) = App.CreateWindowsAudioServices(display,
+            settings with { AllowAudioWrites = true, TvAudioEndpointId = "tv-id" }, context, "unused", "journal",
+            Path.Combine(Environment.CurrentDirectory, "dotnet.exe"));
+        Assert.Null(unsupportedGuard);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => unsupportedHost!.ApplyAsync(CouchPad.Core.Audio.AudioMode.MoveToHdmi));
         Assert.Equal((null, null), App.CreateWindowsAudioServices(null, settings, context, "unused", "journal"));
     }
 

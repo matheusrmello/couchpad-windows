@@ -96,6 +96,45 @@ using (instanceLock)
             catch (IOException) { }
             return 0;
         }
+        // A stuck audio COM call can hold both the decision and mutation locks.
+        // On timeout or a broken pipe, terminate only our verified parent before
+        // recovery so its process-owned locks are released. Never kill a process
+        // for display-only sessions or after an acknowledged decision.
+        if (journal.RestoreAudioBaseline is not null && !parentExit.IsCompleted && !parent.HasExited)
+        {
+            stage = "stop-parent";
+            // A normally exiting parent can close its pipe just before the OS
+            // reports process termination. Give it a moment to finish.
+            await Task.WhenAny(parentExit, Task.Delay(1000));
+            if (!parentExit.IsCompleted && !parent.HasExited)
+            {
+                try
+                {
+#if RESCUE_TEST_BACKEND
+                    if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_PARENT_EXIT_RACE") == "1")
+                    {
+                        parent.Kill(entireProcessTree: false);
+                        await parent.WaitForExitAsync();
+                    }
+#endif
+                    var executable = Path.GetFullPath(parent.MainModule?.FileName ?? throw new InvalidOperationException("Parent executable unavailable."));
+#if RESCUE_TEST_BACKEND
+                    if (!string.Equals(Path.GetFileName(executable), "RescueProcessTests.exe", StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidOperationException("Refusing to terminate an unrecognized test process.");
+#else
+                    var expectedParent = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "CouchPad.exe"));
+                    if (!string.Equals(executable, expectedParent, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidOperationException("Refusing to terminate an unrecognized process.");
+#endif
+                    parent.Kill(entireProcessTree: false);
+                    await parent.WaitForExitAsync();
+                }
+                catch (Exception) when (parent.HasExited)
+                {
+                    // Natural exit can race MainModule or Kill; its locks are gone.
+                }
+            }
+        }
         stage = "restore";
         await Recover(decisions, transactionId, baselineHash, decisionPath, journal);
         return 0;

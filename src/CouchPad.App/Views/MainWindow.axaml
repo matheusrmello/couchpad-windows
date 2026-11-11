@@ -312,6 +312,7 @@
                 <ComboBoxItem Content="{loc:Tr audio_mode.move}" />
                 <ComboBoxItem Content="{loc:Tr audio_mode.keep}" />
               </ComboBox>
+              <TextBlock Classes="hint" Text="{loc:Tr audio.restore_help}" TextWrapping="Wrap" />
             </StackPanel>
             <StackPanel Spacing="4">
               <TextBlock Classes="caption" Text="{loc:Tr audio.tv_endpoint}" />
