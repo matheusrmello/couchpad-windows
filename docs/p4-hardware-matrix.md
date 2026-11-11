@@ -160,3 +160,7 @@ O usuário dispensou explicitamente a ambiguidade em hardware por indisponibilid
 ### P4 — falha controlada após apply, 2026-11-11
 
 Com journal ausente e AOC ativo, `DisplayFailureHardware` usou o coordenador e watchdog reais para aplicar TvOnly e, após o apply verificado, um backend de áudio simulado aguardou três segundos e lançou falha intencional. O coordenador reportou a falha esperada, executou rollback e abortou o guard: retorno do instrumento 0, topologia inicial/final `InternalOnly`, comparação semântica `true` e journal ausente. O usuário confirmou visualmente a ida à Samsung e o retorno normal ao AOC. Operadores: Codex no teste e usuário na confirmação. Não cobre falha dentro de `SetDisplayConfig`, cancelamento, desconexão física durante transição nem kill durante apply.
+
+### P4 — cancelamento após apply, 2026-11-11
+
+O instrumento aplicou TvOnly com watchdog, aguardou três segundos durante uma operação simulada de áudio e sinalizou desconexão do controle; o coordenador cancelou a transição e restaurou. Retorno 0, estado `WaitingForGamepad`, baseline final semanticamente igual ao inicial e journal ausente. O usuário confirmou imagem na TV seguida de retorno normal ao AOC. A chamada CCD já havia terminado ao cancelar; não demonstra cancelamento dentro de `SetDisplayConfig`.
