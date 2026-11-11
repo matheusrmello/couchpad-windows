@@ -1266,3 +1266,5 @@ Revisão final para aceite: não foram encontrados `cdb`, `windbg`, `procdump`, 
 ### P5 — início somente leitura, 2026-11-11
 
 `WindowsAudioProbe` e `tools/AudioProbe` consultam os endpoints Core Audio e os IDs padrão dos três papéis, sem escrita; a sessão tinha oito endpoints, um ativo, e os três papéis com o mesmo padrão. `AudioOutput` atual não preserva IDs por papel e o watchdog ainda restaura apenas display, de modo que escrita real de áudio continua desabilitada. Falta identificar endpoint da TV, ampliar contrato/journal/rescue com decisão registrada, implementação de áudio/HDR e matriz de hardware. Build Debug e 167 testes passaram; ver `docs/p5-audio-hdr.md`.
+
+O usuário dispensou o teste de HDR da etapa atual e pediu registrar o tema para implementações futuras. O cenário está adiado, não aprovado; requisitos e validação de áudio da P5 permanecem. Ver `docs/p5-audio-hdr.md`.
