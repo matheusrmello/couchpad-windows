@@ -41,12 +41,17 @@ public static class AudioRecoveryTransaction
         var endpoints = Validate(baseline);
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         deadline.CancelAfter(timeout);
-        while (true)
+        try
         {
-            deadline.Token.ThrowIfCancellationRequested();
-            if (endpoints.Keys.All(backend.IsActive)) break;
-            await Task.Delay(pollInterval, deadline.Token).ConfigureAwait(false);
+            while (true)
+            {
+                deadline.Token.ThrowIfCancellationRequested();
+                if (endpoints.Keys.All(backend.IsActive)) break;
+                await Task.Delay(pollInterval, deadline.Token).ConfigureAwait(false);
+            }
         }
+        catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && deadline.IsCancellationRequested)
+        { throw new TimeoutException("Baseline audio endpoints did not become available.", ex); }
     }
 
     public static void Restore(AudioBaseline baseline, IAudioRecoveryBackend backend, CancellationToken cancellationToken = default)

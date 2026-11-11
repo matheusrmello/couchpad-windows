@@ -63,8 +63,18 @@ public sealed class AudioRecoveryTransactionTests
     public async Task Times_out_without_writes_when_endpoint_stays_unavailable()
     {
         var backend = new FakeBackend { Missing = "b" };
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => AudioRecoveryTransaction.RestoreWhenAvailableAsync(
+        await Assert.ThrowsAsync<TimeoutException>(() => AudioRecoveryTransaction.RestoreWhenAvailableAsync(
             Baseline, backend, TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(5)));
+        Assert.Equal(0, backend.Writes);
+    }
+
+    [Fact]
+    public async Task Caller_cancellation_remains_cancellation_without_writes()
+    {
+        var backend = new FakeBackend { Missing = "b" };
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(50));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => AudioRecoveryTransaction.RestoreWhenAvailableAsync(
+            Baseline, backend, TimeSpan.FromSeconds(2), TimeSpan.FromMilliseconds(5), cancellation.Token));
         Assert.Equal(0, backend.Writes);
     }
 

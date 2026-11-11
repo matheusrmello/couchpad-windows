@@ -44,7 +44,7 @@ public sealed class WindowsAudioServiceTests : IDisposable
         var disabled = Create(context, backend, false, () => Inventory("tv"));
         await Assert.ThrowsAsync<NotSupportedException>(() => disabled.ApplyAsync(AudioMode.MoveToHdmi));
         var missing = Create(context, backend, true, () => Inventory());
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => missing.ApplyAsync(AudioMode.MoveToHdmi));
+        await Assert.ThrowsAsync<TimeoutException>(() => missing.ApplyAsync(AudioMode.MoveToHdmi));
         var ambiguous = Create(context, backend, true, () => Inventory("tv", "tv"));
         await Assert.ThrowsAsync<InvalidOperationException>(() => ambiguous.ApplyAsync(AudioMode.MoveToHdmi));
         Assert.Equal(0, backend.Writes);

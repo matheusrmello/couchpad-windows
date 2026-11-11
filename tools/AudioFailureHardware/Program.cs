@@ -6,7 +6,7 @@ using CouchPad.Core.Display;
 using CouchPad.Core.Storage;
 using CouchPad.Platform.Windows;
 
-if (!OperatingSystem.IsWindows() || args.Length != 3 || args[0] is not ("--failure-confirmed" or "--cancel-confirmed")) return 2;
+if (!OperatingSystem.IsWindows() || args.Length != 3 || args[0] is not ("--failure-confirmed" or "--cancel-confirmed" or "--missing-confirmed")) return 2;
 var journalPath = AppPaths.SessionJournalFile();
 using var owner = DisplaySessionOwner.Acquire(journalPath);
 var journal = new JsonSessionJournalStore(journalPath);
@@ -29,12 +29,15 @@ var guard = new WindowsAudioRescueGuard(Path.GetFullPath(args[1]), journalPath, 
 var coordinator = new AutomationCoordinator(display, audio, new SystemDelayScheduler(), journal, rescueGuard: guard);
 await coordinator.UpdateSettingsAsync(new AutomationSettings { Enabled = true, DisplayMode = DisplayMode.TvOnly, AudioMode = AudioMode.MoveToHdmi });
 var activation = coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
-await audio.Ready.Task.WaitAsync(TimeSpan.FromSeconds(45));
-Console.WriteLine("AUDIO_APPLIED_WAITING_FOR_OPERATOR: press Enter to trigger test");
-await Console.Out.FlushAsync();
-if (await Console.In.ReadLineAsync() is null) throw new InvalidOperationException("Operator input lost; watchdog recovery required.");
-if (args[0] == "--cancel-confirmed") await coordinator.GamepadDisconnectedAsync();
-else audio.Release.TrySetResult();
+if (args[0] != "--missing-confirmed")
+{
+    await audio.Ready.Task.WaitAsync(TimeSpan.FromSeconds(45));
+    Console.WriteLine("AUDIO_APPLIED_WAITING_FOR_OPERATOR: press Enter to trigger test");
+    await Console.Out.FlushAsync();
+    if (await Console.In.ReadLineAsync() is null) throw new InvalidOperationException("Operator input lost; watchdog recovery required.");
+    if (args[0] == "--cancel-confirmed") await coordinator.GamepadDisconnectedAsync();
+    else audio.Release.TrySetResult();
+}
 await activation;
 var expectedState = args[0] == "--cancel-confirmed" ? AutomationState.WaitingForGamepad : AutomationState.Error;
 var expected = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(before.Topology!)!;
