@@ -18,7 +18,7 @@ Em 2026-11-11, o usuário solicitou ignorar o teste de HDR nesta etapa e registr
 
 Concluir e registrar cada item antes do próximo, conforme `AGENTS.md`; continuar sem pedidos repetidos. Não confundir inventário somente leitura com troca/restauração real. Parar se uma recuperação de hardware falhar ou a tela ficar preta.
 
-1. **Identificação da TV:** expor nome e propriedades necessários para identificar o endpoint Samsung, observar seu aparecimento quando a TV fica ativa e verificar seleção inequívoca; testar ausência e ambiguidade. Pendente.
+1. **Identificação da TV:** expor nome e propriedades, observar endpoint ativo e confirmar som na Samsung; seleção explícita por ID e recusa de ausência/ambiguidade. Validado para o hardware observado; vínculo automático CCD↔endpoint não foi comprovado e seleção de produção permanece por integrar.
 2. **Contrato e baseline:** registrar decisão e ampliar o Core e o journal para preservar os IDs padrão por papel e os estados de volume/mudo pertinentes, com compatibilidade e testes de serialização. Pendente.
 3. **Recuperação independente:** vincular o baseline completo ao watchdog e restaurar áudio com segurança em morte/timeout; validar com backend falso e processos, inclusive falhas e decisões incertas. Pendente.
 4. **Implementação de áudio Windows:** seleção por identidade, espera/retry limitado pelo endpoint HDMI, troca por papel, verificação e rollback fail-closed; manter escrita desabilitada por padrão. Pendente.
@@ -37,3 +37,7 @@ Com o usuário presente, o instrumento protegido aplicou `TvOnly`, consultou end
 O seletor puro por nome exato recusa ausência e dois matches ativos; testes sintéticos passaram. A observação identifica um candidato único na topologia experimentada, mas ainda não prova uma associação estável por identidade entre o target CCD e o endpoint de áudio nem implementa a seleção de produção. Item 1 permanece em andamento até essa associação e sua validação serem concluídas.
 
 Como alternativa segura para seleção pelo usuário, há também seletor puro por ID explícito: ele exige exatamente um endpoint ativo com o mesmo ID e recusa ID ausente, inativo ou duplicado; os testes sintéticos passaram. Ainda falta oferecer/integrar essa seleção e comprovar que o ID escolhido corresponde à TV sem inferência por nome.
+
+### Item 1 — tom físico, 2026-11-11
+
+Com TvOnly e watchdog, o endpoint `SAMSUNG (3- HD Audio Driver for Display Audio)` estava ativo e era o padrão multimídia. Um tom de diagnóstico de dois segundos foi iniciado após a troca; o usuário confirmou ouvi-lo pela Samsung e confirmou o retorno da imagem ao AOC. Os IDs padrão dos três papéis retornaram aos valores anteriores cerca de 1,9 segundo depois do retorno da tela, sem alteração explícita de endpoint pelo CouchPad. No teste anterior, o usuário não ouviu na TV o som que já estava tocando: esse fluxo preexistente não foi comprovadamente migrado. O teste de tom prova reprodução iniciada após a mudança do padrão apenas nesta configuração; associação automática universal CCD↔endpoint e seleção de produção ainda não foram comprovadas.
