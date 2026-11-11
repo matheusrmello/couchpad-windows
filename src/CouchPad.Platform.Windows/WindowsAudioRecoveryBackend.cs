@@ -7,6 +7,13 @@ namespace CouchPad.Platform.Windows;
 [SupportedOSPlatform("windows")]
 public sealed class WindowsAudioRecoveryBackend(bool allowWrites = false) : IAudioRecoveryBackend
 {
+    /// <summary>Checks COM activation only; does not invoke the undocumented mutation method.</summary>
+    public static void CheckPolicyConfigAvailable()
+    {
+        var policy = (IPolicyConfig)new PolicyConfigClient();
+        Marshal.ReleaseComObject(policy);
+    }
+
     public bool IsActive(string endpointId) => WindowsAudioProbe.Capture().Endpoints.Any(e =>
         e.State == 1 && string.Equals(e.Id, endpointId, StringComparison.OrdinalIgnoreCase));
 
