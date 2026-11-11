@@ -69,7 +69,7 @@ sealed class FailingAudio(bool cancelScenario, WindowsDisplayService? disconnect
                 await Task.Delay(200, deadline.Token);
             }
         }
-        await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+        await Task.Delay(TimeSpan.FromSeconds(inventoryScenario ? 8 : 3), cancellationToken);
         if (inventoryScenario)
         {
             var inventory = WindowsAudioProbe.Capture();
