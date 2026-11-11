@@ -5,7 +5,7 @@ using CouchPad.Core.Display;
 using CouchPad.Core.Storage;
 using CouchPad.Platform.Windows;
 
-if (args.Length != 8 || args[0] is not ("--hardware-confirmed" or "--hardware-cancel" or "--hardware-disconnect" or "--hardware-parent-death" or "--audio-inventory"))
+if (args.Length != 8 || args[0] is not ("--hardware-confirmed" or "--hardware-cancel" or "--hardware-disconnect" or "--hardware-parent-death" or "--audio-inventory" or "--audio-test-tone"))
 {
     Console.Error.WriteLine("Usage: --hardware-confirmed <rescue.exe> <tv-path> <tv-manufacturer> <tv-product> <monitor-path> <monitor-manufacturer> <monitor-product>");
     return 2;
@@ -23,7 +23,7 @@ if (before.Mode != DisplayMode.InternalOnly) throw new InvalidOperationException
 var cancelScenario = args[0] == "--hardware-cancel";
 var disconnectScenario = args[0] == "--hardware-disconnect";
 var deathScenario = args[0] == "--hardware-parent-death";
-var audio = new FailingAudio(cancelScenario, disconnectScenario ? display : null, options, deathScenario, args[0] == "--audio-inventory");
+var audio = new FailingAudio(cancelScenario, disconnectScenario ? display : null, options, deathScenario, args[0] is "--audio-inventory" or "--audio-test-tone", args[0] == "--audio-test-tone");
 var coordinator = new AutomationCoordinator(display, audio, new SystemDelayScheduler(), journal,
     rescueGuard: new WindowsRescueGuard(args[1], journalPath, TimeSpan.FromSeconds(60), true, context));
 await coordinator.UpdateSettingsAsync(new AutomationSettings { Enabled = true, DisplayMode = disconnectScenario ? DisplayMode.Extend : DisplayMode.TvOnly });
@@ -44,7 +44,7 @@ Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { coordinator.St
 var expectedState = cancelScenario ? coordinator.State == AutomationState.WaitingForGamepad : coordinator.State == AutomationState.Error && coordinator.LastError == FailingAudio.Expected;
 return expectedState && semanticMatch && journalStatus == SessionJournalStatus.Missing ? 0 : 1;
 
-sealed class FailingAudio(bool cancelScenario, WindowsDisplayService? disconnectDisplay, WindowsDisplayOptions options, bool deathScenario, bool inventoryScenario) : IAudioService
+sealed class FailingAudio(bool cancelScenario, WindowsDisplayService? disconnectDisplay, WindowsDisplayOptions options, bool deathScenario, bool inventoryScenario, bool toneScenario) : IAudioService
 {
     public const string Expected = "Injected test failure after display apply";
     public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -69,11 +69,19 @@ sealed class FailingAudio(bool cancelScenario, WindowsDisplayService? disconnect
                 await Task.Delay(200, deadline.Token);
             }
         }
-        await Task.Delay(TimeSpan.FromSeconds(inventoryScenario ? 8 : 3), cancellationToken);
+        await Task.Delay(TimeSpan.FromSeconds(toneScenario ? 3 : inventoryScenario ? 8 : 3), cancellationToken);
         if (inventoryScenario)
         {
             var inventory = WindowsAudioProbe.Capture();
             Console.WriteLine("AUDIO_INVENTORY=" + System.Text.Json.JsonSerializer.Serialize(inventory.Endpoints.Select(e => new { e.State, e.FriendlyName, IsConsole = e.Id == inventory.Console, IsMultimedia = e.Id == inventory.Multimedia, IsCommunications = e.Id == inventory.Communications })));
+            if (toneScenario)
+            {
+                var samsung = WindowsAudioProbe.SelectActiveExactName(inventory.Endpoints, "SAMSUNG (3- HD Audio Driver for Display Audio)");
+                if (samsung.Id != inventory.Multimedia) throw new InvalidOperationException("Samsung is not the multimedia default.");
+                Console.WriteLine("PLAYING_DIAGNOSTIC_TONE");
+                WindowsAudioTestTone.Play();
+                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+            }
         }
         throw new InvalidOperationException(Expected);
     }
