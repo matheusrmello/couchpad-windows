@@ -19,6 +19,15 @@ if (args.Contains("--validate"))
     foreach (var mode in new[] { DisplayMode.TvOnly, DisplayMode.Extend })
         results.Add(mode.ToString(), DisplayTopologyValidator.ValidateProposal(DisplayTopologyPlanner.Create(snapshot, all, selected, internalDisplay, mode)));
 }
+if (args.Contains("--validate-invalid-target"))
+{
+    var internalDisplay = WindowsDisplayService.SelectTarget(all.Targets, internalSelector.DevicePath, internalSelector.EdidManufacturer, internalSelector.EdidProduct);
+    var snapshot = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(baseline.Topology!)!;
+    var proposal = DisplayTopologyPlanner.Create(snapshot, all, selected, internalDisplay, DisplayMode.TvOnly);
+    // Corrupt only the proposed target identifier; SDC_VALIDATE does not apply it.
+    BitConverter.GetBytes(uint.MaxValue).CopyTo(proposal.Paths, 28);
+    results.Add("InvalidTarget", DisplayTopologyValidator.ValidateProposal(proposal));
+}
 bool? comparison = null;
 if (args.Contains("--compare-current"))
 {

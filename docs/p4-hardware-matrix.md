@@ -126,3 +126,7 @@ Operação pelo Codex e confirmação visual pelo usuário. Com AOC 27G2G4 ativo
 ### P4 — seletor inexistente em consulta, 2026-11-11
 
 Com journal ausente e baseline `InternalOnly`, o probe somente leitura recusou um caminho de TV inexistente com erro de identidade ausente ou ambígua. Consulta posterior mostrou `InternalOnly`, AOC ativo e Samsung inativa; não houve chamada de apply. Passaram 27 testes direcionados de topologia, fencing e decisões do rescue com backend falso. Isso não simula desconexão física, ambiguidade real, nem uma tentativa de apply com seletor inválido; esses cenários continuam pendentes na matriz.
+
+### P4 — validação CCD de alvo inválido, 2026-11-11
+
+O probe construiu uma proposta TvOnly com identificador de target inválido e chamou apenas `SDC_VALIDATE`; Windows retornou 87. Baseline consultado `InternalOnly`, com AOC ativo e Samsung inativa, manteve-se semanticamente igual após a chamada. Isso demonstra recusa de uma proposta inválida pelo driver, mas não substitui o teste de modo de vídeo indisponível, nem exercita apply ou rollback.
