@@ -1236,3 +1236,5 @@ Em 2026-11-11, `TvOnly` foi novamente aplicado no hardware e confirmado pelo usu
 Validação adicional: o probe somente leitura recusou um seletor inexistente e a consulta posterior continuou em `InternalOnly`; 27 testes direcionados passaram com backend falso. Isso não equivale a desconexão física ou teste de apply inválido. Os demais cenários reais da P4 permanecem pendentes.
 
 O probe recebeu opção para validar proposta CCD com target inválido: `SDC_VALIDATE` retornou 87 e o baseline permaneceu semanticamente igual. Não foi chamado apply; modo de vídeo indisponível e demais falhas reais seguem pendentes.
+
+Com a Samsung fisicamente desconectada pelo usuário, o Windows enumerou somente AOC e o probe recusou a TV ausente; o usuário confirmou imagem no AOC. Após reconexão, path/EDID da Samsung foram encontrados e as validações CCD de TvOnly/Extend retornaram 0 sem apply. O teste não exercitou apply durante desconexão nem ambiguidade física.

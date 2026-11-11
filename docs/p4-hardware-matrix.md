@@ -130,3 +130,7 @@ Com journal ausente e baseline `InternalOnly`, o probe somente leitura recusou u
 ### P4 — validação CCD de alvo inválido, 2026-11-11
 
 O probe construiu uma proposta TvOnly com identificador de target inválido e chamou apenas `SDC_VALIDATE`; Windows retornou 87. Baseline consultado `InternalOnly`, com AOC ativo e Samsung inativa, manteve-se semanticamente igual após a chamada. Isso demonstra recusa de uma proposta inválida pelo driver, mas não substitui o teste de modo de vídeo indisponível, nem exercita apply ou rollback.
+
+### P4 — TV fisicamente desconectada, 2026-11-11
+
+O usuário desconectou o cabo da Samsung; o inventário WMI retornou somente AOC ativo, e o probe recusou o seletor da Samsung como ausente ou ambíguo. O journal estava ausente e o usuário confirmou imagem normal no AOC. Após reconexão pelo usuário, o probe identificou Samsung 41015 por path/EDID, registrou baseline `InternalOnly` e validou TvOnly e Extend com retorno 0, sem aplicar. Operadores: usuário nas conexões e na confirmação visual; Codex nas consultas. Não foi executado apply durante a desconexão nem simulada ambiguidade física; ambos permanecem pendentes.
