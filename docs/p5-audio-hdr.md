@@ -29,3 +29,9 @@ Concluir e registrar cada item antes do próximo, conforme `AGENTS.md`; continua
 ### Item 1 — preparação
 
 O inventário agora lê `PKEY_Device_FriendlyName` em modo somente leitura. Na topologia `InternalOnly`, foram observados dois registros Samsung com estado `not present` e um AOC ativo; escolher simplesmente por nome seria ambíguo. Foi preparado um instrumento de teste que ativa TvOnly com watchdog, aguarda, consulta nomes/estados dos endpoints e restaura o baseline por falha de áudio simulada. Este instrumento não altera diretamente o padrão de áudio. A disponibilidade e a seleção inequívoca ainda serão verificadas com a TV ativa.
+
+### Item 1 — observação com a Samsung ativa
+
+Com o usuário presente, o instrumento protegido aplicou `TvOnly`, consultou endpoints após três segundos e restaurou o display. Havia um endpoint ativo chamado `SAMSUNG (3- HD Audio Driver for Display Audio)` e um segundo registro Samsung `not present`; os três papéis apontavam para o endpoint ativo. Após restaurar display, a leitura imediata ainda apontava para Samsung; uma leitura posterior apontou para `27G2G4 (HD Audio Driver for Display Audio)` ativo nos três papéis. O usuário confirmou imagem normal no AOC. O instrumento não definiu endpoints; o Windows alterou os padrões ao mudar a disponibilidade. Não foram guardados IDs anteriores para comprovar igualdade exata após a mudança nem foi testada reprodução. A espera demonstra que a disponibilidade e os padrões podem mudar depois de o display voltar.
+
+O seletor puro por nome exato recusa ausência e dois matches ativos; testes sintéticos passaram. A observação identifica um candidato único na topologia experimentada, mas ainda não prova uma associação estável por identidade entre o target CCD e o endpoint de áudio nem implementa a seleção de produção. Item 1 permanece em andamento até essa associação e sua validação serem concluídas.

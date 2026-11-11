@@ -8,6 +8,15 @@ public static class WindowsAudioProbe
     public sealed record Endpoint(string Id, uint State, string? FriendlyName);
     public sealed record Inventory(IReadOnlyList<Endpoint> Endpoints, string? Console, string? Multimedia, string? Communications);
 
+    /// <summary>Exact-name fallback; never chooses among multiple active matches.</summary>
+    public static Endpoint SelectActiveExactName(IEnumerable<Endpoint> endpoints, string exactName)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+        ArgumentException.ThrowIfNullOrWhiteSpace(exactName);
+        var matches = endpoints.Where(e => e.State == 1 && string.Equals(e.FriendlyName, exactName, StringComparison.OrdinalIgnoreCase)).ToArray();
+        return matches.Length == 1 ? matches[0] : throw new InvalidOperationException("Audio endpoint is missing or ambiguous.");
+    }
+
     public static Inventory Capture()
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
