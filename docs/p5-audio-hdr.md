@@ -67,3 +67,5 @@ A restauração simulada agora espera por tempo limitado os endpoints do baselin
 O caminho de áudio no rescue de teste também adquiriu o lock compartilhado de mutação e executou a restauração sob a decisão `RecoveryRequested`. A suíte de processo passou novamente com sucesso e falha de áudio falsos, e a suíte automatizada passou com 181 testes. Outro processo manteve o lock após o display simulado e confirmou que o rescue aguardou antes de restaurar o áudio; após liberar o lock, a recuperação simulada terminou. O backend real ainda precisa de validação; o gate de produção segue fechado.
 
 A verificação final agora relê todos os papéis e estados de volume/mudo, para detectar que uma operação posterior alterou um valor previamente verificado. O cenário de regressão foi reproduzido com backend falso; 182 testes passaram.
+
+No teste `AUDIO_PARENT_DEATH`, um processo pai dedicado foi encerrado após apply simulado enquanto segurava o lock; o watchdog independente recuperou display e áudio com backend falso e gravou `Recovered`. Nenhum processo de terceiros ou dispositivo real foi alterado. Esse teste não substitui o crash com áudio real.
