@@ -66,6 +66,17 @@ public static class AudioRecoveryTransaction
             if (!float.IsFinite(actual.Volume) || Math.Abs(actual.Volume - endpoint.MasterVolume.Value) > 0.01f || actual.Muted != endpoint.Muted.Value)
                 throw new InvalidOperationException("Audio volume verification failed.");
         }
+        // A later role change can also change an earlier default; verify the whole
+        // snapshot again before declaring the transaction recovered.
+        for (var i = 0; i < roles.Length; i++)
+            if (!string.Equals(backend.GetDefault((AudioRole)i), roles[i], StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Audio defaults changed during recovery.");
+        foreach (var endpoint in endpoints.Values)
+        {
+            var actual = backend.GetVolumeAndMute(endpoint.EndpointId);
+            if (!float.IsFinite(actual.Volume) || Math.Abs(actual.Volume - endpoint.MasterVolume!.Value) > 0.01f || actual.Muted != endpoint.Muted!.Value)
+                throw new InvalidOperationException("Audio volume changed during recovery.");
+        }
     }
 
     private static Dictionary<string, AudioEndpointBaseline> Validate(AudioBaseline baseline)

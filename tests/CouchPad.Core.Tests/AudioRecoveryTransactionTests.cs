@@ -38,6 +38,13 @@ public sealed class AudioRecoveryTransactionTests
     }
 
     [Fact]
+    public void Detects_a_later_role_change_that_invalidates_an_earlier_default()
+    {
+        var backend = new FakeBackend { CorruptEarlierRole = true };
+        Assert.Throws<InvalidOperationException>(() => AudioRecoveryTransaction.Restore(Baseline, backend));
+    }
+
+    [Fact]
     public async Task Waits_for_baseline_endpoints_then_restores()
     {
         var backend = new FakeBackend { MissingChecks = 2 };
@@ -73,6 +80,7 @@ public sealed class AudioRecoveryTransactionTests
     {
         public string? Missing { get; init; }
         public bool WrongDefault { get; init; }
+        public bool CorruptEarlierRole { get; init; }
         public int MissingChecks { get; set; }
         public int Writes { get; private set; }
         public Dictionary<AudioRole, string> Roles { get; } = [];
@@ -82,7 +90,12 @@ public sealed class AudioRecoveryTransactionTests
             if (MissingChecks > 0) { MissingChecks--; return false; }
             return endpointId != Missing;
         }
-        public void SetDefault(string endpointId, AudioRole role) { Writes++; Roles[role] = endpointId; }
+        public void SetDefault(string endpointId, AudioRole role)
+        {
+            Writes++;
+            Roles[role] = endpointId;
+            if (CorruptEarlierRole && role == AudioRole.Communications) Roles[AudioRole.Console] = "wrong";
+        }
         public string? GetDefault(AudioRole role) => WrongDefault ? "wrong" : Roles.GetValueOrDefault(role);
         public void SetVolumeAndMute(string endpointId, float volume, bool muted) { Writes++; Volumes[endpointId] = (volume, muted); }
         public (float Volume, bool Muted) GetVolumeAndMute(string endpointId) => Volumes[endpointId];
