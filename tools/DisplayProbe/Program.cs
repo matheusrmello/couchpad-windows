@@ -28,6 +28,16 @@ if (args.Contains("--validate-invalid-target"))
     BitConverter.GetBytes(uint.MaxValue).CopyTo(proposal.Paths, 28);
     results.Add("InvalidTarget", DisplayTopologyValidator.ValidateProposal(proposal));
 }
+if (args.Contains("--validate-impossible-mode"))
+{
+    var snapshot = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(baseline.Topology!)!;
+    var modes = Convert.FromBase64String(snapshot.ModesBase64);
+    var sourceOffset = Enumerable.Range(0, modes.Length / 64).Select(i => i * 64)
+        .First(i => BitConverter.ToUInt32(modes, i) == 1);
+    BitConverter.GetBytes(uint.MaxValue).CopyTo(modes, sourceOffset + 16);
+    BitConverter.GetBytes(uint.MaxValue).CopyTo(modes, sourceOffset + 20);
+    results.Add("ImpossibleMode", DisplayTopologyValidator.ValidateSnapshot(snapshot with { ModesBase64 = Convert.ToBase64String(modes) }));
+}
 bool? comparison = null;
 if (args.Contains("--compare-current"))
 {

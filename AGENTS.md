@@ -86,6 +86,15 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 6. `HANDOFF.md` e `docs/decisions.md` atualizados.
 7. Revisão independente feita antes do handoff.
 
+## Validação sequencial
+
+Liste as pendências e execute as validações uma por vez: termine cada cenário,
+verifique o resultado e registre evidência antes de iniciar o próximo. Continue
+automaticamente sem exigir que o usuário peça cada teste. Se faltar uma ação
+física indispensável, solicite-a e aguarde; se houver falha de rollback, tela
+preta ou falha do watchdog em restaurar, pare imediatamente e reporte o estado.
+Não declare aprovado um cenário sem a evidência exigida.
+
 ## Handoff
 
 Ao terminar uma fase:

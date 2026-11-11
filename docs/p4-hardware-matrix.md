@@ -138,3 +138,15 @@ O usuário desconectou o cabo da Samsung; o inventário WMI retornou somente AOC
 ### P4 — tentativa de ativação sem TV, 2026-11-11
 
 O usuário desconectou novamente a Samsung e o Codex acionou a conexão de controle simulado no App, com `TvOnly` selecionado. Após a contagem, o App apresentou `Erro`; o journal permaneceu ausente, o inventário WMI mostrou somente AOC e o usuário confirmou imagem normal. Não foram instrumentadas chamadas CCD individuais; a evidência mostra recusa segura observada, sem provar por rastreamento que nenhuma chamada apply ocorreu. Após reconexão, o probe confirmou Samsung por path/EDID e `InternalOnly` com AOC ativo. Ambiguidade física, modo indisponível e falhas/crash após mutação seguem pendentes.
+
+### P4 — modo impossível em SDC_VALIDATE, 2026-11-11
+
+O probe preservou a topologia ativa e construiu uma cópia do modo de source com largura e altura `uint.MaxValue`. `SDC_VALIDATE | SDC_USE_SUPPLIED_DISPLAY_CONFIG` retornou 31; não foi solicitado `SDC_APPLY`. A comparação semântica antes/depois confirmou topologia `InternalOnly` inalterada. Isto comprova recusa da proposta impossível pelo driver, não uma tentativa de apply pelo App nem verificação de todos os modos suportados.
+
+### Pendências sequenciais atuais
+
+1. Ambiguidade de targets em hardware: identificar ou preparar cenário real e comprovar recusa sem mudança; a recusa sintética já passou.
+2. Falha e cancelamento após alteração: instrumentar evento com segurança e confirmar rollback e imagem.
+3. Desconexão física durante transição: comprovar estado utilizável e recuperação, interrompendo em falha.
+4. Kill do processo de teste durante apply: confirmar restauração pelo watchdog independente.
+5. Build, testes e smoke finais, revisão independente e registro para aceite; recuperação no logon pertence à P6.
