@@ -17,6 +17,15 @@ public static class WindowsAudioProbe
         return matches.Length == 1 ? matches[0] : throw new InvalidOperationException("Audio endpoint is missing or ambiguous.");
     }
 
+    /// <summary>Uses the explicitly selected endpoint ID; refuses stale or duplicate identities.</summary>
+    public static Endpoint SelectActiveById(IEnumerable<Endpoint> endpoints, string endpointId)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+        ArgumentException.ThrowIfNullOrWhiteSpace(endpointId);
+        var matches = endpoints.Where(e => e.State == 1 && string.Equals(e.Id, endpointId, StringComparison.OrdinalIgnoreCase)).ToArray();
+        return matches.Length == 1 ? matches[0] : throw new InvalidOperationException("Audio endpoint is missing or ambiguous.");
+    }
+
     public static Inventory Capture()
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();

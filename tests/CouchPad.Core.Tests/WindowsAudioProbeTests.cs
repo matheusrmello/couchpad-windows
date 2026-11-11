@@ -20,4 +20,15 @@ public sealed class WindowsAudioProbeTests
         Assert.Throws<InvalidOperationException>(() => WindowsAudioProbe.SelectActiveExactName([first, second], "SAMSUNG"));
         Assert.Throws<InvalidOperationException>(() => WindowsAudioProbe.SelectActiveExactName([first], "OTHER"));
     }
+
+    [Fact]
+    public void Selected_endpoint_id_must_be_active_and_unique()
+    {
+        var selected = new WindowsAudioProbe.Endpoint("ID", 1, "Samsung");
+        var other = new WindowsAudioProbe.Endpoint("other", 1, "Samsung");
+        Assert.Equal(selected, WindowsAudioProbe.SelectActiveById([selected, other], "id"));
+        Assert.Throws<InvalidOperationException>(() => WindowsAudioProbe.SelectActiveById([selected with { State = 4 }], "ID"));
+        Assert.Throws<InvalidOperationException>(() => WindowsAudioProbe.SelectActiveById([selected, selected], "ID"));
+        Assert.Throws<InvalidOperationException>(() => WindowsAudioProbe.SelectActiveById([other], "ID"));
+    }
 }
