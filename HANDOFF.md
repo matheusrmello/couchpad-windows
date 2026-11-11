@@ -1262,3 +1262,7 @@ Revisão independente apontou que uma opção temporária de limpeza do journal 
 Revisão final para aceite: não foram encontrados `cdb`, `windbg`, `procdump`, `vsdbg` nem Windows Kits Debuggers no caminho padrão; não se conseguiu sincronizar kill dentro de `SetDisplayConfig` com a instrumentação disponível. Isso é limitação, não evidência de impossibilidade. Build e 167 testes Release e smoke passaram em 2026-11-11; journal verificado ausente antes do smoke. Aguardar decisão do usuário sobre aceite da P4 com esse risco; não criar tag de hardware antes da P6. A recuperação no logon continua pendente da P6.
 
 **P4 aceita em 2026-11-11:** o usuário aceitou expressamente a limitação do teste de morte dentro de `SetDisplayConfig` e o risco associado ao timeout. O cenário permanece não comprovado; a recuperação após reinício/logon continua na P6. Nenhuma tag de hardware foi criada.
+
+### P5 — início somente leitura, 2026-11-11
+
+`WindowsAudioProbe` e `tools/AudioProbe` consultam os endpoints Core Audio e os IDs padrão dos três papéis, sem escrita; a sessão tinha oito endpoints, um ativo, e os três papéis com o mesmo padrão. `AudioOutput` atual não preserva IDs por papel e o watchdog ainda restaura apenas display, de modo que escrita real de áudio continua desabilitada. Falta identificar endpoint da TV, ampliar contrato/journal/rescue com decisão registrada, implementação de áudio/HDR e matriz de hardware. Build Debug e 167 testes passaram; ver `docs/p5-audio-hdr.md`.
