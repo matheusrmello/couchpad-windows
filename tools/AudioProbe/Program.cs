@@ -1,7 +1,13 @@
 using System.Text.Json;
 using CouchPad.Platform.Windows;
 
-if (args.Contains("--policy-probe"))
+if (args.Contains("--tone"))
+{
+    if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
+    WindowsAudioTestTone.Play();
+    Console.WriteLine("DIAGNOSTIC_TONE_COMPLETE");
+}
+else if (args.Contains("--policy-probe"))
 {
     if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
     WindowsAudioRecoveryBackend.CheckPolicyConfigAvailable();
