@@ -156,3 +156,7 @@ O probe preservou a topologia ativa e construiu uma cópia do modo de source com
 O usuário informou que não há segundo display com nome idêntico disponível. Foram reexecutados três testes sintéticos de identidade, fallback e recusa por nome ambíguo; todos passaram. Não foi produzida ambiguidade no hardware real; esse cenário não deve ser marcado como aprovado em hardware apenas com os testes sintéticos. A sequência física depende de equipamento adequado ou de alteração explícita do critério pelo usuário.
 
 O usuário dispensou explicitamente a ambiguidade em hardware por indisponibilidade de equipamento. Mantêm-se os testes sintéticos aprovados; o cenário físico é dispensado, não aprovado.
+
+### P4 — falha controlada após apply, 2026-11-11
+
+Com journal ausente e AOC ativo, `DisplayFailureHardware` usou o coordenador e watchdog reais para aplicar TvOnly e, após o apply verificado, um backend de áudio simulado aguardou três segundos e lançou falha intencional. O coordenador reportou a falha esperada, executou rollback e abortou o guard: retorno do instrumento 0, topologia inicial/final `InternalOnly`, comparação semântica `true` e journal ausente. O usuário confirmou visualmente a ida à Samsung e o retorno normal ao AOC. Operadores: Codex no teste e usuário na confirmação. Não cobre falha dentro de `SetDisplayConfig`, cancelamento, desconexão física durante transição nem kill durante apply.
