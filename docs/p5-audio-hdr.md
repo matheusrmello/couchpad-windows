@@ -24,7 +24,7 @@ Concluir e registrar cada item antes do próximo, conforme `AGENTS.md`; continua
 4. **Implementação de áudio Windows:** seleção explícita, espera limitada, verificação e restore implementados; escrita desligada por padrão. Troca e retorno validados em hardware; seleção automática por identidade de display continua sem comprovação.
 5. **Integração e testes puros:** composição real do App e testes de falha, cancelamento, ausência, ambiguidade e papéis distintos; execução física normal com controle simulado e testes físicos de falha/cancelamento registrados abaixo.
 6. **Matriz real:** som na TV, retorno do baseline, endpoint ausente, falha, cancelamento e crash do processo de teste documentados. Endpoint tardio e papéis distintos foram testados com fakes; não há evidência de papéis físicos distintos ou de migração de fluxo preexistente.
-7. **Fechamento:** build, testes e smoke passaram; revisão independente e aceite ainda pendentes. HDR foi adiado e não é contado como aprovado.
+7. **Fechamento:** build com zero avisos/erros, 194 testes, smoke e revisão independente concluídos; aceite do usuário pendente. HDR foi adiado e não é contado como aprovado.
 
 ### Item 1 — preparação
 
@@ -117,3 +117,5 @@ Endpoint ausente, 11/11/2026: após corrigir a distinção entre timeout e cance
 Revisão independente identificou que uma chamada COM bloqueada poderia manter os locks e impedir o watchdog de recuperar o display. D049 limita o encerramento por timeout/pipe quebrado ao processo pai do CouchPad validado; teste falso manteve simultaneamente os locks de decisão e mutação, e o watchdog encerrou o processo de teste e recuperou o baseline simulado. Outro teste cobriu o pai encerrando durante a checagem. O App recusa áudio real quando executado pelo host `dotnet.exe`, que o watchdog não pode encerrar com segurança. A revisão das correções não apontou outro bloqueador concreto. A validação do travamento é simulada; o próprio rescue também pode ficar preso em COM após recuperar o display, preservando a decisão pendente. Não há garantia sobre operações de áudio que o serviço do Windows possa concluir após o término do App.
 
 A revisão também identificou que `KeepCurrent` restaura o baseline ao sair, inclusive alterações feitas durante a sessão. A interface agora informa explicitamente essa política; ela preserva o requisito de voltar ao áudio anterior mesmo quando o Windows muda de endpoint após a troca de display. Um teste do Core registra esse comportamento.
+
+Revalidação física após D049, 11/11/2026: partindo do AOC, TvOnly e o áudio Samsung foram aplicados com guard armado; o usuário confirmou TV com imagem e AOC apagado. Após encerramento do processo de teste, o rescue de produção atualizado registrou `Recovered`, verificou o baseline completo e limpou o journal. O usuário confirmou retorno do AOC e ausência da área de trabalho na Samsung. O travamento prolongado de COM foi testado com backend/processos falsos, não provocado em hardware.
