@@ -5,7 +5,7 @@ using CouchPad.Core.Display;
 using CouchPad.Core.Storage;
 using CouchPad.Platform.Windows;
 
-if (args.Length != 8 || args[0] != "--hardware-confirmed")
+if (args.Length != 8 || args[0] is not ("--hardware-confirmed" or "--hardware-cancel"))
 {
     Console.Error.WriteLine("Usage: --hardware-confirmed <rescue.exe> <tv-path> <tv-manufacturer> <tv-product> <monitor-path> <monitor-manufacturer> <monitor-product>");
     return 2;
@@ -20,25 +20,38 @@ var context = new RescueTransactionContext(Path.GetDirectoryName(journalPath)!);
 var display = new WindowsDisplayService(options, context);
 var before = display.GetCurrent();
 if (before.Mode != DisplayMode.InternalOnly) throw new InvalidOperationException("Expected internal-only baseline.");
-var coordinator = new AutomationCoordinator(display, new FailingAudio(), new SystemDelayScheduler(), journal,
+var cancelScenario = args[0] == "--hardware-cancel";
+var audio = new FailingAudio(cancelScenario);
+var coordinator = new AutomationCoordinator(display, audio, new SystemDelayScheduler(), journal,
     rescueGuard: new WindowsRescueGuard(args[1], journalPath, TimeSpan.FromSeconds(60), true, context));
 await coordinator.UpdateSettingsAsync(new AutomationSettings { Enabled = true, DisplayMode = DisplayMode.TvOnly });
-await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+var activation = coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+if (cancelScenario)
+{
+    await audio.Entered.Task.WaitAsync(TimeSpan.FromSeconds(20));
+    await Task.Delay(TimeSpan.FromSeconds(3));
+    await coordinator.GamepadDisconnectedAsync();
+}
+await activation;
 var after = display.GetCurrent();
 var snapshotBefore = System.Text.Json.JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(before.Topology!)!;
 var snapshotAfter = System.Text.Json.JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(after.Topology!)!;
 var semanticMatch = DisplaySnapshotComparer.SemanticallyEqual(snapshotBefore, snapshotAfter);
 var journalStatus = journal.Inspect().Status;
 Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { coordinator.State, coordinator.LastError, Before = before.Mode, After = after.Mode, SemanticMatch = semanticMatch, Journal = journalStatus }));
-return coordinator.State == AutomationState.Error && coordinator.LastError == FailingAudio.Expected && semanticMatch && journalStatus == SessionJournalStatus.Missing ? 0 : 1;
+var expectedState = cancelScenario ? coordinator.State == AutomationState.WaitingForGamepad : coordinator.State == AutomationState.Error && coordinator.LastError == FailingAudio.Expected;
+return expectedState && semanticMatch && journalStatus == SessionJournalStatus.Missing ? 0 : 1;
 
-sealed class FailingAudio : IAudioService
+sealed class FailingAudio(bool cancelScenario) : IAudioService
 {
     public const string Expected = "Injected test failure after display apply";
+    public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
     public AudioOutput GetCurrent() => AudioOutput.Default;
     public async Task<AudioOutput> ApplyAsync(AudioMode mode, CancellationToken cancellationToken = default)
     {
         Console.WriteLine("DISPLAY_APPLIED_WAITING_TO_INJECT_FAILURE");
+        Entered.TrySetResult();
+        if (cancelScenario) await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
         await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
         throw new InvalidOperationException(Expected);
     }
