@@ -328,8 +328,9 @@ using (var current = Process.GetCurrentProcess())
 }
 if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
 {
-    foreach (var fail in new[] { false, true })
+    foreach (var scenario in new[] { "success", "failure", "lock" })
     {
+        var fail = scenario == "failure";
         Reset();
         var audioEntry = entry with { RestoreAudioBaseline = new CouchPad.Core.Audio.AudioBaseline(1, "a", "b", "a", [new("a", 0.5f, false), new("b", 0.2f, true)]) };
         new JsonSessionJournalStore(marker + ".journal").Save(audioEntry);
@@ -338,6 +339,8 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
         using var current = Process.GetCurrentProcess();
         var info = new ProcessStartInfo(childExecutable) { UseShellExecute = false, CreateNoWindow = true };
         if (fail) info.Environment["COUCHPAD_TEST_AUDIO_FAIL"] = "1";
+        var audioGate = marker + ".audio-gate";
+        if (scenario == "lock") info.Environment["COUCHPAD_TEST_AUDIO_GATE"] = audioGate;
         info.ArgumentList.Add(testPipe); info.ArgumentList.Add(marker + ".journal");
         info.ArgumentList.Add(current.Id.ToString()); info.ArgumentList.Add(current.StartTime.ToUniversalTime().Ticks.ToString()); info.ArgumentList.Add("5000");
         var decision = await AddDecisionArguments(info, audioEntry);
@@ -347,13 +350,25 @@ if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
         using var reader = new StreamReader(server, Encoding.UTF8, false, 1024, true);
         if (await reader.ReadLineAsync(limit.Token) != "READY") throw new InvalidOperationException("Missing audio recovery READY.");
         server.Disconnect();
+        if (scenario == "lock")
+        {
+            await WaitMarker(audioGate + ".waiting", TimeSpan.FromSeconds(5));
+            var stateDirectory = Path.GetDirectoryName(Path.GetFullPath(marker + ".journal"))!;
+            await using (var held = await DisplayMutationLock.AcquireAsync(Path.Combine(stateDirectory, "display-mutation.lock")))
+            {
+                await File.WriteAllTextAsync(audioGate + ".release", "release");
+                await Task.Delay(300);
+                if ((await File.ReadAllTextAsync(marker)) != "RESTORE_DISPLAY" || child.HasExited)
+                    throw new InvalidOperationException("Audio recovery did not wait for the mutation lock.");
+            }
+        }
         await child.WaitForExitAsync(limit.Token);
         var observed = await WaitMarker(marker, TimeSpan.FromSeconds(5));
         var state = (await decision.Store.ReadAsync(decision.Id, decision.Hash))?.State;
         if (fail ? child.ExitCode == 0 || observed != "RESTORE_DISPLAY" || state != RescueDecisionState.RecoveryRequested
                  : child.ExitCode != 0 || observed != "RESTORE_DISPLAY+AUDIO" || state != RescueDecisionState.Recovered)
             throw new InvalidOperationException("Unexpected audio recovery outcome.");
-        Console.WriteLine(fail ? "AUDIO_FAILURE_REMAINS_PENDING: PASS" : "AUDIO_RECOVERY_FAKE: PASS");
+        Console.WriteLine(fail ? "AUDIO_FAILURE_REMAINS_PENDING: PASS" : scenario == "lock" ? "AUDIO_WAITS_FOR_MUTATION_LOCK: PASS" : "AUDIO_RECOVERY_FAKE: PASS");
     }
     new JsonSessionJournalStore(marker + ".journal").Save(entry);
 }

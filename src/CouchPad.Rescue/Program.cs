@@ -127,6 +127,13 @@ static async Task Restore(SessionJournalEntry journal, string decisionPath, Guid
     }
     if (journal.RestoreAudioBaseline is not null)
     {
+        var audioGate = Environment.GetEnvironmentVariable("COUCHPAD_TEST_AUDIO_GATE");
+        if (!string.IsNullOrEmpty(audioGate))
+        {
+            await File.WriteAllTextAsync(audioGate + ".waiting", "waiting");
+            using var gateTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+            while (!File.Exists(audioGate + ".release")) await Task.Delay(25, gateTimeout.Token);
+        }
         await GuardedAudioRecovery.RestoreAsync(journal.RestoreAudioBaseline, new FakeAudioRecoveryBackend(), transaction, TimeSpan.FromSeconds(5));
         await File.AppendAllTextAsync(marker, "+AUDIO");
     }
