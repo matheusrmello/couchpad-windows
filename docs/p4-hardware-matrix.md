@@ -1,19 +1,20 @@
 # Matriz de hardware — P4
 
-Data: 2026-11-09. A P4 não está implementada nem aceita. Nenhum teste desta matriz foi considerado aprovado pela mera presença de monitores.
+Estado em 2026-11-11: P4 implementada parcialmente e ainda não aceita; resultados detalhados e limitações estão no histórico abaixo.
 
 Consulta WMI somente leitura detectou dois monitores ativos, IDs de produto `SAM7167` e `AOC2702`. Isso não confirma a identidade de TV, conexão, modo ou capacidade dos dispositivos. O serviço real ainda não está disponível para executar a matriz.
 
 | Cenário | Verificação obrigatória | Resultado |
 |---|---|---|
-| Identificação | target path e IDs EDID válidos; fallback por nome inequívoco; ambiguidade recusa | Pendente |
-| TvOnly | Somente alvo escolhido ativo, saída visível e baseline restaurado | Não executado |
-| Extend | Alvos esperados ativos e área estendida; baseline restaurado | Não executado |
+| Identificação | target path e IDs EDID válidos; fallback por nome inequívoco; ambiguidade recusa | Path/EDID reais confirmados; ambiguidade física dispensada, sintética aprovada |
+| TvOnly | Somente alvo escolhido ativo, saída visível e baseline restaurado | Confirmado no hardware |
+| Extend | Alvos esperados ativos e área estendida; baseline restaurado | Confirmado no hardware |
 | Mirror | Removido do escopo por decisão do usuário; snapshots espelhados continuam restauráveis | Não aplicável |
-| Modo indisponível | Validação recusa antes da mudança | Não executado |
-| Sem TV / alvo ambíguo | Nenhuma alteração | Não executado |
-| Falha ou cancelamento após alteração | Rollback e confirmação da topologia anterior | Não executado |
-| Desconexão durante transição | Recuperação e pelo menos uma saída utilizável; registrar limitações | Não executado |
+| Modo indisponível | Validação recusa antes da mudança | Resolução impossível recusada com SDC_VALIDATE; apply no App não exercitado |
+| Sem TV / alvo ambíguo | Nenhuma alteração | TV ausente recusada pelo App; ambiguidade física dispensada |
+| Falha ou cancelamento após alteração | Rollback e confirmação da topologia anterior | Confirmados após retorno do apply CCD; não dentro da chamada nativa |
+| Desconexão durante transição | Recuperação e pelo menos uma saída utilizável; registrar limitações | Confirmada após retorno do apply CCD, com AOC ativo |
+| Morte do processo durante transação | Watchdog independente restaura baseline | Confirmada após retorno do apply CCD; não dentro da chamada nativa |
 | Reinício com journal pendente | Snapshot completo recuperável pela futura P6 | Não executado |
 
 Registrar para cada execução hardware, conexões, topologia inicial, resultado de cada API, verificação visual, baseline final e operador. Uma falha de rollback não pode ser tratada como aprovação.
@@ -145,11 +146,11 @@ O probe preservou a topologia ativa e construiu uma cópia do modo de source com
 
 ### Pendências sequenciais atuais
 
-1. Ambiguidade de targets em hardware: identificar ou preparar cenário real e comprovar recusa sem mudança; a recusa sintética já passou.
-2. Falha e cancelamento após alteração: instrumentar evento com segurança e confirmar rollback e imagem.
-3. Desconexão física durante transição: comprovar estado utilizável e recuperação, interrompendo em falha.
-4. Kill do processo de teste durante apply: confirmar restauração pelo watchdog independente.
-5. Build, testes e smoke finais, revisão independente e registro para aceite; recuperação no logon pertence à P6.
+1. Ambiguidade de targets em hardware: dispensada pelo usuário; recusa sintética aprovada.
+2. Falha e cancelamento após retorno do apply CCD: confirmados com rollback e imagem.
+3. Desconexão física após retorno do apply CCD: confirmada com AOC ativo e recuperação.
+4. Morte do processo durante transação após retorno do apply CCD: watchdog restaurou; morte dentro da chamada nativa não foi testada.
+5. Build, testes e smoke finais passaram; revisão independente identificou e motivou remoção de opção temporária insegura de limpeza do journal. Recuperação no logon pertence à P6.
 
 ### P4 — ambiguidade, limitação física, 2026-11-11
 
@@ -168,3 +169,7 @@ O instrumento aplicou TvOnly com watchdog, aguardou três segundos durante uma o
 ### P4 — desconexão física após apply, 2026-11-11
 
 O instrumento aplicou `Extend` com watchdog e aguardou, mantendo o AOC ativo, enquanto o usuário desconectou fisicamente a Samsung. O probe do instrumento detectou a ausência durante a operação simulada de áudio e injetou falha; o coordenador retornou erro esperado, restaurou baseline semanticamente igual e limpou journal (saída 0). O usuário confirmou AOC com imagem e reconectou a Samsung; consulta posterior confirmou `InternalOnly` e reconhecimento da TV. A desconexão ocorreu após o apply CCD, enquanto a transação aguardava a operação de áudio simulada; não demonstra desconexão dentro da chamada CCD.
+
+### P4 — morte do processo após apply, 2026-11-11
+
+O instrumento iniciou watchdog real, gravou journal `pending`, aplicou TvOnly e aguardou na operação de áudio simulada, antes do commit. Foi encerrado exclusivamente o PID de teste 13320, conferido por linha de comando. O watchdog registrou `recovered` revisão 2; o usuário confirmou imagem no AOC, e o probe comparou o estado atual com o baseline do journal: equivalentes, hash do baseline igual ao da decisão. O journal de teste foi limpo apenas após validar `pending`, decisão `recovered`, identidade/hash e igualdade semântica com posse exclusiva. A interrupção ocorreu depois do retorno da chamada `SetDisplayConfig`, ainda durante a transação; não prova morte durante a execução da chamada nativa. P4 continua pendente dessa evidência e revisão.

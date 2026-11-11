@@ -1,6 +1,7 @@
 using System.Text.Json;
 using CouchPad.Core.Display;
 using CouchPad.Platform.Windows;
+using CouchPad.Core.Automation;
 if (args.Length < 3) throw new ArgumentException("Usage: DisplayProbe <tv-path> <manufacturer> <product> --internal <monitor-path> <manufacturer> <product> [--validate] [--compare-current]");
 var internalIndex = Array.IndexOf(args, "--internal");
 if (internalIndex < 3 || internalIndex + 3 >= args.Length) throw new ArgumentException("An explicit internal display selector is required.");
@@ -39,10 +40,22 @@ if (args.Contains("--validate-impossible-mode"))
     results.Add("ImpossibleMode", DisplayTopologyValidator.ValidateSnapshot(snapshot with { ModesBase64 = Convert.ToBase64String(modes) }));
 }
 bool? comparison = null;
+bool? journalComparison = null;
+string? journalBaselineHash = null;
+var journalIndex = Array.IndexOf(args, "--compare-journal");
+if (journalIndex >= 0)
+{
+    if (journalIndex + 1 >= args.Length) throw new ArgumentException("Missing journal path.");
+    var entry = new JsonSessionJournalStore(args[journalIndex + 1]).Load() ?? throw new InvalidOperationException("Journal unavailable.");
+    var expected = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(entry.RestoreDisplay?.Topology ?? throw new InvalidOperationException("Missing journal baseline."))!;
+    var current = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(baseline.Topology!)!;
+    journalComparison = DisplaySnapshotComparer.SemanticallyEqual(expected, current);
+    journalBaselineHash = RescueDecisionStore.ComputeBaselineSha256(entry);
+}
 if (args.Contains("--compare-current"))
 {
     var first = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(baseline.Topology!)!;
     var second = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(service.GetCurrent().Topology!)!;
     comparison = DisplaySnapshotComparer.SemanticallyEqual(first, second);
 }
-Console.WriteLine(JsonSerializer.Serialize(new { State = new { baseline.Mode, baseline.PrimaryActive, baseline.TvActive }, Baseline = JsonSerializer.Deserialize<JsonElement>(baseline.Topology!), AllPaths = all, Selected = selected, Validation = results, Comparison = comparison }));
+Console.WriteLine(JsonSerializer.Serialize(new { State = new { baseline.Mode, baseline.PrimaryActive, baseline.TvActive }, Baseline = JsonSerializer.Deserialize<JsonElement>(baseline.Topology!), AllPaths = all, Selected = selected, Validation = results, Comparison = comparison, JournalComparison = journalComparison, JournalBaselineHash = journalBaselineHash }));
