@@ -69,3 +69,5 @@ O caminho de áudio no rescue de teste também adquiriu o lock compartilhado de 
 A verificação final agora relê todos os papéis e estados de volume/mudo, para detectar que uma operação posterior alterou um valor previamente verificado. O cenário de regressão foi reproduzido com backend falso; 182 testes passaram.
 
 No teste `AUDIO_PARENT_DEATH`, um processo pai dedicado foi encerrado após apply simulado enquanto segurava o lock; o watchdog independente recuperou display e áudio com backend falso e gravou `Recovered`. Nenhum processo de terceiros ou dispositivo real foi alterado. Esse teste não substitui o crash com áudio real.
+
+Há uma compilação isolada `tools/RescueAudioExperiment`, com símbolo próprio, que conecta a restauração real de display ao backend real de áudio sob o lock e a decisão do watchdog. Ela compilou sem avisos, mas ainda não foi executada ou validada em hardware. Não é o executável de produção; o guard de produção continua recusando baseline de áudio, e nenhum serviço real de áudio está composto no app.

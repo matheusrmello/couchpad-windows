@@ -3,3 +3,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("CouchPad.Rescue")]
 [assembly: InternalsVisibleTo("RescueProcessTests")]
 [assembly: InternalsVisibleTo("RescueDryRun")]
+[assembly: InternalsVisibleTo("RescueAudioExperiment")]
