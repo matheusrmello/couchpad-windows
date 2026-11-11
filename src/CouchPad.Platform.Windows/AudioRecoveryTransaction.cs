@@ -17,6 +17,13 @@ public interface IAudioRecoveryBackend
 /// <summary>Restores a complete baseline; failures remain observable to the watchdog.</summary>
 public static class AudioRecoveryTransaction
 {
+    /// <summary>Rejects incomplete or inconsistent snapshots without touching devices.</summary>
+    public static void ValidateBaseline(AudioBaseline baseline)
+    {
+        ArgumentNullException.ThrowIfNull(baseline);
+        _ = Validate(baseline);
+    }
+
     /// <summary>Waits for endpoints to reappear after display recovery before attempting writes.</summary>
     public static async Task RestoreWhenAvailableAsync(AudioBaseline baseline, IAudioRecoveryBackend backend,
         TimeSpan timeout, TimeSpan pollInterval, CancellationToken cancellationToken = default)

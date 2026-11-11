@@ -30,6 +30,13 @@ public sealed class AudioRecoveryTransactionTests
     }
 
     [Fact]
+    public void Baseline_validation_rejects_missing_endpoint_state_before_rescue_ready()
+    {
+        Assert.Throws<InvalidDataException>(() => AudioRecoveryTransaction.ValidateBaseline(Baseline with { Endpoints = [new("a", 0.5f, false)] }));
+        Assert.Throws<InvalidDataException>(() => AudioRecoveryTransaction.ValidateBaseline(Baseline with { Endpoints = [new("a", float.NaN, false), new("b", 0.2f, true)] }));
+    }
+
+    [Fact]
     public void Verification_failure_propagates_without_signalling_success()
     {
         var backend = new FakeBackend { WrongDefault = true };
