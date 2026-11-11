@@ -37,6 +37,21 @@ public sealed class AudioRecoveryTransactionTests
         Assert.Equal(1, backend.Writes);
     }
 
+    [Fact]
+    public void Windows_backend_rejects_mutations_by_default_before_touching_devices()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        AssertWindowsBackendIsReadOnly();
+    }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private static void AssertWindowsBackendIsReadOnly()
+    {
+        var backend = new WindowsAudioRecoveryBackend();
+        Assert.Throws<NotSupportedException>(() => backend.SetDefault("unused", AudioRole.Console));
+        Assert.Throws<NotSupportedException>(() => backend.SetVolumeAndMute("unused", 0.5f, false));
+    }
+
     private sealed class FakeBackend : IAudioRecoveryBackend
     {
         public string? Missing { get; init; }

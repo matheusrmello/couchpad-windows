@@ -101,6 +101,14 @@
 - ARM64 nativo.
 - Estatísticas locais.
 
+## D047 — Exceção isolada para seleção de áudio padrão
+
+- Data: 2026-11-11
+- Decisão: o usuário autorizou explicitamente usar `IPolicyConfig`, interface Windows não documentada, como exceção isolada em Platform.Windows para definir o endpoint padrão por papel e recuperá-lo.
+- Motivo: não foi identificada API pública documentada equivalente; a troca automática de endpoint não garante restauração em todas as configurações.
+- Impacto: sem garantia de compatibilidade entre versões do Windows; falha de ativação, chamada ou verificação deve impedir operação ou manter recuperação pendente. Escrita real continua fechada até watchdog e testes estarem prontos. O restante continua com APIs públicas, sem admin ou telemetria.
+- Evidência: [consulta Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/1162167/how-to-find-audio-devices-that-are-connected); autorização explícita do usuário em 11/11/2026.
+
 ## Formato de nova decisão
 
 ```md
