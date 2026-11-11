@@ -1238,3 +1238,5 @@ Validação adicional: o probe somente leitura recusou um seletor inexistente e 
 O probe recebeu opção para validar proposta CCD com target inválido: `SDC_VALIDATE` retornou 87 e o baseline permaneceu semanticamente igual. Não foi chamado apply; modo de vídeo indisponível e demais falhas reais seguem pendentes.
 
 Com a Samsung fisicamente desconectada pelo usuário, o Windows enumerou somente AOC e o probe recusou a TV ausente; o usuário confirmou imagem no AOC. Após reconexão, path/EDID da Samsung foram encontrados e as validações CCD de TvOnly/Extend retornaram 0 sem apply. O teste não exercitou apply durante desconexão nem ambiguidade física.
+
+Em nova desconexão física da Samsung, o Codex tentou ativar `TvOnly` pelo App: este mostrou erro, journal permaneceu ausente, Windows detectou somente AOC e o usuário confirmou imagem normal. A reconexão foi verificada pelo probe. As chamadas CCD individuais não foram instrumentadas; ambiguidade física, modo indisponível e testes de falha/crash após mutação permanecem pendentes.
