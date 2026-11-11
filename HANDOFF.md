@@ -2,6 +2,8 @@
 
 **Atualização P5, 11/11/2026:** recuperação de áudio em processo separado passou com backend falso e crash real de TvOnly usando o rescue de produção; D047 registra a exceção `IPolicyConfig`. O App oferece seleção explícita e opt-in (D048); fluxo normal, falha após apply, cancelamento e endpoint ausente foram verificados fisicamente com controle simulado e retorno confirmado ao AOC. D049 trata locks de áudio presos no processo pai, com teste falso e crash físico de regressão; `dotnet.exe` não habilita áudio real. Build 0 avisos/erros, 194 testes, smoke e revisão independente concluídos. Endpoint tardio e papéis distintos têm evidência apenas com fakes; watcher físico e launcher permanecem pendentes, HDR adiado. Aceite P5 pendente. Detalhes em `docs/p5-audio-hdr.md`.
 
+**Fila de validação:** `docs/validation-queue.md` — próxima ação: aceite da P5.
+
 > Documento único de contexto para iniciar o trabalho no OpenCode (DeepSeek)
 > e continuar no Codex sem perder decisões, evidências ou pendências.
 >
@@ -683,8 +685,8 @@ separados.
 | P1 shell | DeepSeek | **concluído** | tag `v0.2.0-shell`; build 0 avisos/0 erros; 29 testes; smoke 1020×780 pt/en; capturas 3/2/1 colunas; ver seção 20 |
 | P2 componentes | DeepSeek | **concluído** | tag `v0.3.0-components`; build 0 avisos/0 erros; 34 testes; galeria pt/en; shell 3/2/1 colunas; ver seção 21 |
 | P3 simulação | DeepSeek | **aceito** | tag `v0.4.0-sim`; contrato 0.4.2 no HEAD; build 0 avisos/0 erros; 66 testes; fluxo simulado idle→pending→active→restored; journal e persistência; aceite do usuário em 09/11/2026; ver seção 22 |
-| P4 display | Codex | pendente | Depende de spec REA + hardware |
-| P5 áudio/HDR | Codex | pendente | Depende de P4 |
+| P4 display | Codex | **aceito com limitação** | TvOnly/Extend, rollback, falha/cancelamento, desconexão e kill após retorno do CCD; morte dentro de `SetDisplayConfig` não comprovada; aceite do usuário em 11/11/2026; matriz em `docs/p4-hardware-matrix.md` |
+| P5 áudio/HDR | Codex | **aguardando aceite** | Áudio validado em hardware com controle simulado, restore, falha, cancelamento, endpoint ausente e rescue; HDR adiado; ver `docs/p5-audio-hdr.md` |
 | P6 rescue/tray | Codex | pendente | Depende de P4/P5 |
 | P7a docs/a11y | DeepSeek | pendente | Depende de P6 |
 | P7b corrections/release | Codex | pendente | Depende de P7a |

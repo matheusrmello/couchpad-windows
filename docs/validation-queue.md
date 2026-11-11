@@ -1,0 +1,78 @@
+# Fila de validação sequencial
+
+- Data: 2026-11-11
+- Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
+  da próxima; continuar automaticamente; pedir apenas ação física indispensável;
+  parar em falha de rollback, tela preta ou watchdog que não restaura.
+- Estado atual: build 0 avisos/0 erros; **194 testes**; smoke OK; nenhuma tag
+  de hardware criada.
+
+## Status das fases
+
+| Fase | Estado | Evidência/limite |
+|---|---|---|
+| P0–P3 | Aceitas | Shell, componentes, simulação, journal e persistência |
+| P4 display | **Aceita com limitação** | Hardware: TvOnly/Extend, rollback, falha/cancelamento, desconexão e kill após retorno do CCD; morte dentro de `SetDisplayConfig` não comprovada |
+| P5 áudio | **Aceite pendente** | Hardware: fluxo com controle simulado, troca/restore, falha, cancelamento, endpoint ausente, crash do filho de teste e rescue de produção; HDR adiado |
+| P6 rescue/tray/autostart | Pendente | Rescue/watchdog existe; logon, bandeja e autostart pendentes |
+| P7a docs/a11y/screenshots | Pendente | Depende da P6 |
+| P7b release | Pendente | Depende da P7a |
+
+## Fila, em ordem
+
+### 1. Aceite da P5 (usuário)
+
+- **Dono:** usuário.
+- **Evidência disponível:** `docs/p5-audio-hdr.md`, build 0/0, 194 testes,
+  smoke, matriz de áudio com hardware e limitações.
+- **Limites conhecidos:** endpoint tardio/papéis distintos só com fakes;
+  migração de stream preexistente não comprovada; HDR adiado; watcher e
+  launcher não fazem parte deste aceite.
+- **Ação:** aceitar a P5 com as limitações ou pedir correção antes.
+
+### 2. Watcher de gamepad físico
+
+- **Dono:** Codex.
+- **Validar:** conectar/desconectar controle real; contagem configurável;
+  cancelar atraso; ativar/desativar; ausência de controle; reconexão.
+- **Evidência:** hardware + logs + estado/journal.
+
+### 3. Launcher real
+
+- **Dono:** Codex.
+- **Validar:** abrir Steam Big Picture ou caminho customizado; fechar ao
+  desativar; falha de caminho; não afetar processos de terceiros.
+- **Evidência:** hardware + captura/estado.
+
+### 4. P6 — rescue no logon, bandeja e autostart
+
+- **Dono:** Codex.
+- **Validar:** journal pendente após reinício/logon; restore automático;
+  bandeja; autostart por usuário; instância única/concorrência; sem admin.
+- **Evidência:** teste de crash/reinício, matrix P6, tag `v0.6.0-hardware`.
+
+### 5. HDR (adiado)
+
+- **Dono:** futuro/Codex.
+- **Validar:** detecção de suporte, captura, reaplicação e restore sem forçar
+  HDR incompatível.
+- **Evidência:** hardware; não contar como aprovado antes disso.
+
+### 6. P7a — docs, a11y, screenshots
+
+- **Dono:** DeepSeek.
+- **Validar:** checklist de acessibilidade, screenshots 3 breakpoints × 2
+  idiomas, i18n, release notes.
+- **Evidência:** docs + capturas versionadas.
+
+### 7. P7b — release
+
+- **Dono:** Codex.
+- **Validar:** regressão final, instalador, assinatura, tag `v1.0.0`.
+- **Evidência:** build/test, instalador, smoke e notas.
+
+## Próxima ação
+
+A próxima validação é o **aceite da P5**. As seguintes exigem ação física
+(controle real, launcher, logon) e serão executadas uma por vez, com evidência
+registrada antes de avançar.
