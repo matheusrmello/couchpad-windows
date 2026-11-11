@@ -1,6 +1,6 @@
 # Matriz de hardware — P4
 
-Estado em 2026-11-11: P4 implementada parcialmente e ainda não aceita; resultados detalhados e limitações estão no histórico abaixo.
+Estado em 2026-11-11: P4 aceita pelo usuário com a limitação explícita de que não foi comprovada a morte dentro de `SetDisplayConfig`; resultados e riscos estão no histórico abaixo.
 
 Consulta WMI somente leitura detectou dois monitores ativos, IDs de produto `SAM7167` e `AOC2702`. Isso não confirma a identidade de TV, conexão, modo ou capacidade dos dispositivos. O serviço real ainda não está disponível para executar a matriz.
 
@@ -177,3 +177,5 @@ O instrumento iniciou watchdog real, gravou journal `pending`, aplicou TvOnly e 
 ### Revisão e limite para aceite, 2026-11-11
 
 Não foi encontrada instalação configurada de `cdb`, `windbg`, `procdump` ou `vsdbg`, nem o diretório padrão Windows Kits Debuggers. Não foi possível sincronizar e demonstrar o encerramento dentro de `SetDisplayConfig` com a instrumentação disponível; a ausência dessas ferramentas não prova que o teste seja impossível por outros meios. O watchdog aguarda locks mantidos pela chamada nativa síncrona: se ela travar, o timeout sozinho não assegura restauração em prazo fixo. A revisão independente também apontou uma opção temporária de limpeza de journal potencialmente insegura, removida antes do commit. O teste de ambiguidade física foi dispensado pelo usuário. Build e 167 testes Release e smoke passaram. O resultado é submetido para decisão de aceite com essas limitações, não como prova do cenário nativo não executado; recuperação após reinício permanece P6. Nenhuma tag foi criada.
+
+**Aceite:** o usuário aceitou a P4 em 2026-11-11 com a limitação descrita acima. A aceitação não transforma o teste não realizado em evidência nem elimina o risco de chamada nativa travada. A recuperação após reinício permanece pendente da P6.
