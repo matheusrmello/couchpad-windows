@@ -164,3 +164,7 @@ Com journal ausente e AOC ativo, `DisplayFailureHardware` usou o coordenador e w
 ### P4 — cancelamento após apply, 2026-11-11
 
 O instrumento aplicou TvOnly com watchdog, aguardou três segundos durante uma operação simulada de áudio e sinalizou desconexão do controle; o coordenador cancelou a transição e restaurou. Retorno 0, estado `WaitingForGamepad`, baseline final semanticamente igual ao inicial e journal ausente. O usuário confirmou imagem na TV seguida de retorno normal ao AOC. A chamada CCD já havia terminado ao cancelar; não demonstra cancelamento dentro de `SetDisplayConfig`.
+
+### P4 — desconexão física após apply, 2026-11-11
+
+O instrumento aplicou `Extend` com watchdog e aguardou, mantendo o AOC ativo, enquanto o usuário desconectou fisicamente a Samsung. O probe do instrumento detectou a ausência durante a operação simulada de áudio e injetou falha; o coordenador retornou erro esperado, restaurou baseline semanticamente igual e limpou journal (saída 0). O usuário confirmou AOC com imagem e reconectou a Samsung; consulta posterior confirmou `InternalOnly` e reconhecimento da TV. A desconexão ocorreu após o apply CCD, enquanto a transação aguardava a operação de áudio simulada; não demonstra desconexão dentro da chamada CCD.
