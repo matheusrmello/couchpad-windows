@@ -5,7 +5,7 @@ using CouchPad.Core.Display;
 using CouchPad.Core.Storage;
 using CouchPad.Platform.Windows;
 
-if (!OperatingSystem.IsWindows() || args.Length != 3 || args[0] is not ("--extend-switch-confirmed" or "--extend-inventory-confirmed")) return 2;
+if (!OperatingSystem.IsWindows() || args.Length != 3 || args[0] is not ("--extend-switch-confirmed" or "--extend-inventory-confirmed" or "--tv-switch-confirmed")) return 2;
 var journalPath = AppPaths.SessionJournalFile();
 using var owner = DisplaySessionOwner.Acquire(journalPath);
 var journal = new JsonSessionJournalStore(journalPath);
@@ -27,7 +27,8 @@ var baseline = audio.CaptureBaseline();
 if (baseline.ConsoleEndpointId is null || baseline.ConsoleEndpointId != baseline.MultimediaEndpointId || baseline.ConsoleEndpointId != baseline.CommunicationsEndpointId)
     throw new InvalidOperationException("Test requires one common baseline endpoint for all roles.");
 var monitorAudio = new WindowsAudioService(new WindowsAudioOptions(baseline.ConsoleEndpointId, AllowWrites: true), transaction);
-journal.Save(new SessionJournalEntry(SessionJournalEntry.PendingState, DisplayMode.Extend, AudioMode.MoveToHdmi, DateTimeOffset.UtcNow)
+var targetMode = args[0] == "--tv-switch-confirmed" ? DisplayMode.TvOnly : DisplayMode.Extend;
+journal.Save(new SessionJournalEntry(SessionJournalEntry.PendingState, targetMode, AudioMode.MoveToHdmi, DateTimeOffset.UtcNow)
 { RestoreDisplay = before, RestoreAudio = AudioOutput.Default, RestoreAudioBaseline = baseline });
 var guard = new WindowsAudioRescueGuard(Path.GetFullPath(args[1]), journalPath, TimeSpan.FromMinutes(3), transaction, allowRecovery: true);
 await using var lease = await guard.BeginAsync("test audio switch");
@@ -35,7 +36,7 @@ using var linked = CancellationTokenSource.CreateLinkedTokenSource(lease.Failure
 try
 {
     lease.ThrowIfUnavailable();
-    await display.ApplyAsync(DisplayMode.Extend, linked.Token);
+    await display.ApplyAsync(targetMode, linked.Token);
     lease.ThrowIfUnavailable();
     if (args[0] == "--extend-inventory-confirmed")
     {
@@ -51,8 +52,11 @@ try
         Console.WriteLine("INVENTORY_RESTORED: baseline roles, volume, mute and display verified");
         return 0;
     }
-    await monitorAudio.ApplyAsync(AudioMode.MoveToHdmi, linked.Token);
-    if (monitorAudio.GetCurrent() != AudioOutput.Hdmi) throw new InvalidOperationException("Monitor audio precondition failed.");
+    if (targetMode == DisplayMode.Extend)
+    {
+        await monitorAudio.ApplyAsync(AudioMode.MoveToHdmi, linked.Token);
+        if (monitorAudio.GetCurrent() != AudioOutput.Hdmi) throw new InvalidOperationException("Monitor audio precondition failed.");
+    }
     await audio.ApplyAsync(AudioMode.MoveToHdmi, linked.Token);
     lease.ThrowIfUnavailable();
     if (audio.GetCurrent() != AudioOutput.Hdmi) throw new InvalidOperationException("TV audio did not become default.");
