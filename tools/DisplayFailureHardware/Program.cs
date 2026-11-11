@@ -5,7 +5,7 @@ using CouchPad.Core.Display;
 using CouchPad.Core.Storage;
 using CouchPad.Platform.Windows;
 
-if (args.Length != 8 || args[0] is not ("--hardware-confirmed" or "--hardware-cancel" or "--hardware-disconnect"))
+if (args.Length != 8 || args[0] is not ("--hardware-confirmed" or "--hardware-cancel" or "--hardware-disconnect" or "--hardware-parent-death"))
 {
     Console.Error.WriteLine("Usage: --hardware-confirmed <rescue.exe> <tv-path> <tv-manufacturer> <tv-product> <monitor-path> <monitor-manufacturer> <monitor-product>");
     return 2;
@@ -22,10 +22,12 @@ var before = display.GetCurrent();
 if (before.Mode != DisplayMode.InternalOnly) throw new InvalidOperationException("Expected internal-only baseline.");
 var cancelScenario = args[0] == "--hardware-cancel";
 var disconnectScenario = args[0] == "--hardware-disconnect";
-var audio = new FailingAudio(cancelScenario, disconnectScenario ? display : null, options);
+var deathScenario = args[0] == "--hardware-parent-death";
+var audio = new FailingAudio(cancelScenario, disconnectScenario ? display : null, options, deathScenario);
 var coordinator = new AutomationCoordinator(display, audio, new SystemDelayScheduler(), journal,
     rescueGuard: new WindowsRescueGuard(args[1], journalPath, TimeSpan.FromSeconds(60), true, context));
 await coordinator.UpdateSettingsAsync(new AutomationSettings { Enabled = true, DisplayMode = disconnectScenario ? DisplayMode.Extend : DisplayMode.TvOnly });
+Console.WriteLine($"TEST_PARENT_PID={Environment.ProcessId}");
 var activation = coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
 if (cancelScenario)
 {
@@ -42,7 +44,7 @@ Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(new { coordinator.St
 var expectedState = cancelScenario ? coordinator.State == AutomationState.WaitingForGamepad : coordinator.State == AutomationState.Error && coordinator.LastError == FailingAudio.Expected;
 return expectedState && semanticMatch && journalStatus == SessionJournalStatus.Missing ? 0 : 1;
 
-sealed class FailingAudio(bool cancelScenario, WindowsDisplayService? disconnectDisplay, WindowsDisplayOptions options) : IAudioService
+sealed class FailingAudio(bool cancelScenario, WindowsDisplayService? disconnectDisplay, WindowsDisplayOptions options, bool deathScenario) : IAudioService
 {
     public const string Expected = "Injected test failure after display apply";
     public TaskCompletionSource Entered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -51,6 +53,7 @@ sealed class FailingAudio(bool cancelScenario, WindowsDisplayService? disconnect
     {
         Console.WriteLine("DISPLAY_APPLIED_WAITING_TO_INJECT_FAILURE");
         Entered.TrySetResult();
+        if (deathScenario) await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
         if (cancelScenario) await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
         if (disconnectDisplay is not null)
         {
