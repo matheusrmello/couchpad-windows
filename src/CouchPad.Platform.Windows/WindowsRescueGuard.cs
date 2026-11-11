@@ -12,16 +12,18 @@ public sealed class WindowsRescueGuard : IRescueGuard
     private readonly string _journal;
     private readonly TimeSpan _timeout;
     private readonly bool _allowRecovery;
+    private readonly bool _allowExperimentalAudioRecovery;
     private readonly RescueTransactionContext? _transaction;
 
     public WindowsRescueGuard(string executable, string journal, TimeSpan timeout, bool allowRecovery = false,
-        RescueTransactionContext? transaction = null)
+        RescueTransactionContext? transaction = null, bool allowExperimentalAudioRecovery = false)
     {
         _executable = Path.GetFullPath(executable);
         _journal = Path.GetFullPath(journal);
         if (timeout < TimeSpan.FromSeconds(5) || timeout > TimeSpan.FromMinutes(10)) throw new ArgumentOutOfRangeException(nameof(timeout));
         _timeout = timeout;
         _allowRecovery = allowRecovery;
+        _allowExperimentalAudioRecovery = allowExperimentalAudioRecovery;
         _transaction = transaction;
     }
 
@@ -35,7 +37,7 @@ public sealed class WindowsRescueGuard : IRescueGuard
             ?? throw new InvalidDataException("Recovery journal is unavailable.");
         if (journal.State is not (SessionJournalEntry.PendingState or SessionJournalEntry.ActiveState))
             throw new InvalidDataException("Recovery journal has an invalid state.");
-        if (journal.RestoreAudioBaseline is not null)
+        if (journal.RestoreAudioBaseline is not null && !_allowExperimentalAudioRecovery)
             throw new NotSupportedException("This rescue guard cannot yet restore real audio.");
         var baselineHash = RescueDecisionStore.ComputeBaselineSha256(journal);
         var transactionId = Guid.NewGuid();

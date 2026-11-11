@@ -353,6 +353,16 @@ using (var current = Process.GetCurrentProcess())
 }
 if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") is not null)
 {
+    Reset();
+    var guardAudioEntry = entry with { RestoreAudioBaseline = new CouchPad.Core.Audio.AudioBaseline(1, "a", "b", "a", [new("a", 0.5f, false), new("b", 0.2f, true)]) };
+    new JsonSessionJournalStore(marker + ".journal").Save(guardAudioEntry);
+    var audioGuard = new WindowsRescueGuard(childExecutable, marker + ".journal", TimeSpan.FromSeconds(5), allowRecovery: true, allowExperimentalAudioRecovery: true);
+    await using (var lease = await audioGuard.BeginAsync("experimental audio test"))
+    {
+        await lease.AbortAsync();
+        if (await WaitMarker(marker, TimeSpan.FromSeconds(5)) != "ABORT") throw new InvalidOperationException("Audio guard abort failed.");
+    }
+    Console.WriteLine("AUDIO_GUARD_READY_ABORT: PASS");
     foreach (var scenario in new[] { "success", "failure", "lock" })
     {
         var fail = scenario == "failure";
