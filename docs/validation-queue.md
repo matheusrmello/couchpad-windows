@@ -23,12 +23,12 @@
 ### 1. Aceite da P5 (usuário)
 
 - **Dono:** usuário.
+- **Status:** **aceita em 11/11/2026**, com as limitações abaixo.
 - **Evidência disponível:** `docs/p5-audio-hdr.md`, build 0/0, 194 testes,
   smoke, matriz de áudio com hardware e limitações.
-- **Limites conhecidos:** endpoint tardio/papéis distintos só com fakes;
+- **Limites aceitos:** endpoint tardio/papéis distintos só com fakes;
   migração de stream preexistente não comprovada; HDR adiado; watcher e
   launcher não fazem parte deste aceite.
-- **Ação:** aceitar a P5 com as limitações ou pedir correção antes.
 
 ### 2. Watcher de gamepad físico
 
@@ -73,6 +73,6 @@
 
 ## Próxima ação
 
-A próxima validação é o **aceite da P5**. As seguintes exigem ação física
-(controle real, launcher, logon) e serão executadas uma por vez, com evidência
-registrada antes de avançar.
+A próxima validação é o **watcher de gamepad físico**. As seguintes exigem ação
+física (controle real, launcher, logon) e serão executadas uma por vez, com
+evidência registrada antes de avançar.

@@ -1,8 +1,8 @@
 # CouchPad Windows — Handoff e Bootstrap
 
-**Atualização P5, 11/11/2026:** recuperação de áudio em processo separado passou com backend falso e crash real de TvOnly usando o rescue de produção; D047 registra a exceção `IPolicyConfig`. O App oferece seleção explícita e opt-in (D048); fluxo normal, falha após apply, cancelamento e endpoint ausente foram verificados fisicamente com controle simulado e retorno confirmado ao AOC. D049 trata locks de áudio presos no processo pai, com teste falso e crash físico de regressão; `dotnet.exe` não habilita áudio real. Build 0 avisos/erros, 194 testes, smoke e revisão independente concluídos. Endpoint tardio e papéis distintos têm evidência apenas com fakes; watcher físico e launcher permanecem pendentes, HDR adiado. Aceite P5 pendente. Detalhes em `docs/p5-audio-hdr.md`.
+**Atualização P5, 11/11/2026:** recuperação de áudio em processo separado passou com backend falso e crash real de TvOnly usando o rescue de produção; D047 registra a exceção `IPolicyConfig`. O App oferece seleção explícita e opt-in (D048); fluxo normal, falha após apply, cancelamento e endpoint ausente foram verificados fisicamente com controle simulado e retorno confirmado ao AOC. D049 trata locks de áudio presos no processo pai, com teste falso e crash físico de regressão; `dotnet.exe` não habilita áudio real. Build 0 avisos/erros, 194 testes, smoke e revisão independente concluídos. Endpoint tardio e papéis distintos têm evidência apenas com fakes; watcher físico e launcher permanecem pendentes, HDR adiado. **P5 aceita pelo usuário em 11/11/2026 com essas limitações.** Detalhes em `docs/p5-audio-hdr.md`.
 
-**Fila de validação:** `docs/validation-queue.md` — próxima ação: aceite da P5.
+**Fila de validação:** `docs/validation-queue.md` — próxima ação: watcher físico de gamepad.
 
 > Documento único de contexto para iniciar o trabalho no OpenCode (DeepSeek)
 > e continuar no Codex sem perder decisões, evidências ou pendências.
@@ -686,7 +686,7 @@ separados.
 | P2 componentes | DeepSeek | **concluído** | tag `v0.3.0-components`; build 0 avisos/0 erros; 34 testes; galeria pt/en; shell 3/2/1 colunas; ver seção 21 |
 | P3 simulação | DeepSeek | **aceito** | tag `v0.4.0-sim`; contrato 0.4.2 no HEAD; build 0 avisos/0 erros; 66 testes; fluxo simulado idle→pending→active→restored; journal e persistência; aceite do usuário em 09/11/2026; ver seção 22 |
 | P4 display | Codex | **aceito com limitação** | TvOnly/Extend, rollback, falha/cancelamento, desconexão e kill após retorno do CCD; morte dentro de `SetDisplayConfig` não comprovada; aceite do usuário em 11/11/2026; matriz em `docs/p4-hardware-matrix.md` |
-| P5 áudio/HDR | Codex | **aguardando aceite** | Áudio validado em hardware com controle simulado, restore, falha, cancelamento, endpoint ausente e rescue; HDR adiado; ver `docs/p5-audio-hdr.md` |
+| P5 áudio/HDR | Codex | **aceito** | Áudio validado em hardware com controle simulado, restore, falha, cancelamento, endpoint ausente e rescue; HDR adiado; aceite do usuário em 11/11/2026; ver `docs/p5-audio-hdr.md` |
 | P6 rescue/tray | Codex | pendente | Depende de P4/P5 |
 | P7a docs/a11y | DeepSeek | pendente | Depende de P6 |
 | P7b corrections/release | Codex | pendente | Depende de P7a |
@@ -1286,3 +1286,15 @@ P5 item 2 em andamento: D046 introduz baseline versionado com IDs por papel e vo
 O probe agora captura, sem escrita, IDs por papel e volume/mudo dos endpoints padrão via Core Audio. Na máquina atual os três papéis estavam representados por um endpoint; duas capturas mantiveram os mesmos IDs e volume válido. Compatibilidade do hash anterior foi testada. Restauração real, papéis fisicamente distintos e watchdog de áudio não foram validados; guard real continua bloqueando a integração de áudio.
 
 P5 item 3 em andamento: guard e executável rescue de display recusam explicitamente journal que contém baseline real de áudio, impedindo falso sucesso antes da implementação de restore de áudio. Teste de guard verifica recusa antes de iniciar o processo e preservação do journal; 175 testes passaram. Recuperação independente de áudio ainda não está implementada.
+
+### P5 aceite e P7a snapshot (DeepSeek), 11/11/2026
+
+- P5 **aceita pelo usuário** com as limitações documentadas: endpoint
+  tardio/papéis distintos só com fakes, migração de stream preexistente não
+  comprovada e HDR adiado.
+- P7a (snapshot): `docs/ui-a11y-checklist.md`, contraste corrigido
+  (`DangerMuted #35191B`), live region nos erros/recuperação, README atualizado,
+  notas de release em rascunho e seis capturas em `docs/screenshots/`.
+- As capturas oficiais serão refeitas após a P6 (bandeja/autostart/logon).
+- Build 0 avisos/erros, **194 testes**, smoke OK; nenhuma tag nova.
+- Próxima validação da fila: watcher físico de gamepad.

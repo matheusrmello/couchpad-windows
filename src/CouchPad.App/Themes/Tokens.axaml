@@ -20,7 +20,7 @@
   <Color x:Key="CouchPad.Color.Warning">#F2C94C</Color>
   <Color x:Key="CouchPad.Color.WarningMuted">#3A3117</Color>
   <Color x:Key="CouchPad.Color.Danger">#EB5757</Color>
-  <Color x:Key="CouchPad.Color.DangerMuted">#3A1D1E</Color>
+  <Color x:Key="CouchPad.Color.DangerMuted">#35191B</Color>
 
   <SolidColorBrush x:Key="CouchPad.Background" Color="{StaticResource CouchPad.Color.Background}" />
   <SolidColorBrush x:Key="CouchPad.Surface" Color="{StaticResource CouchPad.Color.Surface}" />

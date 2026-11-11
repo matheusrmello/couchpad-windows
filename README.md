@@ -8,13 +8,20 @@ independente (clean-room) em Avalonia + .NET 10.
 
 ## Status
 
-**P0 — bootstrap** concluído:
+- **P0–P3 aceitas:** shell, componentes, simulação, state machine, journal e
+  persistência.
+- **P4 display aceita com limitação:** TvOnly/Extend, rollback, falha,
+  cancelamento e watchdog em hardware; a morte dentro de `SetDisplayConfig`
+  não foi comprovada e a recuperação no logon fica na P6.
+- **P5 áudio aceita com limitações:** seleção e troca de endpoint, restore,
+  falha/cancelamento, endpoint ausente e rescue em hardware; HDR adiado;
+  endpoint tardio/papéis distintos só com fakes.
+- **P6 pendente:** watcher de gamepad físico, launcher real, rescue no logon,
+  bandeja, autostart e instância única.
+- **P7 pendente:** screenshots finais, a11y, instalador, assinatura e release.
 
-- solução, projetos e testes;
-- tema escuro com tokens;
-- i18n pt-BR + inglês com troca em tempo real;
-- configurações em `%LOCALAPPDATA%\CouchPad\settings.json`;
-- janela inicial com smoke test.
+Build atual: 0 avisos/0 erros; **194 testes**; smoke OK. Nenhuma tag de
+hardware foi criada.
 
 ## Requisitos
 
@@ -27,9 +34,12 @@ independente (clean-room) em Avalonia + .NET 10.
 ```text
 src/CouchPad.App/                # UI Avalonia, ViewModels, tema, i18n
 src/CouchPad.Core/               # modelos, interfaces, simulação, journal
-src/CouchPad.Platform.Windows/   # P/Invoke/COM (P4–P6; vazio no P0)
+src/CouchPad.Platform.Windows/   # P/Invoke/COM de display/áudio
+src/CouchPad.Rescue/             # rescue/watchdog independente
 tests/CouchPad.Core.Tests/       # xunit
-docs/                            # decisões, spec de UI, agentes
+tests/CouchPad.App.Tests/        # composição/UI sem hardware
+tools/                           # probes e instrumentos de hardware
+docs/                            # decisões, specs, matrizes, screenshots
 .opencode/                       # agentes e skills do OpenCode
 ```
 
@@ -43,22 +53,34 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 & $dotnet src\CouchPad.App\bin\Debug\net10.0\CouchPad.dll --smoke
 ```
 
+A escrita real de display/áudio é **opt-in** e desligada por padrão. Use apenas
+com a TV conectada e o usuário presente; leia `docs/p4-runbook.md` e
+`docs/p5-audio-hdr.md`.
+
+## Funcionalidades
+
+- UI pt-BR/en com cards, controles, estados e acessibilidade.
+- Simulação de display, áudio e gamepad.
+- State machine com atrasos canceláveis, journal atômico e persistência.
+- Display real: identificação por path/EDID, TvOnly/Extend/Mirror, rollback e
+  watchdog independente.
+- Áudio real: seleção explícita de endpoint, troca/restore e recuperação.
+- HDR: adiado; não declarar suportado até implementação e teste.
+
+## Lacunas conhecidas
+
+- Watcher de gamepad físico e launcher real ainda não integrados.
+- Rescue no logon, bandeja e autostart são P6.
+- HDR adiado.
+- Instalador/assinatura são P7b.
+- `SetDisplayConfig` travado e certas normalizações de driver não foram
+  reproduzidos; ver limitações nas matrizes.
+
 ## Agentes
 
-- **OpenCode**: selecione `orchestrator` em `/agents` para as fases P0–P3/P7a.
-- **Codex**: use `codex -p rea`, `codex -p hardware`, `codex -p release` ou
-  `codex -p review`. Os papéis ficam em `docs/agents/codex/roles/`.
-- **Skills**: `.opencode/skills/couchpad-*`.
-
-## Escopo
-
-- **Tela**: identificar a TV, aplicar o modo escolhido e reverter em falha.
-- **Áudio**: selecionar o endpoint correto.
-- **HDR**: capturar, aplicar e restaurar.
-- **Rescue**: recuperar a sessão após falha ou logoff.
-
-Fora do escopo: licença, ativação, trial, telemetria, cópia de código/assets de
-terceiros.
+- **OpenCode/DeepSeek:** App/Core, UI, i18n, testes, docs e P7a.
+- **Codex:** REA, `Platform.Windows`, P4–P6 e P7b (instalador/release).
+- Skills: `.opencode/skills/couchpad-*`.
 
 ## Licença
 

@@ -1,5 +1,9 @@
 # P5 — áudio e HDR
 
+**Aceite:** usuário aceitou em 2026-11-11, com as limitações registradas
+(endpoint tardio/papéis distintos só com fakes, migração de stream preexistente
+não comprovada e HDR adiado). A P5 não inclui watcher físico nem launcher.
+
 ## Inventário somente leitura — 2026-11-11
 
 `tools/AudioProbe` consulta os endpoints de reprodução via Core Audio, seus estados e IDs padrão para os papéis console, multimídia e comunicação. Na sessão de teste foram encontrados oito endpoints, um ativo e um endpoint padrão presente para cada papel; os três papéis apontavam para o mesmo endpoint. Nenhuma saída foi alterada. IDs permanecem na saída local do probe e não são registrados neste documento.

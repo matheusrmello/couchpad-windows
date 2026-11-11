@@ -316,24 +316,19 @@ captura de combinação, bandeja, autostart e rescue no logon.
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: 144 aprovados — catálogos/i18n, composição do shell, temas,
+- Testes: 194 aprovados — catálogos/i18n, composição do shell, temas,
   estados da galeria, state machine, atrasos/cancelamento, journal, settings,
   composição Windows e guard.
 - Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em
   telas 720p), troca pt/en, título `CouchPad`.
 - Galeria: `CouchPad.dll --gallery` abre em `1100 × 720`; todos os estados
   visíveis e navegáveis por teclado.
-- Capturas de revisão em `C:\Users\Usuario\AppData\Local\Temp\opencode\`:
-  - `p1-3col.png`, `p1-2col.png`, `p1-1col.png` (P1);
-  - `p1-en.png`, `p1-en-waiting.png`, `p1-screen.png` (P1);
-  - `p2-gallery-pt.png`, `p2-gallery-en.png` (galeria);
-  - `p2-main-pt.png`, `p2-main-en.png` (shell 3 colunas);
-  - `p2-main-pt-2col.png`, `p2-main-pt-640.png` (2 e 1 coluna);
-  - `p2-refresh-loading.png` (ActionButton em loading no shell);
-  - `p3-01-idle.png` … `p3-06-restored.png` (fluxo simulado completo);
-  - `p2-main-pt.png` atualizado com seletores TV/monitor e opt-in de escrita.
-- As capturas definitivas dos 3 breakpoints × 2 idiomas serão versionadas na
-  P7a em `docs/screenshots/`.
+- Capturas P7a (snapshot 11/11/2026; refazer após P6):
+  `docs/screenshots/p7a-3col-pt.png`, `p7a-2col-pt.png`, `p7a-1col-pt.png`,
+  `p7a-3col-en.png`, `p7a-2col-en.png`, `p7a-1col-en.png`.
+- Checklist de acessibilidade: `docs/ui-a11y-checklist.md`.
+- As capturas definitivas dos 3 breakpoints × 2 idiomas serão refeitas após a
+  P6 e substituirão o snapshot atual em `docs/screenshots/`.
 
 ### Checklist de aceite P1
 
