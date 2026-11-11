@@ -29,6 +29,8 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
         Assert.Equal(0, settings.DisplayModeIndex);
         Assert.Equal(0, settings.AudioModeIndex);
         Assert.False(settings.AllowDisplayWrites);
+        Assert.False(settings.AllowAudioWrites);
+        Assert.Null(settings.TvAudioEndpointId);
         Assert.Null(settings.TvDevicePath);
         Assert.Null(settings.TvEdidManufacturer);
         Assert.Null(settings.TvEdidProduct);
@@ -57,6 +59,8 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
             DisplayModeIndex = 1,
             AudioModeIndex = 1,
             AllowDisplayWrites = true,
+            AllowAudioWrites = true,
+            TvAudioEndpointId = "endpoint-tv",
             TvDevicePath = @"\\?\DISPLAY#SAM7167#tv",
             TvEdidManufacturer = 11596,
             TvEdidProduct = 29031,

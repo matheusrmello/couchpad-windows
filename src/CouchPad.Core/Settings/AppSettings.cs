@@ -36,6 +36,11 @@ public sealed record AppSettings
     /// </summary>
     public bool AllowDisplayWrites { get; init; }
 
+    /// <summary>Audio endpoint writes require a separate opt-in and a selected endpoint ID.</summary>
+    public bool AllowAudioWrites { get; init; }
+
+    public string? TvAudioEndpointId { get; init; }
+
     public string? TvDevicePath { get; init; }
 
     public ushort? TvEdidManufacturer { get; init; }

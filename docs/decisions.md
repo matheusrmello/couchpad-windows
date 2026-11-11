@@ -109,6 +109,14 @@
 - Impacto: sem garantia de compatibilidade entre versões do Windows; falha de ativação, chamada ou verificação deve impedir operação ou manter recuperação pendente. Escrita real continua fechada até watchdog e testes estarem prontos. O restante continua com APIs públicas, sem admin ou telemetria.
 - Evidência: [consulta Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/1162167/how-to-find-audio-devices-that-are-connected); autorização explícita do usuário em 11/11/2026.
 
+## D048 — Configuração explícita do endpoint de áudio
+
+- Data: 2026-11-11
+- Decisão: adicionar às configurações do Core um ID de endpoint de TV e um opt-in de escrita de áudio, desligado por padrão. O App apresenta seleção de endpoint e informa que alterações exigem reinício.
+- Motivo: o mesmo display apresentou IDs de áudio diferentes em TvOnly e Extend; nome ou EDID de vídeo não comprovam a identidade do endpoint de áudio.
+- Impacto: a escolha é específica para a topologia configurada; endpoint ausente ou ambíguo deve falhar fechado. A configuração é per-user, sem API Windows no Core; a seleção automática CCD↔áudio continua não comprovada.
+- Evidência: inventários e testes físicos em `docs/p5-audio-hdr.md`.
+
 ## Formato de nova decisão
 
 ```md
