@@ -6,6 +6,10 @@
 
 O probe não identifica ainda o endpoint correspondente à TV e não realiza apply ou restore. O contrato atual `AudioOutput` não permite persistir IDs distintos para os três papéis; o journal e o watchdog precisam ser ampliados antes de qualquer escrita real. HDR continua pendente. A seleção de endpoints ativos e papéis é documentada pela Microsoft em [Default Audio Endpoint Selection](https://learn.microsoft.com/en-us/windows-hardware/drivers/audio/default-audio-endpoint-selection); a documentação de CCD enumera as operações de cor avançada em [DISPLAYCONFIG_DEVICE_INFO_TYPE](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ne-wingdi-displayconfig_device_info_type).
 
+## Revalidação de áudio somente leitura — 2026-11-11
+
+Build do probe: zero avisos e erros. Na topologia atual foram enumerados oito endpoints de reprodução, um ativo; os três papéis tinham padrão presente, o mesmo entre si e estável em duas leituras. IDs enumerados eram únicos. A consulta PnP de endpoints presentes retornou `27G2G4 (HD Audio Driver for Display Audio)` como dispositivo presente. Isso não identifica por si só o endpoint da Samsung nem comprova a correspondência entre o nome PnP e cada ID Core Audio. Não foi alterado áudio nem testada reprodução. Troca, retry, preservação por papel, volume/mudo, recuperação e áudio físico na Samsung permanecem pendentes.
+
 ## HDR adiado por solicitação do usuário
 
 Em 2026-11-11, o usuário solicitou ignorar o teste de HDR nesta etapa e registrar o assunto para implementações futuras. Não executar a matriz de hardware de HDR como requisito da P5 atual nem registrá-la como aprovada. A implementação e a futura validação devem considerar detecção de suporte, captura do estado anterior, reaplicação e recuperação segura, sem forçar HDR em display incompatível. A alteração não dispensa os requisitos e testes de áudio.
