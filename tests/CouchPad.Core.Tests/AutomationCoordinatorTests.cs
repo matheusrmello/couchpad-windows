@@ -42,9 +42,27 @@ public sealed class AutomationCoordinatorTests
         Assert.Null(journal.Entry);
     }
 
+    [Fact]
+    public async Task Audio_apply_failure_restores_display_and_complete_audio_baseline_before_abort()
+    {
+        var display = new FakeDisplayService();
+        var audio = new BaselineAudio { ApplyException = new InvalidOperationException("audio failure") };
+        var journal = new FakeJournal();
+        var guard = new AudioCapableGuard();
+        var coordinator = new AutomationCoordinator(display, audio, new ManualDelayScheduler(), journal, rescueGuard: guard);
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Single(display.Restored);
+        Assert.Equal(audio.Baseline, audio.Restored);
+        Assert.Equal(1, Assert.Single(guard.Leases).Aborts);
+        Assert.Null(journal.Entry);
+    }
+
     private sealed class AudioCapableGuard : IAudioRescueGuard
     {
         private readonly FakeRescueGuard _inner = new();
+        public IReadOnlyList<FakeRescueLease> Leases => _inner.Leases;
         public Task<IRescueLease> BeginAsync(string operation, CancellationToken cancellationToken = default) => _inner.BeginAsync(operation, cancellationToken);
     }
 
@@ -52,9 +70,11 @@ public sealed class AutomationCoordinatorTests
     {
         public AudioBaseline Baseline { get; } = new(1, "console-id", "multimedia-id", "communications-id", [new("console-id", 0.5f, false)]);
         public AudioBaseline? Restored { get; private set; }
+        public Exception? ApplyException { get; init; }
         public AudioOutput GetCurrent() => AudioOutput.Default;
         public AudioBaseline CaptureBaseline() => Baseline;
-        public Task<AudioOutput> ApplyAsync(AudioMode mode, CancellationToken cancellationToken = default) => Task.FromResult(AudioOutput.Hdmi);
+        public Task<AudioOutput> ApplyAsync(AudioMode mode, CancellationToken cancellationToken = default) =>
+            ApplyException is null ? Task.FromResult(AudioOutput.Hdmi) : throw ApplyException;
         public Task RestoreAsync(AudioOutput state, CancellationToken cancellationToken = default) => throw new InvalidOperationException("Complete baseline required.");
         public Task RestoreBaselineAsync(AudioBaseline baseline, CancellationToken cancellationToken = default) { Restored = baseline; return Task.CompletedTask; }
     }
