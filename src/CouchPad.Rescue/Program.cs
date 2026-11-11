@@ -31,6 +31,8 @@ using (instanceLock)
         var journal = new JsonSessionJournalStore(journalPath).Load();
         if (journal is null || (journal.State != SessionJournalEntry.PendingState && journal.State != SessionJournalEntry.ActiveState) || journal.RestoreDisplay?.Topology is null)
             throw new InvalidDataException("Recovery journal is unavailable.");
+        if (journal.RestoreAudioBaseline is not null)
+            throw new NotSupportedException("This rescue process cannot yet restore real audio.");
         var actualHash = RescueDecisionStore.ComputeBaselineSha256(journal);
         if (!string.Equals(actualHash, baselineHash, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Recovery baseline does not match transaction.");
         var snapshot = JsonSerializer.Deserialize<WindowsDisplayService.Snapshot>(journal.RestoreDisplay.Topology);

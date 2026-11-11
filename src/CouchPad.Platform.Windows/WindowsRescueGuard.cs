@@ -35,6 +35,8 @@ public sealed class WindowsRescueGuard : IRescueGuard
             ?? throw new InvalidDataException("Recovery journal is unavailable.");
         if (journal.State is not (SessionJournalEntry.PendingState or SessionJournalEntry.ActiveState))
             throw new InvalidDataException("Recovery journal has an invalid state.");
+        if (journal.RestoreAudioBaseline is not null)
+            throw new NotSupportedException("This rescue guard cannot yet restore real audio.");
         var baselineHash = RescueDecisionStore.ComputeBaselineSha256(journal);
         var transactionId = Guid.NewGuid();
         var decisionPath = Path.Combine(Path.GetDirectoryName(_journal)!, "rescue-decisions", transactionId.ToString("N") + ".json");
