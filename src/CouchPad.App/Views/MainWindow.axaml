@@ -313,6 +313,28 @@
                 <ComboBoxItem Content="{loc:Tr audio_mode.keep}" />
               </ComboBox>
             </StackPanel>
+            <StackPanel Spacing="4">
+              <TextBlock Classes="caption" Text="{loc:Tr audio.tv_endpoint}" />
+              <ComboBox ItemsSource="{Binding AudioEndpoints}"
+                        SelectedItem="{Binding SelectedTvAudioEndpoint, Mode=TwoWay}"
+                        PlaceholderText="{loc:Tr audio.endpoint_none}"
+                        AutomationProperties.Name="{loc:Tr audio.tv_endpoint}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:AudioEndpointOption">
+                    <TextBlock Text="{Binding DisplayName}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <Button Classes="link" Content="{loc:Tr audio.refresh}"
+                      Command="{Binding RefreshAudioEndpointsCommand}"
+                      AutomationProperties.Name="{loc:Tr audio.refresh}" />
+            </StackPanel>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <TextBlock Text="{loc:Tr audio.allow_writes}" VerticalAlignment="Center" />
+              <ToggleSwitch Grid.Column="1" IsChecked="{Binding AllowAudioWrites}"
+                            AutomationProperties.Name="{loc:Tr audio.allow_writes}" />
+            </Grid>
+            <TextBlock Classes="hint" Text="{loc:Tr audio.restart_help}" TextWrapping="Wrap" />
           </StackPanel>
         </controls:Card>
 

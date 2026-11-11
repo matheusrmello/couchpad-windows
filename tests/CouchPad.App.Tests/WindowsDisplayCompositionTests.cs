@@ -10,6 +10,24 @@ public class WindowsDisplayCompositionTests
     private static readonly string[] Arguments = ["--windows-display", "tv-path", "12", "34", "monitor-path", "56", "78"];
 
     [Fact]
+    public async Task Real_audio_requires_opt_in_and_a_selected_endpoint()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var display = new WindowsDisplayService(new WindowsDisplayOptions("tv", 1, 2));
+        var context = new RescueTransactionContext(Path.GetTempPath());
+        var settings = new AppSettings { AllowDisplayWrites = true };
+        var (blocked, noGuard) = App.CreateWindowsAudioServices(display, settings, context, "unused", "journal");
+        Assert.NotNull(blocked);
+        Assert.Null(noGuard);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => blocked.ApplyAsync(CouchPad.Core.Audio.AudioMode.MoveToHdmi));
+        var (audio, guard) = App.CreateWindowsAudioServices(display,
+            settings with { AllowAudioWrites = true, TvAudioEndpointId = "tv-id" }, context, "unused", "journal");
+        Assert.IsType<WindowsAudioService>(audio);
+        Assert.IsType<WindowsAudioRescueGuard>(guard);
+        Assert.Equal((null, null), App.CreateWindowsAudioServices(null, settings, context, "unused", "journal"));
+    }
+
+    [Fact]
     public void Real_display_session_is_exclusive_before_the_view_model_is_created()
     {
         if (!OperatingSystem.IsWindows()) return;

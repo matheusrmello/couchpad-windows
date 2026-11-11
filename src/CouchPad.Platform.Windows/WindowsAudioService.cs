@@ -15,6 +15,7 @@ public sealed class WindowsAudioService : IAudioService, IAudioBaselineService
     private readonly IAudioRecoveryBackend _backend;
     private readonly Func<WindowsAudioProbe.Inventory> _inventory;
     private readonly Func<AudioBaseline> _baseline;
+    private readonly CancellationTokenSource _writesRevoked = new();
 
     public WindowsAudioService(WindowsAudioOptions options, RescueTransactionContext transaction)
         : this(options, transaction, new WindowsAudioRecoveryBackend(options.AllowWrites), WindowsAudioProbe.Capture, WindowsAudioProbe.CaptureBaseline) { }
@@ -47,7 +48,7 @@ public sealed class WindowsAudioService : IAudioService, IAudioBaselineService
         cancellationToken.ThrowIfCancellationRequested();
         if (mode == AudioMode.KeepCurrent) return GetCurrent();
         RequireWrites();
-        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _writesRevoked.Token);
         deadline.CancelAfter(_options.AvailabilityTimeout ?? TimeSpan.FromSeconds(15));
         while (true)
         {
@@ -82,6 +83,8 @@ public sealed class WindowsAudioService : IAudioService, IAudioBaselineService
 
     public Task RestoreAsync(AudioOutput state, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException("A complete audio baseline is required for restoration.");
+
+    public void DisableNewWrites() => _writesRevoked.Cancel();
 
     private void RequireWrites() { if (!_options.AllowWrites) throw new NotSupportedException("Audio writes are disabled."); }
 }

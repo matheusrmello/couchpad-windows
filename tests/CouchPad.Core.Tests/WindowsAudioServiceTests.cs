@@ -72,6 +72,20 @@ public sealed class WindowsAudioServiceTests : IDisposable
         Assert.Equal((.5f, false), backend.GetVolumeAndMute("monitor"));
     }
 
+    [Fact]
+    public async Task Revocation_blocks_new_audio_apply_but_keeps_restore_available()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var (context, _, _) = await Armed();
+        var backend = new Backend();
+        var service = Create(context, backend, true, () => Inventory("tv"));
+        service.DisableNewWrites();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.ApplyAsync(AudioMode.MoveToHdmi));
+        Assert.Equal(0, backend.Writes);
+        await service.RestoreBaselineAsync(Baseline);
+        Assert.Equal("monitor", backend.GetDefault(AudioRole.Console));
+    }
+
     [SupportedOSPlatform("windows")]
     private static WindowsAudioService Create(RescueTransactionContext context, Backend backend, bool allow, Func<WindowsAudioProbe.Inventory> inventory) =>
         new(new WindowsAudioOptions("tv", allow, TimeSpan.FromMilliseconds(40)), context, backend, inventory, () => Baseline);

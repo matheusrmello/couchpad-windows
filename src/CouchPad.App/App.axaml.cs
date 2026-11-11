@@ -6,6 +6,7 @@ using CouchPad.App.Localization;
 using CouchPad.App.ViewModels;
 using CouchPad.App.Views;
 using CouchPad.Core.Automation;
+using CouchPad.Core.Audio;
 using CouchPad.Core.Display;
 using CouchPad.Core.Localization;
 using CouchPad.Core.Settings;
@@ -38,9 +39,13 @@ public partial class App : Application
             LocalizationService.Instance.Initialize(settingsStore);
             var appSettings = settingsStore.Load();
 
+            var transaction = new RescueTransactionContext(Path.GetDirectoryName(Path.GetFullPath(journalPath))!);
             var (displayService, rescueGuard) = CreateWindowsDisplayServices(
                 desktop.Args ?? [], journalPath, isSmoke || isGallery,
-                Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"), appSettings);
+                Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"), appSettings, transaction);
+            var (audioService, audioGuard) = CreateWindowsAudioServices(displayService, appSettings, transaction,
+                Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"), journalPath);
+            if (audioGuard is not null) rescueGuard = audioGuard;
             _displaySessionOwner = isGallery ? null : AcquireDisplayOwner(journalPath);
             Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets =
                 isSmoke || isGallery || !OperatingSystem.IsWindows()
@@ -56,8 +61,12 @@ public partial class App : Application
                         settingsStore,
                         new JsonSessionJournalStore(journalPath),
                         displayService: displayService,
+                        audioService: audioService,
                         rescueGuard: rescueGuard,
-                        discoverTargets: discoverTargets),
+                        discoverTargets: discoverTargets,
+                        discoverAudioEndpoints: isSmoke || isGallery || !OperatingSystem.IsWindows() ? null : DiscoverAudioEndpoints,
+                        revokeAudioWrites: OperatingSystem.IsWindows() && audioService is WindowsAudioService windowsAudio
+                            ? windowsAudio.DisableNewWrites : null),
                 };
 
             desktop.MainWindow = window;
@@ -94,7 +103,7 @@ public partial class App : Application
 
     internal static (IDisplayService? Display, IRescueGuard? Guard) CreateWindowsDisplayServices(
         string[] args, string journalPath, bool simulationOnly, string rescuePath,
-        AppSettings? settings = null)
+        AppSettings? settings = null, RescueTransactionContext? sharedTransaction = null)
     {
         if (simulationOnly) return (null, null);
         var allowWrites = settings?.AllowDisplayWrites == true;
@@ -151,10 +160,38 @@ public partial class App : Application
                 internalPath!, internalManufacturer!.Value, internalProduct!.Value,
                 settings?.InternalExactName));
         var stateDirectory = Path.GetDirectoryName(Path.GetFullPath(journalPath))!;
-        var transaction = new RescueTransactionContext(stateDirectory);
+        var transaction = sharedTransaction ?? new RescueTransactionContext(stateDirectory);
         return (new WindowsDisplayService(options, transaction),
             new WindowsRescueGuard(rescuePath, journalPath, TimeSpan.FromSeconds(60),
                 allowRecovery: allowWrites, transaction: transaction));
+    }
+
+    internal static (IAudioService? Audio, IRescueGuard? Guard) CreateWindowsAudioServices(
+        IDisplayService? display, AppSettings settings, RescueTransactionContext transaction, string rescuePath, string journalPath)
+    {
+        if (!OperatingSystem.IsWindows() || display is not WindowsDisplayService || !settings.AllowDisplayWrites) return (null, null);
+        if (!settings.AllowAudioWrites || string.IsNullOrWhiteSpace(settings.TvAudioEndpointId)) return (new UnavailableAudioService(), null);
+        return (new WindowsAudioService(new WindowsAudioOptions(settings.TvAudioEndpointId, AllowWrites: true), transaction),
+            new WindowsAudioRescueGuard(rescuePath, journalPath, TimeSpan.FromSeconds(60), transaction, allowRecovery: true));
+    }
+
+    internal static IReadOnlyList<AudioEndpointOption> DiscoverAudioEndpoints()
+    {
+        if (!OperatingSystem.IsWindows()) return [];
+        try { return WindowsAudioProbe.Capture().Endpoints.Select(e => new AudioEndpointOption(e.Id, e.FriendlyName)).ToArray(); }
+        catch { return []; }
+    }
+
+    private sealed class UnavailableAudioService : IAudioService
+    {
+        public AudioOutput GetCurrent() => AudioOutput.Default;
+        public Task<AudioOutput> ApplyAsync(AudioMode mode, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return mode == AudioMode.KeepCurrent ? Task.FromResult(AudioOutput.Default) :
+                throw new InvalidOperationException("Windows audio is not configured.");
+        }
+        public Task RestoreAsync(AudioOutput state, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     internal static IReadOnlyList<DisplayTargetOption> DiscoverDisplayTargets()

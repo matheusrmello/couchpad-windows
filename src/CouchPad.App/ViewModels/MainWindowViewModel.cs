@@ -29,7 +29,10 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly AutomationCoordinator _coordinator;
     private readonly IDisplayWriteControl? _displayWriteControl;
     private readonly Func<IReadOnlyList<DisplayTargetOption>>? _discoverTargets;
+    private readonly Func<IReadOnlyList<AudioEndpointOption>>? _discoverAudioEndpoints;
+    private readonly Action? _revokeAudioWrites;
     private bool _isLoadingSettings;
+    private bool _audioWritesRevoked;
     private readonly DispatcherTimer _countdownTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private long _countdownDeadline;
 
@@ -70,6 +73,12 @@ public partial class MainWindowViewModel : ObservableObject
     private bool _allowDisplayWrites;
 
     [ObservableProperty]
+    private bool _allowAudioWrites;
+
+    [ObservableProperty]
+    private AudioEndpointOption? _selectedTvAudioEndpoint;
+
+    [ObservableProperty]
     private DisplayTargetOption? _selectedTvTarget;
 
     [ObservableProperty]
@@ -79,6 +88,7 @@ public partial class MainWindowViewModel : ObservableObject
     private string? _displayTargetsError;
 
     public ObservableCollection<DisplayTargetOption> DisplayTargets { get; } = new();
+    public ObservableCollection<AudioEndpointOption> AudioEndpoints { get; } = new();
 
     public MainWindowViewModel(
         LocalizationService localization,
@@ -89,12 +99,16 @@ public partial class MainWindowViewModel : ObservableObject
         IAudioService? audioService = null,
         IDelayScheduler? delayScheduler = null,
         IRescueGuard? rescueGuard = null,
-        Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets = null)
+        Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets = null,
+        Func<IReadOnlyList<AudioEndpointOption>>? discoverAudioEndpoints = null,
+        Action? revokeAudioWrites = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
         _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         _discoverTargets = discoverTargets;
+        _discoverAudioEndpoints = discoverAudioEndpoints;
+        _revokeAudioWrites = revokeAudioWrites;
         _displayWriteControl = displayService as IDisplayWriteControl;
         _localization.PropertyChanged += OnLocalizationChanged;
 
@@ -112,6 +126,7 @@ public partial class MainWindowViewModel : ObservableObject
 
         LoadSettings();
         RefreshDisplayTargets();
+        RefreshAudioEndpoints();
         _ = InitializeAutomationAsync();
     }
 
@@ -290,6 +305,27 @@ public partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private void RefreshAudioEndpoints()
+    {
+        if (_discoverAudioEndpoints is null) return;
+        var selected = SelectedTvAudioEndpoint;
+        _isLoadingSettings = true;
+        try
+        {
+            AudioEndpoints.Clear();
+            foreach (var endpoint in _discoverAudioEndpoints().DistinctBy(e => e.Id, StringComparer.OrdinalIgnoreCase))
+                AudioEndpoints.Add(endpoint);
+            if (selected is not null)
+            {
+                var match = AudioEndpoints.FirstOrDefault(e => string.Equals(e.Id, selected.Id, StringComparison.OrdinalIgnoreCase));
+                if (match is null) { AudioEndpoints.Add(selected); match = selected; }
+                SelectedTvAudioEndpoint = match;
+            }
+        }
+        finally { _isLoadingSettings = false; }
+    }
+
     private DisplayTargetOption? EnsureTarget(DisplayTargetOption? target)
     {
         if (target is null)
@@ -369,6 +405,8 @@ public partial class MainWindowViewModel : ObservableObject
     private void Reset()
     {
         _displayWriteControl?.DisableNewWrites();
+        _revokeAudioWrites?.Invoke();
+        if (_revokeAudioWrites is not null) _audioWritesRevoked = true;
         _isLoadingSettings = true;
         try
         {
@@ -383,6 +421,8 @@ public partial class MainWindowViewModel : ObservableObject
             SteamEnabled = true;
             CustomLauncherPath = null;
             AllowDisplayWrites = false;
+            AllowAudioWrites = false;
+            SelectedTvAudioEndpoint = null;
             SelectedTvTarget = null;
             SelectedInternalTarget = null;
             DisplayTargetsError = null;
@@ -399,7 +439,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     partial void OnAutomationEnabledChanged(bool value)
     {
-        if (value && _displayWriteControl is { CanApply: false })
+        if (value && (_displayWriteControl is { CanApply: false } || (AllowAudioWrites && _audioWritesRevoked)))
         {
             AutomationEnabled = false;
             return;
@@ -467,6 +507,19 @@ public partial class MainWindowViewModel : ObservableObject
         PersistSettings();
     }
 
+    partial void OnAllowAudioWritesChanged(bool value)
+    {
+        if (!_isLoadingSettings && !value)
+        {
+            _revokeAudioWrites?.Invoke();
+            if (_revokeAudioWrites is not null) _audioWritesRevoked = true;
+            if (AutomationEnabled) AutomationEnabled = false;
+        }
+        PersistSettings();
+    }
+
+    partial void OnSelectedTvAudioEndpointChanged(AudioEndpointOption? value) => PersistSettings();
+
     partial void OnSelectedTvTargetChanged(DisplayTargetOption? value) => PersistSettings();
 
     partial void OnSelectedInternalTargetChanged(DisplayTargetOption? value) => PersistSettings();
@@ -500,6 +553,9 @@ public partial class MainWindowViewModel : ObservableObject
             SteamEnabled = settings.SteamEnabled;
             CustomLauncherPath = settings.CustomLauncherPath;
             AllowDisplayWrites = settings.AllowDisplayWrites;
+            AllowAudioWrites = settings.AllowAudioWrites;
+            if (!string.IsNullOrWhiteSpace(settings.TvAudioEndpointId))
+                SelectedTvAudioEndpoint = new AudioEndpointOption(settings.TvAudioEndpointId, null);
 
             var tv = CreateSavedTarget(
                 settings.TvDevicePath,
@@ -568,6 +624,8 @@ public partial class MainWindowViewModel : ObservableObject
                 SteamEnabled = SteamEnabled,
                 CustomLauncherPath = CustomLauncherPath,
                 AllowDisplayWrites = AllowDisplayWrites,
+                AllowAudioWrites = AllowAudioWrites,
+                TvAudioEndpointId = SelectedTvAudioEndpoint?.Id,
                 TvDevicePath = SelectedTvTarget?.DevicePath,
                 TvEdidManufacturer = SelectedTvTarget?.EdidManufacturer,
                 TvEdidProduct = SelectedTvTarget?.EdidProduct,

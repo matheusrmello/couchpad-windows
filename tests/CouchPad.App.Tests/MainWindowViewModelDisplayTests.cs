@@ -67,6 +67,29 @@ public sealed class MainWindowViewModelDisplayTests
     }
 
     [Fact]
+    public void Audio_selection_persists_and_disabling_revokes_writes()
+    {
+        var store = new FakeSettingsStore();
+        LocalizationService.Instance.Initialize(store);
+        var revoked = false;
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            displayService: new SimulatedDisplayService(TimeSpan.Zero), audioService: new SimulatedAudioService(TimeSpan.Zero),
+            discoverAudioEndpoints: () => [new AudioEndpointOption("tv-id", "TV")], revokeAudioWrites: () => revoked = true);
+        vm.SelectedTvAudioEndpoint = Assert.Single(vm.AudioEndpoints);
+        vm.AllowAudioWrites = true;
+        Assert.Equal("tv-id", store.Current.TvAudioEndpointId);
+        Assert.True(store.Current.AllowAudioWrites);
+        vm.AllowAudioWrites = false;
+        Assert.True(revoked);
+        vm.AllowAudioWrites = true;
+        vm.AutomationEnabled = true;
+        Assert.False(vm.AutomationEnabled);
+        vm.ResetCommand.Execute(null);
+        Assert.False(store.Current.AllowAudioWrites);
+        Assert.Null(store.Current.TvAudioEndpointId);
+    }
+
+    [Fact]
     public void Reset_clears_display_selection_and_write_opt_in()
     {
         var store = new FakeSettingsStore
