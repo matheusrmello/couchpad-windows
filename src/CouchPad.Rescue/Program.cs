@@ -31,14 +31,10 @@ using (instanceLock)
         var journal = new JsonSessionJournalStore(journalPath).Load();
         if (journal is null || (journal.State != SessionJournalEntry.PendingState && journal.State != SessionJournalEntry.ActiveState) || journal.RestoreDisplay?.Topology is null)
             throw new InvalidDataException("Recovery journal is unavailable.");
-#if !RESCUE_TEST_BACKEND && !RESCUE_EXPERIMENTAL_AUDIO
-        if (journal.RestoreAudioBaseline is not null)
-            throw new NotSupportedException("This rescue process cannot yet restore real audio.");
-#endif
         if (journal.RestoreAudioBaseline is not null)
         {
             AudioRecoveryTransaction.ValidateBaseline(journal.RestoreAudioBaseline);
-#if RESCUE_EXPERIMENTAL_AUDIO
+#if !RESCUE_TEST_BACKEND
             WindowsAudioRecoveryBackend.CheckPolicyConfigAvailable();
 #endif
         }
@@ -147,14 +143,12 @@ static async Task Restore(SessionJournalEntry journal, string decisionPath, Guid
 #else
     var display = WindowsDisplayService.ForRecovery(new WindowsDisplayOptions("", 0, 0, AllowWrites: true), transaction);
     await display.RestoreAsync(journal.RestoreDisplay!, CancellationToken.None);
-#if RESCUE_EXPERIMENTAL_AUDIO
     if (journal.RestoreAudioBaseline is not null)
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
         await GuardedAudioRecovery.RestoreAsync(journal.RestoreAudioBaseline,
             new WindowsAudioRecoveryBackend(allowWrites: true), transaction, TimeSpan.FromSeconds(15));
     }
-#endif
 #endif
 }
 
