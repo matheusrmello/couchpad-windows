@@ -1244,3 +1244,5 @@ Em nova desconexão física da Samsung, o Codex tentou ativar `TvOnly` pelo App:
 Regra em `AGENTS.md`: executar e registrar cada validação antes da próxima, continuar sem pedidos repetidos e parar imediatamente em falha de recuperação/tela preta. `SDC_VALIDATE` recusou resolução impossível com código 31 e sem alteração semântica da topologia; não houve apply. Pendências ordenadas em `docs/p4-hardware-matrix.md`: ambiguidade física, falha/cancelamento após alteração, desconexão durante transição, kill durante apply, validação final e revisão.
 
 O usuário informou não haver segundo display com nome idêntico para produzir ambiguidade física. Três testes sintéticos de seleção, fallback e recusa de ambiguidade passaram; não há evidência de ambiguidade em hardware. A sequência estrita depende de equipamento adequado ou mudança explícita do critério.
+
+O usuário dispensou expressamente o teste de ambiguidade em hardware por falta de equipamento; a evidência continua limitada aos testes sintéticos. Prosseguir para falha/cancelamento após alteração, depois desconexão durante transição e kill durante apply.

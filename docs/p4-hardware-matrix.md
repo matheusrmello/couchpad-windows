@@ -154,3 +154,5 @@ O probe preservou a topologia ativa e construiu uma cópia do modo de source com
 ### P4 — ambiguidade, limitação física, 2026-11-11
 
 O usuário informou que não há segundo display com nome idêntico disponível. Foram reexecutados três testes sintéticos de identidade, fallback e recusa por nome ambíguo; todos passaram. Não foi produzida ambiguidade no hardware real; esse cenário não deve ser marcado como aprovado em hardware apenas com os testes sintéticos. A sequência física depende de equipamento adequado ou de alteração explícita do critério pelo usuário.
+
+O usuário dispensou explicitamente a ambiguidade em hardware por indisponibilidade de equipamento. Mantêm-se os testes sintéticos aprovados; o cenário físico é dispensado, não aprovado.
