@@ -150,3 +150,7 @@ O probe preservou a topologia ativa e construiu uma cópia do modo de source com
 3. Desconexão física durante transição: comprovar estado utilizável e recuperação, interrompendo em falha.
 4. Kill do processo de teste durante apply: confirmar restauração pelo watchdog independente.
 5. Build, testes e smoke finais, revisão independente e registro para aceite; recuperação no logon pertence à P6.
+
+### P4 — ambiguidade, limitação física, 2026-11-11
+
+O usuário informou que não há segundo display com nome idêntico disponível. Foram reexecutados três testes sintéticos de identidade, fallback e recusa por nome ambíguo; todos passaram. Não foi produzida ambiguidade no hardware real; esse cenário não deve ser marcado como aprovado em hardware apenas com os testes sintéticos. A sequência física depende de equipamento adequado ou de alteração explícita do critério pelo usuário.
