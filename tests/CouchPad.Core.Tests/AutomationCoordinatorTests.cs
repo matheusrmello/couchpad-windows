@@ -7,6 +7,57 @@ namespace CouchPad.Core.Tests;
 
 public sealed class AutomationCoordinatorTests
 {
+    [Fact]
+    public async Task Real_audio_baseline_is_journaled_before_apply_and_restored()
+    {
+        var display = new FakeDisplayService();
+        var audio = new BaselineAudio();
+        var journal = new FakeJournal();
+        var guard = new AudioCapableGuard();
+        var coordinator = new AutomationCoordinator(display, audio, new ManualDelayScheduler(), journal, rescueGuard: guard);
+        display.DuringApply = () =>
+        {
+            Assert.Equal(SessionJournalEntry.PendingState, journal.Entry?.State);
+            Assert.Equal("console-id", journal.Entry?.RestoreAudioBaseline?.ConsoleEndpointId);
+            return Task.CompletedTask;
+        };
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Equal("multimedia-id", journal.Entry?.RestoreAudioBaseline?.MultimediaEndpointId);
+        await coordinator.SetEnabledAsync(false);
+        Assert.Equal(audio.Baseline, audio.Restored);
+        Assert.Null(journal.Entry);
+    }
+
+    [Fact]
+    public async Task Real_audio_is_blocked_without_audio_capable_rescue()
+    {
+        var display = new FakeDisplayService();
+        var journal = new FakeJournal();
+        var coordinator = new AutomationCoordinator(display, new BaselineAudio(), new ManualDelayScheduler(), journal, rescueGuard: new FakeRescueGuard());
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Empty(display.Applied);
+        Assert.Null(journal.Entry);
+    }
+
+    private sealed class AudioCapableGuard : IAudioRescueGuard
+    {
+        private readonly FakeRescueGuard _inner = new();
+        public Task<IRescueLease> BeginAsync(string operation, CancellationToken cancellationToken = default) => _inner.BeginAsync(operation, cancellationToken);
+    }
+
+    private sealed class BaselineAudio : IAudioService, IAudioBaselineService
+    {
+        public AudioBaseline Baseline { get; } = new(1, "console-id", "multimedia-id", "communications-id", [new("console-id", 0.5f, false)]);
+        public AudioBaseline? Restored { get; private set; }
+        public AudioOutput GetCurrent() => AudioOutput.Default;
+        public AudioBaseline CaptureBaseline() => Baseline;
+        public Task<AudioOutput> ApplyAsync(AudioMode mode, CancellationToken cancellationToken = default) => Task.FromResult(AudioOutput.Hdmi);
+        public Task RestoreAsync(AudioOutput state, CancellationToken cancellationToken = default) => throw new InvalidOperationException("Complete baseline required.");
+        public Task RestoreBaselineAsync(AudioBaseline baseline, CancellationToken cancellationToken = default) { Restored = baseline; return Task.CompletedTask; }
+    }
     [Theory]
     [InlineData(SessionJournalEntry.PendingState)]
     [InlineData(SessionJournalEntry.ActiveState)]

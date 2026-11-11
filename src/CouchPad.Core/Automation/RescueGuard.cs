@@ -16,6 +16,9 @@ public interface IRescueGuard
         CancellationToken cancellationToken = default);
 }
 
+/// <summary>Marker for a rescue guard that also restores journaled real audio.</summary>
+public interface IAudioRescueGuard : IRescueGuard { }
+
 public interface IRescueLease : IAsyncDisposable
 {
     /// <summary>Sinalizado se o watchdog parar inesperadamente antes da liberação.</summary>

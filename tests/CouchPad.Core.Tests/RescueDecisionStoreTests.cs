@@ -10,6 +10,22 @@ public sealed class RescueDecisionStoreTests : IDisposable
     private const string Digest = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF";
 
     [Fact]
+    public void Audio_baseline_is_bound_to_recovery_decision()
+    {
+        var audio = new CouchPad.Core.Audio.AudioBaseline(1, "a", "b", "c", [new("a", 0.5f, false)]);
+        var entry = new SessionJournalEntry(SessionJournalEntry.PendingState, CouchPad.Core.Display.DisplayMode.TvOnly,
+            CouchPad.Core.Audio.AudioMode.MoveToHdmi, DateTimeOffset.UtcNow)
+        {
+            RestoreDisplay = new(CouchPad.Core.Display.DisplayMode.InternalOnly, true, false) { Topology = "snapshot" },
+            RestoreAudioBaseline = audio,
+        };
+        var original = RescueDecisionStore.ComputeBaselineSha256(entry);
+        var changed = RescueDecisionStore.ComputeBaselineSha256(entry with { RestoreAudioBaseline = audio with { MultimediaEndpointId = "other" } });
+        Assert.NotEqual(original, changed);
+        Assert.NotEqual(original, RescueDecisionStore.ComputeBaselineSha256(entry with { RestoreAudioBaseline = null }));
+    }
+
+    [Fact]
     public async Task Initialize_and_commit_are_idempotent_and_cannot_rearm()
     {
         var store = new RescueDecisionStore(DecisionPath);

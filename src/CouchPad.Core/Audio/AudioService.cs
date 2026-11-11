@@ -12,6 +12,17 @@ public enum AudioOutput
     Hdmi,
 }
 
+/// <summary>Actual endpoint properties captured before changing display or audio.</summary>
+public sealed record AudioEndpointBaseline(string EndpointId, float? MasterVolume, bool? Muted);
+
+/// <summary>Versioned baseline for the three Windows default playback roles.</summary>
+public sealed record AudioBaseline(
+    int SchemaVersion,
+    string? ConsoleEndpointId,
+    string? MultimediaEndpointId,
+    string? CommunicationsEndpointId,
+    IReadOnlyList<AudioEndpointBaseline> Endpoints);
+
 public interface IAudioService
 {
     AudioOutput GetCurrent();
@@ -19,6 +30,13 @@ public interface IAudioService
     Task<AudioOutput> ApplyAsync(AudioMode mode, CancellationToken cancellationToken = default);
 
     Task RestoreAsync(AudioOutput state, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Provides and restores the complete real-device baseline for journaling.</summary>
+public interface IAudioBaselineService
+{
+    AudioBaseline CaptureBaseline();
+    Task RestoreBaselineAsync(AudioBaseline baseline, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

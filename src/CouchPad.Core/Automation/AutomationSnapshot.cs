@@ -12,4 +12,7 @@ public sealed record AutomationSnapshot(
     AudioOutput RestoreAudio,
     DisplayMode DisplayMode,
     AudioMode AudioMode,
-    AudioOutput AppliedAudio);
+    AudioOutput AppliedAudio)
+{
+    public AudioBaseline? RestoreAudioBaseline { get; init; }
+}

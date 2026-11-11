@@ -101,6 +101,23 @@ public sealed class JsonSessionJournalStoreTests : IDisposable
         Assert.NotNull(entry);
         Assert.Null(entry!.RestoreDisplay);
         Assert.Null(entry.RestoreAudio);
+        Assert.Null(entry.RestoreAudioBaseline);
+    }
+
+    [Fact]
+    public void Audio_baseline_roundtrips_distinct_roles_and_volume()
+    {
+        var store = new JsonSessionJournalStore(JournalPath);
+        var expected = new AudioBaseline(1, "console-id", "music-id", "communications-id",
+            [new AudioEndpointBaseline("console-id", 0.42f, false), new AudioEndpointBaseline("music-id", null, true)]);
+        store.Save(new SessionJournalEntry(SessionJournalEntry.PendingState, DisplayMode.TvOnly, AudioMode.MoveToHdmi, DateTimeOffset.UtcNow)
+        { RestoreAudioBaseline = expected });
+        var actual = store.Load()!.RestoreAudioBaseline!;
+        Assert.Equal(expected.SchemaVersion, actual.SchemaVersion);
+        Assert.Equal(expected.ConsoleEndpointId, actual.ConsoleEndpointId);
+        Assert.Equal(expected.MultimediaEndpointId, actual.MultimediaEndpointId);
+        Assert.Equal(expected.CommunicationsEndpointId, actual.CommunicationsEndpointId);
+        Assert.Equal(expected.Endpoints, actual.Endpoints);
     }
 
     [Fact]

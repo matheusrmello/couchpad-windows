@@ -26,6 +26,9 @@ public sealed record SessionJournalEntry(
 
     public AudioOutput? RestoreAudio { get; init; }
 
+    /// <summary>Optional versioned real audio baseline; absent in older journals.</summary>
+    public AudioBaseline? RestoreAudioBaseline { get; init; }
+
     /// <summary>Saída aplicada; nulo no estado pending.</summary>
     public AudioOutput? AppliedAudio { get; init; }
 }

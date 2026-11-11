@@ -259,10 +259,14 @@ public sealed class AutomationCoordinator
         }
 
         var previousSnapshot = Snapshot;
+        if (_audio is IAudioBaselineService && _rescueGuard is not IAudioRescueGuard)
+            throw new InvalidOperationException("Real audio requires an audio-capable rescue guard.");
         var displayBefore = _display.GetCurrent();
         var audioBefore = _audio.GetCurrent();
+        var audioBeforeBaseline = (_audio as IAudioBaselineService)?.CaptureBaseline();
         var restoreDisplay = previousSnapshot?.RestoreDisplay ?? displayBefore;
         var restoreAudio = previousSnapshot?.RestoreAudio ?? audioBefore;
+        var restoreAudioBaseline = previousSnapshot?.RestoreAudioBaseline ?? audioBeforeBaseline;
 
         var pending = new SessionJournalEntry(
             SessionJournalEntry.PendingState,
@@ -272,6 +276,7 @@ public sealed class AutomationCoordinator
         {
             RestoreDisplay = restoreDisplay,
             RestoreAudio = restoreAudio,
+            RestoreAudioBaseline = restoreAudioBaseline,
         };
 
         // Every apply requires a confirmed pending journal, including reapply.
@@ -317,7 +322,7 @@ public sealed class AutomationCoordinator
                 restoreAudio,
                 settings.DisplayMode,
                 settings.AudioMode,
-                audio);
+                audio) { RestoreAudioBaseline = restoreAudioBaseline };
 
             lock (_sync)
             {
@@ -332,6 +337,7 @@ public sealed class AutomationCoordinator
             {
                 RestoreDisplay = restoreDisplay,
                 RestoreAudio = restoreAudio,
+                RestoreAudioBaseline = restoreAudioBaseline,
                 AppliedAudio = audio,
             };
 
@@ -355,7 +361,7 @@ public sealed class AutomationCoordinator
         }
         catch (Exception ex) when (lease?.FailureToken.IsCancellationRequested == true)
         {
-            if (mutationStarted) await TryRestoreAsync(displayBefore, audioBefore);
+            if (mutationStarted) await TryRestoreAsync(displayBefore, audioBefore, audioBeforeBaseline);
             lease.Abandon();
             lock (_sync)
             {
@@ -367,7 +373,7 @@ public sealed class AutomationCoordinator
         }
         catch (OperationCanceledException)
         {
-            var restored = !mutationStarted || await TryRestoreAsync(displayBefore, audioBefore);
+            var restored = !mutationStarted || await TryRestoreAsync(displayBefore, audioBefore, audioBeforeBaseline);
             var released = await FinishLeaseAsync(lease, restored);
 
             lock (_sync)
@@ -396,7 +402,7 @@ public sealed class AutomationCoordinator
         }
         catch (Exception ex)
         {
-            var restored = !mutationStarted || await TryRestoreAsync(displayBefore, audioBefore);
+            var restored = !mutationStarted || await TryRestoreAsync(displayBefore, audioBefore, audioBeforeBaseline);
             var released = await FinishLeaseAsync(lease, restored);
 
             lock (_sync)
@@ -461,7 +467,7 @@ public sealed class AutomationCoordinator
             await _display.RestoreAsync(snapshot.RestoreDisplay, guardedToken);
             lease?.ThrowIfUnavailable();
             guardedToken.ThrowIfCancellationRequested();
-            await _audio.RestoreAsync(snapshot.RestoreAudio, guardedToken);
+            await RestoreAudioAsync(snapshot.RestoreAudio, snapshot.RestoreAudioBaseline, guardedToken);
             lease?.ThrowIfUnavailable();
             guardedToken.ThrowIfCancellationRequested();
 
@@ -491,7 +497,7 @@ public sealed class AutomationCoordinator
         }
         catch (Exception ex) when (lease?.FailureToken.IsCancellationRequested == true)
         {
-            await TryRestoreAsync(snapshot.RestoreDisplay, snapshot.RestoreAudio);
+            await TryRestoreAsync(snapshot.RestoreDisplay, snapshot.RestoreAudio, snapshot.RestoreAudioBaseline);
             lease.Abandon();
             lock (_sync) { _recoveryUncertain = true; }
             SetState(AutomationState.Error, ex.Message);
@@ -632,7 +638,17 @@ public sealed class AutomationCoordinator
         }
     }
 
-    private async Task<bool> TryRestoreAsync(DisplayState display, AudioOutput audio)
+    private async Task RestoreAudioAsync(AudioOutput audio, AudioBaseline? baseline, CancellationToken cancellationToken)
+    {
+        if (baseline is not null)
+        {
+            if (_audio is not IAudioBaselineService service) throw new InvalidOperationException("Audio baseline cannot be restored.");
+            await service.RestoreBaselineAsync(baseline, cancellationToken);
+        }
+        else await _audio.RestoreAsync(audio, cancellationToken);
+    }
+
+    private async Task<bool> TryRestoreAsync(DisplayState display, AudioOutput audio, AudioBaseline? baseline = null)
     {
         var restored = true;
 
@@ -647,7 +663,7 @@ public sealed class AutomationCoordinator
 
         try
         {
-            await _audio.RestoreAsync(audio, CancellationToken.None);
+            await RestoreAudioAsync(audio, baseline, CancellationToken.None);
         }
         catch
         {

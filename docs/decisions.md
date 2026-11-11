@@ -54,6 +54,7 @@
 | D043 | 2026-11-10 | Espelhamento deixa de ser modo selecionável ou aplicável, inclusive na simulação; modo e snapshot espelhados existentes permanecem legíveis e restauráveis. Configuração antiga de espelhamento volta ao padrão com automação desligada | Atender à decisão do usuário sem prejudicar a recuperação de uma topologia anterior |
 | D044 | 2026-11-10 | Novas configurações e redefinição usam atraso de ativação de 2 segundos, com contagem regressiva localizada; valores já salvos continuam respeitados | Dar tempo ao usuário antes de mudar a tela, mantendo o atraso configurável |
 | D045 | 2026-11-10 | Usar a imagem fornecida explicitamente pelo usuário como marca no cabeçalho e ícone da janela e executável; o ICO contém tamanhos para Windows | Atender à escolha de imagem feita pelo usuário; preservar a origem do arquivo fornecido |
+| D046 | 2026-11-11 | Baseline real de áudio terá schema explícito, IDs de endpoint por papel e estados de volume/mudo por endpoint; será adicionado ao journal de forma compatível com registros anteriores e vinculado à decisão de rescue antes de permitir escrita real | `AudioOutput` não identifica dispositivos, e o Windows pode alterar padrões automaticamente ao mudar a topologia |
 
 ## Pendentes
 

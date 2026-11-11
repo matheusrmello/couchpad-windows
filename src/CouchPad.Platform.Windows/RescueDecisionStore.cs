@@ -49,7 +49,9 @@ public sealed class RescueDecisionStore
     {
         ArgumentNullException.ThrowIfNull(entry);
         if (entry.RestoreDisplay?.Topology is null) throw new InvalidDataException("Recovery baseline is missing.");
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(new { Display = entry.RestoreDisplay, Audio = entry.RestoreAudio });
+        var bytes = entry.RestoreAudioBaseline is null
+            ? JsonSerializer.SerializeToUtf8Bytes(new { Display = entry.RestoreDisplay, Audio = entry.RestoreAudio })
+            : JsonSerializer.SerializeToUtf8Bytes(new { Display = entry.RestoreDisplay, Audio = entry.RestoreAudio, AudioBaseline = entry.RestoreAudioBaseline });
         return Convert.ToHexString(SHA256.HashData(bytes));
     }
 
