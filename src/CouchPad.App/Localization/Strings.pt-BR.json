@@ -70,6 +70,8 @@
   "settings.close_launcher": "Sair do modo de jogo ao restaurar",
   "settings.startup_error": "Não foi possível atualizar a inicialização com o Windows.",
   "tray.open": "Abrir CouchPad",
+  "tray.disable": "Desativar CouchPad",
+  "tray.enable": "Ativar CouchPad",
   "tray.exit": "Sair",
   "settings.start_with_windows": "Iniciar com o Windows",
   "settings.minimize_to_tray": "Minimizar para a bandeja",

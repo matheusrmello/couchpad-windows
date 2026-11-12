@@ -90,14 +90,23 @@ public partial class App : Application
             if (!isSmoke && !isGallery && OperatingSystem.IsWindows() && window.DataContext is MainWindowViewModel viewModel)
             {
                 var open = new NativeMenuItem();
+                var automation = new NativeMenuItem();
                 var exit = new NativeMenuItem();
                 void UpdateTrayText()
                 {
                     open.Header = LocalizationService.Instance["tray.open"];
+                    automation.Header = LocalizationService.Instance[viewModel.AutomationEnabled
+                        ? "tray.disable" : "tray.enable"];
+                    automation.IsEnabled = !viewModel.IsRecoveryUncertain;
                     exit.Header = LocalizationService.Instance["tray.exit"];
                 }
                 UpdateTrayText();
                 LocalizationService.Instance.PropertyChanged += (_, _) => UpdateTrayText();
+                viewModel.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName is nameof(MainWindowViewModel.AutomationEnabled) or nameof(MainWindowViewModel.IsRecoveryUncertain))
+                        UpdateTrayText();
+                };
                 void ShowWindow()
                 {
                     window.Show();
@@ -123,9 +132,15 @@ public partial class App : Application
                     finally { exiting = false; }
                 }
                 open.Click += (_, _) => ShowWindow();
+                automation.Click += (_, _) =>
+                {
+                    if (!viewModel.IsRecoveryUncertain)
+                        viewModel.AutomationEnabled = !viewModel.AutomationEnabled;
+                };
                 exit.Click += (_, _) => ExitSafely();
                 var menu = new NativeMenu();
                 menu.Items.Add(open);
+                menu.Items.Add(automation);
                 menu.Items.Add(exit);
                 using var stream = AssetLoader.Open(new Uri("avares://CouchPad/Assets/couchpad.ico"));
                 _trayIcon = new TrayIcon { Icon = new WindowIcon(stream), ToolTipText = "CouchPad", Menu = menu, IsVisible = true };
