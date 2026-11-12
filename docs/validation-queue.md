@@ -44,8 +44,8 @@
 ### 2. Launcher real
 
 - **Dono:** Codex.
-- **Implementado:** seleção entre Steam e Hydra Big Picture; fechamento apenas de processo iniciado e identificado pelo CouchPad, sem kill forçado. Falha não impede restore. Testes com fakes passaram.
-- **Validar:** cenários reais, um por vez, conforme `docs/launcher-validation.md`; nenhum launcher real foi validado nesta implementação.
+- **Implementado e validado:** Steam e Hydra Big Picture em hardware, restore de tela/áudio e preservação da instância Hydra preexistente. Steam próprio sai do Big Picture e permanece aberto, conforme escolha do usuário; instâncias preexistentes não são fechadas. Sem kill forçado.
+- **Limites:** launcher ausente foi injetado com serviços reais de hardware e rescue; ausência física e detecção de caminho pelo backend não foram exercitadas. Hydra próprio permaneceu com processos ativos após saída visual. Evidências em `docs/launcher-validation.md`.
 - **Evidência:** hardware + captura/estado.
 
 ### 3. P6 — rescue no logon, bandeja e autostart
@@ -81,6 +81,6 @@
 
 ## Próxima ação
 
-A próxima validação é o **watcher de gamepad físico**. As seguintes exigem ação
-física (controle real, launcher, logon) e serão executadas uma por vez, com
-evidência registrada antes de avançar.
+Prosseguir com P6, preservando a pendência independente da reconexão do watcher.
+As validações físicas serão executadas uma por vez, com evidência registrada
+antes de avançar.

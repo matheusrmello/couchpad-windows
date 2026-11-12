@@ -24,7 +24,7 @@ Data: 2026-11-12. Escopo: Steam e Hydra em Big Picture, um cenário por vez.
 | 3 | Steam: desligamento, restauração e saída do Big Picture conforme opção | Concluído |
 | 4 | Hydra Big Picture: ativação, imagem, áudio e journal | Concluído |
 | 5 | Hydra: desligamento e restauração; saída conforme opção | Concluído com ressalva de processo |
-| 6 | Launcher ausente e launcher previamente aberto; restaurar sem afetar instância anterior | Pendente |
+| 6 | Launcher ausente simulado e launcher previamente aberto; restaurar sem fechar instância anterior | Concluído com falha injetada |
 
 Registrar resultado, operador, topologia e áudio antes/depois antes de avançar; parar em tela preta ou falha de recuperação. Ausência de evidência mantém o cenário pendente.
 
@@ -57,3 +57,9 @@ Registrar resultado, operador, topologia e áudio antes/depois antes de avançar
 - Instância Hydra preexistente: ao ligar o controle, a Samsung mostrou Windows, mas o Hydra não veio para primeiro plano (usuário). Probe: somente TV, áudio Samsung e journal `active`. Após desligar, usuário confirmou AOC normal e Hydra ainda aberto; probe confirmou `InternalOnly`, áudio AOC e journal ausente. A preservação da instância passou; a apresentação do Hydra preexistente falhou e precisa de correção e repetição.
 - Ajuste subsequente: após solicitar Big Picture à instância existente, o serviço tenta restaurar e ativar uma janela do executável Hydra; falha é reportada se o Windows não permitir. Build 0/0, 215 testes e smoke aprovados; apresentação do Big Picture precisa de repetição visual porque ativar uma janela não comprova o modo exibido.
 - Repetição com Hydra preexistente: usuário confirmou Big Picture na Samsung e AOC apagado; probe confirmou somente TV, áudio Samsung e journal `active`. Ao desligar o controle, usuário confirmou AOC normal e Hydra ainda em Big Picture. Probe confirmou `InternalOnly`, áudio AOC, journal ausente e preservação dos processos Hydra preexistentes. A apresentação e a preservação passaram; o modo preexistente não é fechado pelo CouchPad, de acordo com a política de não encerrar instâncias anteriores.
+
+### Launcher ausente simulado com hardware real, 12/11/2026
+
+- Operador: usuário presente. `tools/LauncherMissingHardware` injeta `FileNotFoundException` no contrato do launcher, com controle simulado e serviços reais de tela, áudio, journal e rescue; não altera a instalação de Steam ou Hydra. Não é evidência de executável fisicamente ausente nem da detecção do caminho pelo backend Windows.
+- O instrumento confirmou falha de launcher sinalizada e journal `active` enquanto a sessão permanecia ativa. Usuário confirmou Samsung com imagem e AOC apagado.
+- Após solicitar restore, o instrumento confirmou correspondência semântica da topologia inicial, três papéis de áudio, volume/mudo e journal ausente; usuário confirmou AOC normal e Samsung sem área de trabalho. O processo terminou com código 0.
