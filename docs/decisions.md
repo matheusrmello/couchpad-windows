@@ -184,6 +184,12 @@
 - Motivo: manter a automação disponível em segundo plano sem abandonar uma recuperação incerta na saída solicitada.
 - Impacto: smoke e galeria não criam bandeja. A validação automatizada cobre saída inativa e recusa quando a recuperação é incerta; interação visual da bandeja e saída com sessão real ainda precisam de validação.
 
+## D058 — Limite de recuperação automática
+
+- Data: 2026-11-12
+- Decisão: limitar a três tentativas automáticas de recuperação por baseline, registrando cada tentativa antes de escrever no hardware. Após o limite ou registro inválido, preservar o journal e exigir recuperação assistida. Limpar o contador após recuperação confirmada ou ausência de journal.
+- Evidência: testes unitários e processos com backend falso; a quarta tentativa não acionou o backend e preservou o journal. Teste real permanece pendente.
+
 ## Formato de nova decisão
 
 ```md

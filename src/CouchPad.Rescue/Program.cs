@@ -177,10 +177,12 @@ static async Task RecoverAtStartup(string journalPath)
     var lockPath = Path.Combine(Path.GetDirectoryName(journalPath)!, "watchdog-" + identity + ".lock");
     using var watchdogLock = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
     var store = new JsonSessionJournalStore(journalPath);
+    var attempts = new StartupRecoveryAttempts(Path.Combine(Path.GetDirectoryName(journalPath)!, "startup-recovery-attempts.json"));
     await StartupRecovery.RunAsync(store, async (entry, cancellationToken) =>
     {
         var id = Guid.NewGuid();
         var hash = RescueDecisionStore.ComputeBaselineSha256(entry);
+        attempts.Begin(hash);
         var path = Path.Combine(Path.GetDirectoryName(journalPath)!, "rescue-decisions", id.ToString("N") + ".json");
         var decisions = new RescueDecisionStore(path);
         await decisions.InitializeAsync(id, hash, cancellationToken);
@@ -190,6 +192,7 @@ static async Task RecoverAtStartup(string journalPath)
         if (!await decisions.TryTransitionAsync(id, hash, RescueDecisionState.RecoveryRequested, RescueDecisionState.Recovered, cancellationToken))
             throw new InvalidDataException("Recovery completion could not be recorded.");
     });
+    attempts.Clear();
 }
 
 static async Task Recover(RescueDecisionStore decisions, Guid id, string baselineHash, string decisionPath, SessionJournalEntry journal)

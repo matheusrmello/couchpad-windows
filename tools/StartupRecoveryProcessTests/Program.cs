@@ -85,6 +85,19 @@ foreach (var state in new[] { SessionJournalEntry.PendingState, SessionJournalEn
     Console.WriteLine("injected display failure: audio blocked, journal preserved and retry succeeded");
 }
 {
+    var dir = Path.Combine(root, "retry-limit");
+    Directory.CreateDirectory(dir);
+    var path = Path.Combine(dir, "session.json");
+    new JsonSessionJournalStore(path).Save(Entry(SessionJournalEntry.ActiveState));
+    for (var i = 0; i < 3; i++)
+        if (await Run(child, path, Path.Combine(dir, "failure-" + i), true) == 0 || !File.Exists(path))
+            throw new InvalidOperationException("Injected failure did not preserve journal.");
+    var marker = Path.Combine(dir, "blocked");
+    if (await Run(child, path, marker, false) == 0 || !File.Exists(path) || File.Exists(marker))
+        throw new InvalidOperationException("Retry limit failed to block recovery.");
+    Console.WriteLine("retry limit: fourth automatic attempt blocked, journal preserved");
+}
+{
     var dir = Path.Combine(root, "interrupted");
     Directory.CreateDirectory(dir);
     var path = Path.Combine(dir, "session.json");
