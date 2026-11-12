@@ -30,6 +30,7 @@ public sealed class WindowsLauncherServiceTests
         Assert.Equal(1, backend.Starts);
         Assert.False(backend.Tracked);
         Assert.Equal(0, backend.Closes);
+        Assert.Equal(kind == LauncherKind.Hydra ? 1 : 0, backend.Activations);
     }
 
     [Fact]
@@ -74,12 +75,13 @@ public sealed class WindowsLauncherServiceTests
     private sealed class FakeBackend : IWindowsLauncherBackend
     {
         public bool Existing, Tracked, Missing;
-        public int Starts, Closes;
+        public int Starts, Closes, Activations;
         public ManualResetEventSlim? StartEntered, ResumeStart;
         public LauncherSpec Resolve(LauncherKind kind) => Missing ? throw new FileNotFoundException() : new("C:\\launcher.exe", WindowsLauncherBackend.ArgumentFor(kind), kind);
         public bool IsRunning(string executable) => Existing;
         public OwnedLauncher? Start(LauncherSpec spec, bool trackOwnership) { Starts++; Tracked = trackOwnership; StartEntered?.Set(); ResumeStart?.Wait(); return trackOwnership ? new(42, DateTime.UnixEpoch, spec.Executable, spec.Kind) : null; }
         public bool IsAlive(OwnedLauncher process) => true;
+        public Task ActivateExistingAsync(LauncherSpec spec, CancellationToken cancellationToken) { Activations++; return Task.CompletedTask; }
         public Task CloseAsync(OwnedLauncher process, CancellationToken cancellationToken) { Closes++; return Task.CompletedTask; }
     }
 }

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using CouchPad.Core.Launchers;
 using Microsoft.Win32;
 
@@ -29,6 +30,8 @@ public sealed class WindowsLauncherService : ILauncherService
                 var preexisting = _backend.IsRunning(spec.Executable);
                 cancellationToken.ThrowIfCancellationRequested();
                 _owned = _backend.Start(spec, !preexisting);
+                if (preexisting && spec.Kind == LauncherKind.Hydra)
+                    await _backend.ActivateExistingAsync(spec, cancellationToken).ConfigureAwait(false);
                 if (cancellationToken.IsCancellationRequested && _owned is not null)
                 {
                     try
@@ -67,6 +70,7 @@ internal interface IWindowsLauncherBackend
     bool IsRunning(string executable);
     OwnedLauncher? Start(LauncherSpec spec, bool trackOwnership);
     bool IsAlive(OwnedLauncher process);
+    Task ActivateExistingAsync(LauncherSpec spec, CancellationToken cancellationToken);
     Task CloseAsync(OwnedLauncher process, CancellationToken cancellationToken);
 }
 
@@ -121,6 +125,45 @@ internal sealed class WindowsLauncherBackend : IWindowsLauncherBackend
         catch (ArgumentException) { return false; }
         catch (InvalidOperationException) { return false; }
     }
+
+    public async Task ActivateExistingAsync(LauncherSpec spec, CancellationToken cancellationToken)
+    {
+        // The Hydra single-instance handler opens its own window asynchronously.
+        // Do not close or claim ownership of any existing instance.
+        await Task.Delay(1500, cancellationToken).ConfigureAwait(false);
+        for (var attempt = 0; attempt < 30; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(spec.Executable));
+            try
+            {
+                foreach (var process in processes)
+                {
+                    try
+                    {
+                        if (!string.Equals(process.MainModule?.FileName, spec.Executable, StringComparison.OrdinalIgnoreCase)) continue;
+                        var window = process.MainWindowHandle;
+                        if (window == IntPtr.Zero) continue;
+                        ShowWindowAsync(window, 9); // SW_RESTORE
+                        if (SetForegroundWindow(window)) return;
+                    }
+                    catch (InvalidOperationException) { }
+                    catch (System.ComponentModel.Win32Exception) { }
+                }
+            }
+            finally { foreach (var process in processes) process.Dispose(); }
+            await Task.Delay(200, cancellationToken).ConfigureAwait(false);
+        }
+        throw new InvalidOperationException("Could not bring the existing Hydra window to the foreground.");
+    }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ShowWindowAsync(IntPtr hWnd, int command);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
 
     public async Task CloseAsync(OwnedLauncher process, CancellationToken cancellationToken)
     {
