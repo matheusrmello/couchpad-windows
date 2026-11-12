@@ -273,6 +273,14 @@
                               AutomationProperties.Name="{loc:Tr settings.start_with_windows}" />
               </Grid>
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <TextBlock Text="{loc:Tr settings.real_gamepad}" VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="1"
+                              IsChecked="{Binding UseWindowsGamepad}"
+                              AutomationProperties.Name="{loc:Tr settings.real_gamepad}"
+                              AutomationProperties.HelpText="{loc:Tr settings.real_gamepad_help}" />
+              </Grid>
+              <TextBlock Classes="hint" Text="{loc:Tr settings.real_gamepad_help}" />
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <TextBlock Text="{loc:Tr settings.minimize_to_tray}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"
                               IsChecked="{Binding MinimizeToTray}"

@@ -24,7 +24,8 @@
 
 - **Dono:** Codex.
 - **Implementação:** `WindowsGamepadWatcher` via XInput, polling dos quatro slots; ativação opt-in com `--windows-gamepad`; a simulação segue padrão. Build 0/0, smoke OK e 197 testes aprovados. Dispositivos HID sem XInput estão fora deste slice (D050).
-- **Status:** aguardando validação física; não aprovado ainda.
+- **Status:** validação física interrompida; não aprovado. Em 12/11/2026, a UI reconheceu `XInput gamepad`. Após o usuário informar a desconexão, a observação foi interrompida; na consulta seguinte o display estava `InternalOnly` (AOC ativo, TV inativa) e os três papéis de áudio apontavam ao AOC, mas o journal ainda estava `active` com baseline AOC. Não há evidência de limpeza nem de que o watcher causou a restauração. Preservar o journal e investigar antes de qualquer nova mudança física.
+- **Confirmação visual:** usuário informou AOC normal e Samsung sem imagem; controle mantido desconectado.
 - **Validar:** conectar/desconectar controle real; contagem configurável;
   cancelar atraso; ativar/desativar; ausência de controle; reconexão.
 - **Evidência:** hardware + logs + estado/journal.

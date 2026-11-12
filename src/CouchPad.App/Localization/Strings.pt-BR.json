@@ -76,6 +76,8 @@
   "settings.allow_display_writes_help": "Avançado: habilita CCD e o watchdog de recuperação. Reinicie após alterar; use apenas com a TV conectada.",
   "settings.activation_delay": "Atraso ao ativar",
   "settings.deactivation_delay": "Atraso ao desativar",
+  "settings.real_gamepad": "Usar controle conectado ao Windows",
+  "settings.real_gamepad_help": "Usa XInput para detectar controles. Reinicie o CouchPad após alterar.",
   "settings.help": "Aplicado apenas quando a automação estiver ativa.",
 
   "delay.immediate": "Imediato",

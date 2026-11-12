@@ -133,6 +133,14 @@
 - Impacto: o nome reportado é genérico (“XInput gamepad”) e o ID identifica o slot XInput, não um serial físico. O modo real só inicia com o argumento explícito; smoke/galeria continuam simulados. A validação de hardware ainda é necessária para conexão, desconexão, atraso, cancelamento, ausência e reconexão.
 - Evidência: `WindowsGamepadWatcher` e testes puros de seleção de slot; build 0/0, smoke OK e 197 testes aprovados em 11/11/2026.
 
+## D051 — Persistir opt-in para watcher físico
+
+- Data: 2026-11-12
+- Decisão: acrescentar `UseWindowsGamepad`, desligado por padrão, às configurações e UI. O App usa XInput quando a opção estiver ligada; é necessário reiniciar para trocar a implementação ativa. `--windows-gamepad` continua como override explícito de diagnóstico.
+- Motivo: permitir habilitar o watcher real sem terminal e sem mudar o padrão simulado, garantindo um caminho reproduzível para o teste assistido de hardware.
+- Impacto: altera o modelo de preferências do Core e acrescenta um toggle localizado no App. Ativar o watcher não liga a automação nem habilita escrita de display/áudio; esses opt-ins continuam independentes.
+- Evidência: decisão tomada durante preparação da validação física de 12/11/2026.
+
 ## Formato de nova decisão
 
 ```md

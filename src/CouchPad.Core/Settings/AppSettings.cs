@@ -14,6 +14,8 @@ public sealed record AppSettings
 
     public bool StartWithWindows { get; init; }
 
+    public bool UseWindowsGamepad { get; init; }
+
     public bool MinimizeToTray { get; init; } = true;
 
     public bool CloseLauncherOnActivate { get; init; } = true;

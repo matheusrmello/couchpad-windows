@@ -46,6 +46,9 @@ public partial class MainWindowViewModel : ObservableObject
     private bool _startWithWindows;
 
     [ObservableProperty]
+    private bool _useWindowsGamepad;
+
+    [ObservableProperty]
     private bool _minimizeToTray = true;
 
     [ObservableProperty]
@@ -413,6 +416,7 @@ public partial class MainWindowViewModel : ObservableObject
             AutomationEnabled = false;
             CloseLauncherOnActivate = true;
             StartWithWindows = false;
+            UseWindowsGamepad = false;
             MinimizeToTray = true;
             ActivationDelayIndex = 2;
             DeactivationDelayIndex = 0;
@@ -455,6 +459,8 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     partial void OnStartWithWindowsChanged(bool value) => PersistSettings();
+
+    partial void OnUseWindowsGamepadChanged(bool value) => PersistSettings();
 
     partial void OnMinimizeToTrayChanged(bool value) => PersistSettings();
 
@@ -543,6 +549,7 @@ public partial class MainWindowViewModel : ObservableObject
             AutomationEnabled = settings.DisplayModeIndex is 0 or 1 && settings.AutomationEnabled;
             CloseLauncherOnActivate = settings.CloseLauncherOnActivate;
             StartWithWindows = settings.StartWithWindows;
+            UseWindowsGamepad = settings.UseWindowsGamepad;
             MinimizeToTray = settings.MinimizeToTray;
             ActivationDelayIndex = Math.Clamp(
                 settings.ActivationDelayIndex, 0, DelayOptions.Values.Count - 1);
@@ -616,6 +623,7 @@ public partial class MainWindowViewModel : ObservableObject
                 AutomationEnabled = AutomationEnabled,
                 CloseLauncherOnActivate = CloseLauncherOnActivate,
                 StartWithWindows = StartWithWindows,
+                UseWindowsGamepad = UseWindowsGamepad,
                 MinimizeToTray = MinimizeToTray,
                 ActivationDelayIndex = ActivationDelayIndex,
                 DeactivationDelayIndex = DeactivationDelayIndex,

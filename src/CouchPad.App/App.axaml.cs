@@ -29,8 +29,6 @@ public partial class App : Application
         {
             var isSmoke = desktop.Args?.Contains("--smoke", StringComparer.Ordinal) == true;
             var isGallery = desktop.Args?.Contains("--gallery", StringComparer.Ordinal) == true;
-            var useWindowsGamepad = !isSmoke && !isGallery && OperatingSystem.IsWindows() &&
-                desktop.Args?.Contains("--windows-gamepad", StringComparer.Ordinal) == true;
             var settingsPath = isSmoke
                 ? Path.Combine(Path.GetTempPath(), "couchpad-smoke", "settings.json")
                 : AppPaths.SettingsFile();
@@ -41,6 +39,8 @@ public partial class App : Application
             var settingsStore = new JsonAppSettingsStore(settingsPath);
             LocalizationService.Instance.Initialize(settingsStore);
             var appSettings = settingsStore.Load();
+            var useWindowsGamepad = !isSmoke && !isGallery && OperatingSystem.IsWindows() &&
+                (appSettings.UseWindowsGamepad || desktop.Args?.Contains("--windows-gamepad", StringComparer.Ordinal) == true);
 
             var transaction = new RescueTransactionContext(Path.GetDirectoryName(Path.GetFullPath(journalPath))!);
             var (displayService, rescueGuard) = CreateWindowsDisplayServices(

@@ -6,6 +6,8 @@
 
 **Atualização do watcher, 11/11/2026:** implementado `WindowsGamepadWatcher` read-only via XInput nos quatro slots, composto apenas com `--windows-gamepad`; simulação continua padrão, inclusive smoke/galeria. D050 documenta a escolha e limita suporte a dispositivos que exponham XInput. Build 0/0, 197 testes (14 App + 183 Core) e smoke OK. Testes rodaram fora do sandbox após falha de conexão do testhost no ambiente restrito. A matriz física do watcher ainda está pendente; launcher não iniciado.
 
+**Watcher, 12/11/2026:** D051 acrescenta opt-in persistido e localizado para XInput, aplicado após reiniciar; build 0/0, 197 testes e smoke passaram. A UI reconheceu `XInput gamepad`. Após desconexão informada pelo usuário e interrupção da observação, probe somente leitura identificou AOC ativo e TV inativa; áudio padrão nos três papéis estava no AOC, mas journal permanecia `active` desde 07:32 com baseline AOC. Não foi comprovado que o watcher restaurou nem que o journal foi limpo. Preservar journal e investigar antes de novos testes físicos; ver `docs/validation-queue.md`.
+
 > Documento único de contexto para iniciar o trabalho no OpenCode (DeepSeek)
 > e continuar no Codex sem perder decisões, evidências ou pendências.
 >

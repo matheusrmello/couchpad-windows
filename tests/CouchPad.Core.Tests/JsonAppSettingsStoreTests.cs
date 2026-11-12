@@ -20,6 +20,7 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
         Assert.Null(settings.Language);
         Assert.False(settings.AutomationEnabled);
         Assert.False(settings.StartWithWindows);
+        Assert.False(settings.UseWindowsGamepad);
         Assert.True(settings.MinimizeToTray);
         Assert.True(settings.CloseLauncherOnActivate);
         Assert.True(settings.SteamEnabled);
@@ -50,6 +51,7 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
             Language = "pt-BR",
             AutomationEnabled = true,
             StartWithWindows = true,
+            UseWindowsGamepad = true,
             MinimizeToTray = false,
             CloseLauncherOnActivate = false,
             SteamEnabled = false,

@@ -76,6 +76,8 @@
   "settings.allow_display_writes_help": "Advanced: enables CCD and the recovery watchdog. Restart after changing; use only with the TV connected.",
   "settings.activation_delay": "Activation delay",
   "settings.deactivation_delay": "Deactivation delay",
+  "settings.real_gamepad": "Use a Windows-connected controller",
+  "settings.real_gamepad_help": "Uses XInput to detect controllers. Restart CouchPad after changing this option.",
   "settings.help": "Applied only when automation is on.",
 
   "delay.immediate": "Immediate",
