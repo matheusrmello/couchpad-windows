@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
+using Avalonia.Threading;
 using CouchPad.App.Localization;
 using CouchPad.App.ViewModels;
 using CouchPad.App.Views;
@@ -132,6 +133,8 @@ public partial class App : Application
                     finally { exiting = false; }
                 }
                 open.Click += (_, _) => ShowWindow();
+                Program.Instance?.Listen(async token =>
+                    await Dispatcher.UIThread.InvokeAsync(ShowWindow, DispatcherPriority.Normal, token));
                 automation.Click += (_, _) =>
                 {
                     if (!viewModel.IsRecoveryUncertain)

@@ -44,3 +44,8 @@
 - Com a proteção existente ativa, iniciar uma sessão real e registrar journal `active`, topologia e áudio; confirmar imagem com o operador. Encerrar somente o processo de teste identificado e acionar o rescue de produção imediatamente.
 - Verificar retorno semântico da topologia, três papéis de áudio, volume/mudo e ausência do journal; obter confirmação visual do operador. Parar imediatamente se a imagem não voltar, a recuperação falhar ou o resultado for incerto.
 - A prova de reinício/logon e a prova de `pending` são cenários separados. Não alterar o conteúdo do journal para fabricá-los nem declarar logon validado pelo comando manual.
+# Instância única do App
+
+- Build Debug sem avisos ou erros, 253 testes e smoke aprovados.
+- `RescueProcessTests.exe --test-app-instance <diretório isolado>` verificou espera pelo listener, encaminhamento com ACK entre processos e transferência da posse.
+- O App real foi minimizado para a bandeja. Uma segunda abertura retornou código 0 e tornou visível o mesmo HWND, em estado normal. O journal permaneceu ausente. A automação e as escritas foram desligadas durante a prova, e as preferências originais foram restauradas byte a byte.

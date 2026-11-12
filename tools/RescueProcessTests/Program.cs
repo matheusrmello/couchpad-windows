@@ -9,6 +9,48 @@ using System.Text.Json;
 // Test-only process: no dependency on, or invocation of, display APIs.
 if (!OperatingSystem.IsWindows()) return 2;
 var executable = Environment.ProcessPath ?? throw new InvalidOperationException("Missing apphost path.");
+if (args is ["--app-instance-owner", var profile])
+{
+    using var owner = await WindowsAppInstance.AcquireOrForwardAsync(profile);
+    if (owner is null) return 1;
+    File.WriteAllText(Path.Combine(profile, "ready"), "");
+    using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    while (!File.Exists(Path.Combine(profile, "listen"))) await Task.Delay(25, deadline.Token);
+    owner.Listen(token => File.WriteAllTextAsync(Path.Combine(profile, "shown"), "", token));
+    while (!File.Exists(Path.Combine(profile, "exit"))) await Task.Delay(25, deadline.Token);
+    return 0;
+}
+if (args is ["--test-app-instance", var testRoot])
+{
+    var profileRoot = Path.Combine(testRoot, Guid.NewGuid().ToString("N"));
+    var info = new ProcessStartInfo(executable) { UseShellExecute = false };
+    info.ArgumentList.Add("--app-instance-owner");
+    info.ArgumentList.Add(profileRoot);
+    using var child = Process.Start(info) ?? throw new InvalidOperationException("App instance test failed to start.");
+    using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+    try
+    {
+        while (!File.Exists(Path.Combine(profileRoot, "ready"))) await Task.Delay(25, deadline.Token);
+        var forwarded = WindowsAppInstance.AcquireOrForwardAsync(profileRoot, deadline.Token);
+        await Task.Delay(150, deadline.Token);
+        if (forwarded.IsCompleted) throw new InvalidOperationException("Secondary instance did not wait for the listener.");
+        File.WriteAllText(Path.Combine(profileRoot, "listen"), "");
+        using var secondary = await forwarded;
+        if (secondary is not null || !File.Exists(Path.Combine(profileRoot, "shown")))
+            throw new InvalidOperationException("Secondary instance did not forward window activation.");
+        File.WriteAllText(Path.Combine(profileRoot, "exit"), "");
+        await child.WaitForExitAsync(deadline.Token);
+        if (child.ExitCode != 0) throw new InvalidOperationException("Primary instance did not exit cleanly.");
+        using var successor = await WindowsAppInstance.AcquireOrForwardAsync(profileRoot, deadline.Token);
+        if (successor is null) throw new InvalidOperationException("Ownership was not released.");
+        Console.WriteLine("APP INSTANCE: delayed listener, cross-process forwarding with ACK, and ownership transfer passed.");
+        return 0;
+    }
+    finally
+    {
+        if (!child.HasExited) child.Kill();
+    }
+}
 var childExecutable = Environment.GetEnvironmentVariable("COUCHPAD_TEST_CHILD") ?? executable;
 var marker = Environment.GetEnvironmentVariable("COUCHPAD_TEST_MARKER") ?? throw new InvalidOperationException("Missing isolated test marker.");
 if (args.Length == 1 && args[0] == "--audio-victim")

@@ -197,6 +197,11 @@
 - Motivo: permitir testes de configuração e da recusa de conflitos antes de habilitar recuperação automática no logon.
 - Impacto: o backend COM e a definição ainda não estão integrados à instalação nem validados no Agendador real. Nenhuma tarefa foi registrada; coordenação com autostart e recuperação em hardware continuam pendentes. Referência: [esquema do Agendador do Windows](https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-schema).
 
+## D060 — Instância única do App Windows
+
+- O App obtém um lock de arquivo por perfil antes de inicializar Avalonia. Uma segunda abertura solicita apenas a exibição da janela por pipe do usuário e aguarda confirmação após a ação na UI.
+- A espera é limitada e permite assumir a posse se o primeiro processo sair durante a inicialização. Smoke e galeria têm execução separada. O lock de display continua exclusivo para coordenar o App com o rescue.
+
 ## Formato de nova decisão
 
 ```md

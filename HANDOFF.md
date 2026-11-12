@@ -699,7 +699,7 @@ separados.
 | P3 simulação | DeepSeek | **aceito** | tag `v0.4.0-sim`; contrato 0.4.2 no HEAD; build 0 avisos/0 erros; 66 testes; fluxo simulado idle→pending→active→restored; journal e persistência; aceite do usuário em 09/11/2026; ver seção 22 |
 | P4 display | Codex | **aceito com limitação** | TvOnly/Extend, rollback, falha/cancelamento, desconexão e kill após retorno do CCD; morte dentro de `SetDisplayConfig` não comprovada; aceite do usuário em 11/11/2026; matriz em `docs/p4-hardware-matrix.md` |
 | P5 áudio/HDR | Codex | **aceito** | Áudio validado em hardware com controle simulado, restore, falha, cancelamento, endpoint ausente e rescue; HDR adiado; aceite do usuário em 11/11/2026; ver `docs/p5-audio-hdr.md` |
-| P6 rescue/tray | Codex | pendente | Depende de P4/P5 |
+| P6 rescue/tray | Codex | em andamento | Instância única validada no Windows (D060). Ver matriz P6. |
 | P7a docs/a11y | DeepSeek | pendente | Depende de P6 |
 | P7b corrections/release | Codex | pendente | Depende de P7a |
 
