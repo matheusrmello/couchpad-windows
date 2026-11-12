@@ -55,3 +55,9 @@
 - Build Debug 0/0, 253 testes e smoke aprovados.
 - Dois processos rescue com backend falso disputaram o lock durante a restauração de áudio. No sucesso, o iniciador aguardou a limpeza do journal antes de lançar, sem segunda restauração. Na falha, aguardou, preservou o journal e bloqueou o lançamento.
 - O executável de produção `--startup-and-launch` retornou 0 e abriu o App real com journal ausente e automação desativada. O App também recebeu uma segunda abertura. Logon do Windows com journal real continua na fila de hardware.
+
+## Recuperação assistida
+
+- Build Debug 0/0, 256 testes (229 Core e 27 App) e smoke aprovados. Os testes do App cobrem a disponibilidade da ação, o encaminhamento do pedido e a reabertura sem reativar a automação.
+- Em processos com backend falso, a quarta tentativa automática foi bloqueada. A tentativa assistida esperou a liberação do lock, reportou falha de áudio e preservou o journal. Uma nova tentativa explícita restaurou tela e áudio e removeu o journal e o contador.
+- O executável de produção `--assisted-recovery` retornou 0 com journal ausente e reabriu o App real com `--recovery-succeeded`. As preferências usadas na validação foram restauradas. A restauração assistida de um baseline real e a interação física com o botão na janela permanecem sem evidência.

@@ -9,6 +9,35 @@ namespace CouchPad.App.Tests;
 
 public sealed class MainWindowViewModelDisplayTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Assisted_recovery_requires_a_blocked_session_and_available_rescue(bool available)
+    {
+        var store = new FakeSettingsStore();
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new UnreadableJournal(),
+            canStartRecovery: available, recoveryFailed: true);
+        var requests = 0;
+        vm.RecoveryRequested += (_, _) => requests++;
+        Assert.Equal(available, vm.CanRetryRecovery);
+        Assert.True(vm.RecoveryFailed);
+        vm.RetryRecoveryCommand.Execute(null);
+        Assert.Equal(available ? 1 : 0, requests);
+    }
+
+    [Fact]
+    public void Reopening_after_recovery_starts_with_automation_off()
+    {
+        var store = new FakeSettingsStore { Current = new AppSettings { AutomationEnabled = true } };
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            suspendAutomation: true, canStartRecovery: true);
+        Assert.False(vm.AutomationEnabled);
+        Assert.False(vm.CanRetryRecovery);
+        Assert.True(store.Current.AutomationEnabled);
+    }
+
     [Fact]
     public async Task Exit_from_idle_is_allowed_without_changing_saved_automation_preference()
     {

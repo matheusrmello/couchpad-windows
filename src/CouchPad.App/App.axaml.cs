@@ -83,7 +83,11 @@ public partial class App : Application
                         showCountdown: _countdownNotifications is { } notifications ? notifications.Show : null,
                         dismissCountdown: _countdownNotifications is { } notificationsToDismiss ? notificationsToDismiss.Cancel : null,
                         launcherService: displayService is WindowsDisplayService && appSettings.AllowDisplayWrites
-                            ? new WindowsLauncherService() : null),
+                            ? new WindowsLauncherService() : null,
+                        suspendAutomation: desktop.Args?.Any(arg => arg is "--recovery-succeeded" or "--recovery-failed") == true,
+                        canStartRecovery: !isSmoke && !isGallery && OperatingSystem.IsWindows() &&
+                            File.Exists(Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe")),
+                        recoveryFailed: desktop.Args?.Contains("--recovery-failed") == true),
                 };
 
             desktop.MainWindow = window;
@@ -116,6 +120,22 @@ public partial class App : Application
                 }
                 var allowExit = false;
                 var exiting = false;
+                viewModel.RecoveryRequested += (_, _) =>
+                {
+                    if (exiting) return;
+                    try
+                    {
+                        WindowsAssistedRecovery.Start(Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"));
+                    }
+                    catch (Exception ex) when (ex is IOException or InvalidOperationException or System.ComponentModel.Win32Exception or UnauthorizedAccessException)
+                    {
+                        viewModel.RecoveryFailed = true;
+                        return;
+                    }
+                    exiting = true;
+                    allowExit = true;
+                    desktop.Shutdown();
+                };
                 async void ExitSafely()
                 {
                     if (exiting) return;

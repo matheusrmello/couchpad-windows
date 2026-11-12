@@ -76,6 +76,14 @@
                        IsVisible="{Binding IsRecoveryUncertain}"
                        AutomationProperties.LiveSetting="Polite"
                        TextWrapping="Wrap" />
+            <Button Content="{loc:Tr recovery.retry}"
+                    IsVisible="{Binding CanRetryRecovery}"
+                    Command="{Binding RetryRecoveryCommand}" />
+            <TextBlock Classes="hint"
+                       Text="{loc:Tr recovery.failed}"
+                       IsVisible="{Binding RecoveryFailed}"
+                       AutomationProperties.LiveSetting="Polite"
+                       TextWrapping="Wrap" />
 
             <StackPanel Spacing="6">
               <controls:StatusRow Label="{loc:Tr automation.gamepad}"

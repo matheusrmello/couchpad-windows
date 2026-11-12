@@ -34,6 +34,9 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly Action? _revokeAudioWrites;
     private readonly Func<bool>? _readStartup;
     private readonly Action<bool>? _configureStartup;
+    private readonly bool _canStartRecovery;
+    [ObservableProperty]
+    private bool _recoveryFailed;
     private bool _revertingStartup;
     [ObservableProperty]
     private bool _startupError;
@@ -119,7 +122,10 @@ public partial class MainWindowViewModel : ObservableObject
         Action? dismissCountdown = null,
         ILauncherService? launcherService = null,
         Func<bool>? readStartup = null,
-        Action<bool>? configureStartup = null)
+        Action<bool>? configureStartup = null,
+        bool suspendAutomation = false,
+        bool canStartRecovery = false,
+        bool recoveryFailed = false)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
@@ -129,6 +135,8 @@ public partial class MainWindowViewModel : ObservableObject
         _revokeAudioWrites = revokeAudioWrites;
         _readStartup = readStartup;
         _configureStartup = configureStartup;
+        _canStartRecovery = canStartRecovery;
+        RecoveryFailed = recoveryFailed;
         _countdownNotifications = new CountdownNotificationPresenter(showCountdown, dismissCountdown);
         _displayWriteControl = displayService as IDisplayWriteControl;
         _localization.PropertyChanged += OnLocalizationChanged;
@@ -146,7 +154,7 @@ public partial class MainWindowViewModel : ObservableObject
         _coordinator.StateChanged += OnAutomationStateChanged;
         _gamepad.ConnectionChanged += OnGamepadConnectionChanged;
 
-        LoadSettings();
+        LoadSettings(suspendAutomation);
         RefreshDisplayTargets();
         RefreshAudioEndpoints();
         _ = InitializeAutomationAsync();
@@ -154,6 +162,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     /// <summary>A view abre o seletor de pastas e devolve o caminho escolhido.</summary>
     public event EventHandler? FolderPickerRequested;
+    public event EventHandler? RecoveryRequested;
 
     public bool IsPortuguese => _localization.Language == AppLanguage.PtBr;
 
@@ -188,6 +197,13 @@ public partial class MainWindowViewModel : ObservableObject
         : _localization[StatusKey];
 
     public bool IsRecoveryUncertain => _coordinator.IsRecoveryUncertain;
+    public bool CanRetryRecovery => _canStartRecovery && IsRecoveryUncertain;
+
+    [RelayCommand]
+    private void RetryRecovery()
+    {
+        if (CanRetryRecovery) RecoveryRequested?.Invoke(this, EventArgs.Empty);
+    }
 
     public bool HasLauncherError => _coordinator.LauncherFailed;
 
@@ -592,14 +608,14 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(DisplayRefreshState));
     }
 
-    private void LoadSettings()
+    private void LoadSettings(bool suspendAutomation)
     {
         var settings = _settings.Load();
 
         _isLoadingSettings = true;
         try
         {
-            AutomationEnabled = settings.DisplayModeIndex is 0 or 1 && settings.AutomationEnabled;
+            AutomationEnabled = !suspendAutomation && settings.DisplayModeIndex is 0 or 1 && settings.AutomationEnabled;
             CloseLauncherOnActivate = settings.CloseLauncherOnActivate;
             try { StartWithWindows = _readStartup?.Invoke() ?? false; }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.Security.SecurityException)
@@ -780,6 +796,7 @@ public partial class MainWindowViewModel : ObservableObject
             OnPropertyChanged(nameof(DisplaySummary));
             OnPropertyChanged(nameof(AudioSummary));
             OnPropertyChanged(nameof(IsRecoveryUncertain));
+            OnPropertyChanged(nameof(CanRetryRecovery));
             OnPropertyChanged(nameof(HasLauncherError));
             OnPropertyChanged(nameof(RecoveryHelpText));
         }

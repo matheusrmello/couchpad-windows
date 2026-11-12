@@ -8,6 +8,12 @@ using CouchPad.Core.Storage;
 using CouchPad.Platform.Windows;
 
 #if RESCUE_TEST_BACKEND
+if (args is ["--test-assisted-recovery", var assistedJournal, var resultMarker] && OperatingSystem.IsWindows())
+{
+    var recovered = await RunAssistedRecovery(assistedJournal);
+    File.WriteAllText(resultMarker, recovered ? "SUCCESS" : "FAILED");
+    return recovered ? 0 : 1;
+}
 if (args is ["--test-startup-and-launch", var testJournal, var launchMarker] && OperatingSystem.IsWindows())
 {
     try
@@ -24,6 +30,13 @@ if (args.Length == 2 && args[0] == "--test-startup-recovery" && OperatingSystem.
     catch { return 1; }
 }
 #endif
+if (args is ["--assisted-recovery"] && OperatingSystem.IsWindows())
+{
+    var recovered = await RunAssistedRecovery(AppPaths.SessionJournalFile());
+    try { LaunchApp(recovered ? "--recovery-succeeded" : "--recovery-failed"); }
+    catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), "startup", ex); return 1; }
+    return recovered ? 0 : 1;
+}
 if (args.Length == 1 && args[0] == "--startup-recovery" && OperatingSystem.IsWindows())
 {
     try { await RecoverAtStartup(AppPaths.SessionJournalFile()); return 0; }
@@ -33,13 +46,8 @@ if (args.Length == 1 && args[0] == "--startup-and-launch" && OperatingSystem.IsW
 {
     try
     {
-        await StartupLaunchSequence.RunAsync(() => RecoverAtStartup(AppPaths.SessionJournalFile(), waitForOwner: true), () =>
-        {
-            var application = Path.Combine(AppContext.BaseDirectory, "CouchPad.exe");
-            if (!File.Exists(application)) throw new FileNotFoundException("CouchPad app is unavailable.");
-            using var started = Process.Start(new ProcessStartInfo(application) { UseShellExecute = false, WorkingDirectory = AppContext.BaseDirectory })
-                ?? throw new InvalidOperationException("CouchPad could not be started.");
-        });
+        await StartupLaunchSequence.RunAsync(() => RecoverAtStartup(AppPaths.SessionJournalFile(), waitForOwner: true),
+            () => LaunchApp());
         return 0;
     }
     catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), "startup", ex); return 1; }
@@ -179,7 +187,33 @@ using (instanceLock)
     catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), stage, ex); return 1; }
 }
 
-static async Task RecoverAtStartup(string journalPath, bool waitForOwner = false)
+static void LaunchApp(string? argument = null)
+{
+    var application = Path.Combine(AppContext.BaseDirectory, "CouchPad.exe");
+    var info = new ProcessStartInfo(application) { UseShellExecute = false, WorkingDirectory = AppContext.BaseDirectory };
+    if (argument is not null) info.ArgumentList.Add(argument);
+    using var started = Process.Start(info) ?? throw new InvalidOperationException("CouchPad could not be started.");
+}
+
+static async Task<bool> RunAssistedRecovery(string journalPath)
+{
+    try
+    {
+        await RecoverAtStartup(journalPath, waitForOwner: true, assisted: true);
+        return true;
+    }
+    catch (Exception ex)
+    {
+#if !RESCUE_TEST_BACKEND
+        RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), "restore", ex);
+#else
+        _ = ex;
+#endif
+        return false;
+    }
+}
+
+static async Task RecoverAtStartup(string journalPath, bool waitForOwner = false, bool assisted = false)
 {
     journalPath = Path.GetFullPath(journalPath);
     using var ownerTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
@@ -188,7 +222,7 @@ static async Task RecoverAtStartup(string journalPath, bool waitForOwner = false
         : (DisplaySessionOwner.Acquire(journalPath), false);
     using var sessionOwner = owner;
     var store = new JsonSessionJournalStore(journalPath);
-    if (waited && store.Inspect().Status != SessionJournalStatus.Missing)
+    if (waited && !assisted && store.Inspect().Status != SessionJournalStatus.Missing)
         throw new InvalidOperationException("The previous session owner did not clear the recovery journal.");
     var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Environment.UserDomainName + "\\" + Environment.UserName + "|" + journalPath.ToUpperInvariant())));
     var lockPath = Path.Combine(Path.GetDirectoryName(journalPath)!, "watchdog-" + identity + ".lock");
@@ -198,7 +232,7 @@ static async Task RecoverAtStartup(string journalPath, bool waitForOwner = false
     {
         var id = Guid.NewGuid();
         var hash = RescueDecisionStore.ComputeBaselineSha256(entry);
-        attempts.Begin(hash);
+        if (!assisted) attempts.Begin(hash);
         var path = Path.Combine(Path.GetDirectoryName(journalPath)!, "rescue-decisions", id.ToString("N") + ".json");
         var decisions = new RescueDecisionStore(path);
         await decisions.InitializeAsync(id, hash, cancellationToken);

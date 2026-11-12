@@ -51,8 +51,9 @@
 ### 3. P6 — rescue no logon, bandeja e autostart
 
 - **Dono:** Codex.
+- **Validação sem TV concluída:** instância única na janela real, coordenação de startup com rescue concorrente e nova tentativa assistida com backend falso. O iniciador de produção e o rescue assistido abriram o App com journal ausente. Evidências em `docs/p6-recovery-matrix.md`.
 - **Validar:** journal pendente após reinício/logon; restore automático;
-  bandeja; autostart por usuário; instância única/concorrência; sem admin.
+  integração de autostart por usuário; recuperação assistida com baseline real; sem admin.
 - **Evidência:** teste de crash/reinício, matrix P6, tag `v0.6.0-hardware`.
 
 ### 4. Notificação nativa (adiada)

@@ -207,6 +207,12 @@
 - O App espera por tempo limitado pelo lock de display antes de compor a automação. O iniciador de logon espera um rescue concorrente e só inicia o App após verificar que o journal está ausente. Se o journal permanecer, preserva-o e interrompe o início, sem repetir o restore nessa disputa.
 - A configuração de autostart continua condicionada à validação de logon. A rota de produção pode ser executada explicitamente para diagnóstico.
 
+## D062 — Nova tentativa de recuperação solicitada pelo operador
+
+- Em estado de recuperação incerta, a janela oferece uma ação localizada que inicia o rescue separado. O App libera a sessão após iniciar o processo, e o rescue aguarda a posse exclusiva antes de verificar e restaurar.
+- O pedido explícito permite uma tentativa além do limite automático. Mantém os locks, a exigência de baseline completo e a remoção do journal apenas após a verificação. O App reabre com automação desligada naquela sessão e informa falha quando aplicável.
+- Journal inválido ou incompleto permanece no disco. O diagnóstico do rescue é local.
+
 ## Formato de nova decisão
 
 ```md

@@ -96,6 +96,31 @@ foreach (var state in new[] { SessionJournalEntry.PendingState, SessionJournalEn
     if (await Run(child, path, marker, false) == 0 || !File.Exists(path) || File.Exists(marker))
         throw new InvalidOperationException("Retry limit failed to block recovery.");
     Console.WriteLine("retry limit: fourth automatic attempt blocked, journal preserved");
+    var result = Path.Combine(dir, "assisted-result");
+    var assisted = ChildInfo(child, path, Path.Combine(dir, "assisted-restore"));
+    assisted.ArgumentList[0] = "--test-assisted-recovery";
+    assisted.ArgumentList.Add(result);
+    assisted.Environment["COUCHPAD_TEST_AUDIO_FAIL"] = "1";
+    using (var held = DisplaySessionOwner.Acquire(path))
+    {
+        using var waiting = Process.Start(assisted)!;
+        await Task.Delay(400);
+        if (waiting.HasExited || File.Exists(result))
+            throw new InvalidOperationException("Assisted recovery did not wait for App ownership.");
+        held.Dispose();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        await waiting.WaitForExitAsync(timeout.Token);
+        if (waiting.ExitCode != 1 || File.ReadAllText(result) != "FAILED" || !File.Exists(path))
+            throw new InvalidOperationException("Failed assisted recovery did not preserve the journal.");
+    }
+    assisted.Environment.Remove("COUCHPAD_TEST_AUDIO_FAIL");
+    using var retry = Process.Start(assisted)!;
+    using var retryTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    await retry.WaitForExitAsync(retryTimeout.Token);
+    if (retry.ExitCode != 0 || File.Exists(path) || File.ReadAllText(result) != "SUCCESS" ||
+        File.Exists(Path.Combine(dir, "startup-recovery-attempts.json")))
+        throw new InvalidOperationException("Explicit recovery failed after automatic retries were exhausted.");
+    Console.WriteLine("assisted retry: waited for App, preserved journal on failure, restored and cleared it on success");
 }
 {
     var dir = Path.Combine(root, "interrupted");

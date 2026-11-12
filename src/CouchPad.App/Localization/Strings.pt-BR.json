@@ -15,7 +15,9 @@
   "status.active": "Ativo",
   "status.error": "Erro",
   "status.rescue_pending": "Recuperação pendente",
-  "recovery.help": "Estado de recuperação incerto. Reinicie o CouchPad antes de tentar novamente.",
+  "recovery.help": "A automação fica pausada até a recuperação terminar. Ao tentar recuperar, o CouchPad será reaberto.",
+  "recovery.retry": "Tentar recuperar",
+  "recovery.failed": "Não foi possível concluir a recuperação. Verifique as conexões de tela e áudio antes de tentar novamente.",
 
   "section.automation": "Automação",
   "section.display": "Display",
