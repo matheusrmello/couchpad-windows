@@ -21,7 +21,7 @@
 ## Trabalho isolado sem TV: autostart do App
 
 - `WindowsStartupRegistration` prepara uma entrada de inicialização por usuário no Registro, com caminho absoluto entre aspas e sem administrador. Ele recusa substituir ou remover uma entrada com outro comando e confirma a leitura após gravar ou remover.
-- Testes usam armazenamento falso; nenhum Registro real foi alterado. A classe ainda não está conectada à opção do App e não configura a tarefa do rescue. Integração, tratamento de erros e validação de logon permanecem pendentes.
+- A integração da opção foi preparada e testada com callbacks falsos, mas está desabilitada na composição do App: iniciar o App antes de um rescue agendado poderia impedir a recuperação de obter o lock da sessão. É preciso coordenar a ordem antes de habilitá-la. Nenhum Registro real foi alterado. A tarefa do rescue e a validação de logon continuam pendentes.
 
 ## Preparação da validação física
 

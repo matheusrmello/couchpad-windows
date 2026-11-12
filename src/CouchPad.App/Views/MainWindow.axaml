@@ -270,8 +270,10 @@
                 <TextBlock Text="{loc:Tr settings.start_with_windows}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"
                               IsChecked="{Binding StartWithWindows}"
+                              IsEnabled="{Binding CanConfigureStartup}"
                               AutomationProperties.Name="{loc:Tr settings.start_with_windows}" />
               </Grid>
+              <TextBlock IsVisible="{Binding StartupError}" Text="{loc:Tr settings.startup_error}" TextWrapping="Wrap" />
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <TextBlock Text="{loc:Tr settings.real_gamepad}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"

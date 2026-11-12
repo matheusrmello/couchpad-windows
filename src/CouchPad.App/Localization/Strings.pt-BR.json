@@ -68,6 +68,7 @@
   "combo.key.a": "A",
 
   "settings.close_launcher": "Sair do modo de jogo ao restaurar",
+  "settings.startup_error": "Não foi possível atualizar a inicialização com o Windows.",
   "settings.start_with_windows": "Iniciar com o Windows",
   "settings.minimize_to_tray": "Minimizar para a bandeja",
   "settings.allow_display_writes": "Permitir escrita de display",

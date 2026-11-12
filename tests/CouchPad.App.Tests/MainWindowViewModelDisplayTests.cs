@@ -10,6 +10,34 @@ namespace CouchPad.App.Tests;
 public sealed class MainWindowViewModelDisplayTests
 {
     [Fact]
+    public void Startup_setting_reads_real_state_and_writes_only_when_changed()
+    {
+        var store = new FakeSettingsStore { Current = new AppSettings { StartWithWindows = true } };
+        LocalizationService.Instance.Initialize(store);
+        var writes = 0;
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            readStartup: () => false, configureStartup: enabled => { Assert.True(enabled); writes++; });
+        Assert.False(vm.StartWithWindows);
+        Assert.Equal(0, writes);
+        vm.StartWithWindows = true;
+        Assert.Equal(1, writes);
+        Assert.True(store.Current.StartWithWindows);
+        Assert.False(vm.StartupError);
+    }
+
+    [Fact]
+    public void Startup_write_failure_reverts_toggle_and_reports_error()
+    {
+        var store = new FakeSettingsStore();
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            readStartup: () => false, configureStartup: _ => throw new UnauthorizedAccessException());
+        vm.StartWithWindows = true;
+        Assert.False(vm.StartWithWindows);
+        Assert.True(vm.StartupError);
+    }
+
+    [Fact]
     public void Launcher_choice_is_persisted_without_losing_the_legacy_custom_path()
     {
         var store = new FakeSettingsStore { Current = new AppSettings { CustomLauncherPath = @"C:\Legacy" } };

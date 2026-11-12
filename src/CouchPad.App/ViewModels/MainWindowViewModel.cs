@@ -32,6 +32,11 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly Func<IReadOnlyList<DisplayTargetOption>>? _discoverTargets;
     private readonly Func<IReadOnlyList<AudioEndpointOption>>? _discoverAudioEndpoints;
     private readonly Action? _revokeAudioWrites;
+    private readonly Func<bool>? _readStartup;
+    private readonly Action<bool>? _configureStartup;
+    private bool _revertingStartup;
+    [ObservableProperty]
+    private bool _startupError;
     private readonly CountdownNotificationPresenter _countdownNotifications;
     private bool _isLoadingSettings;
     private bool _audioWritesRevoked;
@@ -112,7 +117,9 @@ public partial class MainWindowViewModel : ObservableObject
         Action? revokeAudioWrites = null,
         Action<TimeSpan, string, string>? showCountdown = null,
         Action? dismissCountdown = null,
-        ILauncherService? launcherService = null)
+        ILauncherService? launcherService = null,
+        Func<bool>? readStartup = null,
+        Action<bool>? configureStartup = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
@@ -120,6 +127,8 @@ public partial class MainWindowViewModel : ObservableObject
         _discoverTargets = discoverTargets;
         _discoverAudioEndpoints = discoverAudioEndpoints;
         _revokeAudioWrites = revokeAudioWrites;
+        _readStartup = readStartup;
+        _configureStartup = configureStartup;
         _countdownNotifications = new CountdownNotificationPresenter(showCountdown, dismissCountdown);
         _displayWriteControl = displayService as IDisplayWriteControl;
         _localization.PropertyChanged += OnLocalizationChanged;
@@ -149,6 +158,8 @@ public partial class MainWindowViewModel : ObservableObject
     public bool IsPortuguese => _localization.Language == AppLanguage.PtBr;
 
     public bool IsEnglish => _localization.Language == AppLanguage.En;
+
+    public bool CanConfigureStartup => _configureStartup is not null;
 
     /// <summary>Índice do seletor de idioma: 0 = pt-BR, 1 = inglês.</summary>
     public int LanguageIndex
@@ -470,7 +481,23 @@ public partial class MainWindowViewModel : ObservableObject
         SyncAutomation();
     }
 
-    partial void OnStartWithWindowsChanged(bool value) => PersistSettings();
+    partial void OnStartWithWindowsChanged(bool value)
+    {
+        if (_isLoadingSettings || _revertingStartup) return;
+        try
+        {
+            _configureStartup?.Invoke(value);
+            StartupError = false;
+            PersistSettings();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.Security.SecurityException)
+        {
+            StartupError = true;
+            _revertingStartup = true;
+            try { StartWithWindows = !value; }
+            finally { _revertingStartup = false; }
+        }
+    }
 
     partial void OnUseWindowsGamepadChanged(bool value) => PersistSettings();
 
@@ -568,7 +595,12 @@ public partial class MainWindowViewModel : ObservableObject
         {
             AutomationEnabled = settings.DisplayModeIndex is 0 or 1 && settings.AutomationEnabled;
             CloseLauncherOnActivate = settings.CloseLauncherOnActivate;
-            StartWithWindows = settings.StartWithWindows;
+            try { StartWithWindows = _readStartup?.Invoke() ?? false; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.Security.SecurityException)
+            {
+                StartWithWindows = false;
+                StartupError = true;
+            }
             UseWindowsGamepad = settings.UseWindowsGamepad;
             MinimizeToTray = settings.MinimizeToTray;
             ActivationDelayIndex = Math.Clamp(
@@ -645,7 +677,7 @@ public partial class MainWindowViewModel : ObservableObject
             {
                 AutomationEnabled = AutomationEnabled,
                 CloseLauncherOnActivate = CloseLauncherOnActivate,
-                StartWithWindows = StartWithWindows,
+                StartWithWindows = CanConfigureStartup ? StartWithWindows : current.StartWithWindows,
                 UseWindowsGamepad = UseWindowsGamepad,
                 MinimizeToTray = MinimizeToTray,
                 ActivationDelayIndex = ActivationDelayIndex,

@@ -9,12 +9,26 @@ public sealed class WindowsStartupRegistration
     public WindowsStartupRegistration() : this(new RegistryStartupRegistrationStore()) { }
     internal WindowsStartupRegistration(IStartupRegistrationStore store) => _store = store;
 
-    public void SetEnabled(bool enabled, string executable)
+    private static string ExpectedCommand(string executable)
     {
         if (string.IsNullOrWhiteSpace(executable) || !Path.IsPathFullyQualified(executable) ||
             !string.Equals(Path.GetFileName(executable), "CouchPad.exe", StringComparison.OrdinalIgnoreCase) || executable.Contains('"'))
             throw new ArgumentException("An absolute CouchPad.exe path is required.", nameof(executable));
-        var expected = $"\"{Path.GetFullPath(executable)}\"";
+        return $"\"{Path.GetFullPath(executable)}\"";
+    }
+
+    public bool IsEnabled(string executable)
+    {
+        var expected = ExpectedCommand(executable);
+        var current = _store.Read();
+        if (current is not null && !string.Equals(current, expected, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The existing startup entry is not owned by this installation.");
+        return current is not null;
+    }
+
+    public void SetEnabled(bool enabled, string executable)
+    {
+        var expected = ExpectedCommand(executable);
         var current = _store.Read();
         if (current is not null && !string.Equals(current, expected, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("The existing startup entry is not owned by this installation.");
