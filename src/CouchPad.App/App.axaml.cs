@@ -20,6 +20,7 @@ public partial class App : Application
     // Held until process exit, including shutdown while a watchdog is active.
     private DisplaySessionOwner? _displaySessionOwner;
     private WindowsGamepadWatcher? _gamepadWatcher;
+    private WindowsCountdownNotifications? _countdownNotifications;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -51,7 +52,10 @@ public partial class App : Application
             if (audioGuard is not null) rescueGuard = audioGuard;
             _displaySessionOwner = isGallery ? null : AcquireDisplayOwner(journalPath);
             if (useWindowsGamepad) _gamepadWatcher = new WindowsGamepadWatcher();
-            desktop.Exit += (_, _) => _gamepadWatcher?.Dispose();
+            if (!isSmoke && !isGallery && OperatingSystem.IsWindows() &&
+                desktop.Args?.Contains("--experimental-windows-notifications", StringComparer.Ordinal) == true)
+                _countdownNotifications = new WindowsCountdownNotifications(Path.Combine(AppContext.BaseDirectory, "notifications", "CouchPad.Notifications.Windows.exe"));
+            desktop.Exit += (_, _) => { _gamepadWatcher?.Dispose(); _countdownNotifications?.Dispose(); };
             Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets =
                 isSmoke || isGallery || !OperatingSystem.IsWindows()
                     ? null
@@ -72,7 +76,9 @@ public partial class App : Application
                         discoverTargets: discoverTargets,
                         discoverAudioEndpoints: isSmoke || isGallery || !OperatingSystem.IsWindows() ? null : DiscoverAudioEndpoints,
                         revokeAudioWrites: OperatingSystem.IsWindows() && audioService is WindowsAudioService windowsAudio
-                            ? windowsAudio.DisableNewWrites : null),
+                            ? windowsAudio.DisableNewWrites : null,
+                        showCountdown: _countdownNotifications is { } notifications ? notifications.Show : null,
+                        dismissCountdown: _countdownNotifications is { } notificationsToDismiss ? notificationsToDismiss.Cancel : null),
                 };
 
             desktop.MainWindow = window;

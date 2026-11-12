@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Reflection;
 using System.Diagnostics;
+using System.Reflection;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -31,6 +31,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly Func<IReadOnlyList<DisplayTargetOption>>? _discoverTargets;
     private readonly Func<IReadOnlyList<AudioEndpointOption>>? _discoverAudioEndpoints;
     private readonly Action? _revokeAudioWrites;
+    private readonly CountdownNotificationPresenter _countdownNotifications;
     private bool _isLoadingSettings;
     private bool _audioWritesRevoked;
     private readonly DispatcherTimer _countdownTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
@@ -104,7 +105,9 @@ public partial class MainWindowViewModel : ObservableObject
         IRescueGuard? rescueGuard = null,
         Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets = null,
         Func<IReadOnlyList<AudioEndpointOption>>? discoverAudioEndpoints = null,
-        Action? revokeAudioWrites = null)
+        Action? revokeAudioWrites = null,
+        Action<TimeSpan, string, string>? showCountdown = null,
+        Action? dismissCountdown = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
@@ -112,6 +115,7 @@ public partial class MainWindowViewModel : ObservableObject
         _discoverTargets = discoverTargets;
         _discoverAudioEndpoints = discoverAudioEndpoints;
         _revokeAudioWrites = revokeAudioWrites;
+        _countdownNotifications = new CountdownNotificationPresenter(showCountdown, dismissCountdown);
         _displayWriteControl = displayService as IDisplayWriteControl;
         _localization.PropertyChanged += OnLocalizationChanged;
 
@@ -700,14 +704,19 @@ public partial class MainWindowViewModel : ObservableObject
     {
         void Notify()
         {
-            _countdownTimer.Stop();
-            _countdownDeadline = 0;
-            if (e.State == AutomationState.Pending && _coordinator.State == AutomationState.Pending)
+            var duration = IsGamepadConnected ? _coordinator.Settings.ActivationDelay : _coordinator.Settings.DeactivationDelay;
+            if (e.State == _coordinator.State)
             {
-                var duration = IsGamepadConnected ? _coordinator.Settings.ActivationDelay : _coordinator.Settings.DeactivationDelay;
-                _countdownDeadline = Stopwatch.GetTimestamp() + (long)(duration.TotalSeconds * Stopwatch.Frequency);
-                _countdownTimer.Start();
+                _countdownTimer.Stop();
+                _countdownDeadline = 0;
+                if (e.State == AutomationState.Pending)
+                {
+                    _countdownDeadline = Stopwatch.GetTimestamp() + (long)(duration.TotalSeconds * Stopwatch.Frequency);
+                    _countdownTimer.Start();
+                }
             }
+            _countdownNotifications.StateChanged(e.State, _coordinator.State, duration,
+                _localization[IsGamepadConnected ? "notification.activate" : "notification.restore"], _localization["notification.remaining"]);
             OnPropertyChanged(nameof(StatusText));
             OnPropertyChanged(nameof(CurrentStatusTone));
             OnPropertyChanged(nameof(DisplaySummary));

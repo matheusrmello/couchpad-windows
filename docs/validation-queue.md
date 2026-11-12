@@ -4,7 +4,7 @@
 - Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
-- Estado atual: build 0 avisos/0 erros; **197 testes**; smoke OK; nenhuma tag
+- Estado atual: build 0 avisos/0 erros; **200 testes**; smoke OK; nenhuma tag
   de hardware criada.
 
 ## Status das fases
@@ -24,7 +24,7 @@
 
 - **Dono:** Codex.
 - **Implementação:** `WindowsGamepadWatcher` via XInput, polling dos quatro slots; ativação opt-in com `--windows-gamepad`; a simulação segue padrão. Build 0/0, smoke OK e 197 testes aprovados. Dispositivos HID sem XInput estão fora deste slice (D050).
-- **Status:** validação física interrompida; não aprovado. Em 12/11/2026, a UI reconheceu `XInput gamepad`. Após o usuário informar a desconexão, a observação foi interrompida; na consulta seguinte o display estava `InternalOnly` (AOC ativo, TV inativa) e os três papéis de áudio apontavam ao AOC, mas o journal ainda estava `active` com baseline AOC. Não há evidência de limpeza nem de que o watcher causou a restauração. Preservar o journal e investigar antes de qualquer nova mudança física.
+- **Status:** validação física em andamento; ativação, desligamento e cancelamento de ativação foram observados. A reconexão durante o atraso tem relato visual, mas carece de timestamps/eventos independentes; falta validar o toggle de automação com controle conectado e revisar a evidência. O journal foi limpo nas restaurações posteriores documentadas abaixo.
 - **Confirmação visual:** usuário informou AOC normal e Samsung sem imagem; controle mantido desconectado.
 - **Investigação somente leitura:** XInput retornou sucesso no slot 0 e `ERROR_DEVICE_NOT_CONNECTED` nos slots 1–3. O Windows listou presente `Controlador XBOX 360 para Windows` (USB `VID_2DC8&PID_310B`); não está comprovado que corresponda ao controle desconectado. Isso pode explicar o journal ativo. Nenhum dispositivo foi alterado.
 - **Retirada do receptor, 12/11/2026:** após o usuário remover o receptor, os quatro slots retornaram `ERROR_DEVICE_NOT_CONNECTED`; o journal estava ausente, o probe indicou `InternalOnly` com AOC ativo e TV inativa e os três papéis de áudio apontavam ao endpoint anterior do AOC. O usuário confirmou imagem normal no AOC e ausência da área de trabalho na Samsung. A duração do atraso e volume/mudo não foram medidos nesta observação.
@@ -55,21 +55,25 @@
   bandeja; autostart por usuário; instância única/concorrência; sem admin.
 - **Evidência:** teste de crash/reinício, matrix P6, tag `v0.6.0-hardware`.
 
-### 4. HDR (adiado)
+### 4. Notificação nativa (adiada)
+
+- **Status:** protótipo desativado por padrão, sem aceite. O SDK registrou a notificação na Central, mas o usuário não viu o banner; a identidade e as configurações do Windows exigem investigação adicional. A contagem na janela permanece ativa. Antes de habilitar, verificar comportamento do SDK, inclusive ausência de telemetria, e repetir teste visual de contagem/cancelamento.
+
+### 5. HDR (adiado)
 
 - **Dono:** futuro/Codex.
 - **Validar:** detecção de suporte, captura, reaplicação e restore sem forçar
   HDR incompatível.
 - **Evidência:** hardware; não contar como aprovado antes disso.
 
-### 5. P7a — docs, a11y, screenshots
+### 6. P7a — docs, a11y, screenshots
 
 - **Dono:** DeepSeek.
 - **Validar:** checklist de acessibilidade, screenshots 3 breakpoints × 2
   idiomas, i18n, release notes.
 - **Evidência:** docs + capturas versionadas.
 
-### 6. P7b — release
+### 7. P7b — release
 
 - **Dono:** Codex.
 - **Validar:** regressão final, instalador, assinatura, tag `v1.0.0`.

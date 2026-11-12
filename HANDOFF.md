@@ -4,6 +4,8 @@
 
 **Fila de validação:** `docs/validation-queue.md` — próxima ação: watcher físico de gamepad.
 
+**Atualização 12/11/2026:** Ultimate 2 validou ativação, desligamento e cancelamento da ativação com restauração de tela/áudio e journal limpo. Reconexão durante atraso tem relato visual sem timestamps independentes; falta validar o toggle de automação. Notificações nativas foram adiadas a pedido do usuário: protótipo desativado por padrão, banner não confirmado, contagem na janela preservada; auditar dependências e ausência de telemetria antes de habilitar. Ver `docs/validation-queue.md`.
+
 **Atualização do watcher, 11/11/2026:** implementado `WindowsGamepadWatcher` read-only via XInput nos quatro slots, composto apenas com `--windows-gamepad`; simulação continua padrão, inclusive smoke/galeria. D050 documenta a escolha e limita suporte a dispositivos que exponham XInput. Build 0/0, 197 testes (14 App + 183 Core) e smoke OK. Testes rodaram fora do sandbox após falha de conexão do testhost no ambiente restrito. A matriz física do watcher ainda está pendente; launcher não iniciado.
 
 **Watcher, 12/11/2026:** D051 acrescenta opt-in persistido e localizado para XInput, aplicado após reiniciar; build 0/0, 197 testes e smoke passaram. A UI reconheceu `XInput gamepad`. Após desconexão informada pelo usuário e interrupção da observação, probe somente leitura identificou AOC ativo e TV inativa; áudio padrão nos três papéis estava no AOC, mas journal permanecia `active` desde 07:32 com baseline AOC. Não foi comprovado que o watcher restaurou nem que o journal foi limpo. Preservar journal e investigar antes de novos testes físicos; ver `docs/validation-queue.md`.

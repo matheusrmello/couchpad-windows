@@ -141,6 +141,13 @@
 - Impacto: altera o modelo de preferências do Core e acrescenta um toggle localizado no App. Ativar o watcher não liga a automação nem habilita escrita de display/áudio; esses opt-ins continuam independentes.
 - Evidência: decisão tomada durante preparação da validação física de 12/11/2026.
 
+## D052 — Experimento adiado: contagem em notificação local do Windows
+
+- Data: 2026-11-12
+- Decisão: prototipar notificações locais atualizáveis para atrasos em processo auxiliar Windows com SDK oficial; manter a contagem na janela e deixar o experimento desativado por padrão (`--experimental-windows-notifications`). O usuário adiou a funcionalidade após o banner não aparecer em testes visuais.
+- Motivo: tornar a contagem visível fora da janela e manter `net10.0` no App/Core, enquanto o SDK exige TFM Windows versionado.
+- Impacto: o build inclui componente Windows App SDK self-contained; falha, atraso, bloqueio ou descarte de notificação não impede nem altera a automação. O SDK aceitou e registrou notificações na Central, mas o usuário não viu o banner; testes e diagnóstico adicionais são necessários antes de habilitar por padrão. Sem servidor ou telemetria do CouchPad; textos são localizados no App.
+
 ## Formato de nova decisão
 
 ```md
