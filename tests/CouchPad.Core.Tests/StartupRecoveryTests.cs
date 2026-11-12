@@ -74,6 +74,42 @@ public sealed class StartupRecoveryTests
     }
 
     [Fact]
+    public async Task Changed_metadata_with_same_baseline_is_not_cleared()
+    {
+        var store = new Store { Entry = Entry(SessionJournalEntry.ActiveState) };
+        await Assert.ThrowsAsync<InvalidDataException>(() => StartupRecovery.RunAsync(store, (_, _) =>
+        {
+            store.Entry = store.Entry! with { UpdatedAt = store.Entry.UpdatedAt.AddSeconds(1) };
+            return Task.CompletedTask;
+        }));
+        Assert.False(store.Cleared);
+    }
+
+    [Fact]
+    public async Task Cancellation_before_recovery_never_invokes_backend()
+    {
+        var store = new Store { Entry = Entry(SessionJournalEntry.PendingState) };
+        using var cancel = new CancellationTokenSource();
+        cancel.Cancel();
+        var invoked = false;
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => StartupRecovery.RunAsync(store, (_, _) =>
+        {
+            invoked = true;
+            return Task.CompletedTask;
+        }, cancel.Token));
+        Assert.False(invoked);
+        Assert.False(store.Cleared);
+    }
+
+    [Fact]
+    public async Task Unverifiable_clear_is_reported()
+    {
+        var store = new Store { Entry = Entry(SessionJournalEntry.ActiveState), IgnoreClear = true };
+        await Assert.ThrowsAsync<IOException>(() => StartupRecovery.RunAsync(store, (_, _) => Task.CompletedTask));
+        Assert.NotNull(store.Entry);
+    }
+
+    [Fact]
     public async Task Incomplete_audio_baseline_blocks_writes()
     {
         var store = new Store { Entry = Entry(SessionJournalEntry.PendingState) with { RestoreAudioBaseline = null } };
@@ -145,9 +181,10 @@ public sealed class StartupRecoveryTests
         public bool Cleared;
         public bool Unreadable;
         public bool FailClear;
+        public bool IgnoreClear;
         public SessionJournalEntry? Load() => Entry;
         public SessionJournalInspection Inspect() => Unreadable ? new(SessionJournalStatus.Unreadable, null) : Entry is null ? new(SessionJournalStatus.Missing, null) : new(SessionJournalStatus.Present, Entry);
         public void Save(SessionJournalEntry entry) => Entry = entry;
-        public void Clear() { if (FailClear) throw new IOException("Injected clear failure"); Cleared = true; Entry = null; }
+        public void Clear() { if (FailClear) throw new IOException("Injected clear failure"); if (IgnoreClear) return; Cleared = true; Entry = null; }
     }
 }
