@@ -148,6 +148,13 @@
 - Motivo: tornar a contagem visível fora da janela e manter `net10.0` no App/Core, enquanto o SDK exige TFM Windows versionado.
 - Impacto: o build inclui componente Windows App SDK self-contained; falha, atraso, bloqueio ou descarte de notificação não impede nem altera a automação. O SDK aceitou e registrou notificações na Central, mas o usuário não viu o banner; testes e diagnóstico adicionais são necessários antes de habilitar por padrão. Sem servidor ou telemetria do CouchPad; textos são localizados no App.
 
+## D053 — Botão de ativação fora do trabalho pendente
+
+- Data: 2026-11-12
+- Decisão: o usuário dispensou implementação adicional do botão de ativação. O controle existente permanece; seu teste físico específico deixa de ser critério pendente.
+- Motivo: priorizar o fluxo automático por conexão e desconexão do controle conforme a orientação do usuário.
+- Impacto: a reconexão durante o atraso ainda precisa de evidência independente; nenhuma mudança no comportamento existente foi feita.
+
 ## Formato de nova decisão
 
 ```md

@@ -24,7 +24,7 @@
 
 - **Dono:** Codex.
 - **Implementação:** `WindowsGamepadWatcher` via XInput, polling dos quatro slots; ativação opt-in com `--windows-gamepad`; a simulação segue padrão. Build 0/0, smoke OK e 197 testes aprovados. Dispositivos HID sem XInput estão fora deste slice (D050).
-- **Status:** validação física em andamento; ativação, desligamento e cancelamento de ativação foram observados. A reconexão durante o atraso tem relato visual, mas carece de timestamps/eventos independentes; falta validar o toggle de automação com controle conectado e revisar a evidência. O journal foi limpo nas restaurações posteriores documentadas abaixo.
+- **Status:** validação física em andamento; ativação, desligamento e cancelamento de ativação foram observados. A reconexão durante o atraso tem relato visual, mas carece de timestamps/eventos independentes e revisão da evidência. O journal foi limpo nas restaurações posteriores documentadas abaixo. O usuário dispensou trabalho adicional no botão de ativação em 12/11/2026; seu teste físico não é critério pendente.
 - **Confirmação visual:** usuário informou AOC normal e Samsung sem imagem; controle mantido desconectado.
 - **Investigação somente leitura:** XInput retornou sucesso no slot 0 e `ERROR_DEVICE_NOT_CONNECTED` nos slots 1–3. O Windows listou presente `Controlador XBOX 360 para Windows` (USB `VID_2DC8&PID_310B`); não está comprovado que corresponda ao controle desconectado. Isso pode explicar o journal ativo. Nenhum dispositivo foi alterado.
 - **Retirada do receptor, 12/11/2026:** após o usuário remover o receptor, os quatro slots retornaram `ERROR_DEVICE_NOT_CONNECTED`; o journal estava ausente, o probe indicou `InternalOnly` com AOC ativo e TV inativa e os três papéis de áudio apontavam ao endpoint anterior do AOC. O usuário confirmou imagem normal no AOC e ausência da área de trabalho na Samsung. A duração do atraso e volume/mudo não foram medidos nesta observação.
@@ -37,8 +37,8 @@
 - **Tentativa de reconexão durante desativação, 12/11/2026:** com atraso de desativação ajustado para 5 s, usuário informou retorno ao AOC. Após a tentativa, o receptor estava conectado e o controle desligado; leitura mostrou quatro slots desconectados, `InternalOnly` e journal ausente. Resultado inconclusivo para cancelamento: não houve evidência de reconexão XInput durante a contagem.
 - **Repetição da reconexão, 12/11/2026:** usuário relatou retirada e reconexão do receptor durante a contagem, com Samsung mantendo imagem e controle reconectado. Leitura posterior confirmou slot XInput 0 conectado, `TvOnly`, áudio Samsung nos três papéis e journal `active`. Não foram capturados timestamps nem eventos XInput intermediários; o cancelamento efetivo durante o intervalo não está comprovado de forma independente.
 - **Retorno após reconexão, 12/11/2026:** após desligar o controle, o usuário confirmou AOC normal e Samsung sem área de trabalho. Leitura confirmou `InternalOnly`, journal ausente e endpoint AOC nos três papéis com volume e mudo anteriores.
-- **Validar:** conectar/desconectar controle real; contagem configurável;
-  cancelar atraso; ativar/desativar; ausência de controle; reconexão.
+- **Validar:** reconexão durante o atraso com evidência independente e revisão
+  dos cenários do controle; os cenários já observados estão descritos acima.
 - **Evidência:** hardware + logs + estado/journal.
 
 ### 2. Launcher real
