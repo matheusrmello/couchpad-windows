@@ -39,9 +39,6 @@
                   Orientation="Horizontal"
                   Spacing="8"
                   VerticalAlignment="Center">
-        <controls:StatusPill Text="{loc:Tr status.free}"
-                             Tone="Accent"
-                             ShowDot="False" />
         <controls:StatusPill Text="{Binding StatusText}"
                              Tone="{Binding CurrentStatusTone}"
                              AutomationProperties.Name="{Binding StatusText}" />
@@ -380,9 +377,6 @@
     <!-- Rodapé -->
     <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="0,12,0,0">
       <StackPanel VerticalAlignment="Center" Spacing="2">
-        <controls:StatusPill Text="{Binding StatusText}"
-                             Tone="{Binding CurrentStatusTone}"
-                             AutomationProperties.Name="{Binding StatusText}" />
         <TextBlock Classes="caption" Text="{Binding VersionText}" />
       </StackPanel>
 
