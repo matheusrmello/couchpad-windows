@@ -58,8 +58,8 @@ public sealed class WindowsLauncherService : ILauncherService
     }
 }
 
-internal sealed record LauncherSpec(string Executable, string Argument);
-internal sealed record OwnedLauncher(int ProcessId, DateTime StartTimeUtc, string Executable);
+internal sealed record LauncherSpec(string Executable, string Argument, LauncherKind Kind);
+internal sealed record OwnedLauncher(int ProcessId, DateTime StartTimeUtc, string Executable, LauncherKind Kind);
 
 internal interface IWindowsLauncherBackend
 {
@@ -90,7 +90,7 @@ internal sealed class WindowsLauncherBackend : IWindowsLauncherBackend
         }
         if (string.IsNullOrWhiteSpace(executable) || !File.Exists(executable))
             throw new FileNotFoundException("Selected launcher is unavailable.");
-        return new LauncherSpec(Path.GetFullPath(executable), argument);
+        return new LauncherSpec(Path.GetFullPath(executable), argument, kind);
     }
 
     internal static string ArgumentFor(LauncherKind kind) => kind switch
@@ -112,7 +112,7 @@ internal sealed class WindowsLauncherBackend : IWindowsLauncherBackend
         var info = new ProcessStartInfo(spec.Executable) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(spec.Executable)! };
         info.ArgumentList.Add(spec.Argument);
         using var process = Process.Start(info) ?? throw new InvalidOperationException("Launcher did not start.");
-        return trackOwnership ? new OwnedLauncher(process.Id, process.StartTime.ToUniversalTime(), spec.Executable) : null;
+        return trackOwnership ? new OwnedLauncher(process.Id, process.StartTime.ToUniversalTime(), spec.Executable, spec.Kind) : null;
     }
 
     public bool IsAlive(OwnedLauncher process)
@@ -131,10 +131,21 @@ internal sealed class WindowsLauncherBackend : IWindowsLauncherBackend
         {
             if (!Matches(candidate, process) || candidate.HasExited) { VerifyNoReplacement(process); return; }
             cancellationToken.ThrowIfCancellationRequested();
+            if (process.Kind == LauncherKind.Steam)
+            {
+                var command = new ProcessStartInfo(process.Executable) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(process.Executable)! };
+                command.ArgumentList.Add(SteamExitBigPictureArgument);
+                using var request = Process.Start(command) ?? throw new InvalidOperationException("Could not request exit from Big Picture.");
+                await request.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                if (request.ExitCode != 0) throw new InvalidOperationException("Steam rejected the Big Picture exit request.");
+                return;
+            }
             if (!candidate.CloseMainWindow()) throw new InvalidOperationException("The owned launcher has no closable window.");
             await candidate.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
         }
     }
+
+    internal const string SteamExitBigPictureArgument = "steam://close/bigpicture";
 
     private void VerifyNoReplacement(OwnedLauncher process)
     {

@@ -159,6 +159,7 @@
 
 - Data: 2026-11-12
 - Decisão: acrescentar contrato de launcher no Core e implementação Windows; oferecer Steam Big Picture e Hydra Big Picture após confirmação de tela/áudio, conforme escolha posterior do usuário. `CloseLauncherOnActivate` passa a significar fechar ao restaurar somente o processo iniciado e identificado pelo CouchPad.
+- Ajuste de 12/11/2026: a pedido do usuário, para Steam a opção solicita `steam://close/bigpicture` à instância iniciada e identificada pelo CouchPad, mantendo o cliente Steam aberto. Não solicita saída de uma instância preexistente; o envio do comando não prova que a interface mudou. Hydra mantém o fechamento da janela própria.
 - Motivo: executar o fluxo solicitado mantendo a restauração independente de falhas no launcher.
 - Impacto: sem encerramento forçado, árvore de processos ou processos preexistentes; launcher já aberto pode receber o comando, mas não é encerrado pelo CouchPad. Falha do launcher é informada e não impede restore. Configurações antigas de caminho personalizado são preservadas, mas não selecionam launcher. Testes com fakes precedem a validação física.
 

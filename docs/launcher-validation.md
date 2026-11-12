@@ -6,7 +6,7 @@ Data: 2026-11-12. Escopo: Steam e Hydra em Big Picture, um cenário por vez.
 
 - O App oferece uma opção para abrir launcher e um seletor Steam/Hydra. O caminho personalizado antigo é preservado nas configurações, mas não é selecionado nesta versão.
 - Após apply e commit do guard, o Core solicita o launcher; falha é mostrada no card e não impede restore. A opção de fechar atua após restaurar tela e áudio.
-- Steam usa `-gamepadui`; Hydra usa `--big-picture`, presente no [código público do projeto Hydra](https://github.com/hydralauncher/hydra/blob/main/src/main/index.ts). A presença de um processo anterior impede o CouchPad de reivindicar sua posse. Somente o processo iniciado pelo CouchPad, com PID, horário de início e executável correspondentes, recebe solicitação de fechamento de janela; não há kill forçado ou encerramento de árvore. O fechamento não é garantido quando o launcher transfere a execução para outra instância ou fica na bandeja.
+- Steam usa `-gamepadui`; Hydra usa `--big-picture`, presente no [código público do projeto Hydra](https://github.com/hydralauncher/hydra/blob/main/src/main/index.ts). A presença de um processo anterior impede o CouchPad de reivindicar sua posse. Para Steam iniciado e identificado pelo CouchPad, ao restaurar é solicitado `steam://close/bigpicture`, mantendo o Steam aberto, conforme escolha do usuário; para Hydra solicita-se fechamento da janela do processo próprio. Não há kill forçado ou encerramento de árvore. O envio da solicitação não garante que a interface mudou; é preciso confirmação visual.
 - O usuário adiou HDR e notificações nativas. Não modificar processos de terceiros preexistentes.
 
 ## Evidência anterior a hardware

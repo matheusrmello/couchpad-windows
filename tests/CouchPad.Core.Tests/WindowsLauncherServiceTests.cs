@@ -18,12 +18,14 @@ public sealed class WindowsLauncherServiceTests
     public void Both_launchers_use_their_big_picture_argument(LauncherKind kind, string expected) =>
         Assert.Equal(expected, WindowsLauncherBackend.ArgumentFor(kind));
 
-    [Fact]
-    public async Task Existing_launcher_is_never_closed()
+    [Theory]
+    [InlineData(LauncherKind.Steam)]
+    [InlineData(LauncherKind.Hydra)]
+    public async Task Existing_launcher_is_never_closed(LauncherKind kind)
     {
         var backend = new FakeBackend { Existing = true };
         var service = new WindowsLauncherService(backend);
-        await service.StartAsync(new LauncherSelection(LauncherKind.Hydra));
+        await service.StartAsync(new LauncherSelection(kind));
         await service.CloseOwnedAsync();
         Assert.Equal(1, backend.Starts);
         Assert.False(backend.Tracked);
@@ -74,9 +76,9 @@ public sealed class WindowsLauncherServiceTests
         public bool Existing, Tracked, Missing;
         public int Starts, Closes;
         public ManualResetEventSlim? StartEntered, ResumeStart;
-        public LauncherSpec Resolve(LauncherKind kind) => Missing ? throw new FileNotFoundException() : new("C:\\launcher.exe", WindowsLauncherBackend.ArgumentFor(kind));
+        public LauncherSpec Resolve(LauncherKind kind) => Missing ? throw new FileNotFoundException() : new("C:\\launcher.exe", WindowsLauncherBackend.ArgumentFor(kind), kind);
         public bool IsRunning(string executable) => Existing;
-        public OwnedLauncher? Start(LauncherSpec spec, bool trackOwnership) { Starts++; Tracked = trackOwnership; StartEntered?.Set(); ResumeStart?.Wait(); return trackOwnership ? new(42, DateTime.UnixEpoch, spec.Executable) : null; }
+        public OwnedLauncher? Start(LauncherSpec spec, bool trackOwnership) { Starts++; Tracked = trackOwnership; StartEntered?.Set(); ResumeStart?.Wait(); return trackOwnership ? new(42, DateTime.UnixEpoch, spec.Executable, spec.Kind) : null; }
         public bool IsAlive(OwnedLauncher process) => true;
         public Task CloseAsync(OwnedLauncher process, CancellationToken cancellationToken) { Closes++; return Task.CompletedTask; }
     }

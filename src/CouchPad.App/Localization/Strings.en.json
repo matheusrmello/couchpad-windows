@@ -67,7 +67,7 @@
   "combo.key.rb": "RB",
   "combo.key.a": "A",
 
-  "settings.close_launcher": "Close launcher on restore",
+  "settings.close_launcher": "Exit game mode on restore",
   "settings.start_with_windows": "Start with Windows",
   "settings.minimize_to_tray": "Minimize to tray",
   "settings.allow_display_writes": "Allow display writes",

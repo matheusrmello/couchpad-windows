@@ -67,7 +67,7 @@
   "combo.key.rb": "RB",
   "combo.key.a": "A",
 
-  "settings.close_launcher": "Fechar launcher ao restaurar",
+  "settings.close_launcher": "Sair do modo de jogo ao restaurar",
   "settings.start_with_windows": "Iniciar com o Windows",
   "settings.minimize_to_tray": "Minimizar para a bandeja",
   "settings.allow_display_writes": "Permitir escrita de display",
