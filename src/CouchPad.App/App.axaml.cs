@@ -53,7 +53,7 @@ public partial class App : Application
             var (audioService, audioGuard) = CreateWindowsAudioServices(displayService, appSettings, transaction,
                 Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"), journalPath);
             if (audioGuard is not null) rescueGuard = audioGuard;
-            _displaySessionOwner = isGallery ? null : AcquireDisplayOwner(journalPath);
+            _displaySessionOwner = isGallery || Program.OwnsDisplaySession ? null : AcquireDisplayOwner(journalPath);
             if (useWindowsGamepad) _gamepadWatcher = new WindowsGamepadWatcher();
             if (!isSmoke && !isGallery && OperatingSystem.IsWindows() &&
                 desktop.Args?.Contains("--experimental-windows-notifications", StringComparer.Ordinal) == true)

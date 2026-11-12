@@ -202,6 +202,11 @@
 - O App obtém um lock de arquivo por perfil antes de inicializar Avalonia. Uma segunda abertura solicita apenas a exibição da janela por pipe do usuário e aguarda confirmação após a ação na UI.
 - A espera é limitada e permite assumir a posse se o primeiro processo sair durante a inicialização. Smoke e galeria têm execução separada. O lock de display continua exclusivo para coordenar o App com o rescue.
 
+## D061 — Coordenação entre rescue e início do App
+
+- O App espera por tempo limitado pelo lock de display antes de compor a automação. O iniciador de logon espera um rescue concorrente e só inicia o App após verificar que o journal está ausente. Se o journal permanecer, preserva-o e interrompe o início, sem repetir o restore nessa disputa.
+- A configuração de autostart continua condicionada à validação de logon. A rota de produção pode ser executada explicitamente para diagnóstico.
+
 ## Formato de nova decisão
 
 ```md

@@ -49,3 +49,9 @@
 - Build Debug sem avisos ou erros, 253 testes e smoke aprovados.
 - `RescueProcessTests.exe --test-app-instance <diretório isolado>` verificou espera pelo listener, encaminhamento com ACK entre processos e transferência da posse.
 - O App real foi minimizado para a bandeja. Uma segunda abertura retornou código 0 e tornou visível o mesmo HWND, em estado normal. O journal permaneceu ausente. A automação e as escritas foram desligadas durante a prova, e as preferências originais foram restauradas byte a byte.
+
+## Coordenação de startup
+
+- Build Debug 0/0, 253 testes e smoke aprovados.
+- Dois processos rescue com backend falso disputaram o lock durante a restauração de áudio. No sucesso, o iniciador aguardou a limpeza do journal antes de lançar, sem segunda restauração. Na falha, aguardou, preservou o journal e bloqueou o lançamento.
+- O executável de produção `--startup-and-launch` retornou 0 e abriu o App real com journal ausente e automação desativada. O App também recebeu uma segunda abertura. Logon do Windows com journal real continua na fila de hardware.

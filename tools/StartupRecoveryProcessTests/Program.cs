@@ -122,6 +122,41 @@ foreach (var state in new[] { SessionJournalEntry.PendingState, SessionJournalEn
         throw new InvalidOperationException("Retry after interruption failed.");
     Console.WriteLine("concurrent recovery blocked; interruption preserved journal and retry succeeded");
 }
+foreach (var fail in new[] { false, true })
+{
+    var dir = Path.Combine(root, fail ? "launch-after-failure" : "launch-after-recovery");
+    Directory.CreateDirectory(dir);
+    var path = Path.Combine(dir, "session.json");
+    var gate = Path.Combine(dir, "audio");
+    var launched = Path.Combine(dir, "launched");
+    var duplicateRestore = Path.Combine(dir, "duplicate-restore");
+    new JsonSessionJournalStore(path).Save(Entry(SessionJournalEntry.PendingState));
+    var recoveryInfo = ChildInfo(child, path, Path.Combine(dir, "restore"));
+    recoveryInfo.Environment["COUCHPAD_TEST_AUDIO_GATE"] = gate;
+    if (fail) recoveryInfo.Environment["COUCHPAD_TEST_AUDIO_FAIL"] = "1";
+    using var recovery = Process.Start(recoveryInfo)!;
+    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+    while (!File.Exists(gate + ".waiting"))
+    {
+        if (recovery.HasExited) throw new InvalidOperationException("Recovery exited before acquiring the test gate.");
+        await Task.Delay(25, timeout.Token);
+    }
+    var startupInfo = ChildInfo(child, path, duplicateRestore);
+    startupInfo.ArgumentList[0] = "--test-startup-and-launch";
+    startupInfo.ArgumentList.Add(launched);
+    using var startup = Process.Start(startupInfo)!;
+    await Task.Delay(500, timeout.Token);
+    if (startup.HasExited || File.Exists(launched))
+        throw new InvalidOperationException("Startup did not wait for recovery.");
+    File.WriteAllText(gate + ".release", "");
+    await recovery.WaitForExitAsync(timeout.Token);
+    await startup.WaitForExitAsync(timeout.Token);
+    if ((recovery.ExitCode != 0) != fail || (startup.ExitCode != 0) != fail ||
+        File.Exists(path) != fail || File.Exists(launched) == fail || File.Exists(duplicateRestore))
+        throw new InvalidOperationException("Startup did not respect the other rescue process's result.");
+    Console.WriteLine(fail ? "startup: failed recovery preserved the journal and blocked launch"
+        : "startup: waited for recovery and launched once after journal removal");
+}
 return 0;
 
 static async Task<int> Run(string child, string journal, string marker, bool failAudio)

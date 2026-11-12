@@ -16,5 +16,21 @@ public sealed class DisplaySessionOwner : IDisposable
         return new DisplaySessionOwner(new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None));
     }
 
+    public static async Task<(DisplaySessionOwner Owner, bool Waited)> AcquireWhenAvailableAsync(
+        string journalPath, CancellationToken cancellationToken)
+    {
+        var waited = false;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try { return (Acquire(journalPath), waited); }
+            catch (IOException ex) when ((ex.HResult & 0xffff) is 32 or 33)
+            {
+                waited = true;
+                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+            }
+        }
+    }
+
     public void Dispose() => Interlocked.Exchange(ref _handle, null)?.Dispose();
 }

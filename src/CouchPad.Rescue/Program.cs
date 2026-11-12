@@ -8,6 +8,16 @@ using CouchPad.Core.Storage;
 using CouchPad.Platform.Windows;
 
 #if RESCUE_TEST_BACKEND
+if (args is ["--test-startup-and-launch", var testJournal, var launchMarker] && OperatingSystem.IsWindows())
+{
+    try
+    {
+        await StartupLaunchSequence.RunAsync(() => RecoverAtStartup(testJournal, waitForOwner: true),
+            () => File.WriteAllText(launchMarker, "LAUNCHED"));
+        return 0;
+    }
+    catch { return 1; }
+}
 if (args.Length == 2 && args[0] == "--test-startup-recovery" && OperatingSystem.IsWindows())
 {
     try { await RecoverAtStartup(args[1]); return 0; }
@@ -23,7 +33,7 @@ if (args.Length == 1 && args[0] == "--startup-and-launch" && OperatingSystem.IsW
 {
     try
     {
-        await StartupLaunchSequence.RunAsync(() => RecoverAtStartup(AppPaths.SessionJournalFile()), () =>
+        await StartupLaunchSequence.RunAsync(() => RecoverAtStartup(AppPaths.SessionJournalFile(), waitForOwner: true), () =>
         {
             var application = Path.Combine(AppContext.BaseDirectory, "CouchPad.exe");
             if (!File.Exists(application)) throw new FileNotFoundException("CouchPad app is unavailable.");
@@ -169,14 +179,20 @@ using (instanceLock)
     catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), stage, ex); return 1; }
 }
 
-static async Task RecoverAtStartup(string journalPath)
+static async Task RecoverAtStartup(string journalPath, bool waitForOwner = false)
 {
     journalPath = Path.GetFullPath(journalPath);
-    using var sessionOwner = DisplaySessionOwner.Acquire(journalPath);
+    using var ownerTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+    var (owner, waited) = waitForOwner
+        ? await DisplaySessionOwner.AcquireWhenAvailableAsync(journalPath, ownerTimeout.Token)
+        : (DisplaySessionOwner.Acquire(journalPath), false);
+    using var sessionOwner = owner;
+    var store = new JsonSessionJournalStore(journalPath);
+    if (waited && store.Inspect().Status != SessionJournalStatus.Missing)
+        throw new InvalidOperationException("The previous session owner did not clear the recovery journal.");
     var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Environment.UserDomainName + "\\" + Environment.UserName + "|" + journalPath.ToUpperInvariant())));
     var lockPath = Path.Combine(Path.GetDirectoryName(journalPath)!, "watchdog-" + identity + ".lock");
     using var watchdogLock = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-    var store = new JsonSessionJournalStore(journalPath);
     var attempts = new StartupRecoveryAttempts(Path.Combine(Path.GetDirectoryName(journalPath)!, "startup-recovery-attempts.json"));
     await StartupRecovery.RunAsync(store, async (entry, cancellationToken) =>
     {
