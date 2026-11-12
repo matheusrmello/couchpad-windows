@@ -38,6 +38,18 @@ public sealed class MainWindowViewModelDisplayTests
     }
 
     [Fact]
+    public void Unavailable_startup_is_disabled_and_preserves_saved_preference()
+    {
+        var store = new FakeSettingsStore { Current = new AppSettings { StartWithWindows = true } };
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal());
+        Assert.False(vm.CanConfigureStartup);
+        Assert.False(vm.StartWithWindows);
+        vm.LauncherIndex = 1;
+        Assert.True(store.Current.StartWithWindows);
+    }
+
+    [Fact]
     public void Launcher_choice_is_persisted_without_losing_the_legacy_custom_path()
     {
         var store = new FakeSettingsStore { Current = new AppSettings { CustomLauncherPath = @"C:\Legacy" } };
