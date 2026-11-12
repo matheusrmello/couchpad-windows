@@ -1,0 +1,17 @@
+# P6 — recuperação no logon
+
+## Estado em 12/11/2026
+
+- Implementado comando separado `CouchPad.Rescue.exe --startup-recovery`; a tarefa de logon ainda não está configurada, e o comando não é chamado automaticamente.
+- O rescue adquire a posse exclusiva da sessão e o mesmo lock do watchdog antes de inspecionar o journal. Recusa journal ilegível, estado desconhecido e baseline sem topologia ou áudio completo. A restauração usa a decisão transacional e a verificação existentes. O journal é limpo somente após restauração bem-sucedida e confirmação de que seu conteúdo não mudou.
+- A exigência de baseline completo significa que journals antigos sem o snapshot de áudio não são restaurados automaticamente; eles são preservados para recuperação assistida.
+- Processo real compilado com backend falso em diretório isolado: `pending` e `active` restaurados e journal limpo; falha de áudio preservou journal; recuperação concorrente foi bloqueada; interrupção preservou journal e tentativa posterior terminou. O backend falso não acessa hardware.
+- Produção, journal ausente: comando encerrou com código 0 e journal ausente; a opção interna de teste foi recusada com código 2. Nenhuma recuperação real foi acionada nesta observação.
+- Build Debug 0 avisos/0 erros, 223 testes e smoke aprovados. Nenhuma mudança de tela ou áudio foi executada por estes testes.
+
+## Validações restantes deste item
+
+1. Restaurar um journal `active` real após encerramento controlado do processo principal, com usuário presente, evidência de tela e áudio antes/depois e journal final.
+2. Validar `pending` real e reinício/logon, incluindo coordenação com o watchdog, sem inventar estado do journal.
+3. Validar falha de recuperação e retenção de journal em cenário seguro, além da evidência com backend falso.
+4. Revisar concorrência e integridade, registrar resultados e fazer commit antes de iniciar a integração do agendamento de logon.

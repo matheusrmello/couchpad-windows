@@ -7,6 +7,18 @@ using CouchPad.Core.Automation;
 using CouchPad.Core.Storage;
 using CouchPad.Platform.Windows;
 
+#if RESCUE_TEST_BACKEND
+if (args.Length == 2 && args[0] == "--test-startup-recovery" && OperatingSystem.IsWindows())
+{
+    try { await RecoverAtStartup(args[1]); return 0; }
+    catch { return 1; }
+}
+#endif
+if (args.Length == 1 && args[0] == "--startup-recovery" && OperatingSystem.IsWindows())
+{
+    try { await RecoverAtStartup(AppPaths.SessionJournalFile()); return 0; }
+    catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), "startup", ex); return 1; }
+}
 if (args.Length != 8 || !OperatingSystem.IsWindows()) return 2;
 var pipeName = args[0];
 var journalPath = Path.GetFullPath(args[1]);
@@ -140,6 +152,29 @@ using (instanceLock)
         return 0;
     }
     catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), stage, ex); return 1; }
+}
+
+static async Task RecoverAtStartup(string journalPath)
+{
+    journalPath = Path.GetFullPath(journalPath);
+    using var sessionOwner = DisplaySessionOwner.Acquire(journalPath);
+    var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Environment.UserDomainName + "\\" + Environment.UserName + "|" + journalPath.ToUpperInvariant())));
+    var lockPath = Path.Combine(Path.GetDirectoryName(journalPath)!, "watchdog-" + identity + ".lock");
+    using var watchdogLock = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+    var store = new JsonSessionJournalStore(journalPath);
+    await StartupRecovery.RunAsync(store, async (entry, cancellationToken) =>
+    {
+        var id = Guid.NewGuid();
+        var hash = RescueDecisionStore.ComputeBaselineSha256(entry);
+        var path = Path.Combine(Path.GetDirectoryName(journalPath)!, "rescue-decisions", id.ToString("N") + ".json");
+        var decisions = new RescueDecisionStore(path);
+        await decisions.InitializeAsync(id, hash, cancellationToken);
+        if (!await decisions.TryTransitionAsync(id, hash, RescueDecisionState.Armed, RescueDecisionState.RecoveryRequested, cancellationToken))
+            throw new InvalidDataException("Could not acquire recovery decision.");
+        await Restore(entry, path, id, hash);
+        if (!await decisions.TryTransitionAsync(id, hash, RescueDecisionState.RecoveryRequested, RescueDecisionState.Recovered, cancellationToken))
+            throw new InvalidDataException("Recovery completion could not be recorded.");
+    });
 }
 
 static async Task Recover(RescueDecisionStore decisions, Guid id, string baselineHash, string decisionPath, SessionJournalEntry journal)

@@ -163,6 +163,13 @@
 - Motivo: executar o fluxo solicitado mantendo a restauração independente de falhas no launcher.
 - Impacto: sem encerramento forçado, árvore de processos ou processos preexistentes; launcher já aberto pode receber o comando, mas não é encerrado pelo CouchPad. Falha do launcher é informada e não impede restore. Configurações antigas de caminho personalizado são preservadas, mas não selecionam launcher. Testes com fakes precedem a validação física.
 
+## D055 — Recuperação independente na inicialização
+
+- Data: 2026-11-12
+- Decisão: o rescue separado pode recuperar journal `pending` ou `active` após obter os locks exclusivos da sessão e do watchdog. Exige snapshots válidos de display e áudio, usa decisão transacional e somente remove um journal inalterado após restore bem-sucedido.
+- Motivo: evitar disputa com uma sessão ou watchdog ainda ativo e não declarar recuperação completa sem baseline de áudio verificável.
+- Impacto: journals antigos sem áudio completo permanecem para recuperação assistida; o comando não está agendado nem passou por validação em hardware ou logon. Testes em processo com backend falso estão descritos em `docs/p6-recovery-matrix.md`.
+
 ## Formato de nova decisão
 
 ```md
