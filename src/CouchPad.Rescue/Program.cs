@@ -19,6 +19,21 @@ if (args.Length == 1 && args[0] == "--startup-recovery" && OperatingSystem.IsWin
     try { await RecoverAtStartup(AppPaths.SessionJournalFile()); return 0; }
     catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), "startup", ex); return 1; }
 }
+if (args.Length == 1 && args[0] == "--startup-and-launch" && OperatingSystem.IsWindows())
+{
+    try
+    {
+        await StartupLaunchSequence.RunAsync(() => RecoverAtStartup(AppPaths.SessionJournalFile()), () =>
+        {
+            var application = Path.Combine(AppContext.BaseDirectory, "CouchPad.exe");
+            if (!File.Exists(application)) throw new FileNotFoundException("CouchPad app is unavailable.");
+            using var started = Process.Start(new ProcessStartInfo(application) { UseShellExecute = false, WorkingDirectory = AppContext.BaseDirectory })
+                ?? throw new InvalidOperationException("CouchPad could not be started.");
+        });
+        return 0;
+    }
+    catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), "startup", ex); return 1; }
+}
 if (args.Length != 8 || !OperatingSystem.IsWindows()) return 2;
 var pipeName = args[0];
 var journalPath = Path.GetFullPath(args[1]);

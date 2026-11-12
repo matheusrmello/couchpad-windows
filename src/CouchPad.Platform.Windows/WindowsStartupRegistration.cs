@@ -14,7 +14,8 @@ public sealed class WindowsStartupRegistration
         if (string.IsNullOrWhiteSpace(executable) || !Path.IsPathFullyQualified(executable) ||
             !string.Equals(Path.GetFileName(executable), "CouchPad.exe", StringComparison.OrdinalIgnoreCase) || executable.Contains('"'))
             throw new ArgumentException("An absolute CouchPad.exe path is required.", nameof(executable));
-        return $"\"{Path.GetFullPath(executable)}\"";
+        var rescue = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(executable))!, "CouchPad.Rescue.exe");
+        return $"\"{rescue}\" --startup-and-launch";
     }
 
     public bool IsEnabled(string executable)

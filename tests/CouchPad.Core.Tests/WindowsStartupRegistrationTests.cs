@@ -4,6 +4,27 @@ namespace CouchPad.Core.Tests;
 
 public sealed class WindowsStartupRegistrationTests
 {
+    [Fact]
+    public async Task Launch_waits_for_successful_recovery()
+    {
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var launched = false;
+        var task = StartupLaunchSequence.RunAsync(() => gate.Task, () => launched = true);
+        Assert.False(launched);
+        gate.SetResult();
+        await task;
+        Assert.True(launched);
+    }
+
+    [Fact]
+    public async Task Recovery_failure_blocks_launch()
+    {
+        var launched = false;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => StartupLaunchSequence.RunAsync(
+            () => Task.FromException(new InvalidOperationException()), () => launched = true));
+        Assert.False(launched);
+    }
+
     private static string Executable => Path.GetFullPath(Path.Combine(Path.GetTempPath(), "CouchPad.exe"));
 
     [Fact]
@@ -12,7 +33,7 @@ public sealed class WindowsStartupRegistrationTests
         var store = new FakeStore();
         var registration = new WindowsStartupRegistration(store);
         registration.SetEnabled(true, Executable);
-        Assert.Equal($"\"{Executable}\"", store.Value);
+        Assert.Equal($"\"{Path.Combine(Path.GetDirectoryName(Executable)!, "CouchPad.Rescue.exe")}\" --startup-and-launch", store.Value);
         registration.SetEnabled(true, Executable);
         Assert.Equal(1, store.Writes);
         registration.SetEnabled(false, Executable);

@@ -173,9 +173,9 @@
 ## D056 — Base isolada para autostart do App
 
 - Data: 2026-11-12
-- Decisão: preparar registro do App por usuário em `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, sem alterar comando de outra instalação; confirmar o resultado por leitura.
+- Decisão: preparar registro por usuário em `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` para iniciar o rescue com `--startup-and-launch`, sem alterar comando de outra instalação; confirmar o resultado por leitura. O rescue inicia o App somente após a recuperação terminar sem erro.
 - Motivo: permitir implementação e testes isolados sem depender da TV ou de privilégios administrativos.
-- Impacto: callbacks e tratamento de erro localizado foram preparados, mas a opção permanece desabilitada até garantir que o rescue execute antes do App. A integração não cria tarefa para o rescue e não foi validada em logon real. Entradas existentes diferentes são preservadas e reportadas como conflito.
+- Impacto: a sequência foi testada com callbacks falsos, mas a opção permanece desabilitada até a recuperação ser validada em hardware e logon. A integração não cria tarefa para o rescue e não foi validada em logon real. Entradas existentes diferentes são preservadas e reportadas como conflito.
 
 ## D057 — Bandeja e saída segura
 
