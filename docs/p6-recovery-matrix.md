@@ -35,7 +35,7 @@
 ## Tarefa de logon — preparação
 
 - Definição XML usa SID explícito, `InteractiveToken`, `LeastPrivilege`, `IgnoreNew`, sem timeout que possa interromper uma chamada CCD, e inicia somente `CouchPad.Rescue.exe --startup-recovery`. Criação é exclusiva e recusa sobrescrever uma tarefa existente; após registrar, compara campos essenciais.
-- Testes com backend falso cobrem definição, identidades inválidas, conflito e divergência na tarefa registrada. Build isolado, 253 testes e smoke passaram; nenhuma tarefa real foi criada.
+- Testes com backend falso cobrem definição, identidades inválidas, conflito e divergência na tarefa registrada. O Agendador local aceitou a definição com `TASK_VALIDATE_ONLY` (sem registrar tarefa). Build isolado, 253 testes e smoke passaram; nenhuma tarefa real foi criada.
 - Backend COM ainda não está conectado à instalação e não foi testado no Agendador real ou em logon. A coordenação entre essa tarefa e o autostart do App deve ser resolvida antes de habilitá-los; o usuário atual pode não ter permissão de registrar tarefa na pasta raiz, o que ainda precisa de verificação sem assumir elevação.
 
 ## Preparação da validação física
