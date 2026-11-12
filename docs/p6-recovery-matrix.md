@@ -23,6 +23,7 @@
 
 - `WindowsStartupRegistration` prepara uma entrada de inicialização por usuário no Registro, com caminho absoluto entre aspas e sem administrador. Ele recusa substituir ou remover uma entrada com outro comando e confirma a leitura após gravar ou remover.
 - A integração da opção foi preparada e testada com callbacks falsos, mas está desabilitada na composição do App: iniciar o App antes de um rescue agendado poderia impedir a recuperação de obter o lock da sessão. É preciso coordenar a ordem antes de habilitá-la. Nenhum Registro real foi alterado. A tarefa do rescue e a validação de logon continuam pendentes.
+- Testes do App verificam estado real simulado, falha com reversão do controle e preservação da preferência quando a opção está indisponível. Um teste adicional confere chaves e valores não vazios nos dois catálogos de idioma. Build e 239 testes passaram; smoke abriu e fechou a janela e verificou textos pt/en. A revisão visual e de acessibilidade completa permanece na P7a.
 
 ## Preparação da validação física
 
