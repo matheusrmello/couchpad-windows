@@ -60,6 +60,25 @@ public sealed class StartupRecoveryTests
     }
 
     [Fact]
+    public async Task Invalid_display_baseline_blocks_writes()
+    {
+        var original = Entry(SessionJournalEntry.PendingState);
+        var store = new Store { Entry = original with { RestoreDisplay = original.RestoreDisplay! with { Topology = "{}" } } };
+        var called = false;
+        await Assert.ThrowsAnyAsync<Exception>(() => StartupRecovery.RunAsync(store, (_, _) => { called = true; return Task.CompletedTask; }));
+        Assert.False(called);
+        Assert.False(store.Cleared);
+    }
+
+    [Fact]
+    public async Task Unknown_state_blocks_writes()
+    {
+        var store = new Store { Entry = Entry("unknown") };
+        await Assert.ThrowsAsync<InvalidDataException>(() => StartupRecovery.RunAsync(store, (_, _) => throw new Exception()));
+        Assert.False(store.Cleared);
+    }
+
+    [Fact]
     public async Task Unreadable_journal_blocks_writes()
     {
         var store = new Store { Unreadable = true };

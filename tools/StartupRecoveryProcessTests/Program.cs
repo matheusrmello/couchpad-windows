@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using CouchPad.Core.Audio;
 using CouchPad.Core.Automation;
@@ -19,6 +21,39 @@ foreach (var state in new[] { SessionJournalEntry.PendingState, SessionJournalEn
     if (await Run(child, path, marker, false) != 0 || File.Exists(path) || File.ReadAllText(marker) != "RESTORE_DISPLAY+AUDIO")
         throw new InvalidOperationException($"Recovery failed for {state}.");
     Console.WriteLine($"{state}: recovered and journal cleared");
+}
+{
+    var dir = Path.Combine(root, "missing");
+    Directory.CreateDirectory(dir);
+    var path = Path.Combine(dir, "session.json");
+    var marker = Path.Combine(dir, "marker");
+    if (await Run(child, path, marker, false) != 0 || File.Exists(path) || File.Exists(marker))
+        throw new InvalidOperationException("Missing journal must be a no-op.");
+    Console.WriteLine("missing journal: no recovery attempted");
+}
+{
+    var dir = Path.Combine(root, "malformed");
+    Directory.CreateDirectory(dir);
+    var path = Path.Combine(dir, "session.json");
+    var marker = Path.Combine(dir, "marker");
+    await File.WriteAllTextAsync(path, "{ malformed");
+    if (await Run(child, path, marker, false) == 0 || !File.Exists(path) || File.Exists(marker))
+        throw new InvalidOperationException("Malformed journal must block recovery.");
+    Console.WriteLine("malformed journal: no recovery attempted, journal preserved");
+}
+{
+    var dir = Path.Combine(root, "watchdog-locked");
+    Directory.CreateDirectory(dir);
+    var path = Path.Combine(dir, "session.json");
+    var marker = Path.Combine(dir, "marker");
+    new JsonSessionJournalStore(path).Save(Entry(SessionJournalEntry.PendingState));
+    var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Environment.UserDomainName + "\\" + Environment.UserName + "|" + path.ToUpperInvariant())));
+    using (var held = new FileStream(Path.Combine(dir, "watchdog-" + identity + ".lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+    {
+        if (await Run(child, path, marker, false) == 0 || !File.Exists(path) || File.Exists(marker))
+            throw new InvalidOperationException("Watchdog ownership must block startup recovery.");
+    }
+    Console.WriteLine("watchdog lock: competing recovery blocked");
 }
 {
     var dir = Path.Combine(root, "failure");

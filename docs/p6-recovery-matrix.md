@@ -6,8 +6,9 @@
 - O rescue adquire a posse exclusiva da sessão e o mesmo lock do watchdog antes de inspecionar o journal. Recusa journal ilegível, estado desconhecido e baseline sem topologia ou áudio completo. A restauração usa a decisão transacional e a verificação existentes. O journal é limpo somente após restauração bem-sucedida e confirmação de que seu conteúdo não mudou.
 - A exigência de baseline completo significa que journals antigos sem o snapshot de áudio não são restaurados automaticamente; eles são preservados para recuperação assistida.
 - Processo real compilado com backend falso em diretório isolado: `pending` e `active` restaurados e journal limpo; falha de áudio preservou journal; recuperação concorrente foi bloqueada; interrupção preservou journal e tentativa posterior terminou. O backend falso não acessa hardware.
+- Verificação adicional de processo: journal ausente não iniciou restore; journal corrompido foi preservado sem restore; posse do lock do watchdog bloqueou a recuperação concorrente. Testes unitários também recusaram estado desconhecido e topologia inválida.
 - Produção, journal ausente: comando encerrou com código 0 e journal ausente; a opção interna de teste foi recusada com código 2. Nenhuma recuperação real foi acionada nesta observação.
-- Build Debug 0 avisos/0 erros, 223 testes e smoke aprovados. Nenhuma mudança de tela ou áudio foi executada por estes testes.
+- Build Debug 0 avisos/0 erros, 225 testes e smoke aprovados. Nenhuma mudança de tela ou áudio foi executada por estes testes. Em 12/11/2026 o usuário informou que a TV está em uso; a validação física fica pendente até poder acompanhá-la.
 
 ## Validações restantes deste item
 
