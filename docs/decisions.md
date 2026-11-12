@@ -125,6 +125,14 @@
 - Impacto: o App pode ser encerrado para recuperar a sessão; o journal permanece até recuperação confirmada. Um pai de caminho não reconhecido não é encerrado e o watchdog reporta falha em vez de tocar outro processo; o App não habilita áudio real quando executado via `dotnet.exe`. A conclusão de chamadas no serviço de áudio do Windows após término do App não é garantida e segue como limitação a avaliar.
 - Evidência: revisão independente P5 e teste de processo falso com pai mantendo os dois locks.
 
+## D050 — Fonte física de gamepad via XInput, com opt-in de inicialização
+
+- Data: 2026-11-11
+- Decisão: a primeira fonte física será XInput por polling dos quatro slots, somente leitura, em `Platform.Windows`. O padrão permanece simulado; `--windows-gamepad` habilita a fonte real para a sessão. Dispositivos HID que não exponham XInput não são detectados neste slice.
+- Motivo: o contrato `IGamepadWatcher` já representa conexão/desconexão e aceita uma implementação de plataforma sem mudança no Core; XInput é suportado pelo Windows sem admin nem dependência adicional.
+- Impacto: o nome reportado é genérico (“XInput gamepad”) e o ID identifica o slot XInput, não um serial físico. O modo real só inicia com o argumento explícito; smoke/galeria continuam simulados. A validação de hardware ainda é necessária para conexão, desconexão, atraso, cancelamento, ausência e reconexão.
+- Evidência: `WindowsGamepadWatcher` e testes puros de seleção de slot; build 0/0, smoke OK e 197 testes aprovados em 11/11/2026.
+
 ## Formato de nova decisão
 
 ```md

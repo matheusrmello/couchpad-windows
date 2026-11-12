@@ -19,6 +19,7 @@ public partial class App : Application
 {
     // Held until process exit, including shutdown while a watchdog is active.
     private DisplaySessionOwner? _displaySessionOwner;
+    private WindowsGamepadWatcher? _gamepadWatcher;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -28,6 +29,8 @@ public partial class App : Application
         {
             var isSmoke = desktop.Args?.Contains("--smoke", StringComparer.Ordinal) == true;
             var isGallery = desktop.Args?.Contains("--gallery", StringComparer.Ordinal) == true;
+            var useWindowsGamepad = !isSmoke && !isGallery && OperatingSystem.IsWindows() &&
+                desktop.Args?.Contains("--windows-gamepad", StringComparer.Ordinal) == true;
             var settingsPath = isSmoke
                 ? Path.Combine(Path.GetTempPath(), "couchpad-smoke", "settings.json")
                 : AppPaths.SettingsFile();
@@ -47,6 +50,8 @@ public partial class App : Application
                 Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"), journalPath);
             if (audioGuard is not null) rescueGuard = audioGuard;
             _displaySessionOwner = isGallery ? null : AcquireDisplayOwner(journalPath);
+            if (useWindowsGamepad) _gamepadWatcher = new WindowsGamepadWatcher();
+            desktop.Exit += (_, _) => _gamepadWatcher?.Dispose();
             Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets =
                 isSmoke || isGallery || !OperatingSystem.IsWindows()
                     ? null
@@ -60,6 +65,7 @@ public partial class App : Application
                         LocalizationService.Instance,
                         settingsStore,
                         new JsonSessionJournalStore(journalPath),
+                        gamepadWatcher: _gamepadWatcher,
                         displayService: displayService,
                         audioService: audioService,
                         rescueGuard: rescueGuard,
