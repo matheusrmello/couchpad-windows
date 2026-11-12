@@ -66,6 +66,25 @@ foreach (var state in new[] { SessionJournalEntry.PendingState, SessionJournalEn
     Console.WriteLine("injected audio failure: journal preserved");
 }
 {
+    var dir = Path.Combine(root, "display-failure");
+    Directory.CreateDirectory(dir);
+    var path = Path.Combine(dir, "session.json");
+    var marker = Path.Combine(dir, "marker");
+    new JsonSessionJournalStore(path).Save(Entry(SessionJournalEntry.PendingState));
+    var info = ChildInfo(child, path, marker);
+    info.Environment["COUCHPAD_TEST_DISPLAY_FAIL"] = "1";
+    using (var process = Process.Start(info) ?? throw new InvalidOperationException("Fake rescue failed to start."))
+    {
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        await process.WaitForExitAsync(timeout.Token);
+        if (process.ExitCode == 0 || !File.Exists(path) || File.Exists(marker))
+            throw new InvalidOperationException("Display failure did not block audio and preserve journal.");
+    }
+    if (await Run(child, path, marker, false) != 0 || File.Exists(path) || File.ReadAllText(marker) != "RESTORE_DISPLAY+AUDIO")
+        throw new InvalidOperationException("Retry after display failure failed.");
+    Console.WriteLine("injected display failure: audio blocked, journal preserved and retry succeeded");
+}
+{
     var dir = Path.Combine(root, "interrupted");
     Directory.CreateDirectory(dir);
     var path = Path.Combine(dir, "session.json");

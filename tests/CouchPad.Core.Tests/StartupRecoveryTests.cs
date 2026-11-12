@@ -40,6 +40,28 @@ public sealed class StartupRecoveryTests
     }
 
     [Fact]
+    public async Task Failed_clear_reports_failure_and_preserves_journal()
+    {
+        var store = new Store { Entry = Entry(SessionJournalEntry.ActiveState), FailClear = true };
+        await Assert.ThrowsAsync<IOException>(() => StartupRecovery.RunAsync(store, (_, _) => Task.CompletedTask));
+        Assert.NotNull(store.Entry);
+        Assert.False(store.Cleared);
+    }
+
+    [Fact]
+    public async Task Journal_becoming_unreadable_after_restore_is_not_cleared()
+    {
+        var store = new Store { Entry = Entry(SessionJournalEntry.PendingState) };
+        await Assert.ThrowsAsync<InvalidDataException>(() => StartupRecovery.RunAsync(store, (_, _) =>
+        {
+            store.Unreadable = true;
+            return Task.CompletedTask;
+        }));
+        Assert.NotNull(store.Entry);
+        Assert.False(store.Cleared);
+    }
+
+    [Fact]
     public async Task Changed_journal_is_not_cleared()
     {
         var store = new Store { Entry = Entry(SessionJournalEntry.PendingState) };
@@ -122,9 +144,10 @@ public sealed class StartupRecoveryTests
         public SessionJournalEntry? Entry;
         public bool Cleared;
         public bool Unreadable;
+        public bool FailClear;
         public SessionJournalEntry? Load() => Entry;
         public SessionJournalInspection Inspect() => Unreadable ? new(SessionJournalStatus.Unreadable, null) : Entry is null ? new(SessionJournalStatus.Missing, null) : new(SessionJournalStatus.Present, Entry);
         public void Save(SessionJournalEntry entry) => Entry = entry;
-        public void Clear() { Cleared = true; Entry = null; }
+        public void Clear() { if (FailClear) throw new IOException("Injected clear failure"); Cleared = true; Entry = null; }
     }
 }

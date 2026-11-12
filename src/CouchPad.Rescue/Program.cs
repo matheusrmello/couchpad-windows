@@ -200,6 +200,7 @@ static async Task Restore(SessionJournalEntry journal, string decisionPath, Guid
     await using (var mutation = await DisplayMutationLock.AcquireAsync(transaction.MutationLockPath))
     {
         await transaction.RequireAsync(RescueDecisionState.RecoveryRequested);
+        if (Environment.GetEnvironmentVariable("COUCHPAD_TEST_DISPLAY_FAIL") == "1") throw new InvalidOperationException("Injected display recovery failure.");
         await File.WriteAllTextAsync(marker, journal.RestoreAudioBaseline is null ? "RESTORE" : "RESTORE_DISPLAY");
     }
     if (journal.RestoreAudioBaseline is not null)
