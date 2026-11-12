@@ -26,6 +26,11 @@
 - A integração da opção foi preparada e testada com callbacks falsos, mas está desabilitada na composição do App: iniciar o App antes de um rescue agendado poderia impedir a recuperação de obter o lock da sessão. É preciso coordenar a ordem antes de habilitá-la. Nenhum Registro real foi alterado. A tarefa do rescue e a validação de logon continuam pendentes.
 - Testes do App verificam estado real simulado, falha com reversão do controle e preservação da preferência quando a opção está indisponível. Um teste adicional confere chaves e valores não vazios nos dois catálogos de idioma. Build e 239 testes passaram; smoke abriu e fechou a janela e verificou textos pt/en. A revisão visual e de acessibilidade completa permanece na P7a.
 
+## Bandeja
+
+- Ícone Windows com abrir e sair, textos pt/en e ocultação ao minimizar/fechar quando habilitada. Saída solicita desativação; estado de recuperação incerto impede encerramento.
+- Build 0/0, 241 testes e smoke passaram. Testes simulados cobrem saída inativa e recusa com journal ilegível. O smoke não cria bandeja; interação visual de abrir/minimizar/sair e restauração de sessão real na saída permanecem pendentes.
+
 ## Preparação da validação física
 
 - Confirmar presença do usuário, AOC e Samsung conectados, controle desligado, journal ausente e baseline completo de tela e áudio. Não iniciar se o watchdog ou outra instância mantiver os locks.

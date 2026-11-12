@@ -10,6 +10,24 @@ namespace CouchPad.App.Tests;
 public sealed class MainWindowViewModelDisplayTests
 {
     [Fact]
+    public async Task Exit_from_idle_is_allowed_without_changing_saved_automation_preference()
+    {
+        var store = new FakeSettingsStore();
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal());
+        Assert.True(await vm.PrepareExitAsync());
+        Assert.False(store.Current.AutomationEnabled);
+    }
+
+    [Fact]
+    public async Task Exit_is_refused_when_recovery_is_uncertain()
+    {
+        var store = new FakeSettingsStore();
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new UnreadableJournal());
+        Assert.False(await vm.PrepareExitAsync());
+    }
+    [Fact]
     public void Startup_setting_reads_real_state_and_writes_only_when_changed()
     {
         var store = new FakeSettingsStore { Current = new AppSettings { StartWithWindows = true } };
@@ -225,5 +243,13 @@ public sealed class MainWindowViewModelDisplayTests
         public void Clear()
         {
         }
+    }
+
+    private sealed class UnreadableJournal : ISessionJournalStore
+    {
+        public SessionJournalEntry? Load() => null;
+        public SessionJournalInspection Inspect() => new(SessionJournalStatus.Unreadable, null);
+        public void Save(SessionJournalEntry entry) => throw new NotSupportedException();
+        public void Clear() => throw new NotSupportedException();
     }
 }

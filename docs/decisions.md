@@ -177,6 +177,13 @@
 - Motivo: permitir implementação e testes isolados sem depender da TV ou de privilégios administrativos.
 - Impacto: callbacks e tratamento de erro localizado foram preparados, mas a opção permanece desabilitada até garantir que o rescue execute antes do App. A integração não cria tarefa para o rescue e não foi validada em logon real. Entradas existentes diferentes são preservadas e reportadas como conflito.
 
+## D057 — Bandeja e saída segura
+
+- Data: 2026-11-12
+- Decisão: no App Windows, fornecer ícone de bandeja com ações localizadas para abrir e sair. Com a opção de bandeja ativa, minimizar ou fechar a janela a oculta; sair solicita desativação da automação e só encerra quando o coordenador informa estado seguro.
+- Motivo: manter a automação disponível em segundo plano sem abandonar uma recuperação incerta na saída solicitada.
+- Impacto: smoke e galeria não criam bandeja. A validação automatizada cobre saída inativa e recusa quando a recuperação é incerta; interação visual da bandeja e saída com sessão real ainda precisam de validação.
+
 ## Formato de nova decisão
 
 ```md

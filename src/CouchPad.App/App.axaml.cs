@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using CouchPad.App.Localization;
 using CouchPad.App.ViewModels;
 using CouchPad.App.Views;
@@ -21,6 +22,7 @@ public partial class App : Application
     private DisplaySessionOwner? _displaySessionOwner;
     private WindowsGamepadWatcher? _gamepadWatcher;
     private WindowsCountdownNotifications? _countdownNotifications;
+    private TrayIcon? _trayIcon;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -84,6 +86,64 @@ public partial class App : Application
                 };
 
             desktop.MainWindow = window;
+
+            if (!isSmoke && !isGallery && OperatingSystem.IsWindows() && window.DataContext is MainWindowViewModel viewModel)
+            {
+                var open = new NativeMenuItem();
+                var exit = new NativeMenuItem();
+                void UpdateTrayText()
+                {
+                    open.Header = LocalizationService.Instance["tray.open"];
+                    exit.Header = LocalizationService.Instance["tray.exit"];
+                }
+                UpdateTrayText();
+                LocalizationService.Instance.PropertyChanged += (_, _) => UpdateTrayText();
+                void ShowWindow()
+                {
+                    window.Show();
+                    if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
+                    window.Activate();
+                }
+                var allowExit = false;
+                var exiting = false;
+                async void ExitSafely()
+                {
+                    if (exiting) return;
+                    exiting = true;
+                    try
+                    {
+                        if (await viewModel.PrepareExitAsync())
+                        {
+                            allowExit = true;
+                            desktop.Shutdown();
+                        }
+                        else ShowWindow();
+                    }
+                    catch (Exception) { ShowWindow(); }
+                    finally { exiting = false; }
+                }
+                open.Click += (_, _) => ShowWindow();
+                exit.Click += (_, _) => ExitSafely();
+                var menu = new NativeMenu();
+                menu.Items.Add(open);
+                menu.Items.Add(exit);
+                using var stream = AssetLoader.Open(new Uri("avares://CouchPad/Assets/couchpad.ico"));
+                _trayIcon = new TrayIcon { Icon = new WindowIcon(stream), ToolTipText = "CouchPad", Menu = menu, IsVisible = true };
+                _trayIcon.Clicked += (_, _) => ShowWindow();
+                window.PropertyChanged += (_, e) =>
+                {
+                    if (e.Property == Window.WindowStateProperty && window.WindowState == WindowState.Minimized && viewModel.MinimizeToTray)
+                        window.Hide();
+                };
+                window.Closing += (_, e) =>
+                {
+                    if (allowExit) return;
+                    e.Cancel = true;
+                    if (viewModel.MinimizeToTray) window.Hide();
+                    else ExitSafely();
+                };
+                desktop.Exit += (_, _) => _trayIcon.Dispose();
+            }
 
             if (isSmoke)
             {

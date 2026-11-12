@@ -69,6 +69,8 @@
 
   "settings.close_launcher": "Exit game mode on restore",
   "settings.startup_error": "Windows startup could not be updated.",
+  "tray.open": "Open CouchPad",
+  "tray.exit": "Exit",
   "settings.start_with_windows": "Start with Windows",
   "settings.minimize_to_tray": "Minimize to tray",
   "settings.allow_display_writes": "Allow display writes",

@@ -161,6 +161,12 @@ public partial class MainWindowViewModel : ObservableObject
 
     public bool CanConfigureStartup => _configureStartup is not null;
 
+    public async Task<bool> PrepareExitAsync()
+    {
+        await _coordinator.SetEnabledAsync(false);
+        return !_coordinator.IsRecoveryUncertain && _coordinator.State == AutomationState.Idle;
+    }
+
     /// <summary>Índice do seletor de idioma: 0 = pt-BR, 1 = inglês.</summary>
     public int LanguageIndex
     {
