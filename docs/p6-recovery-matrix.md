@@ -36,7 +36,7 @@
 
 - Definição XML usa SID explícito, `InteractiveToken`, `LeastPrivilege`, `IgnoreNew`, sem timeout que possa interromper uma chamada CCD, e inicia somente `CouchPad.Rescue.exe --startup-recovery`. Criação é exclusiva e recusa sobrescrever uma tarefa existente; após registrar, compara campos essenciais.
 - Testes com backend falso cobrem definição, identidades inválidas, conflito e divergência na tarefa registrada. O Agendador local aceitou a definição com `TASK_VALIDATE_ONLY` (sem registrar tarefa). Build isolado, 253 testes e smoke passaram; nenhuma tarefa real foi criada.
-- Backend COM ainda não está conectado à instalação e não foi testado no Agendador real ou em logon. A coordenação entre essa tarefa e o autostart do App deve ser resolvida antes de habilitá-los; o usuário atual pode não ter permissão de registrar tarefa na pasta raiz, o que ainda precisa de verificação sem assumir elevação.
+- Validação local em 12/11/2026: a tarefa do usuário foi registrada e conferida após tratar a normalização do Agendador (nome da conta no gatilho e valores padrão omitidos). A execução manual da tarefa registrada com journal ausente terminou com resultado 0 e o journal continuou ausente. A tarefa está habilitada para a validação do gatilho real. O registro ainda não está integrado à instalação e o autostart do App não está registrado nesta máquina.
 
 ## Preparação da validação física
 

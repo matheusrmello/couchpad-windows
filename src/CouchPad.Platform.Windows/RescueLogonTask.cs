@@ -57,11 +57,23 @@ internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store)
             string.Equals((string?)action.Element(ns + "Command"), Path.GetFullPath(executable), StringComparison.OrdinalIgnoreCase) &&
             (string?)action.Element(ns + "Arguments") == "--startup-recovery" &&
             string.Equals((string?)action.Element(ns + "WorkingDirectory"), Path.GetDirectoryName(Path.GetFullPath(executable)), StringComparison.OrdinalIgnoreCase) &&
-            (string?)trigger.Element(ns + "UserId") == sid && (string?)principal.Element(ns + "UserId") == sid &&
-            (string?)trigger.Element(ns + "Enabled") == "true" && (string?)settings?.Element(ns + "Enabled") == "true" &&
-            (string?)principal.Element(ns + "LogonType") == "InteractiveToken" && (string?)principal.Element(ns + "RunLevel") == "LeastPrivilege" &&
+            IsSameUser((string?)trigger.Element(ns + "UserId"), sid) && IsSameUser((string?)principal.Element(ns + "UserId"), sid) &&
+            ((bool?)trigger.Element(ns + "Enabled") ?? true) && ((bool?)settings?.Element(ns + "Enabled") ?? true) &&
+            (string?)principal.Element(ns + "LogonType") == "InteractiveToken" && ((string?)principal.Element(ns + "RunLevel") ?? "LeastPrivilege") == "LeastPrivilege" &&
             (string?)settings?.Element(ns + "MultipleInstancesPolicy") == "IgnoreNew" &&
             (string?)settings?.Element(ns + "ExecutionTimeLimit") == "PT0S";
+    }
+
+    private static bool IsSameUser(string? user, string sid)
+    {
+        if (string.Equals(user, sid, StringComparison.OrdinalIgnoreCase)) return true;
+        if (string.IsNullOrWhiteSpace(user) || !OperatingSystem.IsWindows()) return false;
+        try
+        {
+            var identity = new System.Security.Principal.NTAccount(user);
+            return identity.Translate(typeof(System.Security.Principal.SecurityIdentifier)).Value == sid;
+        }
+        catch (System.Security.Principal.IdentityNotMappedException) { return false; }
     }
 }
 
@@ -79,6 +91,7 @@ internal sealed class WindowsRescueLogonTaskStore : IRescueLogonTaskStore
     {
         object? task = null;
         try { task = folder.GetTask(name); return true; }
+        catch (FileNotFoundException) { return false; }
         catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x80070002) { return false; }
         finally { Release(task); }
     });
@@ -87,6 +100,7 @@ internal sealed class WindowsRescueLogonTaskStore : IRescueLogonTaskStore
     {
         object? task = null;
         try { task = folder.GetTask(name); return (string)((dynamic)task).Xml; }
+        catch (FileNotFoundException) { return null; }
         catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x80070002) { return null; }
         finally { Release(task); }
     });
