@@ -27,3 +27,10 @@ Data: 2026-11-12. Escopo: Steam e Hydra em Big Picture, um cenário por vez.
 | 6 | Launcher ausente e launcher previamente aberto; restaurar sem afetar instância anterior | Pendente |
 
 Registrar resultado, operador, topologia e áudio antes/depois antes de avançar; parar em tela preta ou falha de recuperação. Ausência de evidência mantém o cenário pendente.
+
+### Pré-voo somente leitura, 12/11/2026
+
+- `InternalOnly`: AOC ativo, TV inativa. Os três papéis de áudio apontam ao monitor; volume 1, mudo ligado.
+- Journal ausente; consulta de processos não encontrou CouchPad, Steam ou Hydra em execução.
+- Configuração persistida: automação, escrita de tela/áudio, gamepad real e launcher habilitados; opção de fechar launcher desligada. Como a skill requer início com automação desligada e launcher desativado no primeiro teste, isso precisa ser preparado antes da matriz real, com o usuário presente.
+- Nenhuma tela, áudio ou processo foi alterado por este pré-voo. Presença, imagem, condições físicas e recuperação manual ainda precisam de confirmação na sessão de teste.
