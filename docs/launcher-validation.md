@@ -20,8 +20,8 @@ Data: 2026-11-12. Escopo: Steam e Hydra em Big Picture, um cenário por vez.
 | Ordem | Cenário | Status |
 |---|---|---|
 | 1 | Pré-voo: AOC/TV, controle, journal ausente, áudio e operador | Concluído |
-| 2 | Steam Big Picture: ativação, imagem, áudio e journal | Pendente |
-| 3 | Steam: desligamento e restauração; fechamento conforme opção | Pendente |
+| 2 | Steam Big Picture: ativação, imagem, áudio e journal | Concluído |
+| 3 | Steam: desligamento e restauração; fechamento conforme opção | Falhou: Steam continuou aberto |
 | 4 | Hydra Big Picture: ativação, imagem, áudio e journal | Pendente |
 | 5 | Hydra: desligamento e restauração; fechamento conforme opção | Pendente |
 | 6 | Launcher ausente e launcher previamente aberto; restaurar sem afetar instância anterior | Pendente |
@@ -40,3 +40,10 @@ Registrar resultado, operador, topologia e áudio antes/depois antes de avançar
 - Operador: usuário presente, com AOC, Samsung e controle 8BitDo conectados. Launcher desativado para este cenário.
 - Ao ligar a automação com o controle conectado, o journal ficou `active`; o probe identificou somente a TV ativa e os três papéis de áudio no mesmo endpoint Samsung. Nenhum processo Steam ou Hydra foi encontrado. O usuário confirmou imagem na Samsung e AOC apagado.
 - Após desligar o controle, o usuário confirmou imagem normal no AOC e Samsung sem área de trabalho. O probe confirmou `InternalOnly`, os três papéis de áudio no endpoint original do AOC e journal ausente; nenhum Steam ou Hydra estava em execução.
+
+### Steam Big Picture, 12/11/2026
+
+- Operador: usuário presente. Steam não estava em execução antes do teste; abertura e fechamento ao restaurar habilitados.
+- Ao ligar o controle, usuário confirmou Steam Big Picture na Samsung e AOC apagado. Probe: somente TV, três papéis de áudio na Samsung, journal `active`; Steam PID 2360 observado.
+- Ao desligar o controle, usuário confirmou restauração visual, mas Steam permaneceu aberto. Probe: `InternalOnly`, três papéis de áudio no AOC e journal ausente. Steam PID 16848 permanecia ativo; a mudança de PID impede atribuir a instância restante com segurança ao processo originalmente iniciado. Fechamento não aprovado e nenhum encerramento forçado foi realizado.
+- O card exibiu mensagem de falha do launcher. A implementação também passou a reportar falha quando o PID rastreado desaparece e outro processo do launcher permanece, em vez de considerar esse caso fechado. Build 0/0, 214 testes e smoke aprovados; repetição em hardware pendente.

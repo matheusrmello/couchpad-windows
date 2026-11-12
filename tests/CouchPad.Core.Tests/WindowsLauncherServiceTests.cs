@@ -5,6 +5,13 @@ namespace CouchPad.Core.Tests;
 
 public sealed class WindowsLauncherServiceTests
 {
+    [Fact]
+    public void ReplacementProcessMustNotBeReportedAsClosed()
+    {
+        Assert.Throws<InvalidOperationException>(() => WindowsLauncherBackend.EnsureNoReplacement(true));
+        WindowsLauncherBackend.EnsureNoReplacement(false);
+    }
+
     [Theory]
     [InlineData(LauncherKind.Steam, "-gamepadui")]
     [InlineData(LauncherKind.Hydra, "--big-picture")]

@@ -126,14 +126,25 @@ internal sealed class WindowsLauncherBackend : IWindowsLauncherBackend
     {
         Process candidate;
         try { candidate = Process.GetProcessById(process.ProcessId); }
-        catch (ArgumentException) { return; }
+        catch (ArgumentException) { VerifyNoReplacement(process); return; }
         using (candidate)
         {
-            if (!Matches(candidate, process) || candidate.HasExited) return;
+            if (!Matches(candidate, process) || candidate.HasExited) { VerifyNoReplacement(process); return; }
             cancellationToken.ThrowIfCancellationRequested();
             if (!candidate.CloseMainWindow()) throw new InvalidOperationException("The owned launcher has no closable window.");
             await candidate.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    private void VerifyNoReplacement(OwnedLauncher process)
+    {
+        EnsureNoReplacement(IsRunning(process.Executable));
+    }
+
+    internal static void EnsureNoReplacement(bool launcherStillRunning)
+    {
+        if (launcherStillRunning)
+            throw new InvalidOperationException("The launcher process changed; its remaining instance cannot be safely closed.");
     }
 
     private static bool Matches(Process candidate, OwnedLauncher expected) =>
