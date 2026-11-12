@@ -190,6 +190,13 @@
 - Decisão: limitar a três tentativas automáticas de recuperação por baseline, registrando cada tentativa antes de escrever no hardware. Após o limite ou registro inválido, preservar o journal e exigir recuperação assistida. Limpar o contador após recuperação confirmada ou ausência de journal.
 - Evidência: testes unitários e processos com backend falso; a quarta tentativa não acionou o backend e preservou o journal. Teste real permanece pendente.
 
+## D059 — Definição isolada da tarefa de logon
+
+- Data: 2026-11-12
+- Decisão: preparar tarefa do rescue por SID, com logon interativo, privilégio limitado, uma instância por vez e comando `--startup-recovery`; criação usa `TASK_CREATE` e recusa sobrescrever tarefa existente.
+- Motivo: permitir testes de configuração e da recusa de conflitos antes de habilitar recuperação automática no logon.
+- Impacto: o backend COM e a definição ainda não estão integrados à instalação nem validados no Agendador real. Nenhuma tarefa foi registrada; coordenação com autostart e recuperação em hardware continuam pendentes. Referência: [esquema do Agendador do Windows](https://learn.microsoft.com/en-us/windows/win32/taskschd/task-scheduler-schema).
+
 ## Formato de nova decisão
 
 ```md

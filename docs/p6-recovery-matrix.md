@@ -32,6 +32,12 @@
 - Ícone Windows com abrir e sair, textos pt/en e ocultação ao minimizar/fechar quando habilitada. Saída solicita desativação; estado de recuperação incerto impede encerramento.
 - Build 0/0, 241 testes e smoke passaram. Testes simulados cobrem saída inativa e recusa com journal ilegível. O smoke não cria bandeja; interação visual de abrir/minimizar/sair e restauração de sessão real na saída permanecem pendentes.
 
+## Tarefa de logon — preparação
+
+- Definição XML usa SID explícito, `InteractiveToken`, `LeastPrivilege`, `IgnoreNew`, sem timeout que possa interromper uma chamada CCD, e inicia somente `CouchPad.Rescue.exe --startup-recovery`. Criação é exclusiva e recusa sobrescrever uma tarefa existente; após registrar, compara campos essenciais.
+- Testes com backend falso cobrem definição, identidades inválidas, conflito e divergência na tarefa registrada. Build isolado, 253 testes e smoke passaram; nenhuma tarefa real foi criada.
+- Backend COM ainda não está conectado à instalação e não foi testado no Agendador real ou em logon. A coordenação entre essa tarefa e o autostart do App deve ser resolvida antes de habilitá-los; o usuário atual pode não ter permissão de registrar tarefa na pasta raiz, o que ainda precisa de verificação sem assumir elevação.
+
 ## Preparação da validação física
 
 - Confirmar presença do usuário, AOC e Samsung conectados, controle desligado, journal ausente e baseline completo de tela e áudio. Não iniciar se o watchdog ou outra instância mantiver os locks.
