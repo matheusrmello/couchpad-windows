@@ -38,6 +38,12 @@
 - Testes com backend falso cobrem definição, identidades inválidas, conflito e divergência na tarefa registrada. O Agendador local aceitou a definição com `TASK_VALIDATE_ONLY` (sem registrar tarefa). Build isolado, 253 testes e smoke passaram; nenhuma tarefa real foi criada.
 - Validação local em 12/11/2026: a tarefa do usuário foi registrada e conferida após tratar a normalização do Agendador (nome da conta no gatilho e valores padrão omitidos). A execução manual da tarefa registrada com journal ausente terminou com resultado 0 e o journal continuou ausente. A tarefa está habilitada para a validação do gatilho real. O registro ainda não está integrado à instalação e o autostart do App não está registrado nesta máquina.
 
+### Comandos para instalação e remoção
+
+- Após copiar os arquivos, o instalador deve chamar o `CouchPad.Rescue.exe --install-logon-task` da pasta de destino, no contexto do usuário. Antes de remover os arquivos, deve chamar `--remove-logon-task` do mesmo executável. Aguarde o código de saída. Código 1 interrompe a etapa e grava diagnóstico local em `%LOCALAPPDATA%\CouchPad\logs\rescue-failures.log`. A remoção recusa sessão em uso ou journal presente. O instalador final pertence à P7b.
+- Em 12/11/2026, no Agendador real, o executável aceitou reinstalação da tarefa idêntica, recusou instalação e remoção a partir de outro diretório e recusou remover com o lock de sessão ocupado. Remoção e remoção repetida retornaram 0, com ausência confirmada. A tarefa foi reinstalada, conferida e permaneceu habilitada. A leitura imediatamente após reinstalação mostrou estado Ready e nenhuma execução anterior. O journal permaneceu ausente.
+- Build Debug 0/0, 258 testes e smoke aprovados. A evidência do disparo automático exige sair da sessão do Windows, entrar novamente e verificar `LastRunTime`, `LastTaskResult = 0` e journal ausente antes de qualquer execução manual da tarefa.
+
 ## Preparação da validação física
 
 - Confirmar presença do usuário, AOC e Samsung conectados, controle desligado, journal ausente e baseline completo de tela e áudio. Não iniciar se o watchdog ou outra instância mantiver os locks.

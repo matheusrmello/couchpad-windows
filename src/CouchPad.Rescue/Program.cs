@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
 using CouchPad.Core.Automation;
@@ -30,6 +31,31 @@ if (args.Length == 2 && args[0] == "--test-startup-recovery" && OperatingSystem.
     catch { return 1; }
 }
 #endif
+if (args is [var taskCommand] && taskCommand is ("--install-logon-task" or "--remove-logon-task") && OperatingSystem.IsWindows())
+{
+    try
+    {
+        var journal = AppPaths.SessionJournalFile();
+        using var owner = DisplaySessionOwner.Acquire(journal);
+        using var currentUser = WindowsIdentity.GetCurrent();
+        var sid = currentUser.User?.Value ?? throw new InvalidOperationException("Windows user SID unavailable.");
+        var executable = Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe");
+        var registration = new RescueLogonTaskRegistration(new WindowsRescueLogonTaskStore());
+        if (taskCommand == "--install-logon-task")
+        {
+            if (!File.Exists(executable)) throw new FileNotFoundException("Rescue apphost unavailable.", executable);
+            registration.Create(executable, sid);
+        }
+        else
+        {
+            if (new JsonSessionJournalStore(journal).Inspect().Status != SessionJournalStatus.Missing)
+                throw new InvalidOperationException("Complete session recovery before removing the rescue task.");
+            registration.Remove(executable, sid);
+        }
+        return 0;
+    }
+    catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), "startup", ex); return 1; }
+}
 if (args is ["--assisted-recovery"] && OperatingSystem.IsWindows())
 {
     var recovered = await RunAssistedRecovery(AppPaths.SessionJournalFile());

@@ -213,6 +213,11 @@
 - O pedido explícito permite uma tentativa além do limite automático. Mantém os locks, a exigência de baseline completo e a remoção do journal apenas após a verificação. O App reabre com automação desligada naquela sessão e informa falha quando aplicável.
 - Journal inválido ou incompleto permanece no disco. O diagnóstico do rescue é local.
 
+## D063 — Ciclo de vida da tarefa de logon
+
+- O rescue fornece comandos de instalação e remoção para o instalador da P7b. A instalação aceita repetir a mesma configuração. A remoção exige que a definição existente corresponda ao executável da instalação e que o journal esteja ausente sob o lock de sessão.
+- A tarefa é criada somente quando ausente. Após instalar ou remover, a operação verifica o resultado no Agendador. Falha retorna código 1 e mantém o diagnóstico local.
+
 ## Formato de nova decisão
 
 ```md

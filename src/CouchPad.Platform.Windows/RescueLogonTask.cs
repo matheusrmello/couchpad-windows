@@ -30,17 +30,33 @@ internal static class RescueLogonTask
     }
 }
 
-/// <summary>Creates only a new task; never overwrites an existing task.</summary>
+/// <summary>Manages the task only when its definition belongs to this installation.</summary>
 internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store)
 {
     internal void Create(string executable, string sid)
     {
         var xml = RescueLogonTask.CreateXml(executable, sid);
         var name = "CouchPad-Rescue-" + sid;
-        if (store.Exists(name)) throw new InvalidOperationException("A rescue task already exists.");
+        var existing = store.ReadXml(name);
+        if (existing is not null)
+        {
+            if (!Matches(existing, executable, sid)) throw new InvalidOperationException("A different rescue task already exists.");
+            return;
+        }
         store.Create(name, xml, sid);
         var registered = store.ReadXml(name) ?? throw new IOException("Rescue task registration could not be verified.");
         if (!Matches(registered, executable, sid)) throw new InvalidDataException("Registered rescue task differs from the intended task.");
+    }
+
+    internal void Remove(string executable, string sid)
+    {
+        _ = RescueLogonTask.CreateXml(executable, sid);
+        var name = "CouchPad-Rescue-" + sid;
+        var existing = store.ReadXml(name);
+        if (existing is null) return;
+        if (!Matches(existing, executable, sid)) throw new InvalidOperationException("The rescue task belongs to a different configuration.");
+        store.Delete(name);
+        if (store.ReadXml(name) is not null) throw new IOException("Rescue task removal could not be verified.");
     }
 
     private static bool Matches(string xml, string executable, string sid)
@@ -61,6 +77,8 @@ internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store)
             ((bool?)trigger.Element(ns + "Enabled") ?? true) && ((bool?)settings?.Element(ns + "Enabled") ?? true) &&
             (string?)principal.Element(ns + "LogonType") == "InteractiveToken" && ((string?)principal.Element(ns + "RunLevel") ?? "LeastPrivilege") == "LeastPrivilege" &&
             (string?)settings?.Element(ns + "MultipleInstancesPolicy") == "IgnoreNew" &&
+            !((bool?)settings?.Element(ns + "DisallowStartIfOnBatteries") ?? true) &&
+            !((bool?)settings?.Element(ns + "StopIfGoingOnBatteries") ?? true) &&
             (string?)settings?.Element(ns + "ExecutionTimeLimit") == "PT0S";
     }
 
@@ -79,23 +97,14 @@ internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store)
 
 internal interface IRescueLogonTaskStore
 {
-    bool Exists(string name);
     string? ReadXml(string name);
     void Create(string name, string xml, string sid);
+    void Delete(string name);
 }
 
 /// <summary>Task Scheduler COM backend. Registration is explicit and never overwrites a task.</summary>
 internal sealed class WindowsRescueLogonTaskStore : IRescueLogonTaskStore
 {
-    public bool Exists(string name) => WithFolder(folder =>
-    {
-        object? task = null;
-        try { task = folder.GetTask(name); return true; }
-        catch (FileNotFoundException) { return false; }
-        catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x80070002) { return false; }
-        finally { Release(task); }
-    });
-
     public string? ReadXml(string name) => WithFolder(folder =>
     {
         object? task = null;
@@ -111,6 +120,14 @@ internal sealed class WindowsRescueLogonTaskStore : IRescueLogonTaskStore
         object? task = null;
         try { task = folder.RegisterTask(name, xml, 2, sid, null, 3, null); return null; }
         finally { Release(task); }
+    });
+
+    public void Delete(string name) => WithFolder<object?>(folder =>
+    {
+        try { folder.DeleteTask(name, 0); }
+        catch (FileNotFoundException) { }
+        catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x80070002) { }
+        return null;
     });
 
     private static T WithFolder<T>(Func<dynamic, T> action)

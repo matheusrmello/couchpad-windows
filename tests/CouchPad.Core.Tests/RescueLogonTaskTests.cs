@@ -37,10 +37,14 @@ public sealed class RescueLogonTaskTests
     [Fact]
     public void Existing_task_is_not_overwritten()
     {
-        var store = new FakeStore { Present = true };
+        var store = new FakeStore { Xml = RescueLogonTask.CreateXml(
+            Path.Combine(Path.GetTempPath(), "other", "CouchPad.Rescue.exe"), "S-1-5-21-1") };
         Assert.Throws<InvalidOperationException>(() => new RescueLogonTaskRegistration(store).Create(
             Path.Combine(Path.GetTempPath(), "CouchPad.Rescue.exe"), "S-1-5-21-1"));
         Assert.Equal(0, store.Creates);
+        Assert.Throws<InvalidOperationException>(() => new RescueLogonTaskRegistration(store).Remove(
+            Path.Combine(Path.GetTempPath(), "CouchPad.Rescue.exe"), "S-1-5-21-1"));
+        Assert.Equal(0, store.Deletes);
     }
 
     [Fact]
@@ -49,8 +53,8 @@ public sealed class RescueLogonTaskTests
         var store = new FakeStore();
         new RescueLogonTaskRegistration(store).Create(Path.Combine(Path.GetTempPath(), "CouchPad.Rescue.exe"), "S-1-5-21-1");
         Assert.Equal(1, store.Creates);
-        Assert.Equal(1, store.Reads);
-        Assert.True(store.Present);
+        Assert.Equal(2, store.Reads);
+        Assert.NotNull(store.Xml);
     }
 
     [Fact]
@@ -61,13 +65,42 @@ public sealed class RescueLogonTaskTests
             Path.Combine(Path.GetTempPath(), "CouchPad.Rescue.exe"), "S-1-5-21-1"));
     }
 
+    [Fact]
+    public void Reinstall_and_uninstall_are_idempotent()
+    {
+        var executable = Path.Combine(Path.GetTempPath(), "CouchPad.Rescue.exe");
+        var store = new FakeStore();
+        var registration = new RescueLogonTaskRegistration(store);
+        registration.Create(executable, "S-1-5-21-1");
+        registration.Create(executable, "S-1-5-21-1");
+        registration.Remove(executable, "S-1-5-21-1");
+        registration.Remove(executable, "S-1-5-21-1");
+        Assert.Equal(1, store.Creates);
+        Assert.Equal(1, store.Deletes);
+        Assert.Null(store.Xml);
+    }
+
+    [Fact]
+    public void Removal_must_be_confirmed()
+    {
+        var executable = Path.Combine(Path.GetTempPath(), "CouchPad.Rescue.exe");
+        var store = new FakeStore { IgnoreDelete = true };
+        var registration = new RescueLogonTaskRegistration(store);
+        registration.Create(executable, "S-1-5-21-1");
+        Assert.Throws<IOException>(() => registration.Remove(executable, "S-1-5-21-1"));
+    }
+
     private sealed class FakeStore : IRescueLogonTaskStore
     {
-        public bool Present, Tamper;
-        public int Creates, Reads;
-        private string? _xml;
-        public bool Exists(string name) { Reads++; return Present; }
-        public string? ReadXml(string name) => Tamper ? _xml?.Replace("LeastPrivilege", "HighestAvailable") : _xml;
-        public void Create(string name, string xml, string sid) { Creates++; Present = true; _xml = xml; }
+        public bool Tamper, IgnoreDelete;
+        public int Creates, Reads, Deletes;
+        public string? Xml;
+        public string? ReadXml(string name)
+        {
+            Reads++;
+            return Tamper ? Xml?.Replace("LeastPrivilege", "HighestAvailable") : Xml;
+        }
+        public void Create(string name, string xml, string sid) { Creates++; Xml = xml; }
+        public void Delete(string name) { Deletes++; if (!IgnoreDelete) Xml = null; }
     }
 }
