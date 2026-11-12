@@ -9,6 +9,7 @@
 - Verificação adicional de processo: journal ausente não iniciou restore; journal corrompido foi preservado sem restore; posse do lock do watchdog bloqueou a recuperação concorrente. Testes unitários também recusaram estado desconhecido e topologia inválida.
 - Falha de display injetada no processo fake impediu a etapa de áudio, preservou o journal e permitiu uma tentativa posterior bem-sucedida. Testes unitários também verificaram erro ao limpar o journal e journal que se torna ilegível após restore. Nenhuma dessas falhas foi injetada no backend de hardware.
 - Testes isolados adicionais verificaram cancelamento antes do backend, alteração de metadados do journal com o mesmo baseline e falha em confirmar a remoção. A suíte de processos fake foi repetida com sucesso.
+- Repetição solicitada em 12/11/2026: os oito cenários de processo fake passaram novamente (incluindo `pending`, `active`, journal ausente/corrompido, locks, falhas e repetição após interrupção); o build de produção foi refeito com 0 avisos e 0 erros. Não houve alteração de tela ou áudio.
 - Produção, journal ausente: comando encerrou com código 0 e journal ausente; a opção interna de teste foi recusada com código 2. Nenhuma recuperação real foi acionada nesta observação.
 - Build Debug e 238 testes aprovados; o último smoke também passou. Nenhuma mudança de tela ou áudio foi executada por estes testes. Em 12/11/2026 o usuário informou que a TV está em uso; a validação física fica pendente até poder acompanhá-la.
 
