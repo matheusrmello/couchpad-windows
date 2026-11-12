@@ -28,6 +28,7 @@
 - **Confirmação visual:** usuário informou AOC normal e Samsung sem imagem; controle mantido desconectado.
 - **Investigação somente leitura:** XInput retornou sucesso no slot 0 e `ERROR_DEVICE_NOT_CONNECTED` nos slots 1–3. O Windows listou presente `Controlador XBOX 360 para Windows` (USB `VID_2DC8&PID_310B`); não está comprovado que corresponda ao controle desconectado. Isso pode explicar o journal ativo. Nenhum dispositivo foi alterado.
 - **Retirada do receptor, 12/11/2026:** após o usuário remover o receptor, os quatro slots retornaram `ERROR_DEVICE_NOT_CONNECTED`; o journal estava ausente, o probe indicou `InternalOnly` com AOC ativo e TV inativa e os três papéis de áudio apontavam ao endpoint anterior do AOC. O usuário confirmou imagem normal no AOC e ausência da área de trabalho na Samsung. A duração do atraso e volume/mudo não foram medidos nesta observação.
+- **Receptor reconectado com controle desligado, 12/11/2026:** usuário identificou o controle como 8BitDo Ultimate 2 e informou receptor reconectado com controle desligado; leitura mostrou os quatro slots desconectados, journal ausente e AOC ativo sem TV. Isso não demonstra que o receptor necessariamente mantém XInput ativo; medir desligamento com receptor conectado continua pendente.
 - **Validar:** conectar/desconectar controle real; contagem configurável;
   cancelar atraso; ativar/desativar; ausência de controle; reconexão.
 - **Evidência:** hardware + logs + estado/journal.
