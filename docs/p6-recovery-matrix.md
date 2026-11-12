@@ -18,6 +18,11 @@
 3. Validar falha de recuperação e retenção de journal em cenário seguro, além da evidência com backend falso.
 4. Revisar concorrência e integridade, registrar resultados e fazer commit antes de iniciar a integração do agendamento de logon.
 
+## Trabalho isolado sem TV: autostart do App
+
+- `WindowsStartupRegistration` prepara uma entrada de inicialização por usuário no Registro, com caminho absoluto entre aspas e sem administrador. Ele recusa substituir ou remover uma entrada com outro comando e confirma a leitura após gravar ou remover.
+- Testes usam armazenamento falso; nenhum Registro real foi alterado. A classe ainda não está conectada à opção do App e não configura a tarefa do rescue. Integração, tratamento de erros e validação de logon permanecem pendentes.
+
 ## Preparação da validação física
 
 - Confirmar presença do usuário, AOC e Samsung conectados, controle desligado, journal ausente e baseline completo de tela e áudio. Não iniciar se o watchdog ou outra instância mantiver os locks.

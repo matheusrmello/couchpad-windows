@@ -170,6 +170,13 @@
 - Motivo: evitar disputa com uma sessão ou watchdog ainda ativo e não declarar recuperação completa sem baseline de áudio verificável.
 - Impacto: journals antigos sem áudio completo permanecem para recuperação assistida; o comando não está agendado nem passou por validação em hardware ou logon. Testes em processo com backend falso estão descritos em `docs/p6-recovery-matrix.md`.
 
+## D056 — Base isolada para autostart do App
+
+- Data: 2026-11-12
+- Decisão: preparar registro do App por usuário em `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, sem alterar comando de outra instalação; confirmar o resultado por leitura.
+- Motivo: permitir implementação e testes isolados sem depender da TV ou de privilégios administrativos.
+- Impacto: o serviço ainda não está ligado à UI, não cria tarefa para o rescue e não foi validado em logon real. Entradas existentes diferentes são preservadas e reportadas como conflito.
+
 ## Formato de nova decisão
 
 ```md
