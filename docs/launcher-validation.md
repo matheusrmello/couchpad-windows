@@ -22,8 +22,8 @@ Data: 2026-11-12. Escopo: Steam e Hydra em Big Picture, um cenário por vez.
 | 1 | Pré-voo: AOC/TV, controle, journal ausente, áudio e operador | Concluído |
 | 2 | Steam Big Picture: ativação, imagem, áudio e journal | Concluído |
 | 3 | Steam: desligamento, restauração e saída do Big Picture conforme opção | Concluído |
-| 4 | Hydra Big Picture: ativação, imagem, áudio e journal | Pendente |
-| 5 | Hydra: desligamento e restauração; fechamento conforme opção | Pendente |
+| 4 | Hydra Big Picture: ativação, imagem, áudio e journal | Concluído |
+| 5 | Hydra: desligamento e restauração; saída conforme opção | Concluído com ressalva de processo |
 | 6 | Launcher ausente e launcher previamente aberto; restaurar sem afetar instância anterior | Pendente |
 
 Registrar resultado, operador, topologia e áudio antes/depois antes de avançar; parar em tela preta ou falha de recuperação. Ausência de evidência mantém o cenário pendente.
@@ -49,3 +49,8 @@ Registrar resultado, operador, topologia e áudio antes/depois antes de avançar
 - O card exibiu mensagem de falha do launcher. A implementação também passou a reportar falha quando o PID rastreado desaparece e outro processo do launcher permanece, em vez de considerar esse caso fechado. Build 0/0, 214 testes e smoke aprovados; repetição em hardware pendente.
 - Repetição após correção: usuário confirmou Big Picture na Samsung e AOC apagado. Probe: journal `active`, somente TV, três papéis de áudio na Samsung; Steam PID 12760. Ao desligar o controle, usuário informou tela restaurada e Steam ainda aberto. Probe: `InternalOnly`, três papéis de áudio no AOC, journal ausente; o mesmo PID 12760 ainda ativo, sem janela principal detectada. Portanto o cenário de fechamento continua reprovado; não se trata apenas de troca de PID.
 - Após o usuário escolher sair apenas do Big Picture, o teste foi repetido com Steam fechado inicialmente e controle físico. Usuário confirmou Big Picture na Samsung com AOC apagado; probe confirmou somente TV, três papéis de áudio na Samsung e journal `active`. Ao desligar o controle, usuário confirmou AOC normal, TV sem área de trabalho e saída do Big Picture com Steam no modo normal. Probe confirmou `InternalOnly`, três papéis de áudio no AOC e journal ausente; Steam PID 15176 permaneceu em execução. Cenário aprovado com a semântica escolhida.
+
+### Hydra Big Picture, 12/11/2026
+
+- Operador: usuário presente; Hydra não estava em execução antes do teste, opção de saída habilitada. Ao ligar o controle, usuário confirmou Hydra Big Picture na Samsung e AOC apagado; probe confirmou somente TV, três papéis de áudio na Samsung e journal `active`.
+- Após desligar o controle, usuário confirmou AOC normal, TV sem área de trabalho e saída do modo de jogo ou fechamento do Hydra. Probe confirmou `InternalOnly`, três papéis de áudio no AOC e journal ausente. Processos Hydra, inclusive uma janela intitulada Hydra Launcher, continuaram presentes; não se afirma que o aplicativo encerrou por completo. Nenhum processo foi encerrado à força.
