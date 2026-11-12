@@ -19,7 +19,7 @@ Data: 2026-11-12. Escopo: Steam e Hydra em Big Picture, um cenário por vez.
 
 | Ordem | Cenário | Status |
 |---|---|---|
-| 1 | Pré-voo: AOC/TV, controle, journal ausente, áudio e operador | Pendente |
+| 1 | Pré-voo: AOC/TV, controle, journal ausente, áudio e operador | Concluído |
 | 2 | Steam Big Picture: ativação, imagem, áudio e journal | Pendente |
 | 3 | Steam: desligamento e restauração; fechamento conforme opção | Pendente |
 | 4 | Hydra Big Picture: ativação, imagem, áudio e journal | Pendente |
@@ -34,3 +34,9 @@ Registrar resultado, operador, topologia e áudio antes/depois antes de avançar
 - Journal ausente; consulta de processos não encontrou CouchPad, Steam ou Hydra em execução.
 - Configuração persistida: automação, escrita de tela/áudio, gamepad real e launcher habilitados; opção de fechar launcher desligada. Como a skill requer início com automação desligada e launcher desativado no primeiro teste, isso precisa ser preparado antes da matriz real, com o usuário presente.
 - Nenhuma tela, áudio ou processo foi alterado por este pré-voo. Presença, imagem, condições físicas e recuperação manual ainda precisam de confirmação na sessão de teste.
+
+### Pré-voo com controle físico, 12/11/2026
+
+- Operador: usuário presente, com AOC, Samsung e controle 8BitDo conectados. Launcher desativado para este cenário.
+- Ao ligar a automação com o controle conectado, o journal ficou `active`; o probe identificou somente a TV ativa e os três papéis de áudio no mesmo endpoint Samsung. Nenhum processo Steam ou Hydra foi encontrado. O usuário confirmou imagem na Samsung e AOC apagado.
+- Após desligar o controle, o usuário confirmou imagem normal no AOC e Samsung sem área de trabalho. O probe confirmou `InternalOnly`, os três papéis de áudio no endpoint original do AOC e journal ausente; nenhum Steam ou Hydra estava em execução.
