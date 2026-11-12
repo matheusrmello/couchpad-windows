@@ -78,7 +78,9 @@ public partial class App : Application
                         revokeAudioWrites: OperatingSystem.IsWindows() && audioService is WindowsAudioService windowsAudio
                             ? windowsAudio.DisableNewWrites : null,
                         showCountdown: _countdownNotifications is { } notifications ? notifications.Show : null,
-                        dismissCountdown: _countdownNotifications is { } notificationsToDismiss ? notificationsToDismiss.Cancel : null),
+                        dismissCountdown: _countdownNotifications is { } notificationsToDismiss ? notificationsToDismiss.Cancel : null,
+                        launcherService: displayService is WindowsDisplayService && appSettings.AllowDisplayWrites
+                            ? new WindowsLauncherService() : null),
                 };
 
             desktop.MainWindow = window;

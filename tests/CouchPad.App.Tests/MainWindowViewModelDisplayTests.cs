@@ -10,6 +10,17 @@ namespace CouchPad.App.Tests;
 public sealed class MainWindowViewModelDisplayTests
 {
     [Fact]
+    public void Launcher_choice_is_persisted_without_losing_the_legacy_custom_path()
+    {
+        var store = new FakeSettingsStore { Current = new AppSettings { CustomLauncherPath = @"C:\Legacy" } };
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal());
+        vm.LauncherIndex = 1;
+        Assert.Equal(1, store.Current.LauncherIndex);
+        Assert.Equal(@"C:\Legacy", store.Current.CustomLauncherPath);
+    }
+
+    [Fact]
     public void Countdown_delays_are_saved_independently()
     {
         var store = new FakeSettingsStore();

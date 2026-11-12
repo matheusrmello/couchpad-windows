@@ -110,12 +110,14 @@ public sealed class UiLocalizationTests
     {
         var xaml = File.ReadAllText(Path.Combine(ViewsDirectory(), "MainWindow.axaml"));
 
-        foreach (var control in ComponentTypes)
+        foreach (var control in ComponentTypes.Where(control => control != "PathPicker"))
         {
             Assert.True(
                 xaml.Contains($"controls:{control}", StringComparison.Ordinal),
                 $"Componente ausente no shell: {control}");
         }
+        Assert.Contains("{loc:Tr launchers.steam}", xaml);
+        Assert.Contains("{loc:Tr launchers.hydra}", xaml);
     }
 
     [Fact]

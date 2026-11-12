@@ -12,6 +12,7 @@ using CouchPad.Core.Automation;
 using CouchPad.Core.Devices;
 using CouchPad.Core.Display;
 using CouchPad.Core.Localization;
+using CouchPad.Core.Launchers;
 using CouchPad.Core.Settings;
 
 namespace CouchPad.App.ViewModels;
@@ -68,6 +69,9 @@ public partial class MainWindowViewModel : ObservableObject
     private bool _steamEnabled = true;
 
     [ObservableProperty]
+    private int _launcherIndex;
+
+    [ObservableProperty]
     private string? _customLauncherPath;
 
     [ObservableProperty]
@@ -107,7 +111,8 @@ public partial class MainWindowViewModel : ObservableObject
         Func<IReadOnlyList<AudioEndpointOption>>? discoverAudioEndpoints = null,
         Action? revokeAudioWrites = null,
         Action<TimeSpan, string, string>? showCountdown = null,
-        Action? dismissCountdown = null)
+        Action? dismissCountdown = null,
+        ILauncherService? launcherService = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
@@ -126,7 +131,8 @@ public partial class MainWindowViewModel : ObservableObject
             audioService ?? new SimulatedAudioService(),
             delayScheduler ?? new SystemDelayScheduler(),
             journalStore ?? new JsonSessionJournalStore(),
-            rescueGuard: rescueGuard);
+            rescueGuard: rescueGuard,
+            launcher: launcherService);
 
         _coordinator.StateChanged += OnAutomationStateChanged;
         _gamepad.ConnectionChanged += OnGamepadConnectionChanged;
@@ -165,6 +171,10 @@ public partial class MainWindowViewModel : ObservableObject
         : _localization[StatusKey];
 
     public bool IsRecoveryUncertain => _coordinator.IsRecoveryUncertain;
+
+    public bool HasLauncherError => _coordinator.LauncherFailed;
+
+    public string LauncherErrorText => _localization["launchers.failed"];
 
     public string RecoveryHelpText => _localization["recovery.help"];
 
@@ -239,12 +249,9 @@ public partial class MainWindowViewModel : ObservableObject
             ? _localization["launchers.no_path"]
             : CustomLauncherPath;
 
-    public string LauncherSummary =>
-        !string.IsNullOrWhiteSpace(CustomLauncherPath)
-            ? _localization["launchers.custom"]
-            : SteamEnabled
-                ? _localization["launchers.steam"]
-                : _localization["automation.no_launcher"];
+    public string LauncherSummary => SteamEnabled
+        ? _localization[LauncherIndex == 1 ? "launchers.hydra" : "launchers.steam"]
+        : _localization["automation.no_launcher"];
 
     public string ChooseFolderDialogTitle => _localization["launchers.choose_title"];
 
@@ -427,6 +434,7 @@ public partial class MainWindowViewModel : ObservableObject
             DisplayModeIndex = 0;
             AudioModeIndex = 0;
             SteamEnabled = true;
+            LauncherIndex = 0;
             CustomLauncherPath = null;
             AllowDisplayWrites = false;
             AllowAudioWrites = false;
@@ -498,6 +506,14 @@ public partial class MainWindowViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(LauncherSummary));
         PersistSettings();
+        SyncAutomation();
+    }
+
+    partial void OnLauncherIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(LauncherSummary));
+        PersistSettings();
+        SyncAutomation();
     }
 
     partial void OnCustomLauncherPathChanged(string? value)
@@ -562,6 +578,7 @@ public partial class MainWindowViewModel : ObservableObject
             DisplayModeIndex = settings.DisplayModeIndex is 0 or 1 ? settings.DisplayModeIndex : 0;
             AudioModeIndex = Math.Clamp(settings.AudioModeIndex, 0, 1);
             SteamEnabled = settings.SteamEnabled;
+            LauncherIndex = Math.Clamp(settings.LauncherIndex, 0, 1);
             CustomLauncherPath = settings.CustomLauncherPath;
             AllowDisplayWrites = settings.AllowDisplayWrites;
             AllowAudioWrites = settings.AllowAudioWrites;
@@ -610,6 +627,8 @@ public partial class MainWindowViewModel : ObservableObject
         },
         AudioMode = AudioModeIndex == 1 ? AudioMode.KeepCurrent : AudioMode.MoveToHdmi,
         CloseLauncherOnActivate = CloseLauncherOnActivate,
+        LauncherEnabled = SteamEnabled,
+        Launcher = LauncherIndex == 1 ? LauncherKind.Hydra : LauncherKind.Steam,
     };
 
     private void PersistSettings()
@@ -634,6 +653,7 @@ public partial class MainWindowViewModel : ObservableObject
                 DisplayModeIndex = DisplayModeIndex,
                 AudioModeIndex = AudioModeIndex,
                 SteamEnabled = SteamEnabled,
+                LauncherIndex = LauncherIndex,
                 CustomLauncherPath = CustomLauncherPath,
                 AllowDisplayWrites = AllowDisplayWrites,
                 AllowAudioWrites = AllowAudioWrites,
@@ -722,6 +742,7 @@ public partial class MainWindowViewModel : ObservableObject
             OnPropertyChanged(nameof(DisplaySummary));
             OnPropertyChanged(nameof(AudioSummary));
             OnPropertyChanged(nameof(IsRecoveryUncertain));
+            OnPropertyChanged(nameof(HasLauncherError));
             OnPropertyChanged(nameof(RecoveryHelpText));
         }
 
@@ -749,6 +770,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(DisplaySummary));
         OnPropertyChanged(nameof(AudioSummary));
         OnPropertyChanged(nameof(RecoveryHelpText));
+        OnPropertyChanged(nameof(LauncherErrorText));
         OnPropertyChanged(nameof(DisplayTargetHint));
         if (DisplayTargetsError is not null)
         {

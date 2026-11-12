@@ -4,6 +4,8 @@
 
 **Fila de validação:** `docs/validation-queue.md` — próxima ação: watcher físico de gamepad.
 
+**Launchers 12/11/2026:** por escolha do usuário, App oferece Steam ou Hydra em Big Picture. Core solicita abertura após commit de tela/áudio; falha de launcher não impede restore. Fechamento é solicitação apenas ao processo iniciado e identificado pelo CouchPad, sem kill forçado ou processos preexistentes. Build 0/0, 213 testes e smoke passaram; validação real ainda pendente em `docs/launcher-validation.md`. O usuário autorizou avançar ao item 2 apesar da evidência independente de reconexão do watcher continuar pendente.
+
 **Atualização 12/11/2026:** Ultimate 2 validou ativação, desligamento e cancelamento da ativação com restauração de tela/áudio e journal limpo. Reconexão durante atraso tem relato visual sem timestamps independentes. O usuário dispensou trabalho adicional no botão de ativação; seu teste físico não é critério pendente. Notificações nativas foram adiadas a pedido do usuário: protótipo desativado por padrão, banner não confirmado, contagem na janela preservada; auditar dependências e ausência de telemetria antes de habilitar. Ver `docs/validation-queue.md`.
 
 **Atualização do watcher, 11/11/2026:** implementado `WindowsGamepadWatcher` read-only via XInput nos quatro slots, composto apenas com `--windows-gamepad`; simulação continua padrão, inclusive smoke/galeria. D050 documenta a escolha e limita suporte a dispositivos que exponham XInput. Build 0/0, 197 testes (14 App + 183 Core) e smoke OK. Testes rodaram fora do sandbox após falha de conexão do testhost no ambiente restrito. A matriz física do watcher ainda está pendente; launcher não iniciado.

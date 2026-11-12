@@ -1,6 +1,7 @@
 using CouchPad.Core.Audio;
 using CouchPad.Core.Devices;
 using CouchPad.Core.Display;
+using CouchPad.Core.Launchers;
 
 namespace CouchPad.Core.Automation;
 
@@ -16,6 +17,7 @@ public sealed class AutomationCoordinator
     private readonly IDelayScheduler _delay;
     private readonly ISessionJournalStore? _journal;
     private readonly IRescueGuard? _rescueGuard;
+    private readonly ILauncherService? _launcher;
     private readonly TimeProvider _time;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly object _sync = new();
@@ -26,6 +28,7 @@ public sealed class AutomationCoordinator
     private AutomationState _state = AutomationState.Idle;
     private string? _lastError;
     private bool _recoveryUncertain;
+    private bool _launcherFailed;
 
     public AutomationCoordinator(
         IDisplayService display,
@@ -33,7 +36,8 @@ public sealed class AutomationCoordinator
         IDelayScheduler delay,
         ISessionJournalStore? journal = null,
         TimeProvider? timeProvider = null,
-        IRescueGuard? rescueGuard = null)
+        IRescueGuard? rescueGuard = null,
+        ILauncherService? launcher = null)
     {
         if (rescueGuard is not null && journal is null)
             throw new ArgumentException("A rescue guard requires a journal.", nameof(journal));
@@ -43,6 +47,7 @@ public sealed class AutomationCoordinator
         _journal = journal;
         _time = timeProvider ?? TimeProvider.System;
         _rescueGuard = rescueGuard;
+        _launcher = launcher;
 
         if (journal is not null)
         {
@@ -88,6 +93,8 @@ public sealed class AutomationCoordinator
             }
         }
     }
+
+    public bool LauncherFailed { get { lock (_sync) return _launcherFailed; } }
 
     public AutomationSnapshot? Snapshot
     {
@@ -351,7 +358,20 @@ public sealed class AutomationCoordinator
                 await lease.CommitAsync(guardedToken);
             }
 
+            if (previousSnapshot is null) lock (_sync) { _launcherFailed = false; }
             SetState(AutomationState.Active);
+            if (previousSnapshot is null && _launcher is not null && settings.LauncherEnabled)
+            {
+                try
+                {
+                    using var launcherCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    launcherCancellation.CancelAfter(TimeSpan.FromSeconds(10));
+                    await _launcher.StartAsync(new LauncherSelection(settings.Launcher), launcherCancellation.Token)
+                        .WaitAsync(launcherCancellation.Token);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
+                catch (Exception) { lock (_sync) { _launcherFailed = true; } SetState(AutomationState.Active); }
+            }
         }
         catch (RescueDecisionUncertainException ex)
         {
@@ -526,6 +546,15 @@ public sealed class AutomationCoordinator
             await DisposeLeaseAsync(lease);
         }
 
+        if (_launcher is not null && settings.CloseLauncherOnActivate)
+        {
+            try
+            {
+                using var launcherCancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await _launcher.CloseOwnedAsync(launcherCancellation.Token).WaitAsync(launcherCancellation.Token);
+            }
+            catch (Exception) { lock (_sync) { _launcherFailed = true; } }
+        }
         SetState(settings.Enabled ? AutomationState.WaitingForGamepad : AutomationState.Idle);
     }
 

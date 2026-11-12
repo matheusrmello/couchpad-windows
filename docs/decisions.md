@@ -155,6 +155,13 @@
 - Motivo: priorizar o fluxo automático por conexão e desconexão do controle conforme a orientação do usuário.
 - Impacto: a reconexão durante o atraso ainda precisa de evidência independente; nenhuma mudança no comportamento existente foi feita.
 
+## D054 — Launcher após ativação protegida
+
+- Data: 2026-11-12
+- Decisão: acrescentar contrato de launcher no Core e implementação Windows; oferecer Steam Big Picture e Hydra Big Picture após confirmação de tela/áudio, conforme escolha posterior do usuário. `CloseLauncherOnActivate` passa a significar fechar ao restaurar somente o processo iniciado e identificado pelo CouchPad.
+- Motivo: executar o fluxo solicitado mantendo a restauração independente de falhas no launcher.
+- Impacto: sem encerramento forçado, árvore de processos ou processos preexistentes; launcher já aberto pode receber o comando, mas não é encerrado pelo CouchPad. Falha do launcher é informada e não impede restore. Configurações antigas de caminho personalizado são preservadas, mas não selecionam launcher. Testes com fakes precedem a validação física.
+
 ## Formato de nova decisão
 
 ```md

@@ -67,7 +67,7 @@
   "combo.key.rb": "RB",
   "combo.key.a": "A",
 
-  "settings.close_launcher": "Close launcher on activate",
+  "settings.close_launcher": "Close launcher on restore",
   "settings.start_with_windows": "Start with Windows",
   "settings.minimize_to_tray": "Minimize to tray",
   "settings.allow_display_writes": "Allow display writes",
@@ -102,6 +102,10 @@
   "audio.active.hdmi": "TV · HDMI",
 
   "launchers.steam": "Steam",
+  "launchers.hydra": "Hydra",
+  "launchers.enabled": "Open launcher",
+  "launchers.select": "Big Picture launcher",
+  "launchers.failed": "Could not start or close the launcher. Display and audio can still be restored.",
   "launchers.custom": "Custom launcher",
   "launchers.no_path": "No path selected",
   "launchers.choose": "Choose folder",

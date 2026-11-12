@@ -4,7 +4,7 @@
 - Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
-- Estado atual: build 0 avisos/0 erros; **200 testes**; smoke OK; nenhuma tag
+- Estado atual: build 0 avisos/0 erros; **213 testes**; smoke OK; nenhuma tag
   de hardware criada.
 
 ## Status das fases
@@ -44,8 +44,8 @@
 ### 2. Launcher real
 
 - **Dono:** Codex.
-- **Validar:** abrir Steam Big Picture ou caminho customizado; fechar ao
-  desativar; falha de caminho; não afetar processos de terceiros.
+- **Implementado:** seleção entre Steam e Hydra Big Picture; fechamento apenas de processo iniciado e identificado pelo CouchPad, sem kill forçado. Falha não impede restore. Testes com fakes passaram.
+- **Validar:** cenários reais, um por vez, conforme `docs/launcher-validation.md`; nenhum launcher real foi validado nesta implementação.
 - **Evidência:** hardware + captura/estado.
 
 ### 3. P6 — rescue no logon, bandeja e autostart

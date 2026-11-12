@@ -356,18 +356,20 @@
                        Title="{loc:Tr section.launchers}">
           <StackPanel Spacing="10">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-              <TextBlock Text="{loc:Tr launchers.steam}" VerticalAlignment="Center" />
+              <TextBlock Text="{loc:Tr launchers.enabled}" VerticalAlignment="Center" />
               <ToggleSwitch Grid.Column="1"
                             IsChecked="{Binding SteamEnabled}"
-                            AutomationProperties.Name="{loc:Tr launchers.steam}" />
+                            AutomationProperties.Name="{loc:Tr launchers.enabled}" />
             </Grid>
 
             <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr launchers.custom}" />
-              <controls:PathPicker PathText="{Binding CustomLauncherPathText}"
-                                   ChooseText="{loc:Tr launchers.choose}"
-                                   ChooseCommand="{Binding ChooseLauncherFolderCommand}" />
+              <TextBlock Classes="caption" Text="{loc:Tr launchers.select}" />
+              <ComboBox SelectedIndex="{Binding LauncherIndex, Mode=TwoWay}" AutomationProperties.Name="{loc:Tr launchers.select}">
+                <ComboBoxItem Content="{loc:Tr launchers.steam}" />
+                <ComboBoxItem Content="{loc:Tr launchers.hydra}" />
+              </ComboBox>
             </StackPanel>
+            <TextBlock Classes="hint" Text="{Binding LauncherErrorText}" IsVisible="{Binding HasLauncherError}" TextWrapping="Wrap" />
           </StackPanel>
         </controls:Card>
       </Grid>

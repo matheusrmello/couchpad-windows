@@ -67,7 +67,7 @@
   "combo.key.rb": "RB",
   "combo.key.a": "A",
 
-  "settings.close_launcher": "Fechar launcher ao ativar",
+  "settings.close_launcher": "Fechar launcher ao restaurar",
   "settings.start_with_windows": "Iniciar com o Windows",
   "settings.minimize_to_tray": "Minimizar para a bandeja",
   "settings.allow_display_writes": "Permitir escrita de display",
@@ -102,6 +102,10 @@
   "audio.active.hdmi": "TV · HDMI",
 
   "launchers.steam": "Steam",
+  "launchers.hydra": "Hydra",
+  "launchers.enabled": "Abrir launcher",
+  "launchers.select": "Launcher em modo Big Picture",
+  "launchers.failed": "Não foi possível iniciar ou fechar o launcher. A restauração de tela e áudio continua disponível.",
   "launchers.custom": "Launcher personalizado",
   "launchers.no_path": "Caminho não especificado",
   "launchers.choose": "Escolher pasta",

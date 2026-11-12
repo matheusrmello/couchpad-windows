@@ -1,5 +1,6 @@
 using CouchPad.Core.Audio;
 using CouchPad.Core.Display;
+using CouchPad.Core.Launchers;
 
 namespace CouchPad.Core.Automation;
 
@@ -17,4 +18,8 @@ public sealed record AutomationSettings
     public AudioMode AudioMode { get; init; } = AudioMode.MoveToHdmi;
 
     public bool CloseLauncherOnActivate { get; init; } = true;
+
+    public bool LauncherEnabled { get; init; }
+
+    public LauncherKind Launcher { get; init; } = LauncherKind.Steam;
 }

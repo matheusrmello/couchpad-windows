@@ -24,6 +24,7 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
         Assert.True(settings.MinimizeToTray);
         Assert.True(settings.CloseLauncherOnActivate);
         Assert.True(settings.SteamEnabled);
+        Assert.Equal(0, settings.LauncherIndex);
         Assert.Null(settings.CustomLauncherPath);
         Assert.Equal(2, settings.ActivationDelayIndex);
         Assert.Equal(0, settings.DeactivationDelayIndex);
@@ -55,6 +56,7 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
             MinimizeToTray = false,
             CloseLauncherOnActivate = false,
             SteamEnabled = false,
+            LauncherIndex = 1,
             CustomLauncherPath = @"C:\Games\Launcher",
             ActivationDelayIndex = 2,
             DeactivationDelayIndex = 3,

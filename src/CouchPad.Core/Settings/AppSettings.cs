@@ -22,6 +22,8 @@ public sealed record AppSettings
 
     public bool SteamEnabled { get; init; } = true;
 
+    public int LauncherIndex { get; init; }
+
     public string? CustomLauncherPath { get; init; }
 
     public int ActivationDelayIndex { get; init; } = 2;
