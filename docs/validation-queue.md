@@ -32,6 +32,7 @@
 - **Ativação por controle físico, 12/11/2026:** usuário ligou o Ultimate 2 com receptor conectado e confirmou Samsung com imagem e AOC apagado. Probe indicou `TvOnly`, TV ativa, monitor inativo; áudio Samsung nos três papéis e journal `active`. A duração da contagem não foi medida.
 - **Desligamento com receptor conectado, 12/11/2026:** usuário desligou o controle e confirmou AOC normal e Samsung sem área de trabalho. Leitura posterior: quatro slots XInput desconectados, journal ausente, `InternalOnly`, AOC ativo e TV inativa; os três papéis de áudio, volume 1 e mudo corresponderam ao baseline capturado. A duração da contagem ainda não foi medida.
 - **Tentativa de cancelamento, 12/11/2026:** usuário relatou que a contagem não apareceu. Consulta posterior mostrou XInput sem controle, journal ausente, AOC ativo, automação ligada e atraso de ativação configurado para 5 s; usuário informou receptor conectado e controle desligado. Resultado inconclusivo: a consulta posterior não prova se o controle chegou a ser detectado durante a tentativa.
+- **Contagem de ativação, 12/11/2026:** com atraso configurado para 5 s e receptor conectado, o usuário ligou o controle, confirmou que viu a contagem e que a Samsung assumiu a imagem. Leitura posterior confirmou `TvOnly`, áudio Samsung nos três papéis e journal `active`. A duração exata não foi cronometrada.
 - **Validar:** conectar/desconectar controle real; contagem configurável;
   cancelar atraso; ativar/desativar; ausência de controle; reconexão.
 - **Evidência:** hardware + logs + estado/journal.
