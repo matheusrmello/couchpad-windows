@@ -16,7 +16,7 @@
 
 ## Validações restantes deste item
 
-1. Restaurar um journal `active` real após encerramento controlado do processo principal, com usuário presente, evidência de tela e áudio antes/depois e journal final.
+1. **Concluído em 12/11/2026.** Com o usuário presente, o AOC era a única tela ativa e o áudio padrão apontava para o AOC. O controle ativou a Samsung, com imagem confirmada pelo usuário. O journal real estava `active` e continha os baselines de tela e áudio. Após encerrar somente o CouchPad da sessão de teste, o rescue de produção executado manualmente com `--startup-recovery` retornou 0. Os probes confirmaram `InternalOnly`, equivalência semântica da topologia, restauração dos três papéis de áudio e dos valores de volume e mudo do baseline e remoção do journal. O usuário confirmou visualmente a restauração no AOC.
 2. Validar `pending` real e reinício/logon, incluindo coordenação com o watchdog, sem inventar estado do journal.
 3. Validar falha de recuperação e retenção de journal em cenário seguro, além da evidência com backend falso.
 4. Revisar concorrência e integridade, registrar resultados e fazer commit antes de iniciar a integração do agendamento de logon.
