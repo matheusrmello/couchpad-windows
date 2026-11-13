@@ -50,6 +50,12 @@ public sealed class WindowsScheduledStartup
         _legacy.RemoveIfOwned(appPath);
     }
 
+    internal void CheckOwnership(string appPath)
+    {
+        _ = _task.IsRegistered(RescuePath(appPath), _sid);
+        _ = _legacy.IsEnabled(appPath);
+    }
+
     private static string CurrentSid()
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();

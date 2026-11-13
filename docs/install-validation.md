@@ -5,6 +5,8 @@
 - No perfil principal, o desinstalador 1.0.0 abortava porque as tarefas de rescue e autostart apontavam para os binários de desenvolvimento. O journal estava ausente.
 - O hook de desinstalação agora preserva tarefas com outro caminho de executável e entradas antigas pertencentes a outra instalação. Tarefas próprias continuam sujeitas à validação da definição. A instalação continua recusando sobrescrever tarefas existentes de outra cópia.
 - Build Release com 0 avisos e 0 erros, 261 testes e smoke aprovados. O hook corrigido retornou 0 na instalação afetada e a comparação do XML confirmou que as duas tarefas de desenvolvimento ficaram intactas. A conclusão pelo desinstalador gráfico ainda precisa ser confirmada.
+- O operador confirmou a desinstalação e reproduziu o conflito ao instalar novamente o EXE publicado da 1.0.0. O instalador antigo encontrou a tarefa de desenvolvimento somente após copiar arquivos. O perfil tinha journal ausente e tarefas de rescue e autostart apontando para o checkout de desenvolvimento.
+- O candidato 1.0.1 executa uma verificação autocontida antes de copiar o payload e apresenta uma mensagem específica para o conflito. O helper retornou 3 no destino real com tarefas de desenvolvimento presentes. Build Release 0/0, 261 testes e smoke passaram. O EXE compilou, mas a prova pelo instalador completo e a publicação do patch estão pendentes.
 
 ## Regressão de entrada
 

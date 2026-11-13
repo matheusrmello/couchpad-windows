@@ -34,7 +34,11 @@ foreach ($file in @('CouchPad.exe','coreclr.dll','hostfxr.dll','Localization\Str
 if (Get-ChildItem -LiteralPath $payload -Recurse | Where-Object Name -match 'CouchPad\.Notifications|^notifications$') {
     throw 'Experimental notifications were found in the payload.'
 }
-& $Iscc "/DPayload=$payload" "/DOutput=$output" "/DVersion=$Version" (Join-Path $PSScriptRoot 'CouchPad.iss')
+$preflight = Join-Path $build 'preflight'
+& $Dotnet publish (Join-Path $root 'src\CouchPad.Rescue\CouchPad.Rescue.csproj') -c Release -r win-x64 --self-contained true -o $preflight --artifacts-path (Join-Path $build 'build') "-p:Version=$Version" -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
+if ($LASTEXITCODE) { throw 'Publish failed for installer preflight.' }
+Rename-Item -LiteralPath (Join-Path $preflight 'CouchPad.Rescue.exe') -NewName 'CouchPad.InstallCheck.exe'
+& $Iscc "/DPayload=$payload" "/DOutput=$output" "/DVersion=$Version" "/DPreflight=$(Join-Path $preflight 'CouchPad.InstallCheck.exe')" (Join-Path $PSScriptRoot 'CouchPad.iss')
 if ($LASTEXITCODE) { throw 'Inno Setup compilation failed.' }
 $setup = Join-Path $output "CouchPad-Setup-$Version-win-x64.exe"
 Get-FileHash -LiteralPath $setup -Algorithm SHA256

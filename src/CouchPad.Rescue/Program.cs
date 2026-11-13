@@ -31,8 +31,11 @@ if (args.Length == 2 && args[0] == "--test-startup-recovery" && OperatingSystem.
     catch { return 1; }
 }
 #endif
-if (args is [var taskCommand] && taskCommand is ("--check-install-session" or "--install-logon-task" or "--remove-logon-task") && OperatingSystem.IsWindows())
+if (OperatingSystem.IsWindows() &&
+    (args is ["--check-install-target", _] ||
+     args is [var command] && command is ("--check-install-session" or "--install-logon-task" or "--remove-logon-task")))
 {
+    var taskCommand = args[0];
     try
     {
         var journal = AppPaths.SessionJournalFile();
@@ -42,8 +45,22 @@ if (args is [var taskCommand] && taskCommand is ("--check-install-session" or "-
         if (taskCommand == "--check-install-session") return 0;
         using var currentUser = WindowsIdentity.GetCurrent();
         var sid = currentUser.User?.Value ?? throw new InvalidOperationException("Windows user SID unavailable.");
-        var executable = Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe");
+        var executable = Path.Combine(taskCommand == "--check-install-target" ? args[1] : AppContext.BaseDirectory, "CouchPad.Rescue.exe");
         var registration = new RescueLogonTaskRegistration(new WindowsRescueLogonTaskStore());
+        if (taskCommand == "--check-install-target")
+        {
+            try
+            {
+                _ = registration.IsRegistered(executable, sid);
+                new WindowsScheduledStartup().CheckOwnership(Path.Combine(args[1], "CouchPad.exe"));
+            }
+            catch (InvalidOperationException ex)
+            {
+                RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), "startup", ex);
+                return 3;
+            }
+            return 0;
+        }
         if (taskCommand == "--install-logon-task")
         {
             if (!File.Exists(executable)) throw new FileNotFoundException("Rescue apphost unavailable.", executable);

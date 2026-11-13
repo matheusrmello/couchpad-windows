@@ -39,8 +39,11 @@ en.CloseCouchPad=Exit CouchPad from its notification area menu and complete any 
 ptbr.CloseCouchPad=Saia do CouchPad pelo menu da bandeja e conclua qualquer recuperação pendente antes de continuar.
 en.TaskFailed=Windows could not configure the CouchPad recovery task. Check the local CouchPad rescue log.
 ptbr.TaskFailed=O Windows não conseguiu configurar a tarefa de recuperação do CouchPad. Consulte o log local do rescue.
+en.TaskConflict=Another CouchPad installation owns the startup or recovery registration for this account. Remove that installation's registration before continuing.
+ptbr.TaskConflict=Outra instalação do CouchPad é responsável pela inicialização ou recuperação nesta conta. Remova o registro dessa instalação antes de continuar.
 
 [Files]
+Source: "{#Preflight}"; Flags: dontcopy
 Source: "{#Payload}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
@@ -58,12 +61,18 @@ begin
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ExitCode: Integer;
 begin
   Result := '';
-  if FileExists(ExpandConstant('{localappdata}\CouchPad\state\session.json')) then
-    Result := CustomMessage('CloseCouchPad')
-  else if FileExists(ExpandConstant('{app}\CouchPad.Rescue.exe')) and
-    not RunRescue('--check-install-session') then
+  ExtractTemporaryFile('CouchPad.InstallCheck.exe');
+  if not Exec(ExpandConstant('{tmp}\CouchPad.InstallCheck.exe'),
+    '--check-install-target "' + ExpandConstant('{app}') + '"',
+    ExpandConstant('{tmp}'), SW_HIDE, ewWaitUntilTerminated, ExitCode) then
+    Result := CustomMessage('TaskFailed')
+  else if ExitCode = 3 then
+    Result := CustomMessage('TaskConflict')
+  else if ExitCode <> 0 then
     Result := CustomMessage('CloseCouchPad');
 end;
 
