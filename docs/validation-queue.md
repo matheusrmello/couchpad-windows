@@ -16,7 +16,7 @@
 | P5 áudio | **Aceita com limitações** | Aceite do usuário em 11/11/2026; hardware: fluxo com controle simulado, troca/restore, falha, cancelamento, endpoint ausente, crash do filho de teste e rescue de produção; HDR adiado |
 | P6 rescue/tray/autostart | Aceita em 13/11/2026 | Logon, bandeja, recuperação assistida e autostart verificados |
 | P7a docs/a11y/screenshots | **Aceita em 13/11/2026** | A11y, i18n, UIAutomation, screenshots e notas concluídos; Narrator/NVDA manual pendente |
-| P7b release | **Validada, aguardando aceite** | Instalador em conta padrão, autostart, reinstalação, desinstalação e tag `v1.0.0` |
+| P7b release | **Aceita** | Instalador em conta padrão, autostart, reinstalação, desinstalação e tag `v1.0.0` |
 
 ## Fila, em ordem
 
@@ -88,6 +88,6 @@
 
 ## Próxima ação
 
-Aguardar o aceite final da P7b. A reconexão do watcher durante a contagem
-ainda carece de evidência independente. HDR e notificações nativas seguem
-adiados.
+A publicação do instalador e do SHA-256 fica como etapa de distribuição.
+A reconexão do watcher durante a contagem ainda carece de evidência
+independente. HDR e notificações nativas seguem adiados.

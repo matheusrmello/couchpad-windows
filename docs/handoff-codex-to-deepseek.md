@@ -1,6 +1,6 @@
 # Handoff do CouchPad 1.0.0
 
-## P7b validada, aguardando aceite
+## P7b validada e aceita pelo usuário
 
 - Tag local `v1.0.0`. Instalador `artifacts/CouchPad-Setup-1.0.0-win-x64.exe`,
   também disponível em `C:\Users\Public\Downloads\CouchPad-Setup-1.0.0-win-x64.exe`.
@@ -17,7 +17,7 @@
 - Evidências em [validação do instalador](install-validation.md) e
   [notas da versão](release-notes-draft.md).
 
-Após o aceite, decidir a publicação do artefato e do hash. Permanecem
+A publicação do artefato e do hash é uma etapa de distribuição. Permanecem
 adiados HDR, notificações, prova independente da reconexão durante a contagem
 e revisão com leitor de tela, incluindo o menu nativo da bandeja. A matriz
 mantém as limitações de CCD travado e áudio tardio ou com papéis distintos.
