@@ -94,11 +94,14 @@ public partial class App : Application
                             ? new WindowsLauncherService() : null,
                         readStartup: startup is null ? null : () => startup.ReadAndMigrate(appPath),
                         configureStartup: startup is null ? null : enabled => startup.SetEnabled(enabled, appPath),
-                        suspendAutomation: desktop.Args?.Any(arg => arg is "--recovery-succeeded" or "--recovery-failed") == true,
+                        suspendAutomation: desktop.Args?.Any(arg => arg is "--recovery-succeeded" or "--recovery-failed" or "--hardware-applied") == true,
                         canStartRecovery: canUseRescue,
                         recoveryFailed: desktop.Args?.Contains("--recovery-failed") == true,
                         productionMode: isProduction,
-                        configuredHardware: audioGuard is not null ? hardwareSettings : null),
+                        configuredHardware: audioGuard is not null ? hardwareSettings : null,
+                        restartForHardware: canUseRescue && Program.CanRestartForHardware ? Program.StartHardwareRestart : null,
+                        playAudioTest: isProduction ? WindowsAudioTestTone.PlayOnEndpoint : null,
+                        hardwareApplied: desktop.Args?.Contains("--hardware-applied", StringComparer.Ordinal) == true),
                 };
 
             desktop.MainWindow = window;
@@ -178,6 +181,12 @@ public partial class App : Application
                     catch (Exception) { ShowWindow(); }
                     finally { exiting = false; }
                 }
+                viewModel.HardwareRestartStarted += (_, _) =>
+                {
+                    exiting = true;
+                    allowExit = true;
+                    desktop.Shutdown();
+                };
                 open.Click += (_, _) => ShowWindow();
                 Program.Instance?.Listen(async token =>
                     await Dispatcher.UIThread.InvokeAsync(ShowWindow, DispatcherPriority.Normal, token));
@@ -338,8 +347,10 @@ public partial class App : Application
     internal static IReadOnlyList<AudioEndpointOption> DiscoverAudioEndpoints()
     {
         if (!OperatingSystem.IsWindows()) return [];
-        try { return WindowsAudioProbe.Capture().Endpoints.Select(e => new AudioEndpointOption(e.Id, e.FriendlyName)).ToArray(); }
-        catch { return []; }
+        var inventory = WindowsAudioProbe.Capture();
+        return inventory.Endpoints.Select(e => new AudioEndpointOption(e.Id, e.FriendlyName, e.State == 1,
+            string.Equals(e.Id, inventory.Multimedia, StringComparison.OrdinalIgnoreCase),
+            CanAppearAfterDisplayChange: e.State is 4 or 8 && e.IsDisplayAudio, IsDisplayAudio: e.IsDisplayAudio)).ToArray();
     }
 
     private sealed class UnavailableAudioService : IAudioService
@@ -358,26 +369,25 @@ public partial class App : Application
     {
         if (!OperatingSystem.IsWindows()) return Array.Empty<DisplayTargetOption>();
 
-        try
-        {
-            var service = new WindowsDisplayService(new WindowsDisplayOptions("", 0, 0));
-            var snapshot = service.Capture(WindowsDisplayService.AllPaths);
-            return snapshot.Targets
-                .Where(target => target.Status == 0 && !string.IsNullOrWhiteSpace(target.DevicePath))
-                .DistinctBy(target => (target.AdapterLow, target.AdapterHigh, target.Id))
-                .Select(target => new DisplayTargetOption(
-                    target.DevicePath!,
-                    target.EdidManufacturer,
-                    target.EdidProduct,
-                    target.FriendlyName))
-                .OrderBy(target => target.FriendlyName, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(target => target.DevicePath, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-        }
-        catch
-        {
-            return Array.Empty<DisplayTargetOption>();
-        }
+        var service = new WindowsDisplayService(new WindowsDisplayOptions("", 0, 0));
+        var snapshot = service.Capture(WindowsDisplayService.AllPaths);
+        return snapshot.Targets
+            .Where(target => target.Status == 0 && !string.IsNullOrWhiteSpace(target.DevicePath))
+            .GroupBy(target => (target.AdapterLow, target.AdapterHigh, target.Id))
+            .Select(group =>
+            {
+                var target = group.First();
+                return new DisplayTargetOption(target.DevicePath!, target.EdidManufacturer, target.EdidProduct,
+                    target.FriendlyName)
+                {
+                    IsActive = group.Any(path => path.IsActive),
+                    IsAvailable = group.Any(path => path.IsAvailable),
+                    IsHdmi = group.Any(path => path.IsAvailable && path.IsHdmi),
+                };
+            })
+            .OrderBy(target => target.FriendlyName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(target => target.DevicePath, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private static bool IsComplete(string? path, ushort? manufacturer, ushort? product) =>

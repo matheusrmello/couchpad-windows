@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.0.10 (pré-release)
+
+- Sugere TV, monitor e saída de áudio quando a identificação é clara. Permite revisar as escolhas e aplicar a configuração sem reabrir o App manualmente.
+- Ordena as saídas disponíveis primeiro, indica a saída padrão e permite testar som na saída selecionada.
+- Build Release 0/0, 275 testes e smoke aprovados. O probe concluiu o tom no AOC com os três papéis de áudio padrão preservados. Validação auditiva na Samsung e validação da aplicação da configuração com a versão instalada pendentes.
+- Instalador Windows x64 sem assinatura Authenticode. SHA-256: `bd143958d458b95a6d8484721541ffd4043be7b3b5d627d383153a6000ae203c`.
+
 ## 1.0.9 (pré-release)
 
 - Reformula a janela Sobre com ícone oficial, versão em destaque, descrição do aplicativo e licença MIT.

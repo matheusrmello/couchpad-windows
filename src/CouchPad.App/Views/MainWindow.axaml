@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:CouchPad.App.Controls"
+        xmlns:converters="using:Avalonia.Data.Converters"
         xmlns:loc="using:CouchPad.App.Localization"
         xmlns:vm="using:CouchPad.App.ViewModels"
         x:Class="CouchPad.App.Views.MainWindow"
@@ -84,6 +85,18 @@
             <TextBlock Classes="hint" Text="{loc:Tr automation.help}" />
             <TextBlock Classes="hint" IsVisible="{Binding ShowHardwareSetup}" Text="{Binding HardwareSetupText}"
                        AutomationProperties.LiveSetting="Polite" TextWrapping="Wrap" />
+            <WrapPanel IsVisible="{Binding ShowHardwareSetup}">
+              <Button Classes="secondary small" Margin="0,0,8,4"
+                      Content="{loc:Tr automation.suggest}" Command="{Binding SuggestHardwareCommand}" />
+              <Button Classes="primary" Margin="0,0,0,4"
+                      Content="{loc:Tr automation.apply}" Command="{Binding ApplyHardwareCommand}" />
+            </WrapPanel>
+            <TextBlock Classes="hint" Text="{Binding HardwareSuggestionText}"
+                       IsVisible="{Binding HasHardwareSuggestion}"
+                       AutomationProperties.LiveSetting="Polite" />
+            <TextBlock Classes="hint" Text="{Binding HardwareApplyStatus}"
+                       IsVisible="{Binding HardwareApplyStatus, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
+                       AutomationProperties.LiveSetting="Polite" />
             <TextBlock Classes="hint"
                        Foreground="{DynamicResource CouchPad.Danger}"
                        Text="{Binding RecoveryHelpText}"
@@ -373,20 +386,35 @@
                         AutomationProperties.Name="{loc:Tr audio.tv_endpoint}">
                 <ComboBox.ItemTemplate>
                   <DataTemplate x:DataType="vm:AudioEndpointOption">
-                    <TextBlock Text="{Binding DisplayName}" />
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <TextBlock Classes="caption" Text="{loc:Tr audio.endpoint_current}"
+                                 IsVisible="{Binding IsCurrent}" />
+                      <TextBlock Classes="caption" Text="{loc:Tr audio.endpoint_unavailable}"
+                                 IsVisible="{Binding !IsAvailable}" />
+                      <TextBlock Text="{Binding DisplayName}" />
+                    </StackPanel>
                   </DataTemplate>
                 </ComboBox.ItemTemplate>
               </ComboBox>
-              <Button Classes="link" Content="{loc:Tr audio.refresh}"
-                      Command="{Binding RefreshAudioEndpointsCommand}"
-                      AutomationProperties.Name="{loc:Tr audio.refresh}" />
+              <WrapPanel>
+                <Button Classes="link" Content="{loc:Tr audio.refresh}"
+                        Command="{Binding RefreshAudioEndpointsCommand}" />
+                <Button Classes="secondary small" Content="{loc:Tr audio.test}"
+                        Command="{Binding TestAudioCommand}" IsVisible="{Binding IsProductionMode}" />
+              </WrapPanel>
+              <TextBlock Classes="hint" Text="{loc:Tr audio.test_inactive}"
+                         IsVisible="{Binding SelectedAudioCanAppearLater}" />
+              <TextBlock Classes="hint" Text="{Binding AudioSetupText}"
+                         IsVisible="{Binding AudioSetupText, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
+                         AutomationProperties.LiveSetting="Polite" />
             </StackPanel>
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding !IsProductionMode}">
               <TextBlock Text="{loc:Tr audio.allow_writes}" VerticalAlignment="Center" />
               <ToggleSwitch Grid.Column="1" IsChecked="{Binding AllowAudioWrites}"
                             AutomationProperties.Name="{loc:Tr audio.allow_writes}" />
             </Grid>
-            <TextBlock Classes="hint" Text="{loc:Tr audio.restart_help}" TextWrapping="Wrap" />
+            <TextBlock Classes="hint" Text="{loc:Tr audio.restart_help}" TextWrapping="Wrap"
+                       IsVisible="{Binding !IsProductionMode}" />
           </StackPanel>
         </controls:Card>
 

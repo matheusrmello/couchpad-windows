@@ -272,6 +272,12 @@
 - A janela Sobre usa o ícone oficial do CouchPad, a versão da build e uma descrição localizada da troca de tela e áudio com o controle. A licença MIT aparece junto da ação Fechar.
 - A altura acompanha o conteúdo. O teste de localização verifica nomes completos de atributos XAML para distinguir texto visível de propriedades de layout como `SizeToContent`.
 
+## D074 — Configuração guiada de tela e áudio
+
+- O App sugere uma TV HDMI inativa e um monitor ativo não HDMI quando são os únicos alvos disponíveis com EDID. Mantém escolhas manuais. Para áudio, propõe um endpoint de áudio de display com nome compatível e correspondência única, incluindo endpoints HDMI que podem aparecer quando a TV for ativada. Duplicatas exigem seleção manual.
+- Aplicar salva os seletores, espera o coordenador ficar inativo e reinicia o executável do próprio App. O sucessor espera o processo anterior sair e adquire os bloqueios existentes. A configuração reabre com a automação desligada. Display, áudio real e watchdog continuam compostos como na D070.
+- A lista de áudio distingue o padrão multimídia e ordena endpoints ativos primeiro. O teste abre um stream WASAPI compartilhado no ID escolhido, sem mudar padrões, volume, topologia ou journal.
+
 ## Formato de nova decisão
 
 ```md

@@ -7,6 +7,10 @@ public sealed record DisplayTargetOption(
     ushort? EdidProduct,
     string? FriendlyName)
 {
+    public bool IsActive { get; init; }
+    public bool IsAvailable { get; init; }
+    public bool IsHdmi { get; init; }
+
     public string DisplayName
     {
         get

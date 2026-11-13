@@ -104,7 +104,12 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                     int offset = checked((int)i * PathSize);
                     var info = new TargetName { Header = new Header { Type = 2, Size = (uint)Marshal.SizeOf<TargetName>(), AdapterLow = BitConverter.ToUInt32(paths, offset + 20), AdapterHigh = BitConverter.ToInt32(paths, offset + 24), Id = BitConverter.ToUInt32(paths, offset + 28) }, FriendlyName = "", DevicePath = "" };
                     var status = DisplayConfigGetDeviceInfo(ref info);
-                    targets.Add(new Target(info.Header.AdapterLow, info.Header.AdapterHigh, info.Header.Id, status == 0 ? info.DevicePath : null, status == 0 ? info.FriendlyName : null, status == 0 && (info.Flags & 4) != 0 ? info.Manufacturer : null, status == 0 && (info.Flags & 4) != 0 ? info.Product : null, status));
+                    targets.Add(new Target(info.Header.AdapterLow, info.Header.AdapterHigh, info.Header.Id, status == 0 ? info.DevicePath : null, status == 0 ? info.FriendlyName : null, status == 0 && (info.Flags & 4) != 0 ? info.Manufacturer : null, status == 0 && (info.Flags & 4) != 0 ? info.Product : null, status)
+                    {
+                        IsActive = (BitConverter.ToUInt32(paths, offset + 68) & 1) != 0,
+                        IsAvailable = BitConverter.ToUInt32(paths, offset + 60) != 0,
+                        IsHdmi = BitConverter.ToUInt32(paths, offset + 36) == 5,
+                    });
                 }
                 return new Snapshot(1, queryFlags, PathSize, ModeSize, Convert.ToBase64String(paths), Convert.ToBase64String(modes), targets);
             }
@@ -296,7 +301,12 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
         exception.Data[RescueFailureLog.NativeOperationKey] = operation;
         throw exception;
     }
-    public sealed record Target(uint AdapterLow, int AdapterHigh, uint Id, string? DevicePath, string? FriendlyName, ushort? EdidManufacturer, ushort? EdidProduct, int Status);
+    public sealed record Target(uint AdapterLow, int AdapterHigh, uint Id, string? DevicePath, string? FriendlyName, ushort? EdidManufacturer, ushort? EdidProduct, int Status)
+    {
+        [System.Text.Json.Serialization.JsonIgnore] public bool IsActive { get; init; }
+        [System.Text.Json.Serialization.JsonIgnore] public bool IsAvailable { get; init; }
+        [System.Text.Json.Serialization.JsonIgnore] public bool IsHdmi { get; init; }
+    }
     public sealed record Snapshot(int SchemaVersion, uint QueryFlags, int PathSize, int ModeSize, string PathsBase64, string ModesBase64, List<Target> Targets);
     [StructLayout(LayoutKind.Sequential)] private struct Header { public uint Type, Size, AdapterLow; public int AdapterHigh; public uint Id; }
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)] private struct TargetName { public Header Header; public uint Flags, Technology; public ushort Manufacturer, Product; public uint Connector; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string FriendlyName; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DevicePath; }

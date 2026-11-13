@@ -129,7 +129,10 @@ public partial class MainWindowViewModel : ObservableObject
         bool canStartRecovery = false,
         bool recoveryFailed = false,
         bool productionMode = false,
-        AppSettings? configuredHardware = null)
+        AppSettings? configuredHardware = null,
+        Action? restartForHardware = null,
+        Action<string>? playAudioTest = null,
+        bool hardwareApplied = false)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
@@ -142,6 +145,9 @@ public partial class MainWindowViewModel : ObservableObject
         _canStartRecovery = canStartRecovery;
         IsProductionMode = productionMode;
         _configuredHardware = configuredHardware;
+        _restartForHardware = restartForHardware;
+        _playAudioTest = playAudioTest;
+        _hardwareApplied = hardwareApplied && configuredHardware is not null;
         RecoveryFailed = recoveryFailed;
         _countdownNotifications = new CountdownNotificationPresenter(showCountdown, dismissCountdown);
         _displayWriteControl = displayService as IDisplayWriteControl;
@@ -203,10 +209,15 @@ public partial class MainWindowViewModel : ObservableObject
         : _localization[StatusKey];
 
     public bool IsRecoveryUncertain => _coordinator.IsRecoveryUncertain;
-    public bool CanToggleAutomation => !IsRecoveryUncertain && (!IsProductionMode || HardwareReady);
+    public bool CanToggleAutomation => !IsRecoveryUncertain && !IsApplyingHardware && (!IsProductionMode || HardwareReady);
     public bool ShowHardwareSetup => IsProductionMode && !IsRecoveryUncertain && !HardwareReady;
-    public string HardwareSetupText => _localization[!HasCompleteSelection ? "automation.setup_required" :
-        _configuredHardware is null && !_canStartRecovery ? "automation.setup_unavailable" : "automation.setup_restart"];
+    public string HardwareSetupText => _localization[SelectedTvTarget is null ? "automation.setup_tv" :
+        SelectedInternalTarget is null ? "automation.setup_monitor" :
+        SelectedTvTarget.Matches(SelectedInternalTarget) ? "automation.setup_distinct" :
+        SelectedTvAudioEndpoint is null ? "automation.setup_audio" :
+        !HasCompleteSelection ? "automation.setup_required" :
+        !CanConfirmHardwareSelection ? "automation.setup_unavailable_devices" :
+        _restartForHardware is null ? "automation.setup_unavailable" : "automation.setup_apply"];
     private bool HardwareReady => HardwareMatchesSelection && _displayWriteControl is not { CanApply: false } && !_audioWritesRevoked;
 
     private bool HasCompleteSelection =>
@@ -228,6 +239,9 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(CanToggleAutomation));
         OnPropertyChanged(nameof(ShowHardwareSetup));
         OnPropertyChanged(nameof(HardwareSetupText));
+        ApplyHardwareCommand.NotifyCanExecuteChanged();
+        SuggestHardwareCommand.NotifyCanExecuteChanged();
+        TestAudioCommand.NotifyCanExecuteChanged();
     }
     public bool CanRetryRecovery => _canStartRecovery && IsRecoveryUncertain;
 
@@ -302,7 +316,7 @@ public partial class MainWindowViewModel : ObservableObject
     public string DisplayRefreshText =>
         _localization[IsRefreshing ? "display.refreshing" : "display.refresh"];
 
-    public string DisplayTargetHint => _localization["display.target_hint"];
+    public string DisplayTargetHint => _localization[IsProductionMode ? "display.target_hint" : "display.target_hint_simulation"];
 
     public bool HasDisplayTargetsError => !string.IsNullOrEmpty(DisplayTargetsError);
 
@@ -381,6 +395,7 @@ public partial class MainWindowViewModel : ObservableObject
         finally
         {
             _isLoadingSettings = false;
+            NotifyHardwareSetup();
         }
     }
 
@@ -392,17 +407,34 @@ public partial class MainWindowViewModel : ObservableObject
         _isLoadingSettings = true;
         try
         {
+            var endpoints = _discoverAudioEndpoints().DistinctBy(e => e.Id, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(e => e.IsAvailable).ThenByDescending(e => e.IsCurrent)
+                .ThenBy(e => e.Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
             AudioEndpoints.Clear();
-            foreach (var endpoint in _discoverAudioEndpoints().DistinctBy(e => e.Id, StringComparer.OrdinalIgnoreCase))
+            foreach (var endpoint in endpoints)
                 AudioEndpoints.Add(endpoint);
             if (selected is not null)
             {
                 var match = AudioEndpoints.FirstOrDefault(e => string.Equals(e.Id, selected.Id, StringComparison.OrdinalIgnoreCase));
-                if (match is null) { AudioEndpoints.Add(selected); match = selected; }
+                if (match is null)
+                {
+                    match = selected with { IsAvailable = false, IsCurrent = false, CanAppearAfterDisplayChange = false };
+                    AudioEndpoints.Add(match);
+                }
                 SelectedTvAudioEndpoint = match;
             }
+            _audioInventoryFailed = false;
         }
-        finally { _isLoadingSettings = false; }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            _audioInventoryFailed = true;
+        }
+        finally
+        {
+            _isLoadingSettings = false;
+            NotifyHardwareSetup();
+            OnPropertyChanged(nameof(AudioSetupText));
+        }
     }
 
     private DisplayTargetOption? EnsureTarget(DisplayTargetOption? target)
@@ -468,8 +500,8 @@ public partial class MainWindowViewModel : ObservableObject
         IsRefreshing = true;
         try
         {
-            // Leitura real de displays entra na P4; aqui só exercita o estado.
-            await Task.Delay(700);
+            if (IsProductionMode) RefreshDisplayTargets();
+            else await Task.Delay(700);
         }
         finally
         {
@@ -517,6 +549,12 @@ public partial class MainWindowViewModel : ObservableObject
         }
 
         PersistSettings();
+        _hardwareSuggestionStatus = null;
+        _hardwareApplied = false;
+        _hardwareApplyFailed = false;
+        OnPropertyChanged(nameof(HardwareSuggestionText));
+        OnPropertyChanged(nameof(HasHardwareSuggestion));
+        OnPropertyChanged(nameof(HardwareApplyStatus));
         SyncAutomation();
         NotifyHardwareSetup();
         RefreshUpdateNotice();
@@ -531,6 +569,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         PersistSettings();
         SyncAutomation();
+        NotifyHardwareSetup();
     }
 
     partial void OnCloseLauncherOnActivateChanged(bool value)
@@ -629,7 +668,13 @@ public partial class MainWindowViewModel : ObservableObject
         PersistSettings();
     }
 
-    partial void OnSelectedTvAudioEndpointChanged(AudioEndpointOption? value) => OnHardwareSelectionChanged();
+    partial void OnSelectedTvAudioEndpointChanged(AudioEndpointOption? value)
+    {
+        _audioTestStatus = null;
+        OnPropertyChanged(nameof(AudioSetupText));
+        OnPropertyChanged(nameof(SelectedAudioCanAppearLater));
+        OnHardwareSelectionChanged();
+    }
 
     partial void OnSelectedTvTargetChanged(DisplayTargetOption? value) => OnHardwareSelectionChanged();
 
@@ -638,6 +683,12 @@ public partial class MainWindowViewModel : ObservableObject
     private void OnHardwareSelectionChanged()
     {
         if (_isLoadingSettings) return;
+        _hardwareApplied = false;
+        _hardwareApplyFailed = false;
+        _hardwareSuggestionStatus = null;
+        OnPropertyChanged(nameof(HardwareApplyStatus));
+        OnPropertyChanged(nameof(HardwareSuggestionText));
+        OnPropertyChanged(nameof(HasHardwareSuggestion));
         if (IsProductionMode && !HardwareMatchesSelection && AutomationEnabled)
             AutomationEnabled = false;
         NotifyHardwareSetup();
@@ -735,11 +786,11 @@ public partial class MainWindowViewModel : ObservableObject
         Launcher = LauncherIndex == 1 ? LauncherKind.Hydra : LauncherKind.Steam,
     };
 
-    private void PersistSettings()
+    private bool PersistSettings()
     {
         if (_isLoadingSettings)
         {
-            return;
+            return false;
         }
 
         try
@@ -773,10 +824,12 @@ public partial class MainWindowViewModel : ObservableObject
                 InternalEdidProduct = SelectedInternalTarget?.EdidProduct,
                 InternalExactName = SelectedInternalTarget?.FriendlyName,
             });
+            return true;
         }
         catch
         {
             // Preferências não são críticas; a UI continua funcionando.
+            return false;
         }
     }
 
@@ -867,6 +920,9 @@ public partial class MainWindowViewModel : ObservableObject
     private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
     {
         OnPropertyChanged(nameof(HardwareSetupText));
+        OnPropertyChanged(nameof(HardwareApplyStatus));
+        OnPropertyChanged(nameof(HardwareSuggestionText));
+        OnPropertyChanged(nameof(AudioSetupText));
         OnPropertyChanged(nameof(IsPortuguese));
         OnPropertyChanged(nameof(IsEnglish));
         OnPropertyChanged(nameof(LanguageIndex));

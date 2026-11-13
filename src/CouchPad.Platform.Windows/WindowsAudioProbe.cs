@@ -6,7 +6,10 @@ namespace CouchPad.Platform.Windows;
 /// <summary>Read-only Core Audio endpoint inventory; does not change defaults.</summary>
 public static class WindowsAudioProbe
 {
-    public sealed record Endpoint(string Id, uint State, string? FriendlyName);
+    public sealed record Endpoint(string Id, uint State, string? FriendlyName)
+    {
+        public bool IsDisplayAudio { get; init; }
+    }
     public sealed record Inventory(IReadOnlyList<Endpoint> Endpoints, string? Console, string? Multimedia, string? Communications);
 
     /// <summary>Exact-name fallback; never chooses among multiple active matches.</summary>
@@ -41,7 +44,12 @@ public static class WindowsAudioProbe
                 for (uint i = 0; i < count; i++)
                 {
                     Check(collection.Item(i, out var device));
-                    try { Check(device.GetId(out var id)); Check(device.GetState(out var state)); endpoints.Add(new(id, state, GetFriendlyName(device))); }
+                    try
+                    {
+                        Check(device.GetId(out var id));
+                        Check(device.GetState(out var state));
+                        endpoints.Add(ReadEndpoint(device, id, state));
+                    }
                     finally { Marshal.ReleaseComObject(device); }
                 }
                 return new(endpoints, GetDefault(enumerator, 0), GetDefault(enumerator, 1), GetDefault(enumerator, 2));
@@ -103,7 +111,7 @@ public static class WindowsAudioProbe
 
     internal static void Check(int hr) { if (hr < 0) Marshal.ThrowExceptionForHR(hr); }
 
-    private static string? GetFriendlyName(IMMDevice device)
+    private static Endpoint ReadEndpoint(IMMDevice device, string id, uint state)
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
         Check(device.OpenPropertyStore(0, out var store));
@@ -111,7 +119,12 @@ public static class WindowsAudioProbe
         {
             var key = new PropertyKey { FormatId = new Guid("A45C254E-DF1C-4EFD-8020-67D146A850E0"), PropertyId = 14 };
             Check(store.GetValue(ref key, out var value));
-            try { return value.Type == 31 ? Marshal.PtrToStringUni(value.Pointer) : null; }
+            string? name;
+            try { name = value.Type == 31 ? Marshal.PtrToStringUni(value.Pointer) : null; }
+            finally { Check(PropVariantClear(ref value)); }
+            key = new PropertyKey { FormatId = new Guid("1DA5D803-D492-4EDD-8C23-E0C0FFEE7F0E"), PropertyId = 0 };
+            if (store.GetValue(ref key, out value) < 0) return new Endpoint(id, state, name);
+            try { return new Endpoint(id, state, name) { IsDisplayAudio = value.Type == 19 && value.UInt == 9 }; }
             finally { Check(PropVariantClear(ref value)); }
         }
         finally { Marshal.ReleaseComObject(store); }
@@ -120,7 +133,12 @@ public static class WindowsAudioProbe
     [StructLayout(LayoutKind.Sequential)]
     internal struct PropertyKey { public Guid FormatId; public uint PropertyId; }
     [StructLayout(LayoutKind.Explicit, Size = 24)]
-    internal struct PropVariant { [FieldOffset(0)] public ushort Type; [FieldOffset(8)] public IntPtr Pointer; }
+    internal struct PropVariant
+    {
+        [FieldOffset(0)] public ushort Type;
+        [FieldOffset(8)] public IntPtr Pointer;
+        [FieldOffset(8)] public uint UInt;
+    }
     [DllImport("ole32.dll")] private static extern int PropVariantClear(ref PropVariant value);
 
     [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]

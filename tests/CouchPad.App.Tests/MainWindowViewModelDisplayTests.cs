@@ -9,6 +9,66 @@ namespace CouchPad.App.Tests;
 
 public sealed class MainWindowViewModelDisplayTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Guided_setup_requires_confirmation_and_refuses_ambiguous_audio(bool duplicate)
+    {
+        var store = new FakeSettingsStore();
+        LocalizationService.Instance.Initialize(store);
+        var tv = new DisplayTargetOption("tv", 1, 2, "SAMSUNG") { IsAvailable = true, IsHdmi = true };
+        var monitor = new DisplayTargetOption("monitor", 3, 4, "AOC") { IsAvailable = true, IsActive = true };
+        var audio = new AudioEndpointOption("tv-audio", "SAMSUNG (HD Audio)", IsAvailable: true, IsDisplayAudio: true);
+        var defaultAudio = new AudioEndpointOption("monitor-audio", "AOC", IsAvailable: true, IsCurrent: true);
+        var restarts = 0;
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            productionMode: true, canStartRecovery: true, discoverTargets: () => [tv, monitor],
+            discoverAudioEndpoints: () => duplicate
+                ? [audio with { Id = "other", Name = "SAMSUNG -2", IsAvailable = false, CanAppearAfterDisplayChange = true }, audio, defaultAudio]
+                : [audio, defaultAudio], restartForHardware: () => restarts++);
+
+        vm.SuggestHardwareCommand.Execute(null);
+
+        Assert.Equal(tv, vm.SelectedTvTarget);
+        Assert.Equal(monitor, vm.SelectedInternalTarget);
+        Assert.Equal(defaultAudio, vm.AudioEndpoints[0]);
+        Assert.False(vm.AutomationEnabled);
+        Assert.Equal(0, restarts);
+        if (duplicate)
+        {
+            Assert.Null(vm.SelectedTvAudioEndpoint);
+            Assert.False(vm.ApplyHardwareCommand.CanExecute(null));
+            vm.SelectedTvAudioEndpoint = audio;
+        }
+        Assert.Equal(audio, vm.SelectedTvAudioEndpoint);
+        Assert.True(vm.ApplyHardwareCommand.CanExecute(null));
+        await vm.ApplyHardwareCommand.ExecuteAsync(null);
+        Assert.Equal(1, restarts);
+        Assert.False(store.Current.AutomationEnabled);
+        Assert.False(store.Current.AllowDisplayWrites);
+        Assert.Equal(audio.Id, store.Current.TvAudioEndpointId);
+    }
+
+    [Fact]
+    public async Task Audio_test_routes_by_selected_id_and_refuses_unavailable_output()
+    {
+        var store = new FakeSettingsStore();
+        LocalizationService.Instance.Initialize(store);
+        var selected = new AudioEndpointOption("test-device", "TV", IsAvailable: true);
+        var inactive = new AudioEndpointOption("inactive", "TV", CanAppearAfterDisplayChange: true);
+        var defaultAudio = new AudioEndpointOption("default", "AOC", IsAvailable: true, IsCurrent: true);
+        var played = new List<string>();
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            discoverAudioEndpoints: () => [inactive, selected, defaultAudio], playAudioTest: played.Add);
+        Assert.Equal(new[] { defaultAudio, selected, inactive }, vm.AudioEndpoints.ToArray());
+        vm.SelectedTvAudioEndpoint = inactive;
+        Assert.False(vm.TestAudioCommand.CanExecute(null));
+        vm.SelectedTvAudioEndpoint = selected;
+        Assert.True(vm.TestAudioCommand.CanExecute(null));
+        await vm.TestAudioCommand.ExecuteAsync(null);
+        Assert.Equal(selected.Id, Assert.Single(played));
+    }
+
     [Fact]
     public void Production_automation_requires_the_currently_loaded_device_selection()
     {
