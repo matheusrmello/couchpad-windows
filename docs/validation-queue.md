@@ -54,7 +54,8 @@
 - **Validação sem TV concluída:** instância única na janela real, coordenação de startup com rescue concorrente e nova tentativa assistida com backend falso. O iniciador de produção e o rescue assistido abriram o App com journal ausente. Evidências em `docs/p6-recovery-matrix.md`.
 - **Itens 4–6 verificados:** instalação e remoção da tarefa no Agendador, disparo automático no logon com journal ausente, reabertura pela bandeja, desativação com restauração de tela/áudio na Samsung/AOC e saída em repouso. Build 0/0, 258 testes e smoke após a matriz.
 - **Validar:** journal pendente após reinício/logon; restore automático;
-  integração de autostart por usuário; recuperação assistida com baseline real; sem admin.
+  integração de autostart por usuário; sem admin.
+- **Rescue real verificado:** logon com journal `pending` criado antes de apply e recuperação assistida pelo botão após interrupção de sessão `active` com Somente TV e áudio na Samsung.
 - **Evidência:** teste de crash/reinício, matrix P6, tag `v0.6.0-hardware`.
 
 ### 4. Notificação nativa (adiada)

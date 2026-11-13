@@ -71,7 +71,8 @@
 
 - Build Debug 0/0, 256 testes (229 Core e 27 App) e smoke aprovados. Os testes do App cobrem a disponibilidade da ação, o encaminhamento do pedido e a reabertura sem reativar a automação.
 - Em processos com backend falso, a quarta tentativa automática foi bloqueada. A tentativa assistida esperou a liberação do lock, reportou falha de áudio e preservou o journal. Uma nova tentativa explícita restaurou tela e áudio e removeu o journal e o contador.
-- O executável de produção `--assisted-recovery` retornou 0 com journal ausente e reabriu o App real com `--recovery-succeeded`. As preferências usadas na validação foram restauradas. A restauração assistida de um baseline real e a interação física com o botão na janela permanecem sem evidência.
+- O executável de produção `--assisted-recovery` retornou 0 com journal ausente e reabriu o App real com `--recovery-succeeded`. As preferências usadas na validação foram restauradas.
+- Hardware em 12/11/2026. A sessão do CouchPad ativou Somente TV e os três papéis de áudio na Samsung. O journal `active` continha os dois baselines. A instância de teste foi encerrada após a ativação e o App foi reaberto com o journal intacto e a recuperação bloqueando a automação. O operador acionou **Tentar recuperar**. Às 22:39:22, o rescue gravou `recovered`. O journal foi removido, a topologia do AOC correspondia semanticamente ao baseline, a Samsung estava inativa e os três papéis de áudio, volume e mudo correspondiam ao baseline. Uma nova instância visível do CouchPad recebeu `--recovery-succeeded`, rota que carrega a automação desativada e foi verificada em teste do App.
 
 ## Regressão após a matriz da bandeja
 
