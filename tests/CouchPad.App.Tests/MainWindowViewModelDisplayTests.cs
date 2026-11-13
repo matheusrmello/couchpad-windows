@@ -9,6 +9,45 @@ namespace CouchPad.App.Tests;
 
 public sealed class MainWindowViewModelDisplayTests
 {
+    [Fact]
+    public void Production_automation_requires_the_currently_loaded_device_selection()
+    {
+        var store = new FakeSettingsStore
+        {
+            Current = new AppSettings
+            {
+                TvDevicePath = "tv-path", TvEdidManufacturer = 11596, TvEdidProduct = 29031,
+                InternalDevicePath = "monitor-path", InternalEdidManufacturer = 58117, InternalEdidProduct = 9986,
+                TvAudioEndpointId = "tv-audio",
+            }
+        };
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            productionMode: true, configuredHardware: store.Current, discoverTargets: Discover);
+        Assert.True(vm.CanToggleAutomation);
+        Assert.False(vm.AutomationEnabled);
+        vm.AutomationEnabled = true;
+        Assert.True(store.Current.AllowDisplayWrites);
+        Assert.True(store.Current.AllowAudioWrites);
+        vm.SelectedTvAudioEndpoint = new AudioEndpointOption("different-audio", "Other");
+        Assert.False(vm.CanToggleAutomation);
+        Assert.False(vm.AutomationEnabled);
+        Assert.False(store.Current.AllowDisplayWrites);
+        Assert.Equal("different-audio", store.Current.TvAudioEndpointId);
+    }
+
+    [Fact]
+    public void Production_without_configured_hardware_cannot_enable_simulated_automation()
+    {
+        var store = new FakeSettingsStore { Current = new AppSettings { AutomationEnabled = true } };
+        LocalizationService.Instance.Initialize(store);
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(), productionMode: true);
+        Assert.False(vm.CanToggleAutomation);
+        Assert.True(vm.ShowHardwareSetup);
+        vm.AutomationEnabled = true;
+        Assert.False(vm.AutomationEnabled);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

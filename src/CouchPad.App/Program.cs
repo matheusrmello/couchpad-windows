@@ -12,7 +12,7 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        if (!OperatingSystem.IsWindows() || args.Contains("--smoke") || args.Contains("--gallery"))
+        if (!OperatingSystem.IsWindows() || args.Contains("--smoke") || args.Contains("--gallery") || args.Contains("--simulate"))
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
 
         try { Instance = WindowsAppInstance.AcquireOrForwardAsync(AppPaths.GetRoot()).GetAwaiter().GetResult(); }

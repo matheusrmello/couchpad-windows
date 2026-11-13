@@ -71,6 +71,10 @@ com a TV conectada e o usuário presente; leia `docs/p4-runbook.md` e
 
 ## Funcionalidades
 
+Na pré-release 1.0.5, o controle físico é detectado por padrão. Selecione a TV,
+o monitor e a saída de áudio da TV, reabra o CouchPad e ligue **Automação**.
+Para simular em desenvolvimento, execute `CouchPad.exe --simulate`.
+
 - UI pt-BR/en com cards, controles, estados e acessibilidade.
 - Simulação de display, áudio e gamepad.
 - State machine com atrasos canceláveis, journal atômico e persistência.

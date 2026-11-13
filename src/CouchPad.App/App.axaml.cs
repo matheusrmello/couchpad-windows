@@ -32,11 +32,14 @@ public partial class App : Application
         {
             var isSmoke = desktop.Args?.Contains("--smoke", StringComparer.Ordinal) == true;
             var isGallery = desktop.Args?.Contains("--gallery", StringComparer.Ordinal) == true;
-            var settingsPath = isSmoke
-                ? Path.Combine(Path.GetTempPath(), "couchpad-smoke", "settings.json")
+            var isSimulation = isSmoke || desktop.Args?.Contains("--simulate", StringComparer.Ordinal) == true;
+            var isProduction = !isSimulation && !isGallery && OperatingSystem.IsWindows();
+            var simulationRoot = Path.Combine(Path.GetTempPath(), isSmoke ? "couchpad-smoke" : "couchpad-simulation");
+            var settingsPath = isSimulation
+                ? AppPaths.SettingsFile(simulationRoot)
                 : AppPaths.SettingsFile();
-            var journalPath = isSmoke
-                ? Path.Combine(Path.GetTempPath(), "couchpad-smoke", "state", "session.json")
+            var journalPath = isSimulation
+                ? AppPaths.SessionJournalFile(simulationRoot)
                 : AppPaths.SessionJournalFile();
 
             var settingsStore = new JsonAppSettingsStore(settingsPath);
@@ -44,26 +47,27 @@ public partial class App : Application
             var appSettings = settingsStore.Load();
             var rescuePath = Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe");
             var appPath = Path.Combine(AppContext.BaseDirectory, "CouchPad.exe");
-            var canUseRescue = !isSmoke && !isGallery && OperatingSystem.IsWindows() && File.Exists(rescuePath);
+            var canUseRescue = isProduction && File.Exists(rescuePath);
             var startup = canUseRescue && File.Exists(appPath) ? new WindowsScheduledStartup() : null;
-            var useWindowsGamepad = !isSmoke && !isGallery && OperatingSystem.IsWindows() &&
-                (appSettings.UseWindowsGamepad || desktop.Args?.Contains("--windows-gamepad", StringComparer.Ordinal) == true);
+            var hardwareSettings = canUseRescue && HasProductionSelectors(appSettings)
+                ? appSettings with { AllowDisplayWrites = true, AllowAudioWrites = true }
+                : appSettings with { AllowDisplayWrites = false, AllowAudioWrites = false };
 
             var transaction = new RescueTransactionContext(Path.GetDirectoryName(Path.GetFullPath(journalPath))!);
             var (displayService, rescueGuard) = CreateWindowsDisplayServices(
-                desktop.Args ?? [], journalPath, isSmoke || isGallery,
-                rescuePath, appSettings, transaction);
-            var (audioService, audioGuard) = CreateWindowsAudioServices(displayService, appSettings, transaction,
+                [], journalPath, !isProduction,
+                rescuePath, hardwareSettings, transaction);
+            var (audioService, audioGuard) = CreateWindowsAudioServices(displayService, hardwareSettings, transaction,
                 rescuePath, journalPath);
             if (audioGuard is not null) rescueGuard = audioGuard;
             _displaySessionOwner = isGallery || Program.OwnsDisplaySession ? null : AcquireDisplayOwner(journalPath);
-            if (useWindowsGamepad) _gamepadWatcher = new WindowsGamepadWatcher();
-            if (!isSmoke && !isGallery && OperatingSystem.IsWindows() &&
+            if (isProduction) _gamepadWatcher = new WindowsGamepadWatcher();
+            if (isProduction &&
                 desktop.Args?.Contains("--experimental-windows-notifications", StringComparer.Ordinal) == true)
                 _countdownNotifications = new WindowsCountdownNotifications(Path.Combine(AppContext.BaseDirectory, "notifications", "CouchPad.Notifications.Windows.exe"));
             desktop.Exit += (_, _) => { _gamepadWatcher?.Dispose(); _countdownNotifications?.Dispose(); };
             Func<IReadOnlyList<DisplayTargetOption>>? discoverTargets =
-                isSmoke || isGallery || !OperatingSystem.IsWindows()
+                !isProduction
                     ? null
                     : DiscoverDisplayTargets;
 
@@ -80,23 +84,25 @@ public partial class App : Application
                         audioService: audioService,
                         rescueGuard: rescueGuard,
                         discoverTargets: discoverTargets,
-                        discoverAudioEndpoints: isSmoke || isGallery || !OperatingSystem.IsWindows() ? null : DiscoverAudioEndpoints,
+                        discoverAudioEndpoints: isProduction ? DiscoverAudioEndpoints : null,
                         revokeAudioWrites: OperatingSystem.IsWindows() && audioService is WindowsAudioService windowsAudio
                             ? windowsAudio.DisableNewWrites : null,
                         showCountdown: _countdownNotifications is { } notifications ? notifications.Show : null,
                         dismissCountdown: _countdownNotifications is { } notificationsToDismiss ? notificationsToDismiss.Cancel : null,
-                        launcherService: displayService is WindowsDisplayService && appSettings.AllowDisplayWrites
+                        launcherService: audioGuard is not null
                             ? new WindowsLauncherService() : null,
                         readStartup: startup is null ? null : () => startup.ReadAndMigrate(appPath),
                         configureStartup: startup is null ? null : enabled => startup.SetEnabled(enabled, appPath),
                         suspendAutomation: desktop.Args?.Any(arg => arg is "--recovery-succeeded" or "--recovery-failed") == true,
                         canStartRecovery: canUseRescue,
-                        recoveryFailed: desktop.Args?.Contains("--recovery-failed") == true),
+                        recoveryFailed: desktop.Args?.Contains("--recovery-failed") == true,
+                        productionMode: isProduction,
+                        configuredHardware: audioGuard is not null ? hardwareSettings : null),
                 };
 
             desktop.MainWindow = window;
 
-            if (!isSmoke && !isGallery && OperatingSystem.IsWindows() && window.DataContext is MainWindowViewModel viewModel)
+            if (isProduction && window.DataContext is MainWindowViewModel viewModel)
             {
                 var open = new NativeMenuItem();
                 var automation = new NativeMenuItem();
@@ -106,12 +112,12 @@ public partial class App : Application
                     open.Header = LocalizationService.Instance["tray.open"];
                     automation.Header = LocalizationService.Instance[viewModel.AutomationEnabled
                         ? "tray.disable" : "tray.enable"];
-                    automation.IsEnabled = !viewModel.IsRecoveryUncertain;
+                    automation.IsEnabled = viewModel.CanToggleAutomation;
                     exit.Header = LocalizationService.Instance["tray.exit"];
                 }
                 viewModel.PropertyChanged += (_, e) =>
                 {
-                    if (e.PropertyName is nameof(MainWindowViewModel.AutomationEnabled) or nameof(MainWindowViewModel.IsRecoveryUncertain))
+                    if (e.PropertyName is nameof(MainWindowViewModel.AutomationEnabled) or nameof(MainWindowViewModel.CanToggleAutomation))
                         UpdateTrayText();
                 };
                 void ShowWindow()
@@ -159,7 +165,7 @@ public partial class App : Application
                     await Dispatcher.UIThread.InvokeAsync(ShowWindow, DispatcherPriority.Normal, token));
                 automation.Click += (_, _) =>
                 {
-                    if (!viewModel.IsRecoveryUncertain)
+                    if (viewModel.CanToggleAutomation)
                         viewModel.AutomationEnabled = !viewModel.AutomationEnabled;
                 };
                 exit.Click += (_, _) => ExitSafely();
@@ -226,6 +232,12 @@ public partial class App : Application
 
     internal static DisplaySessionOwner? AcquireDisplayOwner(string journalPath) =>
         OperatingSystem.IsWindows() ? DisplaySessionOwner.Acquire(journalPath) : null;
+
+    internal static bool HasProductionSelectors(AppSettings settings) =>
+        IsComplete(settings.TvDevicePath, settings.TvEdidManufacturer, settings.TvEdidProduct) &&
+        IsComplete(settings.InternalDevicePath, settings.InternalEdidManufacturer, settings.InternalEdidProduct) &&
+        !string.Equals(settings.TvDevicePath, settings.InternalDevicePath, StringComparison.OrdinalIgnoreCase) &&
+        !string.IsNullOrWhiteSpace(settings.TvAudioEndpointId);
 
     internal static (IDisplayService? Display, IRescueGuard? Guard) CreateWindowsDisplayServices(
         string[] args, string journalPath, bool simulationOnly, string rescuePath,

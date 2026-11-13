@@ -54,6 +54,9 @@
   "display.target_hint": "Selecione a TV e o monitor interno; reinicie o CouchPad para aplicar.",
   "display.targets_error": "Não foi possível listar os displays. Verifique a conexão e tente novamente.",
   "display.target_none": "Selecione…",
+  "automation.setup_required": "Selecione a TV, um monitor diferente e a saída de áudio da TV para configurar a automação.",
+  "automation.setup_restart": "Saia do CouchPad pela bandeja e abra novamente para aplicar os dispositivos escolhidos.",
+  "automation.setup_unavailable": "O componente de recuperação não está disponível. Reinstale o CouchPad para configurar a automação.",
 
   "gamepad.primary": "Controle principal",
   "gamepad.none": "Nenhum controle conectado",

@@ -35,6 +35,8 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly Func<bool>? _readStartup;
     private readonly Action<bool>? _configureStartup;
     private readonly bool _canStartRecovery;
+    private readonly AppSettings? _configuredHardware;
+    public bool IsProductionMode { get; }
     [ObservableProperty]
     private bool _recoveryFailed;
     private bool _revertingStartup;
@@ -125,7 +127,9 @@ public partial class MainWindowViewModel : ObservableObject
         Action<bool>? configureStartup = null,
         bool suspendAutomation = false,
         bool canStartRecovery = false,
-        bool recoveryFailed = false)
+        bool recoveryFailed = false,
+        bool productionMode = false,
+        AppSettings? configuredHardware = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
@@ -136,6 +140,8 @@ public partial class MainWindowViewModel : ObservableObject
         _readStartup = readStartup;
         _configureStartup = configureStartup;
         _canStartRecovery = canStartRecovery;
+        IsProductionMode = productionMode;
+        _configuredHardware = configuredHardware;
         RecoveryFailed = recoveryFailed;
         _countdownNotifications = new CountdownNotificationPresenter(showCountdown, dismissCountdown);
         _displayWriteControl = displayService as IDisplayWriteControl;
@@ -197,6 +203,32 @@ public partial class MainWindowViewModel : ObservableObject
         : _localization[StatusKey];
 
     public bool IsRecoveryUncertain => _coordinator.IsRecoveryUncertain;
+    public bool CanToggleAutomation => !IsRecoveryUncertain && (!IsProductionMode || HardwareReady);
+    public bool ShowHardwareSetup => IsProductionMode && !IsRecoveryUncertain && !HardwareReady;
+    public string HardwareSetupText => _localization[!HasCompleteSelection ? "automation.setup_required" :
+        _configuredHardware is null && !_canStartRecovery ? "automation.setup_unavailable" : "automation.setup_restart"];
+    private bool HardwareReady => HardwareMatchesSelection && _displayWriteControl is not { CanApply: false } && !_audioWritesRevoked;
+
+    private bool HasCompleteSelection =>
+        SelectedTvTarget is { EdidManufacturer: not null, EdidProduct: not null } tv &&
+        SelectedInternalTarget is { EdidManufacturer: not null, EdidProduct: not null } monitor &&
+        !string.IsNullOrWhiteSpace(tv.DevicePath) && !string.IsNullOrWhiteSpace(monitor.DevicePath) &&
+        !string.Equals(tv.DevicePath, monitor.DevicePath, StringComparison.OrdinalIgnoreCase) &&
+        !string.IsNullOrWhiteSpace(SelectedTvAudioEndpoint?.Id);
+
+    private bool HardwareMatchesSelection => _configuredHardware is { } configured && HasCompleteSelection &&
+        SelectedTvTarget!.Matches(CreateSavedTarget(configured.TvDevicePath, configured.TvEdidManufacturer,
+            configured.TvEdidProduct, configured.TvExactName)) &&
+        SelectedInternalTarget!.Matches(CreateSavedTarget(configured.InternalDevicePath, configured.InternalEdidManufacturer,
+            configured.InternalEdidProduct, configured.InternalExactName)) &&
+        string.Equals(SelectedTvAudioEndpoint!.Id, configured.TvAudioEndpointId, StringComparison.OrdinalIgnoreCase);
+
+    private void NotifyHardwareSetup()
+    {
+        OnPropertyChanged(nameof(CanToggleAutomation));
+        OnPropertyChanged(nameof(ShowHardwareSetup));
+        OnPropertyChanged(nameof(HardwareSetupText));
+    }
     public bool CanRetryRecovery => _canStartRecovery && IsRecoveryUncertain;
 
     [RelayCommand]
@@ -484,11 +516,12 @@ public partial class MainWindowViewModel : ObservableObject
 
         PersistSettings();
         SyncAutomation();
+        NotifyHardwareSetup();
     }
 
     partial void OnAutomationEnabledChanged(bool value)
     {
-        if (value && (_displayWriteControl is { CanApply: false } || (AllowAudioWrites && _audioWritesRevoked)))
+        if (!_isLoadingSettings && value && (!CanToggleAutomation || _displayWriteControl is { CanApply: false } || (AllowAudioWrites && _audioWritesRevoked)))
         {
             AutomationEnabled = false;
             return;
@@ -593,11 +626,20 @@ public partial class MainWindowViewModel : ObservableObject
         PersistSettings();
     }
 
-    partial void OnSelectedTvAudioEndpointChanged(AudioEndpointOption? value) => PersistSettings();
+    partial void OnSelectedTvAudioEndpointChanged(AudioEndpointOption? value) => OnHardwareSelectionChanged();
 
-    partial void OnSelectedTvTargetChanged(DisplayTargetOption? value) => PersistSettings();
+    partial void OnSelectedTvTargetChanged(DisplayTargetOption? value) => OnHardwareSelectionChanged();
 
-    partial void OnSelectedInternalTargetChanged(DisplayTargetOption? value) => PersistSettings();
+    partial void OnSelectedInternalTargetChanged(DisplayTargetOption? value) => OnHardwareSelectionChanged();
+
+    private void OnHardwareSelectionChanged()
+    {
+        if (_isLoadingSettings) return;
+        if (IsProductionMode && !HardwareMatchesSelection && AutomationEnabled)
+            AutomationEnabled = false;
+        NotifyHardwareSetup();
+        PersistSettings();
+    }
 
     partial void OnDisplayTargetsErrorChanged(string? value) =>
         OnPropertyChanged(nameof(HasDisplayTargetsError));
@@ -662,6 +704,9 @@ public partial class MainWindowViewModel : ObservableObject
 
             SelectedTvTarget = tv;
             SelectedInternalTarget = internalDisplay;
+            if (IsProductionMode && (!HardwareMatchesSelection || !settings.UseWindowsGamepad ||
+                !settings.AllowDisplayWrites || !settings.AllowAudioWrites || IsRecoveryUncertain))
+                AutomationEnabled = false;
         }
         finally
         {
@@ -671,7 +716,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     private AutomationSettings BuildAutomationSettings() => new()
     {
-        Enabled = AutomationEnabled,
+        Enabled = AutomationEnabled && CanToggleAutomation,
         ActivationDelay = DelayOptions.FromIndex(ActivationDelayIndex),
         DeactivationDelay = DelayOptions.FromIndex(DeactivationDelayIndex),
         DisplayMode = DisplayModeIndex switch
@@ -700,7 +745,7 @@ public partial class MainWindowViewModel : ObservableObject
                 AutomationEnabled = AutomationEnabled,
                 CloseLauncherOnActivate = CloseLauncherOnActivate,
                 StartWithWindows = CanConfigureStartup ? StartWithWindows : current.StartWithWindows,
-                UseWindowsGamepad = UseWindowsGamepad,
+                UseWindowsGamepad = IsProductionMode || UseWindowsGamepad,
                 MinimizeToTray = MinimizeToTray,
                 ActivationDelayIndex = ActivationDelayIndex,
                 DeactivationDelayIndex = DeactivationDelayIndex,
@@ -709,8 +754,8 @@ public partial class MainWindowViewModel : ObservableObject
                 SteamEnabled = SteamEnabled,
                 LauncherIndex = LauncherIndex,
                 CustomLauncherPath = CustomLauncherPath,
-                AllowDisplayWrites = AllowDisplayWrites,
-                AllowAudioWrites = AllowAudioWrites,
+                AllowDisplayWrites = IsProductionMode ? AutomationEnabled && HardwareMatchesSelection : AllowDisplayWrites,
+                AllowAudioWrites = IsProductionMode ? AutomationEnabled && HardwareMatchesSelection : AllowAudioWrites,
                 TvAudioEndpointId = SelectedTvAudioEndpoint?.Id,
                 TvDevicePath = SelectedTvTarget?.DevicePath,
                 TvEdidManufacturer = SelectedTvTarget?.EdidManufacturer,
@@ -796,6 +841,7 @@ public partial class MainWindowViewModel : ObservableObject
             OnPropertyChanged(nameof(DisplaySummary));
             OnPropertyChanged(nameof(AudioSummary));
             OnPropertyChanged(nameof(IsRecoveryUncertain));
+            NotifyHardwareSetup();
             OnPropertyChanged(nameof(CanRetryRecovery));
             OnPropertyChanged(nameof(HasLauncherError));
             OnPropertyChanged(nameof(RecoveryHelpText));
@@ -813,6 +859,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
     {
+        OnPropertyChanged(nameof(HardwareSetupText));
         OnPropertyChanged(nameof(IsPortuguese));
         OnPropertyChanged(nameof(IsEnglish));
         OnPropertyChanged(nameof(LanguageIndex));

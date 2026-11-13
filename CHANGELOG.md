@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.0.5 (pré-release)
+
+- Detecta o controle físico por padrão no Windows. A simulação fica disponível com `--simulate`.
+- O botão Automação é liberado depois de selecionar TV, monitor e áudio e reabrir o CouchPad. Alterar os dispositivos pausa a automação.
+- Build Release sem avisos ou erros, 269 testes e smoke aprovados. A primeira configuração e a transição com TV real ainda precisam de validação interativa.
+
 ## 1.0.4 (pré-release)
 
 - Mostra o nome do controle 8BitDo Ultimate 2 ou Ultimate 2C quando o XInput informa um par de IDs reconhecido.

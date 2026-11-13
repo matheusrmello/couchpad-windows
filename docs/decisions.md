@@ -250,6 +250,12 @@
 - A seleção e os eventos continuam baseados em `XInputGetState`. Ao selecionar um slot, consultar opcionalmente as capacidades estendidas do XInput 1.4 para obter o par fabricante/produto desse slot. A ausência da função, falha de consulta ou par desconhecido mantém o rótulo genérico.
 - A tabela inicial distingue Ultimate 2 e Ultimate 2C. Referências: [interface usada pelo SDL](https://github.com/libsdl-org/SDL/blob/main/src/core/windows/SDL_xinput.h) e [IDs do driver xpad](https://code.googlesource.com/linux/torvalds/linux/+/de03b17ec046d81c4713bc54306579b9024fc513/drivers/input/joystick/xpad.c).
 
+## D070 — Configuração de produção da automação
+
+- A abertura normal no Windows usa XInput desde o primeiro uso. A interface de produção oculta a simulação e os três controles técnicos de permissão. `--simulate` usa armazenamento separado e mantém os controles de diagnóstico.
+- TV, monitor distinto e saída de áudio são selecionados pelo usuário. A composição carrega essas escolhas ao abrir o App. Até aplicar mudanças com uma reabertura, a interface e a bandeja bloqueiam a ativação. Mudar uma escolha desativa a automação antes de reutilizar os serviços.
+- O botão Automação é o consentimento para a sessão real. Preferências antigas só reativam automaticamente se a automação, o controle físico e ambas as permissões reais já estavam ligados. O Core e as verificações de identidade, journal e rescue permanecem no fluxo.
+
 ## Formato de nova decisão
 
 ```md

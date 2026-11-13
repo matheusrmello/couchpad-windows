@@ -63,13 +63,15 @@
                        Title="{loc:Tr section.automation}">
           <controls:Card.HeaderAction>
             <ToggleSwitch IsChecked="{Binding AutomationEnabled}"
-                          IsEnabled="{Binding !IsRecoveryUncertain}"
+                          IsEnabled="{Binding CanToggleAutomation}"
                           AutomationProperties.Name="{loc:Tr automation.toggle}"
                           AutomationProperties.HelpText="{loc:Tr automation.help}" />
           </controls:Card.HeaderAction>
 
           <StackPanel Spacing="10">
             <TextBlock Classes="hint" Text="{loc:Tr automation.help}" />
+            <TextBlock Classes="hint" IsVisible="{Binding ShowHardwareSetup}" Text="{Binding HardwareSetupText}"
+                       AutomationProperties.LiveSetting="Polite" TextWrapping="Wrap" />
             <TextBlock Classes="hint"
                        Foreground="{DynamicResource CouchPad.Danger}"
                        Text="{Binding RecoveryHelpText}"
@@ -286,14 +288,14 @@
                          Foreground="{DynamicResource CouchPad.Danger}"
                          AutomationProperties.LiveSetting="Polite"
                          TextWrapping="Wrap" />
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding !IsProductionMode}">
                 <TextBlock Text="{loc:Tr settings.real_gamepad}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"
                               IsChecked="{Binding UseWindowsGamepad}"
                               AutomationProperties.Name="{loc:Tr settings.real_gamepad}"
                               AutomationProperties.HelpText="{loc:Tr settings.real_gamepad_help}" />
               </Grid>
-              <TextBlock Classes="hint" Text="{loc:Tr settings.real_gamepad_help}" />
+              <TextBlock Classes="hint" IsVisible="{Binding !IsProductionMode}" Text="{loc:Tr settings.real_gamepad_help}" />
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <TextBlock Text="{loc:Tr settings.minimize_to_tray}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"
@@ -301,14 +303,14 @@
                               AutomationProperties.Name="{loc:Tr settings.minimize_to_tray}"
                               AutomationProperties.HelpText="{loc:Tr settings.minimize_to_tray_help}" />
               </Grid>
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding !IsProductionMode}">
                 <TextBlock Text="{loc:Tr settings.allow_display_writes}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"
                               IsChecked="{Binding AllowDisplayWrites}"
                               AutomationProperties.Name="{loc:Tr settings.allow_display_writes}"
                               AutomationProperties.HelpText="{loc:Tr settings.allow_display_writes_help}" />
               </Grid>
-              <TextBlock Classes="hint" Text="{loc:Tr settings.allow_display_writes_help}" />
+              <TextBlock Classes="hint" IsVisible="{Binding !IsProductionMode}" Text="{loc:Tr settings.allow_display_writes_help}" />
             </StackPanel>
 
             <TextBlock Classes="hint" Text="{loc:Tr settings.help}" />
@@ -355,7 +357,7 @@
                       Command="{Binding RefreshAudioEndpointsCommand}"
                       AutomationProperties.Name="{loc:Tr audio.refresh}" />
             </StackPanel>
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding !IsProductionMode}">
               <TextBlock Text="{loc:Tr audio.allow_writes}" VerticalAlignment="Center" />
               <ToggleSwitch Grid.Column="1" IsChecked="{Binding AllowAudioWrites}"
                             AutomationProperties.Name="{loc:Tr audio.allow_writes}" />
