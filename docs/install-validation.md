@@ -21,7 +21,8 @@
 - Em 13/11/2026, o operador criou a conta local `Teste` e confirmou que o candidato foi instalado sem pedir credenciais de administrador e que o CouchPad abriu normalmente. A consulta na conta principal confirmou um processo `CouchPad.exe` na sessão 10 da conta `Teste`. O caminho do processo e a definição da tarefa exigem consulta na própria conta de teste.
 - A captura enviada pelo operador confirma a versão 1.0.0 em pt-BR, estado inativo, simulação local e automação, XInput, autostart e permissões de escrita de tela e áudio desligados. Os seletores de TV, monitor e saída de áudio estavam vazios. A opção de minimizar para a bandeja veio habilitada.
 - O operador confirmou que minimizou o App instalado na conta `Teste` e reabriu a janela pela opção **Abrir** do menu da bandeja.
-- Próxima etapa: verificar o autostart pelo rescue em um novo logon da conta `Teste`.
+- O operador confirmou que o CouchPad abriu sozinho após habilitar **Iniciar com o Windows**, sair e entrar novamente na conta `Teste`. A consulta na conta principal encontrou a nova sessão 11 às 09:09 e o processo do CouchPad iniciado às 09:09:34 na mesma sessão. A consulta entre contas não retornou a linha de comando nem o resultado das tarefas. O disparo das duas tarefas e o marcador do bootstrap têm evidência independente na matriz P6.
+- Próxima etapa: reinstalar o mesmo candidato e verificar a preservação da preferência de autostart.
 
 O perfil principal já possui configurações, journal histórico e tarefas de desenvolvimento. Use uma conta padrão limpa ou uma VM Windows limpa para obter evidência do primeiro uso e evitar substituir tarefas de outra instalação.
 
