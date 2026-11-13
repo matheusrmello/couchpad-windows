@@ -31,12 +31,15 @@ if (args.Length == 2 && args[0] == "--test-startup-recovery" && OperatingSystem.
     catch { return 1; }
 }
 #endif
-if (args is [var taskCommand] && taskCommand is ("--install-logon-task" or "--remove-logon-task") && OperatingSystem.IsWindows())
+if (args is [var taskCommand] && taskCommand is ("--check-install-session" or "--install-logon-task" or "--remove-logon-task") && OperatingSystem.IsWindows())
 {
     try
     {
         var journal = AppPaths.SessionJournalFile();
         using var owner = DisplaySessionOwner.Acquire(journal);
+        if (new JsonSessionJournalStore(journal).Inspect().Status != SessionJournalStatus.Missing)
+            throw new InvalidOperationException("Complete session recovery before changing the installation.");
+        if (taskCommand == "--check-install-session") return 0;
         using var currentUser = WindowsIdentity.GetCurrent();
         var sid = currentUser.User?.Value ?? throw new InvalidOperationException("Windows user SID unavailable.");
         var executable = Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe");
@@ -48,8 +51,6 @@ if (args is [var taskCommand] && taskCommand is ("--install-logon-task" or "--re
         }
         else
         {
-            if (new JsonSessionJournalStore(journal).Inspect().Status != SessionJournalStatus.Missing)
-                throw new InvalidOperationException("Complete session recovery before removing the rescue task.");
             _ = registration.IsRegistered(executable, sid);
             new WindowsScheduledStartup().SetEnabled(false, Path.Combine(AppContext.BaseDirectory, "CouchPad.exe"));
             registration.Remove(executable, sid);

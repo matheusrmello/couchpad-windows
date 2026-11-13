@@ -19,8 +19,8 @@
   <ItemGroup>
     <ProjectReference Include="..\CouchPad.Core\CouchPad.Core.csproj" />
     <ProjectReference Include="..\CouchPad.Platform.Windows\CouchPad.Platform.Windows.csproj" />
-    <ProjectReference Include="..\CouchPad.Rescue\CouchPad.Rescue.csproj" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\CouchPad.Notifications.Windows\CouchPad.Notifications.Windows.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" />
+    <ProjectReference Include="..\CouchPad.Rescue\CouchPad.Rescue.csproj" ReferenceOutputAssembly="false" Condition="'$(CouchPadInstallerPublish)' != 'true'" />
+    <ProjectReference Include="..\CouchPad.Notifications.Windows\CouchPad.Notifications.Windows.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" Condition="'$(CouchPadInstallerPublish)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,19 +30,19 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Target Name="CopyRescueArtifacts" AfterTargets="Build">
+  <Target Name="CopyRescueArtifacts" AfterTargets="Build" Condition="'$(CouchPadInstallerPublish)' != 'true'">
     <ItemGroup>
       <_RescueArtifact Include="$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.exe;$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.dll;$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.deps.json;$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.runtimeconfig.json" />
     </ItemGroup>
     <Copy SourceFiles="@(_RescueArtifact)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
-  <Target Name="CopyNotificationArtifacts" AfterTargets="Build">
+  <Target Name="CopyNotificationArtifacts" AfterTargets="Build" Condition="'$(CouchPadInstallerPublish)' != 'true'">
     <ItemGroup>
       <_NotificationArtifact Include="$(MSBuildThisFileDirectory)..\CouchPad.Notifications.Windows\bin\$(Configuration)\net10.0-windows10.0.18362.0\win-x64\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(_NotificationArtifact)" DestinationFiles="@(_NotificationArtifact->'$(OutDir)notifications\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
-  <Target Name="IncludeNotificationArtifactsInPublish" AfterTargets="ComputeFilesToPublish">
+  <Target Name="IncludeNotificationArtifactsInPublish" AfterTargets="ComputeFilesToPublish" Condition="'$(CouchPadInstallerPublish)' != 'true'">
     <ItemGroup>
       <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\CouchPad.Notifications.Windows\bin\$(Configuration)\net10.0-windows10.0.18362.0\win-x64\**\*">
         <RelativePath>notifications\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
@@ -50,7 +50,7 @@
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
-  <Target Name="IncludeRescueAssemblyInPublish" AfterTargets="ComputeFilesToPublish">
+  <Target Name="IncludeRescueAssemblyInPublish" AfterTargets="ComputeFilesToPublish" Condition="'$(CouchPadInstallerPublish)' != 'true'">
     <ItemGroup>
       <ResolvedFileToPublish Include="$(MSBuildThisFileDirectory)..\CouchPad.Rescue\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\CouchPad.Rescue.dll">
         <RelativePath>CouchPad.Rescue.dll</RelativePath>

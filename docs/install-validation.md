@@ -6,3 +6,22 @@
 - Em 13/11/2026, builds isolados Debug e Release com 0 avisos e 0 erros. Cada configuração passou 259 testes (232 Core e 27 App) e smoke.
 - Passaram os testes de processo de startup e watchdog com filho falso e rescue com backend falso, incluindo concorrência, falhas, timeout, recuperação assistida e morte do processo pai.
 - A UI aceita na P7a é a referência congelada desta distribuição.
+
+## Candidato a instalador
+
+- Inno Setup 6.7.4, instalação per-user com `PrivilegesRequired=lowest`, App e rescue autocontidos para `win-x64`. O pacote inclui runtime, catálogos pt-BR/en e assets incorporados. Notificações experimentais ausentes do payload.
+- `artifacts/CouchPad-Setup-1.0.0-win-x64.exe` — 53.494.908 bytes. SHA-256: `23D28331B7A45081EA6812CCD3E66CDC2EBC22292145069DFE5845C0591834F0`.
+- O App publicado passou no smoke usando o executável autocontido. O rescue publicado carregou o runtime incluído e retornou 2 para um argumento desconhecido.
+- Authenticode do instalador, do App e do rescue: `NotSigned`. Os repositórios pessoais de certificados do usuário e da máquina não contêm certificado de assinatura de código. Ver D067.
+
+## Validação de instalação pendente
+
+O perfil principal já possui configurações, journal histórico e tarefas de desenvolvimento. Use uma conta padrão limpa ou uma VM Windows limpa para obter evidência do primeiro uso e evitar substituir tarefas de outra instalação.
+
+1. Confirme o SHA-256 e instale pelo EXE. Registre o resultado, o nível de privilégio, a pasta de destino, o atalho, o registro do desinstalador e o caminho da tarefa de rescue.
+2. Abra pelo atalho. Confirme automação, XInput e escritas de display/áudio desligados por padrão. Minimize, reabra e saia pela bandeja.
+3. Habilite **Iniciar com o Windows**, saia pela bandeja e entre novamente no Windows. Confira as duas tarefas, o marcador `--windows-autostart`, a origem do processo e a ausência de journal.
+4. Feche pela bandeja. Reinstale o mesmo pacote e confirme a preservação das preferências e a ausência de tarefas duplicadas. Se houver falha, interrompa a validação e preserve o log.
+5. Desinstale. Confirme ausência dos binários, atalho, tarefas, registro de desinstalação e processos do CouchPad. Os dados por usuário são preservados conforme D066.
+
+Para voltar a uma versão anterior, conclua qualquer recuperação pendente, faça backup das configurações, saia do App pela bandeja, desinstale e reinstale o pacote anterior quando disponível. Preserve os baselines originais para diagnóstico. A validação dessa sequência com um instalador anterior depende da existência desse artefato.

@@ -701,7 +701,7 @@ separados.
 | P5 áudio/HDR | Codex | **aceito** | Áudio validado em hardware com controle simulado, restore, falha, cancelamento, endpoint ausente e rescue; HDR adiado; aceite do usuário em 11/11/2026; ver `docs/p5-audio-hdr.md` |
 | P6 rescue/tray | Codex | aceita em 13/11/2026 | Bandeja, logon com e sem journal, recuperação assistida e autostart validados. As duas tarefas retornaram 0 no logon final. Build 0/0, 259 testes, smoke e testes de processo passaram. Tag `v0.6.0-hardware`. Handoff P7a em `docs/handoff-codex-to-deepseek.md`. |
 | P7a docs/a11y | DeepSeek | **aceita** | A11y/i18n/UIAutomation, 6 capturas 0.6.0, README/notas; aceite do usuário em 13/11/2026; Narrator/NVDA manual pendente; ver seção P7a |
-| P7b corrections/release | Codex | pendente | Depende de P7a |
+| P7b corrections/release | Codex | em validação | Regressão e candidato autocontido concluídos. Instalação em perfil limpo pendente. Ver `docs/install-validation.md` e D066–D067. |
 
 ---
 

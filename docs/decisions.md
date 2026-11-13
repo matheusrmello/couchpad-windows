@@ -228,6 +228,17 @@
 - Após dois logons sem disparo da entrada Run e ausência do CouchPad na lista de aplicativos de inicialização, usar uma tarefa de logon por usuário, com privilégio limitado, para executar `--startup-and-launch`.
 - A migração verifica a propriedade da entrada antiga e só a remove após confirmar a tarefa nova. A tarefa independente de recuperação é preservada. O comando de remoção do instalador remove também o autostart próprio.
 
+## D066 — Instalador per-user e preservação de dados
+
+- Gerar um EXE com Inno Setup 6.7.4 para o Windows x64. O App e o rescue compartilham o runtime .NET autocontido, com os dois catálogos de localização e os assets originais. O pacote exclui o componente de notificações experimentais.
+- Instalar em `%LOCALAPPDATA%\Programs\CouchPad` e registrar a tarefa independente de recuperação. O autostart do App permanece opt-in pela interface. Upgrade no mesmo diretório preserva as tarefas próprias e os dados de usuário.
+- A desinstalação verifica a ausência de journal sob o lock da sessão antes de remover as tarefas próprias e os arquivos do pacote. Configurações e diagnósticos em `%LOCALAPPDATA%\CouchPad` são preservados intencionalmente. Em reinstalação após desinstalar, o usuário pode habilitar o autostart novamente.
+
+## D067 — Distribuição sem Authenticode
+
+- Os repositórios pessoais de certificados do usuário e da máquina não contêm certificado de assinatura de código. O instalador candidato, o App e o rescue retornaram `NotSigned` na verificação Authenticode.
+- A distribuição segue sem assinatura Authenticode. O SmartScreen pode advertir sobre o instalador baixado, e as políticas locais podem bloqueá-lo. Publicar SHA-256 para conferência de integridade. [Microsoft Learn](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation)
+
 ## Formato de nova decisão
 
 ```md
