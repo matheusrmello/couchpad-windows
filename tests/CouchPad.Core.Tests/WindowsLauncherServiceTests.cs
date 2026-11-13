@@ -30,7 +30,20 @@ public sealed class WindowsLauncherServiceTests
         Assert.Equal(1, backend.Starts);
         Assert.False(backend.Tracked);
         Assert.Equal(0, backend.Closes);
-        Assert.Equal(kind == LauncherKind.Hydra ? 1 : 0, backend.Activations);
+        Assert.Equal(kind == LauncherKind.Steam ? "steam://open/bigpicture" : "--big-picture", backend.Argument);
+    }
+
+    [Fact]
+    public async Task Hydra_closes_only_the_new_window_even_when_the_client_was_already_running()
+    {
+        var backend = new FakeBackend { Existing = true, NewWindow = new(123, new(42, DateTime.UnixEpoch, "C:\\launcher.exe", LauncherKind.Hydra)) };
+        var service = new WindowsLauncherService(backend);
+        await service.StartAsync(new LauncherSelection(LauncherKind.Hydra));
+        await service.CloseOwnedAsync();
+        await service.CloseOwnedAsync();
+        Assert.Same(backend.NewWindow, backend.ClosedWindow);
+        Assert.Equal(1, backend.WindowCloses);
+        Assert.Equal(0, backend.Closes);
     }
 
     [Fact]
@@ -64,7 +77,7 @@ public sealed class WindowsLauncherServiceTests
         using var cancellation = new CancellationTokenSource();
         var backend = new FakeBackend { StartEntered = started, ResumeStart = resume };
         var service = new WindowsLauncherService(backend);
-        var task = service.StartAsync(new LauncherSelection(LauncherKind.Hydra), cancellation.Token);
+        var task = service.StartAsync(new LauncherSelection(LauncherKind.Steam), cancellation.Token);
         Assert.True(started.Wait(TimeSpan.FromSeconds(2)));
         cancellation.Cancel();
         resume.Set();
@@ -75,13 +88,17 @@ public sealed class WindowsLauncherServiceTests
     private sealed class FakeBackend : IWindowsLauncherBackend
     {
         public bool Existing, Tracked, Missing;
-        public int Starts, Closes, Activations;
+        public int Starts, Closes, WindowCloses;
+        public string? Argument;
+        public HydraWindow? NewWindow, ClosedWindow;
         public ManualResetEventSlim? StartEntered, ResumeStart;
         public LauncherSpec Resolve(LauncherKind kind) => Missing ? throw new FileNotFoundException() : new("C:\\launcher.exe", WindowsLauncherBackend.ArgumentFor(kind), kind);
         public bool IsRunning(string executable) => Existing;
-        public OwnedLauncher? Start(LauncherSpec spec, bool trackOwnership) { Starts++; Tracked = trackOwnership; StartEntered?.Set(); ResumeStart?.Wait(); return trackOwnership ? new(42, DateTime.UnixEpoch, spec.Executable, spec.Kind) : null; }
+        public OwnedLauncher? Start(LauncherSpec spec, bool trackOwnership) { Starts++; Argument = spec.Argument; Tracked = trackOwnership; StartEntered?.Set(); ResumeStart?.Wait(); return trackOwnership ? new(42, DateTime.UnixEpoch, spec.Executable, spec.Kind) : null; }
         public bool IsAlive(OwnedLauncher process) => true;
-        public Task ActivateExistingAsync(LauncherSpec spec, CancellationToken cancellationToken) { Activations++; return Task.CompletedTask; }
+        public IReadOnlyList<HydraWindow> HydraWindows(string executable) => [];
+        public Task<HydraWindow?> FindNewHydraWindowAsync(LauncherSpec spec, IReadOnlyList<HydraWindow> before, CancellationToken cancellationToken) => Task.FromResult(NewWindow);
+        public Task CloseHydraWindowAsync(HydraWindow window, CancellationToken cancellationToken) { WindowCloses++; ClosedWindow = window; return Task.CompletedTask; }
         public Task CloseAsync(OwnedLauncher process, CancellationToken cancellationToken) { Closes++; return Task.CompletedTask; }
     }
 }

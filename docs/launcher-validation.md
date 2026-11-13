@@ -1,5 +1,11 @@
 # Validação de launchers
 
+## Correções no candidato 1.0.2
+
+- Steam já em execução recebe `steam://open/bigpicture`. Inicialização a frio permanece com `-gamepadui`.
+- O CouchPad rastreia a janela nova de Big Picture do Hydra e solicita seu fechamento após restaurar. A janela principal e os processos do Hydra são preservados. Uma janela já presente antes da ativação não é fechada pelo CouchPad.
+- Build Release 0/0, 262 testes e smoke passaram. Testes com backend falso verificaram o comando para Steam aberto e o fechamento exclusivo da janela nova do Hydra. A confirmação visual em hardware permanece pendente.
+
 Data: 2026-11-12. Escopo: Steam e Hydra em Big Picture, um cenário por vez.
 
 ## Implementação e limites
