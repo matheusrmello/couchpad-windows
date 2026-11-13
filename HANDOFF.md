@@ -2,6 +2,8 @@
 
 **1.0.7 (pré-release):** oito ícones nos títulos dos cards da tela principal. Decisão D072. Build Release 0/0, 272 testes, smoke e conferência visual em simulação a 1020 DIP em pt-BR. A conferência visual desta versão cobriu esse layout.
 
+**Aviso de atualização validado no Windows:** a 1.0.6 instalada tinha uma lista em cache anterior à publicação da 1.0.7. Após confirmar a 1.0.7 estável no GitHub, guardar o cache anterior e reabrir o App, o rodapé mostrou o botão de atualização para 1.0.7. Conferido visualmente e por UIAutomation com o canal estável e a automação desligada.
+
 **1.0.6 (pré-release):** aviso de atualização no rodapé, com consulta pública ao GitHub e preferências de canal em Parâmetros. Decisão D071. Build Release 0/0, 272 testes e smoke aprovados. A exibição do aviso com uma release mais nova disponível ainda requer confirmação visual na versão instalada.
 
 **P7a aceita, 13/11/2026:** a11y/i18n revisados; contraste AA, foco visível, ordem de foco alinhada à ordem visual nos 3 breakpoints (UIAutomation), nomes acessíveis e live regions nos fluxos de autostart, launcher e recuperação assistida; bandeja com itens/tooltip localizados. Seis capturas oficiais em `docs/screenshots/` (pt/en × 3 larguras, simulação) na versão 0.6.0. Build 0 avisos/erros, **259 testes**, smoke OK. Narrator/NVDA manual e interação do menu nativo da bandeja com leitor de tela permanecem pendentes; HDR/notificações adiados; reconexão do watcher ainda carece de evidência independente. Detalhes em `docs/ui-a11y-checklist.md` e `docs/screenshots/README.md`.
