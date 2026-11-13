@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.0.7 (pré-release)
+
+- Adiciona ícones aos oito cards, incluindo uma TV para Display e um controle para Gamepad.
+- Build Release sem avisos ou erros, 272 testes e smoke aprovados. Ícones conferidos na janela em simulação, em pt-BR, no layout de três colunas.
+- Instalador Windows x64 sem assinatura Authenticode. SHA-256: `2ba5af7b43f81e14f84578f3ffd1238189bcbdf3f69637b56f2706d4e3048e78`.
+
 ## 1.0.6 (pré-release)
 
 - Mostra um aviso de nova versão no rodapé com link para a release do GitHub.

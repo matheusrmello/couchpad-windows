@@ -261,6 +261,11 @@
 - A abertura normal do App consulta em segundo plano as releases públicas do repositório Windows no GitHub. Uma consulta por dia por perfil, incluindo tentativas que falham. A consulta pode ser desligada. Versões estáveis são o padrão e pré-releases são opcionais.
 - O aviso considera versões numéricas maiores com instalador x64 publicado e abre a página da release. A consulta usa apenas o identificador fixo do App no User-Agent, sem credenciais, configuração ou dados de hardware. O App não baixa nem executa o instalador. A preferência fica nas configurações do Core e o HTTP fica no App.
 
+## D072 — Ícones nos títulos dos cards
+
+- Cada card da tela principal usa uma geometria vetorial no cabeçalho, com a cor de destaque do tema. O título localizado continua visível. O ícone não recebe foco nem captura cliques.
+- A propriedade é opcional no componente `Card`, para manter o espaçamento dos cards sem ícone. A mudança fica no App.
+
 ## Formato de nova decisão
 
 ```md

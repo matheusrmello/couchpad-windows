@@ -60,7 +60,8 @@
         <controls:Card x:Name="AutomationCard"
                        Grid.Row="0"
                        Grid.Column="0"
-                       Title="{loc:Tr section.automation}">
+                       Title="{loc:Tr section.automation}"
+                       TitleIcon="M 13,2 L 4,13 H 10 L 9,22 L 20,10 H 13 Z">
           <controls:Card.HeaderAction>
             <ToggleSwitch IsChecked="{Binding AutomationEnabled}"
                           IsEnabled="{Binding CanToggleAutomation}"
@@ -108,7 +109,8 @@
                        Grid.Row="0"
                        Grid.Column="1"
                        Grid.ColumnSpan="2"
-                       Title="{loc:Tr section.display}">
+                       Title="{loc:Tr section.display}"
+                       TitleIcon="F0 M 4,4 H 20 Q 22,4 22,6 V 16 Q 22,18 20,18 H 4 Q 2,18 2,16 V 6 Q 2,4 4,4 Z M 4,6 H 20 V 16 H 4 Z M 8,20 H 16 V 22 H 8 Z">
           <controls:Card.HeaderAction>
             <controls:ActionButton Classes="small"
                                    Variant="Secondary"
@@ -185,7 +187,8 @@
         <controls:Card x:Name="GamepadCard"
                        Grid.Row="1"
                        Grid.Column="0"
-                       Title="{loc:Tr section.gamepad}">
+                       Title="{loc:Tr section.gamepad}"
+                       TitleIcon="F0 M 8,5 H 16 C 19,5 21,7 22,11 L 23,16 C 24,20 20,22 17,19 L 15,17 H 9 L 7,19 C 4,22 0,20 1,16 L 2,11 C 3,7 5,5 8,5 Z M 7,8 H 9 V 10 H 11 V 12 H 9 V 14 H 7 V 12 H 5 V 10 H 7 Z M 15,11 A 1.5,1.5 0 1 0 18,11 A 1.5,1.5 0 1 0 15,11 Z M 18,14 A 1,1 0 1 0 20,14 A 1,1 0 1 0 18,14 Z">
           <StackPanel Spacing="10">
             <controls:StatusRow Label="{loc:Tr gamepad.primary}"
                                 Value="{Binding GamepadSummary}"
@@ -210,7 +213,8 @@
         <controls:Card x:Name="ComboCard"
                        Grid.Row="1"
                        Grid.Column="1"
-                       Title="{loc:Tr section.combo}">
+                       Title="{loc:Tr section.combo}"
+                       TitleIcon="F0 M 2,4 H 10 V 12 H 2 Z M 4,6 H 8 V 10 H 4 Z M 14,4 H 22 V 12 H 14 Z M 16,6 H 20 V 10 H 16 Z M 2,16 H 10 V 24 H 2 Z M 4,18 H 8 V 22 H 4 Z M 14,16 H 22 V 24 H 14 Z M 16,18 H 20 V 22 H 16 Z">
           <StackPanel Spacing="10">
             <TextBlock Classes="hint" Text="{loc:Tr combo.help}" />
 
@@ -234,7 +238,8 @@
         <controls:Card x:Name="CountdownCard"
                        Grid.Row="1"
                        Grid.Column="2"
-                       Title="{loc:Tr section.countdown}">
+                       Title="{loc:Tr section.countdown}"
+                       TitleIcon="F0 M 9,2 H 15 V 4 H 9 Z M 12,6 A 8,8 0 1 0 12,22 A 8,8 0 1 0 12,6 Z M 12,8 A 6,6 0 1 0 12,20 A 6,6 0 1 0 12,8 Z M 11,10 H 13 V 14 H 16 V 16 H 11 Z">
           <StackPanel Spacing="10">
             <TextBlock Classes="hint" Text="{loc:Tr countdown.help}" TextWrapping="Wrap" />
             <StackPanel Spacing="4">
@@ -266,7 +271,8 @@
         <controls:Card x:Name="SettingsCard"
                        Grid.Row="2"
                        Grid.Column="2"
-                       Title="{loc:Tr section.settings}">
+                       Title="{loc:Tr section.settings}"
+                       TitleIcon="M 2,5 H 7 V 3 H 10 V 5 H 22 V 7 H 10 V 9 H 7 V 7 H 2 Z M 2,11 H 15 V 9 H 18 V 11 H 22 V 13 H 18 V 15 H 15 V 13 H 2 Z M 2,17 H 7 V 15 H 10 V 17 H 22 V 19 H 10 V 21 H 7 V 19 H 2 Z">
           <StackPanel Spacing="10">
             <StackPanel Spacing="6">
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
@@ -327,7 +333,8 @@
         <controls:Card x:Name="TransitionCard"
                        Grid.Row="2"
                        Grid.Column="0"
-                       Title="{loc:Tr section.transition}">
+                       Title="{loc:Tr section.transition}"
+                       TitleIcon="M 2,6 H 16 V 3 L 22,8 L 16,13 V 10 H 2 Z M 22,14 H 8 V 11 L 2,16 L 8,21 V 18 H 22 Z">
           <StackPanel Spacing="10">
             <StackPanel Spacing="4">
               <TextBlock Classes="caption" Text="{loc:Tr transition.display_mode}" />
@@ -376,7 +383,8 @@
         <controls:Card x:Name="LaunchersCard"
                        Grid.Row="2"
                        Grid.Column="1"
-                       Title="{loc:Tr section.launchers}">
+                       Title="{loc:Tr section.launchers}"
+                       TitleIcon="F0 M 12,2 A 10,10 0 1 0 12,22 A 10,10 0 1 0 12,2 Z M 12,4 A 8,8 0 1 0 12,20 A 8,8 0 1 0 12,4 Z M 9,7 L 17,12 L 9,17 Z">
           <StackPanel Spacing="10">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
               <TextBlock Text="{loc:Tr launchers.enabled}" VerticalAlignment="Center" />

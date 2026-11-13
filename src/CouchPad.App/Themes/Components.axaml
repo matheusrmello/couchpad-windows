@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:controls="using:CouchPad.App.Controls">
+                    xmlns:controls="using:CouchPad.App.Controls"
+                    xmlns:converters="using:Avalonia.Data.Converters">
 
   <!-- Card -->
   <ControlTheme x:Key="{x:Type controls:Card}" TargetType="controls:Card">
@@ -18,10 +19,19 @@
                 Padding="{TemplateBinding Padding}">
           <StackPanel Spacing="10">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-              <TextBlock Classes="cardTitle"
-                         Text="{TemplateBinding Title}"
-                         TextWrapping="Wrap"
-                         VerticalAlignment="Center" />
+              <Grid ColumnDefinitions="Auto,*">
+                <PathIcon Width="17" Height="17" Margin="0,0,8,0"
+                          Data="{TemplateBinding TitleIcon}"
+                          IsVisible="{TemplateBinding TitleIcon, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
+                          Foreground="{DynamicResource CouchPad.Accent}"
+                          VerticalAlignment="Center"
+                          IsHitTestVisible="False" />
+                <TextBlock Grid.Column="1"
+                           Classes="cardTitle"
+                           Text="{TemplateBinding Title}"
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center" />
+              </Grid>
               <ContentPresenter Grid.Column="1"
                                 Content="{TemplateBinding HeaderAction}"
                                 VerticalAlignment="Center" />

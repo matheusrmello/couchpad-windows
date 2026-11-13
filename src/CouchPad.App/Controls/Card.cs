@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace CouchPad.App.Controls;
 
@@ -18,6 +19,9 @@ public class Card : ContentControl
     public static readonly StyledProperty<string?> TitleProperty =
         AvaloniaProperty.Register<Card, string?>(nameof(Title));
 
+    public static readonly StyledProperty<Geometry?> TitleIconProperty =
+        AvaloniaProperty.Register<Card, Geometry?>(nameof(TitleIcon));
+
     public static readonly StyledProperty<object?> HeaderActionProperty =
         AvaloniaProperty.Register<Card, object?>(nameof(HeaderAction));
 
@@ -28,6 +32,12 @@ public class Card : ContentControl
     {
         get => GetValue(TitleProperty);
         set => SetValue(TitleProperty, value);
+    }
+
+    public Geometry? TitleIcon
+    {
+        get => GetValue(TitleIconProperty);
+        set => SetValue(TitleIconProperty, value);
     }
 
     public object? HeaderAction
