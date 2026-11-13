@@ -245,6 +245,11 @@
 - Depois da solicitação de abertura em um Steam já aberto, guardar a identidade do cliente na sessão atual para solicitar `steam://close/bigpicture` na restauração. Essa solicitação encerra o modo de jogo e mantém o cliente. Se a identidade do processo mudar, recusar a solicitação ao substituto.
 - O Hydra tem uma janela independente para Big Picture. Identificar a nova janela em tela cheia por handle, sessão e identidade do processo. Ao restaurar, solicitar o fechamento dessa janela quando a opção estiver habilitada. Preservar janelas que já existiam e manter o processo do Hydra.
 
+## D069 — Nome do controle XInput
+
+- A seleção e os eventos continuam baseados em `XInputGetState`. Ao selecionar um slot, consultar opcionalmente as capacidades estendidas do XInput 1.4 para obter o par fabricante/produto desse slot. A ausência da função, falha de consulta ou par desconhecido mantém o rótulo genérico.
+- A tabela inicial distingue Ultimate 2 e Ultimate 2C. Referências: [interface usada pelo SDL](https://github.com/libsdl-org/SDL/blob/main/src/core/windows/SDL_xinput.h) e [IDs do driver xpad](https://code.googlesource.com/linux/torvalds/linux/+/de03b17ec046d81c4713bc54306579b9024fc513/drivers/input/joystick/xpad.c).
+
 ## Formato de nova decisão
 
 ```md

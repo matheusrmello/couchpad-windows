@@ -26,7 +26,7 @@ public sealed class WindowsGamepadWatcher : IGamepadWatcher, IDisposable
         if (_pollInterval < TimeSpan.FromMilliseconds(50) || _pollInterval > TimeSpan.FromSeconds(5))
             throw new ArgumentOutOfRangeException(nameof(pollInterval));
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
-        _current = Select(_source.GetConnectedSlots());
+        _current = Select(_source.GetConnectedSlots(), _source.GetModelName);
         _worker = Task.Run(PollAsync);
     }
 
@@ -41,7 +41,7 @@ public sealed class WindowsGamepadWatcher : IGamepadWatcher, IDisposable
         {
             while (await timer.WaitForNextTickAsync(_stop.Token).ConfigureAwait(false))
             {
-                var next = Select(_source.GetConnectedSlots());
+                var next = Select(_source.GetConnectedSlots(), _source.GetModelName, _current);
                 EventHandler<GamepadConnectionChangedEventArgs>? handler;
                 lock (_sync)
                 {
@@ -55,11 +55,16 @@ public sealed class WindowsGamepadWatcher : IGamepadWatcher, IDisposable
         catch (OperationCanceledException) when (_stop.IsCancellationRequested) { }
     }
 
-    internal static GamepadDevice? Select(IEnumerable<uint> slots)
+    internal static GamepadDevice? Select(IEnumerable<uint> slots, Func<uint, string?>? getModelName = null,
+        GamepadDevice? current = null)
     {
         ArgumentNullException.ThrowIfNull(slots);
         var slot = slots.Where(i => i < 4).Distinct().Order().Select(i => (uint?)i).FirstOrDefault();
-        return slot is null ? null : new GamepadDevice($"xinput:{slot.Value}", "XInput gamepad");
+        if (slot is null) return null;
+        var id = $"xinput:{slot.Value}";
+        // Keep name lookup out of the poll loop while the selected slot stays connected.
+        if (current?.Id == id) return current;
+        return new GamepadDevice(id, getModelName?.Invoke(slot.Value) ?? "XInput gamepad");
     }
 
     public void Dispose()
@@ -79,10 +84,51 @@ public sealed class WindowsGamepadWatcher : IGamepadWatcher, IDisposable
 internal interface IXInputStateSource
 {
     IReadOnlyList<uint> GetConnectedSlots();
+    string? GetModelName(uint slot);
 }
 
 internal sealed class NativeXInputStateSource : IXInputStateSource
 {
+    private static readonly Lazy<ReadExtendedCapabilities?> ExtendedCapabilities = new(ResolveExtendedCapabilities);
+
+    public string? GetModelName(uint slot)
+    {
+        var read = ExtendedCapabilities.Value;
+        if (read is null || read(1, slot, 0, out var capabilities) != 0) return null;
+        return ModelName(capabilities.VendorId, capabilities.ProductId);
+    }
+
+    internal static string? ModelName(ushort vendor, ushort product) => (vendor, product) switch
+    {
+        (0x2DC8, 0x310B) => "8BitDo Ultimate 2 Wireless Controller",
+        (0x2DC8, 0x310A) => "8BitDo Ultimate 2C Wireless Controller",
+        _ => null,
+    };
+
+    private static ReadExtendedCapabilities? ResolveExtendedCapabilities()
+    {
+        // XInput 1.4 optionally exports the extended capabilities function at ordinal 108.
+        var module = GetModuleHandle("xinput1_4.dll");
+        var export = module == 0 ? 0 : GetProcAddress(module, 108);
+        return export == 0 ? null : Marshal.GetDelegateForFunctionPointer<ReadExtendedCapabilities>(export);
+    }
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    private delegate uint ReadExtendedCapabilities(uint reserved, uint slot, uint flags, out ExtendedControllerCapabilities capabilities);
+
+    [StructLayout(LayoutKind.Explicit, Size = 32)]
+    private struct ExtendedControllerCapabilities
+    {
+        [FieldOffset(20)] public ushort VendorId;
+        [FieldOffset(22)] public ushort ProductId;
+    }
+
+    [DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", CharSet = CharSet.Unicode, ExactSpelling = true)]
+    private static extern nint GetModuleHandle(string moduleName);
+
+    [DllImport("kernel32.dll", ExactSpelling = true)]
+    private static extern nint GetProcAddress(nint module, nint ordinal);
+
     public IReadOnlyList<uint> GetConnectedSlots()
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();

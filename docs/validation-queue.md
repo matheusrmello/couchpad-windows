@@ -22,6 +22,8 @@
 
 ### 1. Watcher de gamepad físico
 
+- **Nome no candidato 1.0.4 (D069):** seleção XInput preservada. O nome é associado ao slot pelo par fabricante/produto. Build Release 0/0, 267 testes e smoke passaram, incluindo IDs do Ultimate 2, Ultimate 2C e fallback. O controle estava desligado durante a consulta, então a identificação na interface aguarda confirmação física.
+
 - **Dono:** Codex.
 - **Implementação:** `WindowsGamepadWatcher` via XInput, polling dos quatro slots; ativação opt-in com `--windows-gamepad`; a simulação segue padrão. Build 0/0, smoke OK e 197 testes aprovados. Dispositivos HID sem XInput estão fora deste slice (D050).
 - **Status:** validação física em andamento; ativação, desligamento e cancelamento de ativação foram observados. A reconexão durante o atraso tem relato visual, mas carece de timestamps/eventos independentes e revisão da evidência. O journal foi limpo nas restaurações posteriores documentadas abaixo. O usuário dispensou trabalho adicional no botão de ativação em 12/11/2026; seu teste físico não é critério pendente.
