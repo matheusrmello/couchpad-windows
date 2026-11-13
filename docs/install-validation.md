@@ -6,7 +6,9 @@
 - O hook de desinstalação agora preserva tarefas com outro caminho de executável e entradas antigas pertencentes a outra instalação. Tarefas próprias continuam sujeitas à validação da definição. A instalação continua recusando sobrescrever tarefas existentes de outra cópia.
 - Build Release com 0 avisos e 0 erros, 261 testes e smoke aprovados. O hook corrigido retornou 0 na instalação afetada e a comparação do XML confirmou que as duas tarefas de desenvolvimento ficaram intactas. A conclusão pelo desinstalador gráfico ainda precisa ser confirmada.
 - O operador confirmou a desinstalação e reproduziu o conflito ao instalar novamente o EXE publicado da 1.0.0. O instalador antigo encontrou a tarefa de desenvolvimento somente após copiar arquivos. O perfil tinha journal ausente e tarefas de rescue e autostart apontando para o checkout de desenvolvimento.
-- O candidato 1.0.1 executa uma verificação autocontida antes de copiar o payload e apresenta uma mensagem específica para o conflito. O helper retornou 3 no destino real com tarefas de desenvolvimento presentes. Build Release 0/0, 261 testes e smoke passaram. O EXE compilou, mas a prova pelo instalador completo e a publicação do patch estão pendentes.
+- O candidato 1.0.1 executa uma verificação autocontida antes de copiar os arquivos. Com as tarefas de desenvolvimento presentes, o helper retornou 3 e o instalador completo retornou 7 com a mensagem específica de conflito. Os hashes dos arquivos no destino permaneceram iguais.
+- Depois de guardar as definições das duas tarefas de desenvolvimento, os registros foram removidos para permitir a instalação no perfil principal. O instalador concluiu com código 0, registrou 1.0.1 e criou a tarefa de recuperação apontando para o rescue instalado. O rescue retornou 0 com journal ausente e o App instalado passou no smoke em simulação. Autostart do App pode ser habilitado novamente na interface. A publicação do patch fica pendente.
+- Build Release 0/0, 261 testes e smoke passaram. SHA-256 do candidato 1.0.1: `30C0D83D212A50903FF69D7395E1FAB4CA773881379D7923F2744B56C131C861`.
 
 ## Regressão de entrada
 
