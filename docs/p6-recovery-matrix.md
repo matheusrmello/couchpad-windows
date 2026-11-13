@@ -77,3 +77,9 @@
 
 - Em 12/11/2026, depois da saída pela bandeja, o build Debug terminou com 0 avisos e 0 erros. Passaram 258 testes (231 Core e 27 App). O smoke abriu a janela em 1020 × 780, verificou textos em pt-BR e inglês e encerrou. `git diff --check` passou.
 - O disparo automático já está confirmado com journal ausente. A P6 ainda exige evidência de logon com journal pendente real, recuperação assistida de baseline real e integração de autostart.
+
+## Logon com journal pendente real
+
+- Preparação em 12/11/2026. O instrumento `tools/LogonPendingHardware` usa o coordenador do Core para capturar tela e áudio do Windows e gravar o journal de produção. Simula o encerramento do processo no início do guard, antes do watchdog e de qualquer alteração de tela ou áudio. AOC ativo, Samsung detectada e inativa. A cópia local do journal é idêntica ao original, contém os dois baselines, e a topologia atual corresponde semanticamente ao snapshot.
+- A tarefa estava habilitada e em Ready, com execução anterior às 22:13:00 e resultado 0. Após sair e entrar na mesma conta, verificar execução posterior sem disparo manual, journal ausente, equivalência semântica de tela, três papéis de áudio, volume e mudo, além da confirmação visual do operador.
+- Instrumento e solução compilaram com 0 avisos e 0 erros. A suíte de 258 testes e o smoke passaram antes da preparação. Cenário aguarda logon.
