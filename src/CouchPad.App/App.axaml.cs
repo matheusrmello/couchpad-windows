@@ -42,15 +42,19 @@ public partial class App : Application
             var settingsStore = new JsonAppSettingsStore(settingsPath);
             LocalizationService.Instance.Initialize(settingsStore);
             var appSettings = settingsStore.Load();
+            var rescuePath = Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe");
+            var appPath = Path.Combine(AppContext.BaseDirectory, "CouchPad.exe");
+            var canUseRescue = !isSmoke && !isGallery && OperatingSystem.IsWindows() && File.Exists(rescuePath);
+            var startup = canUseRescue && File.Exists(appPath) ? new WindowsStartupRegistration() : null;
             var useWindowsGamepad = !isSmoke && !isGallery && OperatingSystem.IsWindows() &&
                 (appSettings.UseWindowsGamepad || desktop.Args?.Contains("--windows-gamepad", StringComparer.Ordinal) == true);
 
             var transaction = new RescueTransactionContext(Path.GetDirectoryName(Path.GetFullPath(journalPath))!);
             var (displayService, rescueGuard) = CreateWindowsDisplayServices(
                 desktop.Args ?? [], journalPath, isSmoke || isGallery,
-                Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"), appSettings, transaction);
+                rescuePath, appSettings, transaction);
             var (audioService, audioGuard) = CreateWindowsAudioServices(displayService, appSettings, transaction,
-                Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"), journalPath);
+                rescuePath, journalPath);
             if (audioGuard is not null) rescueGuard = audioGuard;
             _displaySessionOwner = isGallery || Program.OwnsDisplaySession ? null : AcquireDisplayOwner(journalPath);
             if (useWindowsGamepad) _gamepadWatcher = new WindowsGamepadWatcher();
@@ -83,9 +87,10 @@ public partial class App : Application
                         dismissCountdown: _countdownNotifications is { } notificationsToDismiss ? notificationsToDismiss.Cancel : null,
                         launcherService: displayService is WindowsDisplayService && appSettings.AllowDisplayWrites
                             ? new WindowsLauncherService() : null,
+                        readStartup: startup is null ? null : () => startup.IsEnabled(appPath),
+                        configureStartup: startup is null ? null : enabled => startup.SetEnabled(enabled, appPath),
                         suspendAutomation: desktop.Args?.Any(arg => arg is "--recovery-succeeded" or "--recovery-failed") == true,
-                        canStartRecovery: !isSmoke && !isGallery && OperatingSystem.IsWindows() &&
-                            File.Exists(Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe")),
+                        canStartRecovery: canUseRescue,
                         recoveryFailed: desktop.Args?.Contains("--recovery-failed") == true),
                 };
 
@@ -124,7 +129,7 @@ public partial class App : Application
                     if (exiting) return;
                     try
                     {
-                        WindowsAssistedRecovery.Start(Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe"));
+                        WindowsAssistedRecovery.Start(rescuePath);
                     }
                     catch (Exception ex) when (ex is IOException or InvalidOperationException or System.ComponentModel.Win32Exception or UnauthorizedAccessException)
                     {

@@ -218,6 +218,11 @@
 - O rescue fornece comandos de instalação e remoção para o instalador da P7b. A instalação aceita repetir a mesma configuração. A remoção exige que a definição existente corresponda ao executável da instalação e que o journal esteja ausente sob o lock de sessão.
 - A tarefa é criada somente quando ausente. Após instalar ou remover, a operação verifica o resultado no Agendador. Falha retorna código 1 e mantém o diagnóstico local.
 
+## D064 — Ativação da opção de início com o Windows
+
+- A opção lê e altera somente a entrada do CouchPad no Registro por usuário. Ela fica disponível no App Windows quando os executáveis do App e do rescue estão presentes. O usuário habilita a opção pela interface.
+- A entrada chama o rescue com `--startup-and-launch`. Após a recuperação, o rescue inicia o App com `--windows-autostart`, permitindo confirmar a origem do processo no teste de logon. A tarefa independente de recuperação continua habilitada.
+
 ## Formato de nova decisão
 
 ```md

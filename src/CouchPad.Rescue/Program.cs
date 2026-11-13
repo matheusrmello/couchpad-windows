@@ -73,7 +73,7 @@ if (args.Length == 1 && args[0] == "--startup-and-launch" && OperatingSystem.IsW
     try
     {
         await StartupLaunchSequence.RunAsync(() => RecoverAtStartup(AppPaths.SessionJournalFile(), waitForOwner: true),
-            () => LaunchApp());
+            () => LaunchApp("--windows-autostart"));
         return 0;
     }
     catch (Exception ex) { RescueFailureLog.TryWrite(AppPaths.LogsDirectory(), "startup", ex); return 1; }

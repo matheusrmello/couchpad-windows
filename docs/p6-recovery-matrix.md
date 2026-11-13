@@ -23,8 +23,9 @@
 
 ## Trabalho isolado sem TV: autostart do App
 
+- Integração D064 concluída. O App Windows usa a entrada do Registro como fonte de verdade para **Iniciar com o Windows**. O bootstrap de produção marca o processo aberto após a recuperação com `--windows-autostart`. Build Debug 0/0, 258 testes, smoke e a matriz com processos e backend falso passaram. A matriz confirmou que o lançamento aguarda a remoção do journal e é bloqueado se o rescue concorrente falhar. Restam os testes do controle na interface, do Registro real e de logon com a opção ligada.
 - `WindowsStartupRegistration` prepara uma entrada de inicialização por usuário que inicia o rescue com `--startup-and-launch`, com caminho absoluto entre aspas e sem administrador. O rescue só inicia o App após a recuperação terminar sem erro. O registro recusa substituir ou remover uma entrada com outro comando e confirma a leitura após gravar ou remover.
-- A sequência e a integração da opção foram testadas com callbacks falsos, mas a opção permanece desabilitada até a recuperação ser validada em hardware e logon. Nenhum Registro real foi alterado. A tarefa independente do rescue e a validação de logon continuam pendentes.
+- Na etapa inicial, a opção ficou desabilitada e foi testada com callbacks falsos. Nenhum Registro real foi alterado naquela etapa.
 - Testes do App verificam estado real simulado, falha com reversão do controle e preservação da preferência quando a opção está indisponível. Um teste adicional confere chaves e valores não vazios nos dois catálogos de idioma. Build e 239 testes passaram; smoke abriu e fechou a janela e verificou textos pt/en. A revisão visual e de acessibilidade completa permanece na P7a.
 
 ## Bandeja
