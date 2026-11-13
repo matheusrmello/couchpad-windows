@@ -23,7 +23,7 @@
 - O operador confirmou que minimizou o App instalado na conta `Teste` e reabriu a janela pela opção **Abrir** do menu da bandeja.
 - O operador confirmou que o CouchPad abriu sozinho após habilitar **Iniciar com o Windows**, sair e entrar novamente na conta `Teste`. A consulta na conta principal encontrou a nova sessão 11 às 09:09 e o processo do CouchPad iniciado às 09:09:34 na mesma sessão. A consulta entre contas não retornou a linha de comando nem o resultado das tarefas. O disparo das duas tarefas e o marcador do bootstrap têm evidência independente na matriz P6.
 - O operador confirmou a reinstalação do mesmo candidato na conta `Teste`. **Iniciar com o Windows** permaneceu ligado. Automação e permissões de tela e áudio permaneceram desligadas. O estado dos controles foi confirmado pelo operador. A contagem das tarefas ainda depende de consulta na conta de teste.
-- Próxima etapa: desinstalar na conta `Teste` e verificar arquivos, atalhos, tarefas e dados preservados.
+- O operador confirmou a desinstalação na conta `Teste`. A verificação após a remoção encontrou ausência da pasta instalada em `AppData\Local\Programs\CouchPad`, do atalho no menu Iniciar, das tarefas de rescue e autostart e de processos App/rescue. A leitura de `settings.json` a partir da conta principal foi negada pelo Windows, portanto a preservação desse arquivo não foi verificada diretamente.
 
 O perfil principal já possui configurações, journal histórico e tarefas de desenvolvimento. Use uma conta padrão limpa ou uma VM Windows limpa para obter evidência do primeiro uso e evitar substituir tarefas de outra instalação.
 
