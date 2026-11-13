@@ -78,10 +78,12 @@
                        TextWrapping="Wrap" />
             <Button Content="{loc:Tr recovery.retry}"
                     IsVisible="{Binding CanRetryRecovery}"
-                    Command="{Binding RetryRecoveryCommand}" />
+                    Command="{Binding RetryRecoveryCommand}"
+                    AutomationProperties.HelpText="{loc:Tr recovery.retry_help}" />
             <TextBlock Classes="hint"
                        Text="{loc:Tr recovery.failed}"
                        IsVisible="{Binding RecoveryFailed}"
+                       Foreground="{DynamicResource CouchPad.Danger}"
                        AutomationProperties.LiveSetting="Polite"
                        TextWrapping="Wrap" />
 
@@ -276,9 +278,14 @@
                 <ToggleSwitch Grid.Column="1"
                               IsChecked="{Binding StartWithWindows}"
                               IsEnabled="{Binding CanConfigureStartup}"
-                              AutomationProperties.Name="{loc:Tr settings.start_with_windows}" />
+                              AutomationProperties.Name="{loc:Tr settings.start_with_windows}"
+                              AutomationProperties.HelpText="{loc:Tr settings.start_with_windows_help}" />
               </Grid>
-              <TextBlock IsVisible="{Binding StartupError}" Text="{loc:Tr settings.startup_error}" TextWrapping="Wrap" />
+              <TextBlock IsVisible="{Binding StartupError}"
+                         Text="{loc:Tr settings.startup_error}"
+                         Foreground="{DynamicResource CouchPad.Danger}"
+                         AutomationProperties.LiveSetting="Polite"
+                         TextWrapping="Wrap" />
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <TextBlock Text="{loc:Tr settings.real_gamepad}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"
@@ -291,7 +298,8 @@
                 <TextBlock Text="{loc:Tr settings.minimize_to_tray}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"
                               IsChecked="{Binding MinimizeToTray}"
-                              AutomationProperties.Name="{loc:Tr settings.minimize_to_tray}" />
+                              AutomationProperties.Name="{loc:Tr settings.minimize_to_tray}"
+                              AutomationProperties.HelpText="{loc:Tr settings.minimize_to_tray_help}" />
               </Grid>
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                 <TextBlock Text="{loc:Tr settings.allow_display_writes}" VerticalAlignment="Center" />
@@ -376,7 +384,12 @@
                 <ComboBoxItem Content="{loc:Tr launchers.hydra}" />
               </ComboBox>
             </StackPanel>
-            <TextBlock Classes="hint" Text="{Binding LauncherErrorText}" IsVisible="{Binding HasLauncherError}" TextWrapping="Wrap" />
+            <TextBlock Classes="hint"
+                       Text="{Binding LauncherErrorText}"
+                       IsVisible="{Binding HasLauncherError}"
+                       Foreground="{DynamicResource CouchPad.Danger}"
+                       AutomationProperties.LiveSetting="Polite"
+                       TextWrapping="Wrap" />
           </StackPanel>
         </controls:Card>
       </Grid>

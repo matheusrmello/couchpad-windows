@@ -121,6 +121,24 @@ public partial class MainWindow : Window
             Grid.SetRowSpan(card, rowSpan);
             Grid.SetColumnSpan(card, columnSpan);
         }
+
+        // A ordem do visual tree guia o Tab; alinhe-a com a ordem visual
+        // (linha/coluna) em cada breakpoint.
+        var ordered = cards
+            .Select(item => item.Card)
+            .OfType<Control>()
+            .OrderBy(Grid.GetRow)
+            .ThenBy(Grid.GetColumn)
+            .ToArray();
+
+        for (var index = 0; index < ordered.Length; index++)
+        {
+            var current = grid.Children.IndexOf(ordered[index]);
+            if (current != index)
+            {
+                grid.Children.Move(current, index);
+            }
+        }
     }
 
     private static (int Row, int Column, int RowSpan, int ColumnSpan) Placement(

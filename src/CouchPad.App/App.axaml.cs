@@ -109,8 +109,6 @@ public partial class App : Application
                     automation.IsEnabled = !viewModel.IsRecoveryUncertain;
                     exit.Header = LocalizationService.Instance["tray.exit"];
                 }
-                UpdateTrayText();
-                LocalizationService.Instance.PropertyChanged += (_, _) => UpdateTrayText();
                 viewModel.PropertyChanged += (_, e) =>
                 {
                     if (e.PropertyName is nameof(MainWindowViewModel.AutomationEnabled) or nameof(MainWindowViewModel.IsRecoveryUncertain))
@@ -170,9 +168,21 @@ public partial class App : Application
                 menu.Items.Add(automation);
                 menu.Items.Add(exit);
                 using var stream = AssetLoader.Open(new Uri("avares://CouchPad/Assets/couchpad.ico"));
-                var trayIcon = new TrayIcon { Icon = new WindowIcon(stream), ToolTipText = "CouchPad", Menu = menu, IsVisible = true };
+                var trayIcon = new TrayIcon
+                {
+                    Icon = new WindowIcon(stream),
+                    ToolTipText = LocalizationService.Instance["app.name"],
+                    Menu = menu,
+                    IsVisible = true,
+                };
                 trayIcon.Clicked += (_, _) => ShowWindow();
                 TrayIcon.SetIcons(this, new TrayIcons { trayIcon });
+                UpdateTrayText();
+                LocalizationService.Instance.PropertyChanged += (_, _) =>
+                {
+                    UpdateTrayText();
+                    trayIcon.ToolTipText = LocalizationService.Instance["app.name"];
+                };
                 window.PropertyChanged += (_, e) =>
                 {
                     if (e.Property == Window.WindowStateProperty && window.WindowState == WindowState.Minimized && viewModel.MinimizeToTray)

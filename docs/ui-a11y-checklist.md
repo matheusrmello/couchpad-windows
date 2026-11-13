@@ -1,10 +1,11 @@
 # Checklist de acessibilidade — P7a
 
-- Data: 2026-11-11
-- Escopo: shell Avalonia, cards, controles, i18n e estados de erro
+- Data: 2026-11-13
+- Escopo: shell Avalonia, cards, controles, bandeja, autostart, recuperação
+  assistida, i18n e estados de erro
 - Base: WCAG 2.2 AA (alvos principais), teclado, leitor de tela e contraste
-- Limite: auditoria estática/manual; não substitui teste com todos os leitores
-  de tela do mercado
+- Método: inspeção estática + UIAutomation (nomes/ordem de foco) + testes
+  automatizados; **Narrator/NVDA não executados** nesta máquina
 
 ---
 
@@ -29,6 +30,7 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 - [x] Texto de estado (pill/erro) ≥ 4,5:1.
 - [x] Cor nunca é o único indicador; sempre há texto.
 - [x] Disabled usa opacidade e texto, com isenção de contraste da WCAG.
+- [x] Erros de startup, launcher e recuperação usam `Danger` + texto.
 
 ## 2. Teclado e foco
 
@@ -40,6 +42,11 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 - [x] `ComboBox` usa o foco do Fluent, com borda de acento.
 - [x] Links do rodapé mudam fundo/cor no foco.
 - [x] Nenhum controle depende de hover para funcionar.
+- [x] Ordem de foco alinhada à ordem visual (3/2/1 colunas) via reordenação do
+  visual tree no `ApplyLayout`.
+- [x] UIAutomation confirmou ordem e nomes em 3 colunas (pt-BR), 2 colunas
+  (inglês) e 1 coluna (pt-BR), sem controles focáveis sem nome.
+- [ ] Teste manual completo com Narrator/NVDA (pendente).
 
 ## 3. Nomes e leitores de tela
 
@@ -52,6 +59,14 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 - [x] Erro de descoberta de display com `LiveSetting=Polite`.
 - [x] `ActionButton` de sucesso/erro mantém texto ao lado do ícone.
 - [x] `KeyChip` e `StatusRow` têm texto visível.
+- [x] Autostart: toggle com nome/ajuda e erro com live region.
+- [x] Recuperação assistida: `Tentar recuperar` com ajuda; ajuda/erro com
+  `LiveSetting=Polite` e contraste de perigo.
+- [x] Launcher: erro com live region e contraste de perigo.
+- [x] Bandeja: itens com cabeçalhos localizados (`Abrir`, `Ativar/Desativar`,
+  `Sair`) e tooltip usando `app.name`.
+- [ ] Navegação por teclado/leitor de tela dentro do menu nativo da bandeja
+  (depende do shell do Windows; não automatizada).
 
 ## 4. Alvos e layout
 
@@ -64,11 +79,12 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 
 ## 5. i18n e conteúdo
 
-- [x] pt-BR e inglês em paridade (138 chaves).
+- [x] pt-BR e inglês em paridade (157 chaves).
 - [x] Nenhuma string visível fora dos catálogos.
 - [x] Fallback inglês.
 - [x] Erros e dicas traduzidos.
 - [x] Nomes de hardware (Samsung/AOC) são dados, não strings de UI.
+- [x] Itens da bandeja e tooltip vêm do catálogo.
 
 ## 6. Movimento e estado
 
@@ -76,14 +92,26 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 - [x] Barra de progresso é complementar ao texto.
 - [x] Estados normal/hover/pressed/focus/disabled/loading/erro cobertos.
 - [x] `recoveryUncertain` bloqueia nova automação até reiniciar.
+- [x] Contagem regressiva é textual na status pill; o anúncio por leitor de
+  tela não foi medido e pode ser verboso em atrasos de 5 s.
+
+## 6.1 Bandeja, autostart e recuperação
+
+- [x] Bandeja validada funcionalmente na P6 (abrir, ativar/desativar, sair).
+- [x] Autostart por tarefa por usuário validado na P6; toggle reflete o estado.
+- [x] Recuperação assistida validada na P6; botão inicia o rescue separado.
+- [x] Falha de autostart reverte o toggle e exibe erro anunciado.
+- [ ] Interação da bandeja com Narrator/NVDA (manual pendente).
+- [ ] Navegação completa por teclado no menu nativo da bandeja (shell Windows).
 
 ## 7. Limitações conhecidas
 
 - Tema claro não existe; apenas escuro.
-- Teste com NVDA/Narrator completo ainda não foi registrado.
-- A bandeja/autostart da P6 podem alterar a ordem de foco; revisar depois.
-- As capturas oficiais serão refeitas após a P6.
-- HDR adiado não entra neste checklist.
+- Teste com NVDA/Narrator completo ainda não foi registrado; a árvore UIA e os
+  nomes foram validados por UIAutomation.
+- A bandeja é nativa do Windows; o menu não foi percorrido por leitor de tela.
+- O anúncio da contagem regressiva pode ser frequente em atrasos de 5 s.
+- HDR e notificações nativas adiados não entram neste checklist.
 
 ## 8. Verificação
 
@@ -96,6 +124,8 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 ```
 
 - Build 0 avisos/0 erros.
-- 194 testes.
+- 259 testes.
 - Smoke OK.
-- Capturas em `docs/screenshots/` nos 3 breakpoints × 2 idiomas.
+- Capturas oficiais em `docs/screenshots/` nos 3 breakpoints × 2 idiomas.
+- UIAutomation: ordem de foco e nomes em 3/2/1 colunas.
+- Narrator/NVDA: pendente de teste manual.

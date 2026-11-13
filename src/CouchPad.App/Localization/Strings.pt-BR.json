@@ -17,6 +17,7 @@
   "status.rescue_pending": "Recuperação pendente",
   "recovery.help": "A automação fica pausada até a recuperação terminar. Ao tentar recuperar, o CouchPad será reaberto.",
   "recovery.retry": "Tentar recuperar",
+  "recovery.retry_help": "Inicia o rescue separado; o CouchPad será reaberto após a recuperação.",
   "recovery.failed": "Não foi possível concluir a recuperação. Verifique as conexões de tela e áudio antes de tentar novamente.",
 
   "section.automation": "Automação",
@@ -76,7 +77,9 @@
   "tray.enable": "Ativar CouchPad",
   "tray.exit": "Sair",
   "settings.start_with_windows": "Iniciar com o Windows",
+  "settings.start_with_windows_help": "Cria uma tarefa por usuário; o CouchPad abrirá no logon.",
   "settings.minimize_to_tray": "Minimizar para a bandeja",
+  "settings.minimize_to_tray_help": "Ao fechar a janela, o CouchPad continua na bandeja.",
   "settings.allow_display_writes": "Permitir escrita de display",
   "audio.tv_endpoint": "Saída de áudio da TV",
   "audio.endpoint_none": "Selecione uma saída",
