@@ -44,6 +44,12 @@ public sealed class WindowsScheduledStartup
     private static string RescuePath(string appPath) =>
         Path.Combine(Path.GetDirectoryName(appPath)!, "CouchPad.Rescue.exe");
 
+    internal void RemoveForUninstall(string appPath)
+    {
+        _task.Remove(RescuePath(appPath), _sid, preserveOtherInstallations: true);
+        _legacy.RemoveIfOwned(appPath);
+    }
+
     private static string CurrentSid()
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();

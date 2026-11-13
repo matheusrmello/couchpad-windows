@@ -39,6 +39,12 @@ public sealed class WindowsStartupRegistration
         if (enabled ? !string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase) : actual is not null)
             throw new IOException("Startup entry could not be verified.");
     }
+
+    internal void RemoveIfOwned(string executable)
+    {
+        if (string.Equals(_store.Read(), ExpectedCommand(executable), StringComparison.OrdinalIgnoreCase))
+            SetEnabled(false, executable);
+    }
 }
 
 internal interface IStartupRegistrationStore

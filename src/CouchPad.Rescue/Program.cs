@@ -51,9 +51,8 @@ if (args is [var taskCommand] && taskCommand is ("--check-install-session" or "-
         }
         else
         {
-            _ = registration.IsRegistered(executable, sid);
-            new WindowsScheduledStartup().SetEnabled(false, Path.Combine(AppContext.BaseDirectory, "CouchPad.exe"));
-            registration.Remove(executable, sid);
+            registration.Remove(executable, sid, preserveOtherInstallations: true);
+            new WindowsScheduledStartup().RemoveForUninstall(Path.Combine(AppContext.BaseDirectory, "CouchPad.exe"));
         }
         return 0;
     }

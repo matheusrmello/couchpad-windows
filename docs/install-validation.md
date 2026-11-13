@@ -1,5 +1,11 @@
 # Validação da distribuição v1.0.0
 
+## Correção da desinstalação com uma cópia de desenvolvimento
+
+- No perfil principal, o desinstalador 1.0.0 abortava porque as tarefas de rescue e autostart apontavam para os binários de desenvolvimento. O journal estava ausente.
+- O hook de desinstalação agora preserva tarefas com outro caminho de executável e entradas antigas pertencentes a outra instalação. Tarefas próprias continuam sujeitas à validação da definição. A instalação continua recusando sobrescrever tarefas existentes de outra cópia.
+- Build Release com 0 avisos e 0 erros, 261 testes e smoke aprovados. O hook corrigido retornou 0 na instalação afetada e a comparação do XML confirmou que as duas tarefas de desenvolvimento ficaram intactas. A conclusão pelo desinstalador gráfico ainda precisa ser confirmada.
+
 ## Regressão de entrada
 
 - Base `6bf07b5`, árvore limpa. O diff desde `v0.6.0-hardware` confirmou que a P7a preservou o Core, o backend Windows e o rescue.

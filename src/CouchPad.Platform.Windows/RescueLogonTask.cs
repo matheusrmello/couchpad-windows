@@ -59,15 +59,26 @@ internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store, b
         if (!Matches(registered, executable, sid)) throw new InvalidDataException("Registered rescue task differs from the intended task.");
     }
 
-    internal void Remove(string executable, string sid)
+    internal void Remove(string executable, string sid, bool preserveOtherInstallations = false)
     {
         _ = RescueLogonTask.CreateXml(executable, sid, launchApp);
         var name = Name(sid);
         var existing = store.ReadXml(name);
         if (existing is null) return;
+        if (preserveOtherInstallations && PointsToOtherExecutable(existing, executable)) return;
         if (!Matches(existing, executable, sid)) throw new InvalidOperationException("The rescue task belongs to a different configuration.");
         store.Delete(name);
         if (store.ReadXml(name) is not null) throw new IOException("Rescue task removal could not be verified.");
+    }
+
+    private static bool PointsToOtherExecutable(string xml, string executable)
+    {
+        XNamespace ns = "http://schemas.microsoft.com/windows/2004/02/mit/task";
+        var actions = XDocument.Parse(xml).Root?.Element(ns + "Actions")?.Elements().ToArray();
+        if (actions is not { Length: 1 } || actions[0].Name != ns + "Exec") return false;
+        var command = (string?)actions[0].Element(ns + "Command");
+        return command is not null && Path.IsPathFullyQualified(command) &&
+            !string.Equals(Path.GetFullPath(command), Path.GetFullPath(executable), StringComparison.OrdinalIgnoreCase);
     }
 
     private bool Matches(string xml, string executable, string sid)

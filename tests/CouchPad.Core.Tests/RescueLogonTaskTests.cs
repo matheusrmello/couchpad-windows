@@ -81,6 +81,32 @@ public sealed class RescueLogonTaskTests
     }
 
     [Fact]
+    public void Uninstall_preserves_task_for_another_executable_and_removes_its_own()
+    {
+        const string sid = "S-1-5-21-1";
+        var executable = Path.Combine(Path.GetTempPath(), "CouchPad.Rescue.exe");
+        var other = Path.Combine(Path.GetTempPath(), "other", "CouchPad.Rescue.exe");
+        var store = new FakeStore { Xml = RescueLogonTask.CreateXml(other, sid) };
+        var registration = new RescueLogonTaskRegistration(store);
+        registration.Remove(executable, sid, preserveOtherInstallations: true);
+        Assert.Equal(0, store.Deletes);
+        Assert.Throws<InvalidOperationException>(() => registration.Remove(executable, sid));
+        registration.Remove(other, sid, preserveOtherInstallations: true);
+        Assert.Equal(1, store.Deletes);
+    }
+
+    [Fact]
+    public void Uninstall_still_rejects_an_unexpected_definition_at_its_own_path()
+    {
+        const string sid = "S-1-5-21-1";
+        var executable = Path.Combine(Path.GetTempPath(), "CouchPad.Rescue.exe");
+        var store = new FakeStore { Xml = RescueLogonTask.CreateXml(executable, sid), Tamper = true };
+        Assert.Throws<InvalidOperationException>(() => new RescueLogonTaskRegistration(store)
+            .Remove(executable, sid, preserveOtherInstallations: true));
+        Assert.Equal(0, store.Deletes);
+    }
+
+    [Fact]
     public void Removal_must_be_confirmed()
     {
         var executable = Path.Combine(Path.GetTempPath(), "CouchPad.Rescue.exe");
