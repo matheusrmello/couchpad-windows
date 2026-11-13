@@ -2,7 +2,7 @@
 
 **P7a aceita, 13/11/2026:** a11y/i18n revisados; contraste AA, foco visível, ordem de foco alinhada à ordem visual nos 3 breakpoints (UIAutomation), nomes acessíveis e live regions nos fluxos de autostart, launcher e recuperação assistida; bandeja com itens/tooltip localizados. Seis capturas oficiais em `docs/screenshots/` (pt/en × 3 larguras, simulação) na versão 0.6.0. Build 0 avisos/erros, **259 testes**, smoke OK. Narrator/NVDA manual e interação do menu nativo da bandeja com leitor de tela permanecem pendentes; HDR/notificações adiados; reconexão do watcher ainda carece de evidência independente. Detalhes em `docs/ui-a11y-checklist.md` e `docs/screenshots/README.md`.
 
-**Fila de validação:** `docs/validation-queue.md` — P7a aceita; P7b (Codex) liberada.
+**Fila de validação:** `docs/validation-queue.md` — P7b validada, aguardando aceite do usuário.
 
 **P6 em andamento, 12/11/2026:** rescue separado recebeu `--startup-recovery`, com locks da sessão/watchdog, validação do journal e restauração transacional. Testes em processo separado com backend falso cobrem `pending`, `active`, falha de áudio, concorrência e interrupção seguida de nova tentativa; produção sem journal não alterou hardware. Build 0/0, 223 testes e smoke. Ainda não há tarefa no logon nem validação real após crash/reinício; journals sem baseline completo de áudio são preservados. Ver `docs/p6-recovery-matrix.md`.
 
@@ -701,7 +701,7 @@ separados.
 | P5 áudio/HDR | Codex | **aceito** | Áudio validado em hardware com controle simulado, restore, falha, cancelamento, endpoint ausente e rescue; HDR adiado; aceite do usuário em 11/11/2026; ver `docs/p5-audio-hdr.md` |
 | P6 rescue/tray | Codex | aceita em 13/11/2026 | Bandeja, logon com e sem journal, recuperação assistida e autostart validados. As duas tarefas retornaram 0 no logon final. Build 0/0, 259 testes, smoke e testes de processo passaram. Tag `v0.6.0-hardware`. Handoff P7a em `docs/handoff-codex-to-deepseek.md`. |
 | P7a docs/a11y | DeepSeek | **aceita** | A11y/i18n/UIAutomation, 6 capturas 0.6.0, README/notas; aceite do usuário em 13/11/2026; Narrator/NVDA manual pendente; ver seção P7a |
-| P7b corrections/release | Codex | em validação | Regressão e candidato autocontido concluídos. Instalação em perfil limpo pendente. Ver `docs/install-validation.md` e D066–D067. |
+| P7b corrections/release | Codex | validada, aguardando aceite | Instalador autocontido, primeiro uso, bandeja, autostart, reinstalação e remoção em conta padrão. Build Debug/Release 0/0, 259 testes por configuração e smoke. Tag `v1.0.0`. Ver `docs/install-validation.md` e D066–D067. |
 
 ---
 

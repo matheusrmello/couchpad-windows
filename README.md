@@ -1,7 +1,7 @@
 # CouchPad
 
-Troca de tela, áudio e HDR para Windows, com recuperação segura. **100% gratuito**:
-sem licença, ativação, assinatura ou telemetria.
+Troca de tela e áudio para Windows, com recuperação segura. **100% gratuito**,
+sem ativação, assinatura paga ou telemetria.
 
 Aplicativo inspirado no comportamento do ShiftPad, implementado de forma
 independente (clean-room) em Avalonia + .NET 10.
@@ -18,14 +18,21 @@ independente (clean-room) em Avalonia + .NET 10.
   endpoint tardio/papéis distintos só com fakes.
 - **P6 aceita:** bandeja, autostart por tarefa, rescue no logon, recuperação
   assistida e instância única validados; tag `v0.6.0-hardware`.
-- **P7a em andamento:** a11y, i18n, screenshots oficiais e release notes;
-  aceite pendente.
-- **P7b pendente:** instalador, assinatura e release v1.0.0.
+- **P7a aceita:** acessibilidade, localização e seis capturas oficiais.
+- **P7b validada:** instalação, reinstalação e desinstalação em conta padrão,
+  com autostart e bandeja verificados.
 - **Adiados:** HDR e notificações nativas; a reconexão do watcher durante a
   contagem ainda carece de evidência independente.
 
-Build atual: 0 avisos/0 erros; **259 testes**; smoke OK. Versão de
-desenvolvimento: `0.6.0`.
+Versão `1.0.0`. Debug e Release passaram com 0 avisos, 0 erros e **259 testes**
+em cada configuração. [Notas da versão](docs/release-notes-draft.md).
+
+## Instalação
+
+Execute `CouchPad-Setup-1.0.0-win-x64.exe` na conta que vai usar o App.
+Ele inclui o runtime .NET, instala sem elevação e cria um atalho no menu Iniciar.
+Consulte o SHA-256 e o resultado do teste em [Validação do instalador](docs/install-validation.md).
+O instalador está sem assinatura Authenticode e pode receber um aviso do SmartScreen.
 
 ## Requisitos
 
@@ -66,7 +73,7 @@ com a TV conectada e o usuário presente; leia `docs/p4-runbook.md` e
 - UI pt-BR/en com cards, controles, estados e acessibilidade.
 - Simulação de display, áudio e gamepad.
 - State machine com atrasos canceláveis, journal atômico e persistência.
-- Display real: identificação por path/EDID, TvOnly/Extend/Mirror, rollback e
+- Display real: identificação por path/EDID, Somente TV e Estender, rollback e
   watchdog independente.
 - Áudio real: seleção explícita de endpoint, troca/restore e recuperação.
 - Watcher XInput opt-in, launcher Steam/Hydra Big Picture, bandeja, autostart,
@@ -79,7 +86,6 @@ com a TV conectada e o usuário presente; leia `docs/p4-runbook.md` e
   evidência independente com timestamps/eventos.
 - Dispositivos HID sem XInput estão fora do watcher atual.
 - HDR e notificações nativas adiados.
-- Instalador/assinatura são P7b.
 - `SetDisplayConfig` travado e certas normalizações de driver não foram
   reproduzidos; ver limitações nas matrizes.
 - Narrator/NVDA completo ainda não foi executado; UIAutomation foi validado.

@@ -1,47 +1,46 @@
-# CouchPad — notas de release (rascunho)
+# CouchPad 1.0.0
 
-- Versão alvo: `0.6.0-preview`
-- Data do rascunho: 2026-11-13
-- Estado: **P7a em aceite**; P7b pendente; sem release v1.0.0
-- Sem licença, ativação, assinatura ou telemetria
+Aplicativo para Windows 10 1903+ e Windows 11, x64. Distribuição por usuário
+com runtime .NET incluído, sem ativação, assinatura paga ou telemetria.
 
-## Destaques
+## Funcionalidades
 
-- UI Avalonia pt-BR/en com temas, cards, controles e acessibilidade.
-- Simulação completa de gamepad, display e áudio.
-- State machine com atrasos canceláveis, journal atômico e persistência.
-- Display real com identificação por path/EDID, TvOnly/Extend/Mirror,
-  verificação semântica e rollback.
-- Watchdog/rescue independente para recuperar display e áudio.
-- Áudio real com seleção explícita de endpoint, opt-in, troca/restore e
-  recuperação.
-- 259 testes, build 0 avisos/erros e smoke.
-
-## Limitações conhecidas
-
-- Reconexão do watcher durante a contagem sem evidência independente.
-- Dispositivos HID sem XInput estão fora do watcher atual.
-- HDR e notificações nativas adiados.
-- A morte dentro de `SetDisplayConfig` não foi reproduzida; o risco foi aceito
-  na P4 com limitação.
-- Endpoint tardio/papéis distintos e migração de stream existente têm evidência
-  apenas com fakes.
-- Narrator/NVDA completo ainda não foi executado; UIAutomation foi validado.
-- Escrita real de display/áudio é opt-in e exige TV conectada/usuário presente.
-- Instalador e assinatura ainda não existem (P7b).
+- UI em pt-BR e inglês, com bandeja e início opcional no logon do Windows.
+- Simulação local por padrão. Controle físico via XInput e escritas de tela
+  e áudio exigem opções explícitas.
+- Modos Somente TV e Estender, seleção de áudio HDMI e atrasos configuráveis
+  para ativação e restauração.
+- Steam e Hydra em Big Picture, watchdog e recuperação assistida ou no logon.
 
 ## Instalação
 
-Ainda não há instalador. Para desenvolvimento:
+O instalador `CouchPad-Setup-1.0.0-win-x64.exe` instala em
+`%LOCALAPPDATA%\Programs\CouchPad`, com atalho no menu Iniciar e tarefa
+de recuperação por usuário. A desinstalação remove os binários, o atalho
+e as tarefas próprias. Configurações e diagnósticos são preservados por projeto.
 
-```powershell
-$dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
-& $dotnet build CouchPad.slnx -c Debug
-& $dotnet src\CouchPad.App\bin\Debug\net10.0\CouchPad.dll
-```
+SHA-256: `23D28331B7A45081EA6812CCD3E66CDC2EBC22292145069DFE5845C0591834F0`.
+O instalador, o App e o rescue estão sem Authenticode. O SmartScreen pode
+advertir ou bloquear conforme a política local. [Microsoft Learn](https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation)
 
-## Próximos passos
+## Limitações
 
-1. P6: watcher físico, launcher, rescue no logon, bandeja e autostart.
-2. P7a: screenshots finais e revisão de a11y.
-3. P7b: instalador, assinatura, regressão e tag `v1.0.0`.
+- HDR e notificações nativas foram adiados. Controles sem XInput ficam fora do watcher.
+- Reconexão durante a contagem tem relato visual e carece de evidência independente.
+- Narrator/NVDA completo e leitura do menu nativo da bandeja ficaram pendentes.
+  A P7a validou a árvore de acessibilidade por UIAutomation.
+- A morte dentro de uma chamada travada de `SetDisplayConfig` não foi reproduzida.
+  A limitação foi aceita na P4.
+- Endpoint tardio, papéis distintos e migração de stream existente têm evidência
+  apenas com fakes.
+
+## Validação e suporte
+
+Builds Debug e Release passaram com 0 avisos, 0 erros e 259 testes em cada
+configuração. O smoke e os testes de processo do watchdog e do rescue passaram.
+Instalação, primeiro uso, bandeja, autostart, reinstalação e remoção foram
+validados em conta padrão separada. Veja [evidência e procedimento de retorno](install-validation.md).
+
+Ao reportar uma falha, inclua versão, passos para reproduzir, estado da automação
+e trechos relevantes do log local em `%LOCALAPPDATA%\CouchPad\logs`. Omita
+informações pessoais.

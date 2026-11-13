@@ -16,7 +16,7 @@
 | P5 áudio | **Aceita com limitações** | Aceite do usuário em 11/11/2026; hardware: fluxo com controle simulado, troca/restore, falha, cancelamento, endpoint ausente, crash do filho de teste e rescue de produção; HDR adiado |
 | P6 rescue/tray/autostart | Aceita em 13/11/2026 | Logon, bandeja, recuperação assistida e autostart verificados |
 | P7a docs/a11y/screenshots | **Aceita em 13/11/2026** | A11y, i18n, UIAutomation, screenshots e notas concluídos; Narrator/NVDA manual pendente |
-| P7b release | **Liberada** | Codex; depende do aceite da P7a |
+| P7b release | **Validada, aguardando aceite** | Instalador em conta padrão, autostart, reinstalação, desinstalação e tag `v1.0.0` |
 
 ## Fila, em ordem
 
@@ -83,12 +83,11 @@
 ### 7. P7b — release
 
 - **Dono:** Codex.
-- **Validar:** regressão final, instalador, assinatura, tag `v1.0.0`.
-- **Evidência:** build/test, instalador, smoke e notas.
+- **Validado:** regressão Debug e Release, 259 testes por configuração, smoke, watchdog e rescue, instalação sem elevação, padrões de primeiro uso, bandeja, autostart, reinstalação e desinstalação em conta padrão.
+- **Evidência:** `docs/install-validation.md`, SHA-256 do instalador, notas v1.0.0 e tag `v1.0.0`. Distribuição sem Authenticode (D067).
 
 ## Próxima ação
 
-P7a aceita pelo usuário em 13/11/2026. P7b (Codex) está liberada para
-instalador, assinatura, regressão de distribuição e tag `v1.0.0`. A reconexão
-do watcher durante a contagem ainda carece de evidência independente; HDR e
-notificações nativas seguem adiados.
+Aguardar o aceite final da P7b. A reconexão do watcher durante a contagem
+ainda carece de evidência independente. HDR e notificações nativas seguem
+adiados.

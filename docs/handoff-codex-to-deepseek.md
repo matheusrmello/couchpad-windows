@@ -1,4 +1,28 @@
-# Handoff da P6 para a P7a
+# Handoff do CouchPad 1.0.0
+
+## P7b validada, aguardando aceite
+
+- Tag local `v1.0.0`. Instalador `artifacts/CouchPad-Setup-1.0.0-win-x64.exe`,
+  também disponível em `C:\Users\Public\Downloads\CouchPad-Setup-1.0.0-win-x64.exe`.
+- Tamanho de 53.494.908 bytes. SHA-256
+  `23D28331B7A45081EA6812CCD3E66CDC2EBC22292145069DFE5845C0591834F0`.
+  Instalador, App e rescue sem Authenticode, conforme D067.
+- Na conta padrão `Teste`, a instalação ocorreu sem elevação. O App abriu
+  em simulação, com automação e escritas reais desligadas. Bandeja, autostart
+  em novo logon e preservação das opções na reinstalação foram confirmados.
+  A desinstalação removeu pasta, atalho, tarefas e processos. A leitura das
+  configurações após remover foi negada entre contas.
+- Debug e Release com 0 avisos, 0 erros, 259 testes por configuração e smoke.
+  Testes de processo do watchdog e do rescue com backend falso passaram.
+- Evidências em [validação do instalador](install-validation.md) e
+  [notas da versão](release-notes-draft.md).
+
+Após o aceite, decidir a publicação do artefato e do hash. Permanecem
+adiados HDR, notificações, prova independente da reconexão durante a contagem
+e revisão com leitor de tela, incluindo o menu nativo da bandeja. A matriz
+mantém as limitações de CCD travado e áudio tardio ou com papéis distintos.
+
+## Histórico da P6 para a P7a
 
 P6 validada e aceita pelo usuário em 13/11/2026. Referência de código e evidências na tag `v0.6.0-hardware`.
 

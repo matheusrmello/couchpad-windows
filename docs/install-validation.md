@@ -7,14 +7,14 @@
 - Passaram os testes de processo de startup e watchdog com filho falso e rescue com backend falso, incluindo concorrência, falhas, timeout, recuperação assistida e morte do processo pai.
 - A UI aceita na P7a é a referência congelada desta distribuição.
 
-## Candidato a instalador
+## Instalador validado
 
 - Inno Setup 6.7.4, instalação per-user com `PrivilegesRequired=lowest`, App e rescue autocontidos para `win-x64`. O pacote inclui runtime, catálogos pt-BR/en e assets incorporados. Notificações experimentais ausentes do payload.
 - `artifacts/CouchPad-Setup-1.0.0-win-x64.exe` — 53.494.908 bytes. SHA-256: `23D28331B7A45081EA6812CCD3E66CDC2EBC22292145069DFE5845C0591834F0`.
 - O App publicado passou no smoke usando o executável autocontido. O rescue publicado carregou o runtime incluído e retornou 2 para um argumento desconhecido.
 - Authenticode do instalador, do App e do rescue: `NotSigned`. Os repositórios pessoais de certificados do usuário e da máquina não contêm certificado de assinatura de código. Ver D067.
 
-## Validação de instalação pendente
+## Validação em conta limpa
 
 ### Primeira instalação em conta limpa
 
@@ -25,9 +25,9 @@
 - O operador confirmou a reinstalação do mesmo candidato na conta `Teste`. **Iniciar com o Windows** permaneceu ligado. Automação e permissões de tela e áudio permaneceram desligadas. O estado dos controles foi confirmado pelo operador. A contagem das tarefas ainda depende de consulta na conta de teste.
 - O operador confirmou a desinstalação na conta `Teste`. A verificação após a remoção encontrou ausência da pasta instalada em `AppData\Local\Programs\CouchPad`, do atalho no menu Iniciar, das tarefas de rescue e autostart e de processos App/rescue. A leitura de `settings.json` a partir da conta principal foi negada pelo Windows, portanto a preservação desse arquivo não foi verificada diretamente.
 
-O perfil principal já possui configurações, journal histórico e tarefas de desenvolvimento. Use uma conta padrão limpa ou uma VM Windows limpa para obter evidência do primeiro uso e evitar substituir tarefas de outra instalação.
+O teste foi executado na conta padrão `Teste` para preservar a instalação de desenvolvimento. O mesmo pacote está disponível em `C:\Users\Public\Downloads\CouchPad-Setup-1.0.0-win-x64.exe`, com SHA-256 conferido.
 
-O candidato está disponível também em `C:\Users\Public\Downloads\CouchPad-Setup-1.0.0-win-x64.exe`, com SHA-256 conferido. O operador informou que não consegue realizar a troca para uma conta limpa. A consulta local não encontrou Windows Sandbox, Hyper-V, VirtualBox nem VMware disponíveis para o teste. O smoke de instalação permanece pendente e a tag `v1.0.0` depende desse resultado.
+## Roteiro para repetir a validação
 
 1. Confirme o SHA-256 e instale pelo EXE. Registre o resultado, o nível de privilégio, a pasta de destino, o atalho, o registro do desinstalador e o caminho da tarefa de rescue.
 2. Abra pelo atalho. Confirme automação, XInput e escritas de display/áudio desligados por padrão. Minimize, reabra e saia pela bandeja.
@@ -36,3 +36,8 @@ O candidato está disponível também em `C:\Users\Public\Downloads\CouchPad-Set
 5. Desinstale. Confirme ausência dos binários, atalho, tarefas, registro de desinstalação e processos do CouchPad. Os dados por usuário são preservados conforme D066.
 
 Para voltar a uma versão anterior, conclua qualquer recuperação pendente, faça backup das configurações, saia do App pela bandeja, desinstale e reinstale o pacote anterior quando disponível. Preserve os baselines originais para diagnóstico. A validação dessa sequência com um instalador anterior depende da existência desse artefato.
+
+## Regressão final da versão 1.0.0
+
+- Builds isolados Debug e Release com 0 avisos e 0 erros. Em cada configuração, 259 testes (232 Core e 27 App) e smoke passaram.
+- SHA-256 reconferido. A distribuição usa o mesmo EXE que passou pelo ciclo de instalação, reinstalação e desinstalação na conta `Teste`. O pacote foi gerado com a versão 1.0.0 definida no comando de build. O código-fonte agora declara a mesma versão por padrão.
