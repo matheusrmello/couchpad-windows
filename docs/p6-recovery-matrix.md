@@ -72,3 +72,8 @@
 - Build Debug 0/0, 256 testes (229 Core e 27 App) e smoke aprovados. Os testes do App cobrem a disponibilidade da ação, o encaminhamento do pedido e a reabertura sem reativar a automação.
 - Em processos com backend falso, a quarta tentativa automática foi bloqueada. A tentativa assistida esperou a liberação do lock, reportou falha de áudio e preservou o journal. Uma nova tentativa explícita restaurou tela e áudio e removeu o journal e o contador.
 - O executável de produção `--assisted-recovery` retornou 0 com journal ausente e reabriu o App real com `--recovery-succeeded`. As preferências usadas na validação foram restauradas. A restauração assistida de um baseline real e a interação física com o botão na janela permanecem sem evidência.
+
+## Regressão após a matriz da bandeja
+
+- Em 12/11/2026, depois da saída pela bandeja, o build Debug terminou com 0 avisos e 0 erros. Passaram 258 testes (231 Core e 27 App). O smoke abriu a janela em 1020 × 780, verificou textos em pt-BR e inglês e encerrou. `git diff --check` passou.
+- O disparo automático já está confirmado com journal ausente. A P6 ainda exige evidência de logon com journal pendente real, recuperação assistida de baseline real e integração de autostart.
