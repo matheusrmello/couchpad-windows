@@ -1,6 +1,7 @@
 # Checklist de acessibilidade — P7a
 
 - Data: 2026-11-13
+- Aceite do usuário: 2026-11-13
 - Escopo: shell Avalonia, cards, controles, bandeja, autostart, recuperação
   assistida, i18n e estados de erro
 - Base: WCAG 2.2 AA (alvos principais), teclado, leitor de tela e contraste

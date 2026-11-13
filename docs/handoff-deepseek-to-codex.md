@@ -3,7 +3,7 @@
 - Data: 2026-11-13
 - Origem: P7a — a11y, i18n, screenshots, README e notas de release
 - Destino: P7b — regressão final, instalador, assinatura e release v1.0.0
-- Estado da P7a: **em aceite do usuário**
+- Estado da P7a: **aceita pelo usuário em 13/11/2026**; P7b liberada
 - Build: 0 avisos/0 erros
 - Testes: 259 (232 Core + 27 App)
 - Versão de desenvolvimento: 0.6.0
@@ -44,8 +44,7 @@
 
 ## 2. O que o Codex deve fazer na P7b
 
-1. **Aguardar o aceite explícito da P7a.** Não iniciar instalador/assinatura
-   antes disso.
+1. **Aceite da P7a recebido em 13/11/2026.** Iniciar a P7b.
 2. **Regressão final**:
    - build Debug/Release 0 avisos/0 erros;
    - `dotnet test CouchPad.slnx -c Debug` (259+);

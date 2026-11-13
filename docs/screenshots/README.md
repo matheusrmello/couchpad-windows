@@ -1,7 +1,7 @@
 # Screenshots oficiais — P7a
 
 - Data: 2026-11-13
-- Estado: **capturas oficiais da P7a**, após P6
+- Estado: **capturas oficiais da P7a, aceitas em 13/11/2026**, após P6
 - Versão exibida: `0.6.0`
 - Simulação: display/áudio sem escrita real; seletores vazios de propósito
 - Leitor de tela: validação manual ainda pendente (ver checklist)

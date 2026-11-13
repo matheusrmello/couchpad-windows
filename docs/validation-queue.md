@@ -15,8 +15,8 @@
 | P4 display | **Aceita com limitação** | Hardware: TvOnly/Extend, rollback, falha/cancelamento, desconexão e kill após retorno do CCD; morte dentro de `SetDisplayConfig` não comprovada |
 | P5 áudio | **Aceita com limitações** | Aceite do usuário em 11/11/2026; hardware: fluxo com controle simulado, troca/restore, falha, cancelamento, endpoint ausente, crash do filho de teste e rescue de produção; HDR adiado |
 | P6 rescue/tray/autostart | Aceita em 13/11/2026 | Logon, bandeja, recuperação assistida e autostart verificados |
-| P7a docs/a11y/screenshots | Em aceite | A11y, i18n, UIAutomation, screenshots e notas de release concluídos; Narrator/NVDA manual pendente |
-| P7b release | Pendente | Depende do aceite da P7a |
+| P7a docs/a11y/screenshots | **Aceita em 13/11/2026** | A11y, i18n, UIAutomation, screenshots e notas concluídos; Narrator/NVDA manual pendente |
+| P7b release | **Liberada** | Codex; depende do aceite da P7a |
 
 ## Fila, em ordem
 
@@ -71,7 +71,7 @@
 ### 6. P7a — docs, a11y, screenshots
 
 - **Dono:** DeepSeek.
-- **Status:** em aceite (13/11/2026).
+- **Status:** aceita em 13/11/2026.
 - **Concluído:** checklist de a11y, contraste, foco/nomes via UIAutomation nos
   3 breakpoints, i18n 157 chaves, fluxos de bandeja/autostart/recuperação
   revisados, 6 capturas oficiais em `docs/screenshots/`, README e notas de
@@ -88,7 +88,7 @@
 
 ## Próxima ação
 
-P7a pronta para aceite do usuário. Após o aceite, P7b (Codex) inicia
+P7a aceita pelo usuário em 13/11/2026. P7b (Codex) está liberada para
 instalador, assinatura, regressão de distribuição e tag `v1.0.0`. A reconexão
 do watcher durante a contagem ainda carece de evidência independente; HDR e
 notificações nativas seguem adiados.
