@@ -29,6 +29,7 @@
 
 ## Bandeja
 
+- Saída em repouso, 12/11/2026. Com o controle desligado, o operador escolheu **Sair** na bandeja. A consulta confirmou que App e rescue haviam encerrado, que o journal estava ausente e que apenas o AOC estava ativo. Com a reabertura e a desativação em sessão real registradas abaixo, fica concluída a matriz do item 5.
 - Desativação em sessão real, 12/11/2026. O operador confirmou imagem na Samsung e AOC apagado antes de selecionar **Desativar CouchPad** pela bandeja, com o controle ainda conectado. Na leitura após a ação, o mesmo processo permaneceu aberto, a preferência estava desativada, apenas o AOC estava ativo e o journal estava ausente. Os três papéis padrão de áudio, volume e mudo correspondiam à captura anterior. O estado ativo teve confirmação visual do operador. A consulta do journal ocorreu depois da restauração.
 - Após a correção, o operador minimizou e reabriu pelo menu **Abrir** da bandeja. A mesma instância (PID 8608) voltou a apresentar a janela principal e o journal permaneceu ausente. O cenário de desativação com a TV ativa é separado.
 - Na prova interativa, a janela minimizou e o processo permaneceu ativo, mas o operador não encontrou o ícone. O App criava o objeto sem anexá-lo à coleção `TrayIcon.Icons` da aplicação. Corrigido com `TrayIcon.SetIcons`. Build 0/0, 258 testes e smoke passaram. A confirmação visual do ícone e das ações continua na matriz física.
