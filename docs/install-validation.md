@@ -22,7 +22,8 @@
 - A captura enviada pelo operador confirma a versão 1.0.0 em pt-BR, estado inativo, simulação local e automação, XInput, autostart e permissões de escrita de tela e áudio desligados. Os seletores de TV, monitor e saída de áudio estavam vazios. A opção de minimizar para a bandeja veio habilitada.
 - O operador confirmou que minimizou o App instalado na conta `Teste` e reabriu a janela pela opção **Abrir** do menu da bandeja.
 - O operador confirmou que o CouchPad abriu sozinho após habilitar **Iniciar com o Windows**, sair e entrar novamente na conta `Teste`. A consulta na conta principal encontrou a nova sessão 11 às 09:09 e o processo do CouchPad iniciado às 09:09:34 na mesma sessão. A consulta entre contas não retornou a linha de comando nem o resultado das tarefas. O disparo das duas tarefas e o marcador do bootstrap têm evidência independente na matriz P6.
-- Próxima etapa: reinstalar o mesmo candidato e verificar a preservação da preferência de autostart.
+- O operador confirmou a reinstalação do mesmo candidato na conta `Teste`. **Iniciar com o Windows** permaneceu ligado. Automação e permissões de tela e áudio permaneceram desligadas. O estado dos controles foi confirmado pelo operador. A contagem das tarefas ainda depende de consulta na conta de teste.
+- Próxima etapa: desinstalar na conta `Teste` e verificar arquivos, atalhos, tarefas e dados preservados.
 
 O perfil principal já possui configurações, journal histórico e tarefas de desenvolvimento. Use uma conta padrão limpa ou uma VM Windows limpa para obter evidência do primeiro uso e evitar substituir tarefas de outra instalação.
 
