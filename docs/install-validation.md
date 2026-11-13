@@ -19,7 +19,8 @@
 ### Primeira instalação em conta limpa
 
 - Em 13/11/2026, o operador criou a conta local `Teste` e confirmou que o candidato foi instalado sem pedir credenciais de administrador e que o CouchPad abriu normalmente. A consulta na conta principal confirmou um processo `CouchPad.exe` na sessão 10 da conta `Teste`. O caminho do processo e a definição da tarefa exigem consulta na própria conta de teste.
-- Próxima etapa: confirmar os padrões de primeiro uso e a bandeja na conta `Teste`.
+- A captura enviada pelo operador confirma a versão 1.0.0 em pt-BR, estado inativo, simulação local e automação, XInput, autostart e permissões de escrita de tela e áudio desligados. Os seletores de TV, monitor e saída de áudio estavam vazios. A opção de minimizar para a bandeja veio habilitada.
+- Próxima etapa: verificar minimizar e reabrir pela bandeja na conta `Teste`.
 
 O perfil principal já possui configurações, journal histórico e tarefas de desenvolvimento. Use uma conta padrão limpa ou uma VM Windows limpa para obter evidência do primeiro uso e evitar substituir tarefas de outra instalação.
 
