@@ -245,11 +245,23 @@ static async Task RecoverAtStartup(string journalPath, bool waitForOwner = false
 {
     journalPath = Path.GetFullPath(journalPath);
     using var ownerTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-    var (owner, waited) = waitForOwner
-        ? await DisplaySessionOwner.AcquireWhenAvailableAsync(journalPath, ownerTimeout.Token)
-        : (DisplaySessionOwner.Acquire(journalPath), false);
-    using var sessionOwner = owner;
     var store = new JsonSessionJournalStore(journalPath);
+    DisplaySessionOwner owner;
+    bool waited;
+    try
+    {
+        (owner, waited) = waitForOwner
+            ? await DisplaySessionOwner.AcquireWhenAvailableAsync(journalPath, ownerTimeout.Token)
+            : (DisplaySessionOwner.Acquire(journalPath), false);
+    }
+    catch (IOException ex) when (!waitForOwner && (ex.HResult & 0xffff) is 32 or 33)
+    {
+        // Autostart or the App may already own the session. With no journal,
+        // this independent task has nothing to do and must not write state.
+        if (store.Inspect().Status == SessionJournalStatus.Missing) return;
+        throw;
+    }
+    using var sessionOwner = owner;
     if (waited && !assisted && store.Inspect().Status != SessionJournalStatus.Missing)
         throw new InvalidOperationException("The previous session owner did not clear the recovery journal.");
     var identity = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Environment.UserDomainName + "\\" + Environment.UserName + "|" + journalPath.ToUpperInvariant())));

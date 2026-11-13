@@ -32,6 +32,19 @@ foreach (var state in new[] { SessionJournalEntry.PendingState, SessionJournalEn
     Console.WriteLine("missing journal: no recovery attempted");
 }
 {
+    var dir = Path.Combine(root, "session-owned");
+    Directory.CreateDirectory(dir);
+    var path = Path.Combine(dir, "session.json");
+    var marker = Path.Combine(dir, "marker");
+    using var owner = DisplaySessionOwner.Acquire(path);
+    if (await Run(child, path, marker, false) != 0 || File.Exists(path) || File.Exists(marker))
+        throw new InvalidOperationException("Independent rescue with no journal should exit successfully while the session is owned.");
+    new JsonSessionJournalStore(path).Save(Entry(SessionJournalEntry.PendingState));
+    if (await Run(child, path, marker, false) == 0 || !File.Exists(path) || File.Exists(marker))
+        throw new InvalidOperationException("Independent rescue must not restore another owner's pending journal.");
+    Console.WriteLine("session lock: no journal is a no-op; pending journal blocks competing recovery");
+}
+{
     var dir = Path.Combine(root, "malformed");
     Directory.CreateDirectory(dir);
     var path = Path.Combine(dir, "session.json");
