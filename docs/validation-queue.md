@@ -88,6 +88,6 @@
 
 ## Próxima ação
 
-A publicação do instalador e do SHA-256 fica como etapa de distribuição.
+O instalador e o SHA-256 estão publicados na [release v1.0.0](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.0).
 A reconexão do watcher durante a contagem ainda carece de evidência
 independente. HDR e notificações nativas seguem adiados.

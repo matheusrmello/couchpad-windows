@@ -29,6 +29,7 @@ em cada configuração. [Notas da versão](docs/release-notes-draft.md).
 
 ## Instalação
 
+Baixe o instalador e o arquivo SHA-256 na [release v1.0.0](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.0).
 Execute `CouchPad-Setup-1.0.0-win-x64.exe` na conta que vai usar o App.
 Ele inclui o runtime .NET, instala sem elevação e cria um atalho no menu Iniciar.
 Consulte o SHA-256 e o resultado do teste em [Validação do instalador](docs/install-validation.md).
