@@ -1,5 +1,7 @@
 # Validação da distribuição v1.0.0
 
+O script `packaging/Build-Installer.ps1` mantém o artefato no projeto e também copia o instalador para a pasta Downloads da conta que executa o build. A cópia é conferida por SHA-256. Arquivos com o mesmo nome e conteúdo diferente recebem um sufixo numérico. Use `-SkipDownloadsCopy` em builds automatizados que só precisam do artefato do projeto.
+
 ## Correção da desinstalação com uma cópia de desenvolvimento
 
 - No perfil principal, o desinstalador 1.0.0 abortava porque as tarefas de rescue e autostart apontavam para os binários de desenvolvimento. O journal estava ausente.

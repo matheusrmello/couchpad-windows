@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory)] [string] $Dotnet,
     [Parameter(Mandatory)] [string] $Iscc,
-    [string] $Version
+    [string] $Version,
+    [switch] $SkipDownloadsCopy
 )
 
 $ErrorActionPreference = 'Stop'
@@ -42,3 +43,6 @@ Rename-Item -LiteralPath (Join-Path $preflight 'CouchPad.Rescue.exe') -NewName '
 if ($LASTEXITCODE) { throw 'Inno Setup compilation failed.' }
 $setup = Join-Path $output "CouchPad-Setup-$Version-win-x64.exe"
 Get-FileHash -LiteralPath $setup -Algorithm SHA256
+if (!$SkipDownloadsCopy) {
+    & (Join-Path $PSScriptRoot 'Copy-InstallerToDownloads.ps1') -Installer $setup
+}
