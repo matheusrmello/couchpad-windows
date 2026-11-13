@@ -14,7 +14,7 @@
 | P0–P3 | Aceitas | Shell, componentes, simulação, journal e persistência |
 | P4 display | **Aceita com limitação** | Hardware: TvOnly/Extend, rollback, falha/cancelamento, desconexão e kill após retorno do CCD; morte dentro de `SetDisplayConfig` não comprovada |
 | P5 áudio | **Aceita com limitações** | Aceite do usuário em 11/11/2026; hardware: fluxo com controle simulado, troca/restore, falha, cancelamento, endpoint ausente, crash do filho de teste e rescue de produção; HDR adiado |
-| P6 rescue/tray/autostart | Pendente | Rescue/watchdog existe; logon, bandeja e autostart pendentes |
+| P6 rescue/tray/autostart | Validada, aguardando aceite | Logon, bandeja, recuperação assistida e autostart verificados |
 | P7a docs/a11y/screenshots | Pendente | Depende da P6 |
 | P7b release | Pendente | Depende da P7a |
 
@@ -53,8 +53,7 @@
 - **Dono:** Codex.
 - **Validação sem TV concluída:** instância única na janela real, coordenação de startup com rescue concorrente e nova tentativa assistida com backend falso. O iniciador de produção e o rescue assistido abriram o App com journal ausente. Evidências em `docs/p6-recovery-matrix.md`.
 - **Itens 4–6 verificados:** instalação e remoção da tarefa no Agendador, disparo automático no logon com journal ausente, reabertura pela bandeja, desativação com restauração de tela/áudio na Samsung/AOC e saída em repouso. Build 0/0, 258 testes e smoke após a matriz.
-- **Validar:** journal pendente após reinício/logon; restore automático;
-  integração de autostart por usuário; sem admin.
+- **Autostart verificado:** ambas as tarefas por usuário retornaram 0 no logon real e o App abriu pelo rescue. Build final 0/0, 259 testes e smoke.
 - **Rescue real verificado:** logon com journal `pending` criado antes de apply e recuperação assistida pelo botão após interrupção de sessão `active` com Somente TV e áudio na Samsung.
 - **Evidência:** teste de crash/reinício, matrix P6, tag `v0.6.0-hardware`.
 
@@ -84,6 +83,4 @@
 
 ## Próxima ação
 
-Prosseguir com P6, preservando a pendência independente da reconexão do watcher.
-As validações físicas serão executadas uma por vez, com evidência registrada
-antes de avançar.
+Aguardar o aceite da P6 antes de iniciar a P7a. A reconexão do watcher durante a contagem ainda carece de evidência independente.

@@ -23,6 +23,7 @@
 
 ## Trabalho isolado sem TV: autostart do App
 
+- Validação final em 13/11/2026 às 08:18:20, horário local. As tarefas de autostart e rescue dispararam na entrada do operador na sessão 8. Ambas retornaram 0 e ficaram habilitadas e Ready. O CouchPad abriu na mesma sessão e no mesmo segundo do Explorer, com `--windows-autostart` e o caminho esperado. O journal estava ausente e o log não recebeu uma nova falha.
 - Em 13/11/2026, as duas tarefas dispararam às 08:13:45, no início da sessão 7. A tarefa de autostart retornou 0 e o CouchPad abriu às 08:13:48 com `--windows-autostart`. O journal estava ausente. A tarefa independente retornou 1 e registrou `0x80070020`, compatível com disputa pelo lock.
 - O rescue independente agora trata lock ocupado com journal ausente como operação sem trabalho. Com journal pendente, continua recusando a recuperação concorrente. Build 0/0, 259 testes, smoke e testes de processo passaram. O executável de produção retornou 0 com o lock ocupado e journal ausente em teste manual. Falta repetir o logon para confirmar o resultado das duas tarefas juntas com a correção.
 - D065. O operador confirmou que o CouchPad não aparecia na lista de inicialização do Windows. A versão atualizada migrou a preferência para uma tarefa por usuário com `--startup-and-launch`. No Agendador real, a nova tarefa ficou habilitada e Ready, a entrada antiga foi removida e o XML da tarefa independente de rescue permaneceu idêntico. Build 0/0, 259 testes e smoke passaram. Falta provar o disparo real da nova tarefa.
@@ -84,7 +85,7 @@
 ## Regressão após a matriz da bandeja
 
 - Em 12/11/2026, depois da saída pela bandeja, o build Debug terminou com 0 avisos e 0 erros. Passaram 258 testes (231 Core e 27 App). O smoke abriu a janela em 1020 × 780, verificou textos em pt-BR e inglês e encerrou. `git diff --check` passou.
-- O disparo automático já está confirmado com journal ausente. A P6 ainda exige evidência de logon com journal pendente real, recuperação assistida de baseline real e integração de autostart.
+- Na regressão de fechamento em 13/11/2026, o build Debug isolado terminou com 0 avisos e 0 erros, 259 testes (232 Core e 27 App) e smoke aprovados. O App que abriu no logon permaneceu em execução.
 
 ## Logon com journal pendente real
 
