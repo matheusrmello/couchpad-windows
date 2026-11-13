@@ -29,6 +29,7 @@
 
 ## Bandeja
 
+- Na prova interativa, a janela minimizou e o processo permaneceu ativo, mas o operador não encontrou o ícone. O App criava o objeto sem anexá-lo à coleção `TrayIcon.Icons` da aplicação. Corrigido com `TrayIcon.SetIcons`. Build 0/0, 258 testes e smoke passaram. A confirmação visual do ícone e das ações continua na matriz física.
 - Ícone Windows com abrir e sair, textos pt/en e ocultação ao minimizar/fechar quando habilitada. Saída solicita desativação; estado de recuperação incerto impede encerramento.
 - Build 0/0, 241 testes e smoke passaram. Testes simulados cobrem saída inativa e recusa com journal ilegível. O smoke não cria bandeja; interação visual de abrir/minimizar/sair e restauração de sessão real na saída permanecem pendentes.
 

@@ -23,7 +23,6 @@ public partial class App : Application
     private DisplaySessionOwner? _displaySessionOwner;
     private WindowsGamepadWatcher? _gamepadWatcher;
     private WindowsCountdownNotifications? _countdownNotifications;
-    private TrayIcon? _trayIcon;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -166,8 +165,9 @@ public partial class App : Application
                 menu.Items.Add(automation);
                 menu.Items.Add(exit);
                 using var stream = AssetLoader.Open(new Uri("avares://CouchPad/Assets/couchpad.ico"));
-                _trayIcon = new TrayIcon { Icon = new WindowIcon(stream), ToolTipText = "CouchPad", Menu = menu, IsVisible = true };
-                _trayIcon.Clicked += (_, _) => ShowWindow();
+                var trayIcon = new TrayIcon { Icon = new WindowIcon(stream), ToolTipText = "CouchPad", Menu = menu, IsVisible = true };
+                trayIcon.Clicked += (_, _) => ShowWindow();
+                TrayIcon.SetIcons(this, new TrayIcons { trayIcon });
                 window.PropertyChanged += (_, e) =>
                 {
                     if (e.Property == Window.WindowStateProperty && window.WindowState == WindowState.Minimized && viewModel.MinimizeToTray)
@@ -180,7 +180,6 @@ public partial class App : Application
                     if (viewModel.MinimizeToTray) window.Hide();
                     else ExitSafely();
                 };
-                desktop.Exit += (_, _) => _trayIcon.Dispose();
             }
 
             if (isSmoke)
