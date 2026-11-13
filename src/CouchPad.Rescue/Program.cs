@@ -50,6 +50,8 @@ if (args is [var taskCommand] && taskCommand is ("--install-logon-task" or "--re
         {
             if (new JsonSessionJournalStore(journal).Inspect().Status != SessionJournalStatus.Missing)
                 throw new InvalidOperationException("Complete session recovery before removing the rescue task.");
+            _ = registration.IsRegistered(executable, sid);
+            new WindowsScheduledStartup().SetEnabled(false, Path.Combine(AppContext.BaseDirectory, "CouchPad.exe"));
             registration.Remove(executable, sid);
         }
         return 0;

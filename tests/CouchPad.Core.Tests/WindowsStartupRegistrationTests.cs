@@ -67,6 +67,43 @@ public sealed class WindowsStartupRegistrationTests
         Assert.Throws<ArgumentException>(() => registration.SetEnabled(true, Path.Combine(Path.GetTempPath(), "other.exe")));
     }
 
+    [Fact]
+    public void Migration_registers_autostart_before_removing_legacy_and_leaves_rescue_task_alone()
+    {
+        const string sid = "S-1-5-21-1";
+        var legacyStore = new FakeStore();
+        var legacy = new WindowsStartupRegistration(legacyStore);
+        legacy.SetEnabled(true, Executable);
+        var tasks = new FakeTasks();
+        var rescue = Path.Combine(Path.GetDirectoryName(Executable)!, "CouchPad.Rescue.exe");
+        new RescueLogonTaskRegistration(tasks).Create(rescue, sid);
+        var startup = new WindowsScheduledStartup(tasks, legacy, sid);
+        tasks.FailCreate = true;
+        Assert.Throws<IOException>(() => startup.ReadAndMigrate(Executable));
+        Assert.NotNull(legacyStore.Value);
+        tasks.FailCreate = false;
+        Assert.True(startup.ReadAndMigrate(Executable));
+        Assert.Null(legacyStore.Value);
+        Assert.Contains("--startup-and-launch", tasks.Values["CouchPad-Autostart-" + sid]);
+        Assert.True(startup.ReadAndMigrate(Executable));
+        startup.SetEnabled(false, Executable);
+        Assert.False(startup.ReadAndMigrate(Executable));
+        Assert.Contains("--startup-recovery", Assert.Single(tasks.Values).Value);
+    }
+
+    private sealed class FakeTasks : IRescueLogonTaskStore
+    {
+        public Dictionary<string, string> Values { get; } = new();
+        public bool FailCreate;
+        public string? ReadXml(string name) => Values.GetValueOrDefault(name);
+        public void Create(string name, string xml, string sid)
+        {
+            if (FailCreate) throw new IOException("Injected task registration failure.");
+            Values.Add(name, xml);
+        }
+        public void Delete(string name) => Values.Remove(name);
+    }
+
     private sealed class FakeStore : IStartupRegistrationStore
     {
         public string? Value;

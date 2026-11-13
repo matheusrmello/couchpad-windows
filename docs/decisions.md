@@ -223,6 +223,11 @@
 - A opção lê e altera somente a entrada do CouchPad no Registro por usuário. Ela fica disponível no App Windows quando os executáveis do App e do rescue estão presentes. O usuário habilita a opção pela interface.
 - A entrada chama o rescue com `--startup-and-launch`. Após a recuperação, o rescue inicia o App com `--windows-autostart`, permitindo confirmar a origem do processo no teste de logon. A tarefa independente de recuperação continua habilitada.
 
+## D065 — Autostart pelo Agendador
+
+- Após dois logons sem disparo da entrada Run e ausência do CouchPad na lista de aplicativos de inicialização, usar uma tarefa de logon por usuário, com privilégio limitado, para executar `--startup-and-launch`.
+- A migração verifica a propriedade da entrada antiga e só a remove após confirmar a tarefa nova. A tarefa independente de recuperação é preservada. O comando de remoção do instalador remove também o autostart próprio.
+
 ## Formato de nova decisão
 
 ```md

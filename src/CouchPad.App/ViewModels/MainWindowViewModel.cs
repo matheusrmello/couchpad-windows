@@ -512,7 +512,7 @@ public partial class MainWindowViewModel : ObservableObject
             StartupError = false;
             PersistSettings();
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.Security.SecurityException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.Security.SecurityException or System.Runtime.InteropServices.COMException or System.Xml.XmlException)
         {
             StartupError = true;
             _revertingStartup = true;
@@ -618,7 +618,7 @@ public partial class MainWindowViewModel : ObservableObject
             AutomationEnabled = !suspendAutomation && settings.DisplayModeIndex is 0 or 1 && settings.AutomationEnabled;
             CloseLauncherOnActivate = settings.CloseLauncherOnActivate;
             try { StartWithWindows = _readStartup?.Invoke() ?? false; }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.Security.SecurityException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.Security.SecurityException or System.Runtime.InteropServices.COMException or System.Xml.XmlException)
             {
                 StartWithWindows = false;
                 StartupError = true;

@@ -45,7 +45,7 @@ public partial class App : Application
             var rescuePath = Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe");
             var appPath = Path.Combine(AppContext.BaseDirectory, "CouchPad.exe");
             var canUseRescue = !isSmoke && !isGallery && OperatingSystem.IsWindows() && File.Exists(rescuePath);
-            var startup = canUseRescue && File.Exists(appPath) ? new WindowsStartupRegistration() : null;
+            var startup = canUseRescue && File.Exists(appPath) ? new WindowsScheduledStartup() : null;
             var useWindowsGamepad = !isSmoke && !isGallery && OperatingSystem.IsWindows() &&
                 (appSettings.UseWindowsGamepad || desktop.Args?.Contains("--windows-gamepad", StringComparer.Ordinal) == true);
 
@@ -87,7 +87,7 @@ public partial class App : Application
                         dismissCountdown: _countdownNotifications is { } notificationsToDismiss ? notificationsToDismiss.Cancel : null,
                         launcherService: displayService is WindowsDisplayService && appSettings.AllowDisplayWrites
                             ? new WindowsLauncherService() : null,
-                        readStartup: startup is null ? null : () => startup.IsEnabled(appPath),
+                        readStartup: startup is null ? null : () => startup.ReadAndMigrate(appPath),
                         configureStartup: startup is null ? null : enabled => startup.SetEnabled(enabled, appPath),
                         suspendAutomation: desktop.Args?.Any(arg => arg is "--recovery-succeeded" or "--recovery-failed") == true,
                         canStartRecovery: canUseRescue,

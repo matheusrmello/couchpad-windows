@@ -7,7 +7,7 @@ internal static class RescueLogonTask
 {
     private static readonly XNamespace Ns = "http://schemas.microsoft.com/windows/2004/02/mit/task";
 
-    internal static string CreateXml(string rescueExecutable, string userSid)
+    internal static string CreateXml(string rescueExecutable, string userSid, bool launchApp = false)
     {
         if (string.IsNullOrWhiteSpace(rescueExecutable) || !Path.IsPathFullyQualified(rescueExecutable) ||
             !string.Equals(Path.GetFileName(rescueExecutable), "CouchPad.Rescue.exe", StringComparison.OrdinalIgnoreCase) || rescueExecutable.Contains('"'))
@@ -24,19 +24,30 @@ internal static class RescueLogonTask
                 new XElement(Ns + "DisallowStartIfOnBatteries", "false"), new XElement(Ns + "StopIfGoingOnBatteries", "false"),
                 new XElement(Ns + "ExecutionTimeLimit", "PT0S"), new XElement(Ns + "Enabled", "true")),
             new XElement(Ns + "Actions", new XAttribute("Context", "User"), new XElement(Ns + "Exec",
-                new XElement(Ns + "Command", path), new XElement(Ns + "Arguments", "--startup-recovery"),
+                new XElement(Ns + "Command", path), new XElement(Ns + "Arguments", launchApp ? "--startup-and-launch" : "--startup-recovery"),
                 new XElement(Ns + "WorkingDirectory", Path.GetDirectoryName(path)!))));
         return new XDocument(new XDeclaration("1.0", "utf-16", null), task).ToString();
     }
 }
 
 /// <summary>Manages the task only when its definition belongs to this installation.</summary>
-internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store)
+internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store, bool launchApp = false)
 {
+    private string Name(string sid) => (launchApp ? "CouchPad-Autostart-" : "CouchPad-Rescue-") + sid;
+
+    internal bool IsRegistered(string executable, string sid)
+    {
+        _ = RescueLogonTask.CreateXml(executable, sid, launchApp);
+        var existing = store.ReadXml(Name(sid));
+        if (existing is null) return false;
+        if (!Matches(existing, executable, sid)) throw new InvalidOperationException("A different task already exists.");
+        return true;
+    }
+
     internal void Create(string executable, string sid)
     {
-        var xml = RescueLogonTask.CreateXml(executable, sid);
-        var name = "CouchPad-Rescue-" + sid;
+        var xml = RescueLogonTask.CreateXml(executable, sid, launchApp);
+        var name = Name(sid);
         var existing = store.ReadXml(name);
         if (existing is not null)
         {
@@ -50,8 +61,8 @@ internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store)
 
     internal void Remove(string executable, string sid)
     {
-        _ = RescueLogonTask.CreateXml(executable, sid);
-        var name = "CouchPad-Rescue-" + sid;
+        _ = RescueLogonTask.CreateXml(executable, sid, launchApp);
+        var name = Name(sid);
         var existing = store.ReadXml(name);
         if (existing is null) return;
         if (!Matches(existing, executable, sid)) throw new InvalidOperationException("The rescue task belongs to a different configuration.");
@@ -59,7 +70,7 @@ internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store)
         if (store.ReadXml(name) is not null) throw new IOException("Rescue task removal could not be verified.");
     }
 
-    private static bool Matches(string xml, string executable, string sid)
+    private bool Matches(string xml, string executable, string sid)
     {
         XNamespace ns = "http://schemas.microsoft.com/windows/2004/02/mit/task";
         var root = XDocument.Parse(xml).Root ?? throw new InvalidDataException("Task definition missing.");
@@ -71,7 +82,7 @@ internal sealed class RescueLogonTaskRegistration(IRescueLogonTaskStore store)
         var settings = root.Element(ns + "Settings");
         return action.Name == ns + "Exec" && trigger.Name == ns + "LogonTrigger" && principal.Name == ns + "Principal" &&
             string.Equals((string?)action.Element(ns + "Command"), Path.GetFullPath(executable), StringComparison.OrdinalIgnoreCase) &&
-            (string?)action.Element(ns + "Arguments") == "--startup-recovery" &&
+            (string?)action.Element(ns + "Arguments") == (launchApp ? "--startup-and-launch" : "--startup-recovery") &&
             string.Equals((string?)action.Element(ns + "WorkingDirectory"), Path.GetDirectoryName(Path.GetFullPath(executable)), StringComparison.OrdinalIgnoreCase) &&
             IsSameUser((string?)trigger.Element(ns + "UserId"), sid) && IsSameUser((string?)principal.Element(ns + "UserId"), sid) &&
             ((bool?)trigger.Element(ns + "Enabled") ?? true) && ((bool?)settings?.Element(ns + "Enabled") ?? true) &&
