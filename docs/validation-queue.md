@@ -14,7 +14,7 @@
 | P0–P3 | Aceitas | Shell, componentes, simulação, journal e persistência |
 | P4 display | **Aceita com limitação** | Hardware: TvOnly/Extend, rollback, falha/cancelamento, desconexão e kill após retorno do CCD; morte dentro de `SetDisplayConfig` não comprovada |
 | P5 áudio | **Aceita com limitações** | Aceite do usuário em 11/11/2026; hardware: fluxo com controle simulado, troca/restore, falha, cancelamento, endpoint ausente, crash do filho de teste e rescue de produção; HDR adiado |
-| P6 rescue/tray/autostart | Validada, aguardando aceite | Logon, bandeja, recuperação assistida e autostart verificados |
+| P6 rescue/tray/autostart | Aceita em 13/11/2026 | Logon, bandeja, recuperação assistida e autostart verificados |
 | P7a docs/a11y/screenshots | Pendente | Depende da P6 |
 | P7b release | Pendente | Depende da P7a |
 
@@ -83,4 +83,4 @@
 
 ## Próxima ação
 
-Aguardar o aceite da P6 antes de iniciar a P7a. A reconexão do watcher durante a contagem ainda carece de evidência independente.
+P7a liberada para o DeepSeek após o aceite da P6. A reconexão do watcher durante a contagem ainda carece de evidência independente.

@@ -1,6 +1,6 @@
 # Handoff da P6 para a P7a
 
-13/11/2026. P6 validada e aguardando aceite. Referência de código e evidências na tag `v0.6.0-hardware`.
+P6 validada e aceita pelo usuário em 13/11/2026. Referência de código e evidências na tag `v0.6.0-hardware`.
 
 ## O que foi validado
 
@@ -11,6 +11,6 @@
 
 ## P7a
 
-Após aceite, refazer as seis capturas em três larguras, pt-BR e inglês. Revisar contraste, foco, navegação por teclado, leitores de tela e localização, incluindo a bandeja, o autostart e a recuperação assistida. Usar como referência [checklist](ui-a11y-checklist.md) e [fila de validação](validation-queue.md).
+Refazer as seis capturas em três larguras, pt-BR e inglês. Revisar contraste, foco, navegação por teclado, leitores de tela e localização, incluindo a bandeja, o autostart e a recuperação assistida. Usar como referência [checklist](ui-a11y-checklist.md) e [fila de validação](validation-queue.md).
 
 HDR e notificações nativas permanecem adiados. A reconexão do watcher durante a contagem tem relato visual e ainda carece de evidência independente. Instalador, assinatura e regressão de distribuição pertencem à P7b.
