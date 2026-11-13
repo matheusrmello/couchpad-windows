@@ -57,6 +57,10 @@
   "automation.setup_required": "Select the TV, a different monitor, and the TV audio output to set up automation.",
   "automation.setup_restart": "Exit CouchPad from the notification area and reopen it to apply the selected devices.",
   "automation.setup_unavailable": "The recovery component is unavailable. Reinstall CouchPad to set up automation.",
+  "update.check": "Check for new versions on GitHub",
+  "update.include_previews": "Include pre-releases",
+  "update.available": "New version available: {0}",
+  "update.preview": "Pre-release available: {0}",
 
   "gamepad.primary": "Primary controller",
   "gamepad.none": "No controller connected",

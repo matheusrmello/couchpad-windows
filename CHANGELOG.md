@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.0.6 (pré-release)
+
+- Mostra um aviso de nova versão no rodapé com link para a release do GitHub.
+- A consulta em segundo plano pode ser desligada. O canal estável é o padrão, com opção de incluir pré-releases.
+- Build Release sem avisos ou erros, 272 testes e smoke aprovados. A confirmação visual do aviso na versão instalada ainda está pendente.
+- Instalador Windows x64 sem assinatura Authenticode. SHA-256: `f5db9d3e7b515e77b7efbd1578f30f6ab676cc648d586145af23da632f0b07ae`.
+
 ## 1.0.5 (pré-release)
 
 - Detecta o controle físico por padrão no Windows. A simulação fica disponível com `--simulate`.

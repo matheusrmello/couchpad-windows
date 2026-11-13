@@ -313,6 +313,12 @@
               <TextBlock Classes="hint" IsVisible="{Binding !IsProductionMode}" Text="{loc:Tr settings.allow_display_writes_help}" />
             </StackPanel>
 
+            <StackPanel Spacing="6" IsVisible="{Binding UpdatesAvailable}">
+              <CheckBox Content="{loc:Tr update.check}" IsChecked="{Binding CheckForUpdates}"
+                        AutomationProperties.Name="{loc:Tr update.check}" />
+              <CheckBox Content="{loc:Tr update.include_previews}" IsChecked="{Binding IncludePreviewUpdates}"
+                        IsEnabled="{Binding CheckForUpdates}" AutomationProperties.Name="{loc:Tr update.include_previews}" />
+            </StackPanel>
             <TextBlock Classes="hint" Text="{loc:Tr settings.help}" />
           </StackPanel>
         </controls:Card>
@@ -401,6 +407,14 @@
     <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="0,12,0,0">
       <StackPanel VerticalAlignment="Center" Spacing="2">
         <TextBlock Classes="caption" Text="{Binding VersionText}" />
+        <Button Classes="link" HorizontalAlignment="Left" IsVisible="{Binding HasUpdateNotice}"
+                Command="{Binding OpenUpdateCommand}" AutomationProperties.Name="{Binding UpdateNoticeText}"
+                AutomationProperties.LiveSetting="Polite">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <PathIcon Width="12" Height="12" Data="M 1,6 L 6,1 L 11,6 L 8,6 L 8,11 L 4,11 L 4,6 Z" />
+            <TextBlock Text="{Binding UpdateNoticeText}" TextWrapping="Wrap" />
+          </StackPanel>
+        </Button>
       </StackPanel>
 
       <StackPanel Grid.Column="1"

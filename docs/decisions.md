@@ -256,6 +256,11 @@
 - TV, monitor distinto e saída de áudio são selecionados pelo usuário. A composição carrega essas escolhas ao abrir o App. Até aplicar mudanças com uma reabertura, a interface e a bandeja bloqueiam a ativação. Mudar uma escolha desativa a automação antes de reutilizar os serviços.
 - O botão Automação é o consentimento para a sessão real. Preferências antigas só reativam automaticamente se a automação, o controle físico e ambas as permissões reais já estavam ligados. O Core e as verificações de identidade, journal e rescue permanecem no fluxo.
 
+## D071 — Aviso de atualização no App
+
+- A abertura normal do App consulta em segundo plano as releases públicas do repositório Windows no GitHub. Uma consulta por dia por perfil, incluindo tentativas que falham. A consulta pode ser desligada. Versões estáveis são o padrão e pré-releases são opcionais.
+- O aviso considera versões numéricas maiores com instalador x64 publicado e abre a página da release. A consulta usa apenas o identificador fixo do App no User-Agent, sem credenciais, configuração ou dados de hardware. O App não baixa nem executa o instalador. A preferência fica nas configurações do Core e o HTTP fica no App.
+
 ## Formato de nova decisão
 
 ```md

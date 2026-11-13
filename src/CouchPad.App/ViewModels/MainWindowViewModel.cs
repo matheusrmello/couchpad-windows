@@ -492,6 +492,8 @@ public partial class MainWindowViewModel : ObservableObject
             AutomationEnabled = false;
             CloseLauncherOnActivate = true;
             StartWithWindows = false;
+            CheckForUpdates = true;
+            IncludePreviewUpdates = false;
             UseWindowsGamepad = false;
             MinimizeToTray = true;
             ActivationDelayIndex = 2;
@@ -517,6 +519,7 @@ public partial class MainWindowViewModel : ObservableObject
         PersistSettings();
         SyncAutomation();
         NotifyHardwareSetup();
+        RefreshUpdateNotice();
     }
 
     partial void OnAutomationEnabledChanged(bool value)
@@ -658,6 +661,8 @@ public partial class MainWindowViewModel : ObservableObject
         try
         {
             AutomationEnabled = !suspendAutomation && settings.DisplayModeIndex is 0 or 1 && settings.AutomationEnabled;
+            CheckForUpdates = settings.CheckForUpdates;
+            IncludePreviewUpdates = settings.IncludePreviewUpdates;
             CloseLauncherOnActivate = settings.CloseLauncherOnActivate;
             try { StartWithWindows = _readStartup?.Invoke() ?? false; }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or System.Security.SecurityException or System.Runtime.InteropServices.COMException or System.Xml.XmlException)
@@ -743,6 +748,8 @@ public partial class MainWindowViewModel : ObservableObject
             _settings.Save(current with
             {
                 AutomationEnabled = AutomationEnabled,
+                CheckForUpdates = CheckForUpdates,
+                IncludePreviewUpdates = IncludePreviewUpdates,
                 CloseLauncherOnActivate = CloseLauncherOnActivate,
                 StartWithWindows = CanConfigureStartup ? StartWithWindows : current.StartWithWindows,
                 UseWindowsGamepad = IsProductionMode || UseWindowsGamepad,
@@ -880,5 +887,6 @@ public partial class MainWindowViewModel : ObservableObject
         }
 
         OnPropertyChanged(nameof(VersionText));
+        OnPropertyChanged(nameof(UpdateNoticeText));
     }
 }

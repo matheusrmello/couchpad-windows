@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**1.0.6 (pré-release):** aviso de atualização no rodapé, com consulta pública ao GitHub e preferências de canal em Parâmetros. Decisão D071. Build Release 0/0, 272 testes e smoke aprovados. A exibição do aviso com uma release mais nova disponível ainda requer confirmação visual na versão instalada.
+
 **P7a aceita, 13/11/2026:** a11y/i18n revisados; contraste AA, foco visível, ordem de foco alinhada à ordem visual nos 3 breakpoints (UIAutomation), nomes acessíveis e live regions nos fluxos de autostart, launcher e recuperação assistida; bandeja com itens/tooltip localizados. Seis capturas oficiais em `docs/screenshots/` (pt/en × 3 larguras, simulação) na versão 0.6.0. Build 0 avisos/erros, **259 testes**, smoke OK. Narrator/NVDA manual e interação do menu nativo da bandeja com leitor de tela permanecem pendentes; HDR/notificações adiados; reconexão do watcher ainda carece de evidência independente. Detalhes em `docs/ui-a11y-checklist.md` e `docs/screenshots/README.md`.
 
 **Fila de validação:** `docs/validation-queue.md` — P7b aceita pelo usuário.

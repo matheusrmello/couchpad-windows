@@ -13,6 +13,8 @@ public sealed record AppSettings
     public bool AutomationEnabled { get; init; }
 
     public bool StartWithWindows { get; init; }
+    public bool CheckForUpdates { get; init; } = true;
+    public bool IncludePreviewUpdates { get; init; }
 
     public bool UseWindowsGamepad { get; init; }
 

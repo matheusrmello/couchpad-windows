@@ -5,6 +5,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using CouchPad.App.Localization;
+using CouchPad.App.Updates;
 using CouchPad.App.ViewModels;
 using CouchPad.App.Views;
 using CouchPad.Core.Automation;
@@ -104,6 +105,23 @@ public partial class App : Application
 
             if (isProduction && window.DataContext is MainWindowViewModel viewModel)
             {
+                var updateClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
+                {
+                    Timeout = TimeSpan.FromSeconds(8),
+                    MaxResponseContentBufferSize = 4 * 1024 * 1024,
+                };
+                var updateCheck = new GitHubUpdateCheck(updateClient, Path.Combine(AppPaths.GetRoot(), "update-cache.json"), TimeProvider.System);
+                void StartUpdateCheck(object? sender, EventArgs e)
+                {
+                    window.Opened -= StartUpdateCheck;
+                    viewModel.StartUpdateChecks(updateCheck);
+                }
+                window.Opened += StartUpdateCheck;
+                desktop.Exit += (_, _) =>
+                {
+                    viewModel.StopUpdateChecks();
+                    updateClient.Dispose();
+                };
                 var open = new NativeMenuItem();
                 var automation = new NativeMenuItem();
                 var exit = new NativeMenuItem();
