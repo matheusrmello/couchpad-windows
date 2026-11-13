@@ -1,11 +1,11 @@
 # Fila de validação sequencial
 
-- Data: 2026-11-11
+- Data: 2026-11-13
 - Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
-- Estado atual: build 0 avisos/0 erros; **213 testes**; smoke OK; nenhuma tag
-  de hardware criada.
+- Estado atual: build 0 avisos/0 erros; **259 testes**; smoke OK; tag de
+  hardware `v0.6.0-hardware` criada na P6.
 
 ## Status das fases
 
@@ -15,8 +15,8 @@
 | P4 display | **Aceita com limitação** | Hardware: TvOnly/Extend, rollback, falha/cancelamento, desconexão e kill após retorno do CCD; morte dentro de `SetDisplayConfig` não comprovada |
 | P5 áudio | **Aceita com limitações** | Aceite do usuário em 11/11/2026; hardware: fluxo com controle simulado, troca/restore, falha, cancelamento, endpoint ausente, crash do filho de teste e rescue de produção; HDR adiado |
 | P6 rescue/tray/autostart | Aceita em 13/11/2026 | Logon, bandeja, recuperação assistida e autostart verificados |
-| P7a docs/a11y/screenshots | Pendente | Depende da P6 |
-| P7b release | Pendente | Depende da P7a |
+| P7a docs/a11y/screenshots | Em aceite | A11y, i18n, UIAutomation, screenshots e notas de release concluídos; Narrator/NVDA manual pendente |
+| P7b release | Pendente | Depende do aceite da P7a |
 
 ## Fila, em ordem
 
@@ -71,9 +71,14 @@
 ### 6. P7a — docs, a11y, screenshots
 
 - **Dono:** DeepSeek.
-- **Validar:** checklist de acessibilidade, screenshots 3 breakpoints × 2
-  idiomas, i18n, release notes.
-- **Evidência:** docs + capturas versionadas.
+- **Status:** em aceite (13/11/2026).
+- **Concluído:** checklist de a11y, contraste, foco/nomes via UIAutomation nos
+  3 breakpoints, i18n 157 chaves, fluxos de bandeja/autostart/recuperação
+  revisados, 6 capturas oficiais em `docs/screenshots/`, README e notas de
+  release atualizados.
+- **Pendente:** Narrator/NVDA manual; interação do menu nativo da bandeja com
+  leitor de tela; anúncio da contagem em atraso de 5 s pode ser verboso.
+- **Evidência:** docs + capturas versionadas + build/testes/smoke.
 
 ### 7. P7b — release
 
@@ -83,4 +88,7 @@
 
 ## Próxima ação
 
-P7a liberada para o DeepSeek após o aceite da P6. A reconexão do watcher durante a contagem ainda carece de evidência independente.
+P7a pronta para aceite do usuário. Após o aceite, P7b (Codex) inicia
+instalador, assinatura, regressão de distribuição e tag `v1.0.0`. A reconexão
+do watcher durante a contagem ainda carece de evidência independente; HDR e
+notificações nativas seguem adiados.

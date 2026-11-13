@@ -1,8 +1,8 @@
 # CouchPad — notas de release (rascunho)
 
 - Versão alvo: `0.6.0-preview`
-- Data do rascunho: 2026-11-11
-- Estado: **não lançado**; P6/P7b pendentes
+- Data do rascunho: 2026-11-13
+- Estado: **P7a em aceite**; P7b pendente; sem release v1.0.0
 - Sem licença, ativação, assinatura ou telemetria
 
 ## Destaques
@@ -15,17 +15,18 @@
 - Watchdog/rescue independente para recuperar display e áudio.
 - Áudio real com seleção explícita de endpoint, opt-in, troca/restore e
   recuperação.
-- 194 testes, build 0 avisos/erros e smoke.
+- 259 testes, build 0 avisos/erros e smoke.
 
 ## Limitações conhecidas
 
-- Watcher de gamepad físico e launcher real ainda não integrados.
-- Rescue no logon, bandeja e autostart são P6.
-- HDR adiado; não declarar suporte.
+- Reconexão do watcher durante a contagem sem evidência independente.
+- Dispositivos HID sem XInput estão fora do watcher atual.
+- HDR e notificações nativas adiados.
 - A morte dentro de `SetDisplayConfig` não foi reproduzida; o risco foi aceito
   na P4 com limitação.
 - Endpoint tardio/papéis distintos e migração de stream existente têm evidência
   apenas com fakes.
+- Narrator/NVDA completo ainda não foi executado; UIAutomation foi validado.
 - Escrita real de display/áudio é opt-in e exige TV conectada/usuário presente.
 - Instalador e assinatura ainda não existem (P7b).
 

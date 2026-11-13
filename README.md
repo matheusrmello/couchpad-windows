@@ -16,12 +16,16 @@ independente (clean-room) em Avalonia + .NET 10.
 - **P5 áudio aceita com limitações:** seleção e troca de endpoint, restore,
   falha/cancelamento, endpoint ausente e rescue em hardware; HDR adiado;
   endpoint tardio/papéis distintos só com fakes.
-- **P6 pendente:** watcher de gamepad físico, launcher real, rescue no logon,
-  bandeja, autostart e instância única.
-- **P7 pendente:** screenshots finais, a11y, instalador, assinatura e release.
+- **P6 aceita:** bandeja, autostart por tarefa, rescue no logon, recuperação
+  assistida e instância única validados; tag `v0.6.0-hardware`.
+- **P7a em andamento:** a11y, i18n, screenshots oficiais e release notes;
+  aceite pendente.
+- **P7b pendente:** instalador, assinatura e release v1.0.0.
+- **Adiados:** HDR e notificações nativas; a reconexão do watcher durante a
+  contagem ainda carece de evidência independente.
 
-Build atual: 0 avisos/0 erros; **194 testes**; smoke OK. Nenhuma tag de
-hardware foi criada.
+Build atual: 0 avisos/0 erros; **259 testes**; smoke OK. Versão de
+desenvolvimento: `0.6.0`.
 
 ## Requisitos
 
@@ -65,16 +69,20 @@ com a TV conectada e o usuário presente; leia `docs/p4-runbook.md` e
 - Display real: identificação por path/EDID, TvOnly/Extend/Mirror, rollback e
   watchdog independente.
 - Áudio real: seleção explícita de endpoint, troca/restore e recuperação.
-- HDR: adiado; não declarar suportado até implementação e teste.
+- Watcher XInput opt-in, launcher Steam/Hydra Big Picture, bandeja, autostart,
+  rescue no logon e recuperação assistida.
+- HDR e notificações nativas: adiados; não declarar suportados.
 
 ## Lacunas conhecidas
 
-- Watcher de gamepad físico e launcher real ainda não integrados.
-- Rescue no logon, bandeja e autostart são P6.
-- HDR adiado.
+- A reconexão do watcher durante a contagem tem relato visual, mas falta
+  evidência independente com timestamps/eventos.
+- Dispositivos HID sem XInput estão fora do watcher atual.
+- HDR e notificações nativas adiados.
 - Instalador/assinatura são P7b.
 - `SetDisplayConfig` travado e certas normalizações de driver não foram
   reproduzidos; ver limitações nas matrizes.
+- Narrator/NVDA completo ainda não foi executado; UIAutomation foi validado.
 
 ## Agentes
 

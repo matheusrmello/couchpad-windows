@@ -1,15 +1,13 @@
-# CouchPad — Especificação de UI (P1–P4)
+# CouchPad — Especificação de UI (P1–P7a)
 
-- Data: 2026-11-10
-- Fases: P1 (shell), P2 (componentes), P3 (automação simulada) e superfície P4
-  (seletores/opt-in de display), sem alterar hardware por padrão
+- Data: 2026-11-13
+- Fases: P1–P6 implementadas; P7a em revisão de a11y/i18n/screenshots
 - Base visual: referência do ShiftPad 2.2.0, recriada com identidade própria
 - Plataforma: Avalonia 12.1.4 / .NET 10 (`net10.0`)
 
-> Esta spec descreve o shell, a automação simulada e a superfície de
-> configuração de display até a P4. Ela não copia ícones, textos, imagens, XAML
-> ou código do ShiftPad. Todos os textos visíveis vêm de
-> `Strings.pt-BR.json` e `Strings.en.json`.
+> Esta spec descreve o shell, a automação, o display/áudio reais e a superfície
+> P6. Ela não copia ícones, textos, imagens, XAML ou código do ShiftPad. Todos
+> os textos visíveis vêm de `Strings.pt-BR.json` e `Strings.en.json`.
 
 ---
 
@@ -168,6 +166,22 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 - Marca, tagline, aviso 100% gratuito, licença MIT, versão e fase.
 - Botão `about.close` (`Esc`/`Enter` fecham).
 
+### 3.11 Adições P6/P7a
+
+- Card **Contagem regressiva**: atrasos de ativação/desativação; o texto da
+  contagem aparece na status pill.
+- Card **Parâmetros**: Iniciar com o Windows (tarefa por usuário), watcher
+  XInput opt-in, minimizar para bandeja, permitir escrita de display.
+- Card **Transição**: seleção de endpoint de áudio da TV, opt-in de áudio,
+  modo de tela/áudio, retorno do modo de jogo.
+- Card **Launchers**: Steam/Hydra Big Picture, abrir launcher, sair do modo de
+  jogo ao restaurar, erro anunciado.
+- **Bandeja**: abrir, ativar/desativar automação e sair; tooltip localizado.
+- **Recuperação assistida**: botão `Tentar recuperar` quando o estado é
+  incerto; erro e ajuda com live region.
+- **Autostart**: toggle reflete a tarefa por usuário; erro reverte e anuncia.
+- **Acessibilidade**: ordem de foco alinhada à ordem visual nos 3 breakpoints.
+
 ---
 
 ## 4. Tokens
@@ -316,19 +330,18 @@ captura de combinação, bandeja, autostart e rescue no logon.
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: 194 aprovados — catálogos/i18n, composição do shell, temas,
+- Testes: 259 aprovados — catálogos/i18n, composição do shell, temas,
   estados da galeria, state machine, atrasos/cancelamento, journal, settings,
-  composição Windows e guard.
+  composição Windows, guard, áudio, launcher e P6.
 - Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em
   telas 720p), troca pt/en, título `CouchPad`.
 - Galeria: `CouchPad.dll --gallery` abre em `1100 × 720`; todos os estados
   visíveis e navegáveis por teclado.
-- Capturas P7a (snapshot 11/11/2026; refazer após P6):
+- Capturas oficiais P7a (13/11/2026, versão 0.6.0):
   `docs/screenshots/p7a-3col-pt.png`, `p7a-2col-pt.png`, `p7a-1col-pt.png`,
   `p7a-3col-en.png`, `p7a-2col-en.png`, `p7a-1col-en.png`.
-- Checklist de acessibilidade: `docs/ui-a11y-checklist.md`.
-- As capturas definitivas dos 3 breakpoints × 2 idiomas serão refeitas após a
-  P6 e substituirão o snapshot atual em `docs/screenshots/`.
+- Checklist de acessibilidade: `docs/ui-a11y-checklist.md`; UIAutomation
+  confirmou ordem/nomes nos 3 breakpoints; Narrator/NVDA manual pendente.
 
 ### Checklist de aceite P1
 

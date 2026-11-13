@@ -1,8 +1,8 @@
 # CouchPad Windows — Handoff e Bootstrap
 
-**Atualização P5, 11/11/2026:** recuperação de áudio em processo separado passou com backend falso e crash real de TvOnly usando o rescue de produção; D047 registra a exceção `IPolicyConfig`. O App oferece seleção explícita e opt-in (D048); fluxo normal, falha após apply, cancelamento e endpoint ausente foram verificados fisicamente com controle simulado e retorno confirmado ao AOC. D049 trata locks de áudio presos no processo pai, com teste falso e crash físico de regressão; `dotnet.exe` não habilita áudio real. Build 0 avisos/erros, 194 testes, smoke e revisão independente concluídos. Endpoint tardio e papéis distintos têm evidência apenas com fakes; watcher físico e launcher permanecem pendentes, HDR adiado. **P5 aceita pelo usuário em 11/11/2026 com essas limitações.** Detalhes em `docs/p5-audio-hdr.md`.
+**P7a em aceite, 13/11/2026:** a11y/i18n revisados; contraste AA, foco visível, ordem de foco alinhada à ordem visual nos 3 breakpoints (UIAutomation), nomes acessíveis e live regions nos fluxos de autostart, launcher e recuperação assistida; bandeja com itens/tooltip localizados. Seis capturas oficiais em `docs/screenshots/` (pt/en × 3 larguras, simulação) na versão 0.6.0. Build 0 avisos/erros, **259 testes**, smoke OK. Narrator/NVDA manual e interação do menu nativo da bandeja com leitor de tela permanecem pendentes; HDR/notificações adiados; reconexão do watcher ainda carece de evidência independente. Detalhes em `docs/ui-a11y-checklist.md` e `docs/screenshots/README.md`.
 
-**Fila de validação:** `docs/validation-queue.md` — próxima ação: P6; reconexão do watcher ainda carece de evidência independente.
+**Fila de validação:** `docs/validation-queue.md` — próxima ação: aceite da P7a; depois P7b (Codex).
 
 **P6 em andamento, 12/11/2026:** rescue separado recebeu `--startup-recovery`, com locks da sessão/watchdog, validação do journal e restauração transacional. Testes em processo separado com backend falso cobrem `pending`, `active`, falha de áudio, concorrência e interrupção seguida de nova tentativa; produção sem journal não alterou hardware. Build 0/0, 223 testes e smoke. Ainda não há tarefa no logon nem validação real após crash/reinício; journals sem baseline completo de áudio são preservados. Ver `docs/p6-recovery-matrix.md`.
 
@@ -700,7 +700,7 @@ separados.
 | P4 display | Codex | **aceito com limitação** | TvOnly/Extend, rollback, falha/cancelamento, desconexão e kill após retorno do CCD; morte dentro de `SetDisplayConfig` não comprovada; aceite do usuário em 11/11/2026; matriz em `docs/p4-hardware-matrix.md` |
 | P5 áudio/HDR | Codex | **aceito** | Áudio validado em hardware com controle simulado, restore, falha, cancelamento, endpoint ausente e rescue; HDR adiado; aceite do usuário em 11/11/2026; ver `docs/p5-audio-hdr.md` |
 | P6 rescue/tray | Codex | aceita em 13/11/2026 | Bandeja, logon com e sem journal, recuperação assistida e autostart validados. As duas tarefas retornaram 0 no logon final. Build 0/0, 259 testes, smoke e testes de processo passaram. Tag `v0.6.0-hardware`. Handoff P7a em `docs/handoff-codex-to-deepseek.md`. |
-| P7a docs/a11y | DeepSeek | pendente | Depende de P6 |
+| P7a docs/a11y | DeepSeek | **em aceite** | A11y/i18n/UIAutomation, 6 capturas 0.6.0, README/notas; Narrator/NVDA manual pendente; ver seção P7a |
 | P7b corrections/release | Codex | pendente | Depende de P7a |
 
 ---
@@ -1310,3 +1310,23 @@ P5 item 3 em andamento: guard e executável rescue de display recusam explicitam
 - As capturas oficiais serão refeitas após a P6 (bandeja/autostart/logon).
 - Build 0 avisos/erros, **194 testes**, smoke OK; nenhuma tag nova.
 - Próxima validação da fila: watcher físico de gamepad.
+
+### P7a — a11y, i18n e screenshots oficiais (13/11/2026)
+
+- Contraste revisado: `DangerMuted #35191B` (4,62:1), tokens de texto/estado
+  AA; erros de startup, launcher e recuperação em `Danger` + texto.
+- Ordem de foco alinhada à ordem visual nos 3 breakpoints via reordenação do
+  visual tree; UIAutomation confirmou ordem e nomes (pt/en, 3/2/1 colunas), sem
+  controles focáveis sem nome.
+- Live regions: status pill, recuperação incerta, falha de recuperação, erro de
+  startup, erro de launcher e erro de descoberta de display.
+- Bandeja: headers localizados e tooltip via `app.name`; menu nativo não foi
+  percorrido por Narrator/NVDA.
+- i18n: 157 chaves em paridade; nenhuma string visível hardcoded.
+- Seis capturas oficiais em `docs/screenshots/` (pt/en × 1020/780/640),
+  simulação, versão `0.6.0`; README das capturas atualizado.
+- README, notas de release, `ui-spec` e checklist de a11y atualizados.
+- Build 0 avisos/erros, **259 testes** e smoke OK; nenhuma tag nova.
+- **P7a aguardando aceite.** Pendências registradas: Narrator/NVDA completo,
+  menu nativo da bandeja com leitor de tela, anúncio da contagem em 5 s,
+  reconexão do watcher sem evidência independente; HDR/notificações adiados.
