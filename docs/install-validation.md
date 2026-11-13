@@ -9,6 +9,7 @@
 - O candidato 1.0.1 executa uma verificação autocontida antes de copiar os arquivos. Com as tarefas de desenvolvimento presentes, o helper retornou 3 e o instalador completo retornou 7 com a mensagem específica de conflito. Os hashes dos arquivos no destino permaneceram iguais.
 - Depois de guardar as definições das duas tarefas de desenvolvimento, os registros foram removidos para permitir a instalação no perfil principal. O instalador concluiu com código 0, registrou 1.0.1 e criou a tarefa de recuperação apontando para o rescue instalado. O rescue retornou 0 com journal ausente e o App instalado passou no smoke em simulação. Autostart do App pode ser habilitado novamente na interface. A publicação do patch fica pendente.
 - Build Release 0/0, 261 testes e smoke passaram. SHA-256 do candidato 1.0.1: `30C0D83D212A50903FF69D7395E1FAB4CA773881379D7923F2744B56C131C861`.
+- O operador desinstalou a 1.0.1 pelo Windows. A consulta confirmou ausência da pasta do programa, atalho, entrada de desinstalação, processos e tarefas de rescue e autostart. O `settings.json` permaneceu no perfil e o journal estava ausente. A próxima etapa é reinstalar o mesmo EXE a partir desse estado.
 
 ## Regressão de entrada
 
