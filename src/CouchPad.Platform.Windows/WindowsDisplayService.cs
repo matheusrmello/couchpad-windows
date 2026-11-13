@@ -86,7 +86,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
         for (var attempt = 0; attempt < 5; attempt++)
         {
-            Check(GetDisplayConfigBufferSizes(queryFlags, out var pathCount, out var modeCount));
+            Check(GetDisplayConfigBufferSizes(queryFlags, out var pathCount, out var modeCount), "GetDisplayConfigBufferSizes");
             var paths = new byte[checked((int)pathCount * PathSize)];
             var modes = new byte[checked((int)modeCount * ModeSize)];
             var p = GCHandle.Alloc(paths, GCHandleType.Pinned);
@@ -95,7 +95,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             {
                 var result = QueryDisplayConfig(queryFlags, ref pathCount, p.AddrOfPinnedObject(), ref modeCount, m.AddrOfPinnedObject(), IntPtr.Zero);
                 if (result == InsufficientBuffer) continue;
-                Check(result);
+                Check(result, "QueryDisplayConfig");
                 Array.Resize(ref paths, checked((int)pathCount * PathSize));
                 Array.Resize(ref modes, checked((int)modeCount * ModeSize));
                 var targets = new List<Target>();
@@ -263,10 +263,11 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
 
     private void SetConfigurationCore(byte[] paths, byte[] modes, uint action)
     {
-        if (_setOverride is not null) { Check(_setOverride(paths, modes, action)); return; }
+        var operation = action == 0x40 ? "SetDisplayConfig.Validate" : "SetDisplayConfig.Apply";
+        if (_setOverride is not null) { Check(_setOverride(paths, modes, action), operation); return; }
         var pathPin = GCHandle.Alloc(paths, GCHandleType.Pinned);
         var modePin = GCHandle.Alloc(modes, GCHandleType.Pinned);
-        try { Check(SetDisplayConfig((uint)(paths.Length / PathSize), pathPin.AddrOfPinnedObject(), (uint)(modes.Length / ModeSize), modes.Length == 0 ? IntPtr.Zero : modePin.AddrOfPinnedObject(), action | 0x20)); }
+        try { Check(SetDisplayConfig((uint)(paths.Length / PathSize), pathPin.AddrOfPinnedObject(), (uint)(modes.Length / ModeSize), modes.Length == 0 ? IntPtr.Zero : modePin.AddrOfPinnedObject(), action | 0x20), operation); }
         finally { pathPin.Free(); modePin.Free(); }
     }
 
@@ -288,7 +289,13 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
 
     [DllImport("user32.dll")]
     private static extern int SetDisplayConfig(uint pathCount, IntPtr paths, uint modeCount, IntPtr modes, uint flags);
-    private static void Check(int error) { if (error != 0) throw new Win32Exception(error); }
+    private static void Check(int error, string operation)
+    {
+        if (error == 0) return;
+        var exception = new Win32Exception(error);
+        exception.Data[RescueFailureLog.NativeOperationKey] = operation;
+        throw exception;
+    }
     public sealed record Target(uint AdapterLow, int AdapterHigh, uint Id, string? DevicePath, string? FriendlyName, ushort? EdidManufacturer, ushort? EdidProduct, int Status);
     public sealed record Snapshot(int SchemaVersion, uint QueryFlags, int PathSize, int ModeSize, string PathsBase64, string ModesBase64, List<Target> Targets);
     [StructLayout(LayoutKind.Sequential)] private struct Header { public uint Type, Size, AdapterLow; public int AdapterHigh; public uint Id; }

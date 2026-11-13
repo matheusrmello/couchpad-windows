@@ -234,6 +234,8 @@ public class WindowsDisplayServiceFakeTests
         var actions = new List<uint>();
         var service = Create((p, m, action) => { actions.Add(action); return 87; });
         var error = await Assert.ThrowsAsync<System.ComponentModel.Win32Exception>(() => service.ApplyAsync(DisplayMode.TvOnly));
+        Assert.Equal(87, error.NativeErrorCode);
+        Assert.Equal("SetDisplayConfig.Validate", error.Data[RescueFailureLog.NativeOperationKey]);
         Assert.True(DisplayApplyFailure.IsUnchanged(error));
         Assert.Equal(new uint[] { 0x40 }, actions);
     }
@@ -388,11 +390,18 @@ public class RescueFailureLogTests
         {
             RescueFailureLog.TryWrite(directory, "restore", new InvalidOperationException("private payload"));
             RescueFailureLog.TryWrite(directory, "untrusted text", new IOException("private payload"));
+            var query = new System.ComponentModel.Win32Exception(5, "private payload");
+            query.Data[RescueFailureLog.NativeOperationKey] = "QueryDisplayConfig";
+            var rollback = new System.ComponentModel.Win32Exception(87, "private payload");
+            rollback.Data[RescueFailureLog.NativeOperationKey] = "untrusted text";
+            RescueFailureLog.TryWrite(directory, "startup", new AggregateException(query, rollback));
             var log = File.ReadAllText(Path.Combine(directory, "rescue-failures.log"));
             Assert.Contains("stage=restore", log);
             Assert.Contains("stage=unknown", log);
             Assert.DoesNotContain("private payload", log);
             Assert.DoesNotContain("untrusted text", log);
+            Assert.Contains("api=QueryDisplayConfig win32=5", log);
+            Assert.Contains("api=unknown win32=87", log);
         }
         finally { if (Directory.Exists(directory)) Directory.Delete(directory, recursive: true); }
     }
