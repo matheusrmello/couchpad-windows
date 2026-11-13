@@ -35,7 +35,7 @@ public sealed class UiLocalizationTests
         new(@"\{loc:Tr\s+([A-Za-z0-9_.]+)\s*\}", RegexOptions.Compiled);
 
     private static readonly Regex LiteralVisibleTextPattern = new(
-        @"(?:AutomationProperties\.(?:Name|HelpText)|ToolTip\.Tip|Text|Content|Title|Watermark|PlaceholderText|Header|Tag)=""([^""{][^""]*)""",
+        @"(?<=\s)(?:AutomationProperties\.(?:Name|HelpText)|ToolTip\.Tip|Text|Content|Title|Watermark|PlaceholderText|Header|Tag)=""([^""{][^""]*)""",
         RegexOptions.Compiled);
 
     private static readonly Regex InlineVisibleTextPattern = new(

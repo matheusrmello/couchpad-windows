@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.0.9 (pré-release)
+
+- Reformula a janela Sobre com ícone oficial, versão em destaque, descrição do aplicativo e licença MIT.
+- Build Release 0/0, 272 testes e smoke aprovados. Janela conferida em português e inglês na build de simulação. Instalação desta versão pendente.
+- Instalador Windows x64 sem assinatura Authenticode. SHA-256: `69698dd824fbe4f249f3c270870f829b14e4da37770488538ee912cc6c7c776f`.
+
 ## 1.0.8 (pré-release)
 
 - Move o aviso de nova versão para o cabeçalho, em uma cápsula azul clicável ao lado do status do gamepad.

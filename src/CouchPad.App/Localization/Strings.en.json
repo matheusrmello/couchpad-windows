@@ -129,7 +129,6 @@
   "launchers.choose_title": "Choose launcher folder",
 
   "footer.version": "Version {0}",
-  "footer.phase": "P3 · simulation",
   "footer.reset": "Reset",
   "footer.about": "About",
 
@@ -138,7 +137,7 @@
   "language.en": "English",
 
   "about.title": "About CouchPad",
-  "about.free": "100% free — no license, activation or telemetry.",
+  "about.description": "Turn on your controller to play on the TV. CouchPad switches the display and audio and can open Steam or Hydra in Big Picture. Turn off your controller to restore your previous display and audio.",
   "about.license": "MIT License",
   "about.close": "Close",
 

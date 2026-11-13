@@ -129,7 +129,6 @@
   "launchers.choose_title": "Escolher pasta do launcher",
 
   "footer.version": "Versão {0}",
-  "footer.phase": "P3 · simulação",
   "footer.reset": "Redefinir",
   "footer.about": "Sobre",
 
@@ -138,7 +137,7 @@
   "language.en": "English",
 
   "about.title": "Sobre o CouchPad",
-  "about.free": "100% gratuito — sem licença, ativação ou telemetria.",
+  "about.description": "Ligue o controle para jogar na TV. O CouchPad muda a tela e o áudio e pode abrir o Steam ou o Hydra em Big Picture. Ao desligar o controle, restaura a tela e o áudio anteriores.",
   "about.license": "Licença MIT",
   "about.close": "Fechar",
 

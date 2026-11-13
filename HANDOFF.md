@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**1.0.9 (pré-release):** janela Sobre com o ícone oficial, versão em destaque, descrição localizada do fluxo de jogo e licença MIT. Conferência visual e UIAutomation em pt-BR e inglês na build de simulação. Botão Fechar conferido em pt-BR. Build Release 0/0, 272 testes e smoke. Instalação desta versão pendente.
+
 **1.0.8 (pré-release):** aviso de atualização em cápsula azul no cabeçalho, ao lado do status do gamepad. Build Release 0/0, 272 testes e smoke. Conferência visual com atualização fictícia em pt-BR a 1020 DIP e em inglês a 640 DIP, com foco de teclado verificado. A versão instalada ainda precisa de conferência visual.
 
 **1.0.7 (pré-release):** oito ícones nos títulos dos cards da tela principal. Decisão D072. Build Release 0/0, 272 testes, smoke e conferência visual em simulação a 1020 DIP em pt-BR. A conferência visual desta versão cobriu esse layout.

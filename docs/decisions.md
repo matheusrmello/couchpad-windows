@@ -267,6 +267,11 @@
 - Cada card da tela principal usa uma geometria vetorial no cabeçalho, com a cor de destaque do tema. O título localizado continua visível. O ícone não recebe foco nem captura cliques.
 - A propriedade é opcional no componente `Card`, para manter o espaçamento dos cards sem ícone. A mudança fica no App.
 
+## D073 — Conteúdo da janela Sobre
+
+- A janela Sobre usa o ícone oficial do CouchPad, a versão da build e uma descrição localizada da troca de tela e áudio com o controle. A licença MIT aparece junto da ação Fechar.
+- A altura acompanha o conteúdo. O teste de localização verifica nomes completos de atributos XAML para distinguir texto visível de propriedades de layout como `SizeToContent`.
+
 ## Formato de nova decisão
 
 ```md
