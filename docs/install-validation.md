@@ -18,6 +18,8 @@
 
 O perfil principal já possui configurações, journal histórico e tarefas de desenvolvimento. Use uma conta padrão limpa ou uma VM Windows limpa para obter evidência do primeiro uso e evitar substituir tarefas de outra instalação.
 
+O candidato está disponível também em `C:\Users\Public\Downloads\CouchPad-Setup-1.0.0-win-x64.exe`, com SHA-256 conferido. O operador informou que não consegue realizar a troca para uma conta limpa. A consulta local não encontrou Windows Sandbox, Hyper-V, VirtualBox nem VMware disponíveis para o teste. O smoke de instalação permanece pendente e a tag `v1.0.0` depende desse resultado.
+
 1. Confirme o SHA-256 e instale pelo EXE. Registre o resultado, o nível de privilégio, a pasta de destino, o atalho, o registro do desinstalador e o caminho da tarefa de rescue.
 2. Abra pelo atalho. Confirme automação, XInput e escritas de display/áudio desligados por padrão. Minimize, reabra e saia pela bandeja.
 3. Habilite **Iniciar com o Windows**, saia pela bandeja e entre novamente no Windows. Confira as duas tarefas, o marcador `--windows-autostart`, a origem do processo e a ausência de journal.
