@@ -30,8 +30,6 @@ public sealed class WindowsLauncherService : ILauncherService
             {
                 var spec = _backend.Resolve(selection.Kind);
                 cancellationToken.ThrowIfCancellationRequested();
-                var preexisting = _backend.IsRunning(spec.Executable);
-                cancellationToken.ThrowIfCancellationRequested();
                 if (spec.Kind == LauncherKind.Hydra)
                 {
                     var before = _backend.HydraWindows(spec.Executable);
@@ -40,7 +38,11 @@ public sealed class WindowsLauncherService : ILauncherService
                 }
                 else
                 {
-                    _owned = _backend.Start(preexisting ? spec with { Argument = WindowsLauncherBackend.SteamOpenBigPictureArgument } : spec, !preexisting);
+                    var existingSteam = _backend.FindExistingSteam(spec.Executable);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    _owned = existingSteam is null
+                        ? _backend.Start(spec, true)
+                        : RequestSteamBigPicture(spec, existingSteam);
                 }
                 if (cancellationToken.IsCancellationRequested && _owned is not null)
                 {
@@ -56,6 +58,12 @@ public sealed class WindowsLauncherService : ILauncherService
             }, CancellationToken.None).ConfigureAwait(false);
         }
         finally { _gate.Release(); }
+    }
+
+    private OwnedLauncher RequestSteamBigPicture(LauncherSpec spec, OwnedLauncher steam)
+    {
+        _backend.Start(spec with { Argument = WindowsLauncherBackend.SteamOpenBigPictureArgument }, false);
+        return steam;
     }
 
     public async Task CloseOwnedAsync(CancellationToken cancellationToken = default)
@@ -83,7 +91,7 @@ internal sealed record HydraWindow(nint Handle, OwnedLauncher Owner);
 internal interface IWindowsLauncherBackend
 {
     LauncherSpec Resolve(LauncherKind kind);
-    bool IsRunning(string executable);
+    OwnedLauncher? FindExistingSteam(string executable);
     OwnedLauncher? Start(LauncherSpec spec, bool trackOwnership);
     bool IsAlive(OwnedLauncher process);
     IReadOnlyList<HydraWindow> HydraWindows(string executable);
@@ -122,10 +130,29 @@ internal sealed class WindowsLauncherBackend : IWindowsLauncherBackend
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    public bool IsRunning(string executable)
+    private static bool IsRunning(string executable)
     {
         var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(executable));
         try { return processes.Length != 0; }
+        finally { foreach (var process in processes) process.Dispose(); }
+    }
+
+    public OwnedLauncher? FindExistingSteam(string executable)
+    {
+        using var self = Process.GetCurrentProcess();
+        var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(executable));
+        try
+        {
+            OwnedLauncher? existing = null;
+            foreach (var process in processes)
+            {
+                if (process.SessionId != self.SessionId || process.HasExited ||
+                    !string.Equals(process.MainModule?.FileName, executable, StringComparison.OrdinalIgnoreCase)) continue;
+                if (existing is not null) throw new InvalidOperationException("Multiple Steam clients match the launcher path.");
+                existing = new(process.Id, process.StartTime.ToUniversalTime(), executable, LauncherKind.Steam);
+            }
+            return existing;
+        }
         finally { foreach (var process in processes) process.Dispose(); }
     }
 

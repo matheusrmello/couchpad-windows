@@ -242,6 +242,7 @@
 ## D068 — Sessão Big Picture dos launchers
 
 - Para Steam já aberto, solicitar `steam://open/bigpicture` ao executável identificado. Para uma inicialização a frio, manter `-gamepadui`.
+- Depois da solicitação de abertura em um Steam já aberto, guardar a identidade do cliente na sessão atual para solicitar `steam://close/bigpicture` na restauração. Essa solicitação encerra o modo de jogo e mantém o cliente. Se a identidade do processo mudar, recusar a solicitação ao substituto.
 - O Hydra tem uma janela independente para Big Picture. Identificar a nova janela em tela cheia por handle, sessão e identidade do processo. Ao restaurar, solicitar o fechamento dessa janela quando a opção estiver habilitada. Preservar janelas que já existiam e manter o processo do Hydra.
 
 ## Formato de nova decisão

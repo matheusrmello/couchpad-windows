@@ -1,5 +1,11 @@
 # Validação de launchers
 
+## Saída do Steam no candidato 1.0.3
+
+- O operador confirmou que a 1.0.2 abriu o Steam Big Picture na Samsung. Ao desconectar, a imagem voltou ao AOC, mas o Steam permaneceu em Big Picture.
+- A 1.0.3 identifica o cliente Steam existente pelo executável, sessão, PID e hora de início. Após solicitar a abertura do Big Picture nesse cliente, mantém a referência para solicitar `steam://close/bigpicture` durante a restauração, quando a opção de saída está ligada. A operação preserva o processo Steam.
+- Build Release 0/0, 262 testes e smoke passaram. O teste com backend falso verifica que o pedido de saída usa o cliente existente e não o processo temporário que encaminha o comando. Falta confirmar a saída visual com o Steam real.
+
 ## Correções no candidato 1.0.2
 
 - Steam já em execução recebe `steam://open/bigpicture`. Inicialização a frio permanece com `-gamepadui`.
