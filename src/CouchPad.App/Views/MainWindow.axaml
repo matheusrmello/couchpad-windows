@@ -39,6 +39,17 @@
                   Orientation="Horizontal"
                   Spacing="8"
                   VerticalAlignment="Center">
+        <Button Classes="updateNotice"
+                IsVisible="{Binding HasUpdateNotice}"
+                Command="{Binding OpenUpdateCommand}"
+                AutomationProperties.Name="{Binding UpdateNoticeText}"
+                AutomationProperties.LiveSetting="Polite">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                     Fill="{DynamicResource CouchPad.Info}" />
+            <TextBlock Text="{Binding UpdateNoticeText}" VerticalAlignment="Center" />
+          </StackPanel>
+        </Button>
         <controls:StatusPill Text="{Binding StatusText}"
                              Tone="{Binding CurrentStatusTone}"
                              AutomationProperties.Name="{Binding StatusText}" />
@@ -413,17 +424,7 @@
 
     <!-- Rodapé -->
     <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="0,12,0,0">
-      <StackPanel VerticalAlignment="Center" Spacing="2">
-        <TextBlock Classes="caption" Text="{Binding VersionText}" />
-        <Button Classes="link" HorizontalAlignment="Left" IsVisible="{Binding HasUpdateNotice}"
-                Command="{Binding OpenUpdateCommand}" AutomationProperties.Name="{Binding UpdateNoticeText}"
-                AutomationProperties.LiveSetting="Polite">
-          <StackPanel Orientation="Horizontal" Spacing="6">
-            <PathIcon Width="12" Height="12" Data="M 1,6 L 6,1 L 11,6 L 8,6 L 8,11 L 4,11 L 4,6 Z" />
-            <TextBlock Text="{Binding UpdateNoticeText}" TextWrapping="Wrap" />
-          </StackPanel>
-        </Button>
-      </StackPanel>
+      <TextBlock Classes="caption" Text="{Binding VersionText}" />
 
       <StackPanel Grid.Column="1"
                   Orientation="Horizontal"

@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.0.8 (pré-release)
+
+- Move o aviso de nova versão para o cabeçalho, em uma cápsula azul clicável ao lado do status do gamepad.
+- Build Release 0/0, 272 testes e smoke aprovados. Prévia conferida com atualização fictícia em pt-BR a 1020 DIP e em inglês a 640 DIP. Foco por teclado verificado.
+- Instalador Windows x64 sem assinatura Authenticode. SHA-256: `5943047e1647dd7c1ed6f1412e13fa174e228ec382448e394e5ee3276991a508`.
+
 ## 1.0.7 (pré-release)
 
 - Adiciona ícones aos oito cards, incluindo uma TV para Display e um controle para Gamepad.

@@ -119,6 +119,30 @@
     <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceRaised}" />
   </Style>
 
+  <Style Selector="Button.updateNotice">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.InfoMuted}" />
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.Info}" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.Pill}" />
+    <Setter Property="Padding" Value="10,4" />
+    <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Caption}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Cursor" Value="Hand" />
+  </Style>
+
+  <Style Selector="Button.updateNotice:pointerover /template/ ContentPresenter, Button.updateNotice:focus-visible /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.InfoMuted}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Info}" />
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.Info}" />
+  </Style>
+
+  <Style Selector="Button.updateNotice:pressed /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource CouchPad.InfoMuted}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Info}" />
+    <Setter Property="Foreground" Value="{DynamicResource CouchPad.TextPrimary}" />
+  </Style>
+
   <!-- Estados de ação em botões comuns; o ActionButton tem tema dedicado. -->
   <Style Selector="Button.success">
     <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Accent}" />

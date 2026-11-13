@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**1.0.8 (pré-release):** aviso de atualização em cápsula azul no cabeçalho, ao lado do status do gamepad. Build Release 0/0, 272 testes e smoke. Conferência visual com atualização fictícia em pt-BR a 1020 DIP e em inglês a 640 DIP, com foco de teclado verificado. A versão instalada ainda precisa de conferência visual.
+
 **1.0.7 (pré-release):** oito ícones nos títulos dos cards da tela principal. Decisão D072. Build Release 0/0, 272 testes, smoke e conferência visual em simulação a 1020 DIP em pt-BR. A conferência visual desta versão cobriu esse layout.
 
 **Aviso de atualização validado no Windows:** a 1.0.6 instalada tinha uma lista em cache anterior à publicação da 1.0.7. Após confirmar a 1.0.7 estável no GitHub, guardar o cache anterior e reabrir o App, o rodapé mostrou o botão de atualização para 1.0.7. Conferido visualmente e por UIAutomation com o canal estável e a automação desligada.

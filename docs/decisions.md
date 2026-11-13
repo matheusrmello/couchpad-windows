@@ -260,6 +260,7 @@
 
 - A abertura normal do App consulta em segundo plano as releases públicas do repositório Windows no GitHub. Uma consulta por dia por perfil, incluindo tentativas que falham. A consulta pode ser desligada. Versões estáveis são o padrão e pré-releases são opcionais.
 - O aviso considera versões numéricas maiores com instalador x64 publicado e abre a página da release. A consulta usa apenas o identificador fixo do App no User-Agent, sem credenciais, configuração ou dados de hardware. O App não baixa nem executa o instalador. A preferência fica nas configurações do Core e o HTTP fica no App.
+- Desde a 1.0.8, o aviso aparece no cabeçalho como botão azul arredondado ao lado do status do gamepad. Preserva o nome acessível, a indicação de foco e o link da release.
 
 ## D072 — Ícones nos títulos dos cards
 
