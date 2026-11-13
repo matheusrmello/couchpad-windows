@@ -97,6 +97,14 @@ Não declare aprovado um cenário sem a evidência exigida.
 
 ## Handoff
 
+### Publicação de instaladores
+
+Ao gerar uma nova versão do instalador, copie o EXE para Downloads, registre
+o SHA-256 e os resultados da validação, faça commit e envie a branch e a tag
+para o GitHub. Publique o EXE e o arquivo SHA-256 na release da mesma tag.
+Use pré-release para candidatos com validação pendente. Mantenha os binários
+fora do histórico Git.
+
 Ao terminar uma fase:
 
 1. Atualize o ledger em `HANDOFF.md`.
