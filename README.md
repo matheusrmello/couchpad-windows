@@ -85,6 +85,8 @@ Para simular em desenvolvimento, execute `CouchPad.exe --simulate`.
   rescue no logon e recuperação assistida.
 - Perfis de ambiente nomeados para alternar TV, monitor interno e saída de
   áudio entre salas/configurações.
+- Diagnóstico explicável da identificação de TV, monitor e áudio, com motivo e
+  confiança, sem alterar hardware.
 - HDR e notificações nativas: adiados; não declarar suportados.
 
 ## Lacunas conhecidas

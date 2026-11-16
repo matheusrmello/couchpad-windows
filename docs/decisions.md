@@ -295,6 +295,14 @@
 - Impacto: `AppSettings` ganha `ActiveProfileId` e `EnvironmentProfiles`; o App ganha seletor, criação, renomeação e exclusão de perfis. Nenhuma mudança em `Platform.Windows`, no rescue ou no contrato de display/áudio.
 - Evidência: `JsonAppSettingsStoreTests`, `EnvironmentProfileTests`, troca de perfil via UIAutomation com escritas desligadas, build/testes/smoke e captura de tela.
 
+## D077 — Diagnóstico explicável da identificação
+
+- Data: 2026-11-16
+- Decisão: o card Display mostra um expander read-only com o perfil ativo, a TV, o monitor e a saída de áudio, incluindo nome, EDID, HDMI, estado ativo/disponível, motivo da escolha e confiança alta/média/baixa. O texto é gerado a partir das mesmas regras usadas pela sugestão e não chama escrita de hardware.
+- Motivo: a sugestão é conservadora e pode deixar escolhas manuais ou ambíguas; o usuário precisa entender o que foi reconhecido e por quê, especialmente com mais de uma TV ou endpoint de áudio.
+- Impacto: somente App/localização. Nenhuma mudança em `Platform.Windows`, rescue ou contratos do Core.
+- Evidência: `HardwareDiagnosisTests`, expander aberto por UIAutomation no build e no executável instalado, captura de tela, build/testes/smoke e instalação local.
+
 ## Formato de nova decisão
 
 ```md

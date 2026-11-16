@@ -76,3 +76,13 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - Tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal ausente. `settings.json` restaurado após o teste.
 - Capturas oficiais de 16/11/2026 atualizadas para `1.0.12` em `docs/screenshots/`.
 - Instalador `CouchPad-Setup-1.0.12-win-x64.exe`: 84.294.096 bytes, SHA-256 `E5DE69BFBFCB7CA8EC5F513B1070007C8D8B819F31E642C50C36C2523DA6F84A`. Publicação no GitHub pendente.
+
+## Candidato 1.0.13
+
+- Recurso: diagnóstico explicável da identificação de TV, monitor e áudio, com EDID, HDMI, ativo/disponível, motivo e confiança alta/média/baixa; expander read-only.
+- Build Debug/Release 0/0, 294 testes e smoke.
+- Instalação per-user sem elevação por cima da instalação existente: exit 0. App e rescue reportaram `1.0.13.0`; ProductVersion `1.0.13+dca36e4356807a2cbcc4cf13731dde2b66b9f7e4`.
+- Expander aberto por UIAutomation no executável instalado. No hardware real, o texto mostrou TV SAMSUNG e monitor AOC com motivos de TV HDMI inativa e monitor ativo não-HDMI; o áudio apareceu como ambíguo por duas saídas Samsung compatíveis e não foi selecionado. Nenhuma escrita de display/áudio ocorreu.
+- Tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal ausente. `settings.json` foi restaurado ao conteúdo original após os testes.
+- Capturas oficiais de 16/11/2026 atualizadas para `1.0.13` em `docs/screenshots/`.
+- Instalador `CouchPad-Setup-1.0.13-win-x64.exe`: 84.283.279 bytes, SHA-256 `109DE17A9AF1E24AAA1000DB373B95EAB28B20C4D4F20BFC7EB707349722F373`. Publicação no GitHub pendente.

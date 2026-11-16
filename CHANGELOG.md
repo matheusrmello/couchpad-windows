@@ -5,7 +5,7 @@
 - Adiciona diagnóstico explicável da identificação de TV, monitor e saída de áudio, com motivo, estado do dispositivo e confiança alta/média/baixa.
 - O diagnóstico fica em um expander no card Display e não altera hardware; nomes, EDID, HDMI, ativo/disponível e associação do endpoint são mostrados no idioma atual.
 - Build Debug/Release 0/0, 294 testes e smoke. Diagnóstico coberto por testes de confiança e conteúdo.
-- Instalação e publicação desta versão pendentes.
+- Instalação local validada sem elevação: App/rescue 1.0.13, diagnóstico expandido por UIAutomation no executável instalado e estado de áudio ambíguo explicado sem escrita. Instalador com 84.283.279 bytes e SHA-256 `109DE17A9AF1E24AAA1000DB373B95EAB28B20C4D4F20BFC7EB707349722F373`; publicação pendente.
 
 ## 1.0.12 (candidato)
 
