@@ -206,7 +206,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
         return RestoreCoreAsync(target, cancellationToken);
     }
 
-    private async Task RestoreCoreAsync(Snapshot target, CancellationToken cancellationToken)
+    private async Task RestoreCoreAsync(Snapshot expected, CancellationToken cancellationToken)
     {
         await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -217,6 +217,11 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             cancellationToken.ThrowIfCancellationRequested();
             EnsureMutationAllowed();
             var before = Capture(ActivePaths);
+            // Adapter LUIDs and source ids can change across reboots or driver
+            // resets. Rebind the journal snapshot to the current identities
+            // before validating or applying anything.
+            var target = DisplaySnapshotRehydrator.Rehydrate(expected, Capture(AllPaths));
+            if (DisplaySnapshotComparer.SemanticallyEqual(target, before)) return;
             var (paths, modes) = DecodeSnapshot(target);
             DisplayTransaction.Execute(
                 () => SetConfiguration(paths, modes, 0x40),

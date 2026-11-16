@@ -278,6 +278,14 @@
 - Aplicar salva os seletores, espera o coordenador ficar inativo e reinicia o executável do próprio App. O sucessor espera o processo anterior sair e adquire os bloqueios existentes. A configuração reabre com a automação desligada. Display, áudio real e watchdog continuam compostos como na D070.
 - A lista de áudio distingue o padrão multimídia e ordena endpoints ativos primeiro. O teste abre um stream WASAPI compartilhado no ID escolhido, sem mudar padrões, volume, topologia ou journal.
 
+## D075 — Reidratar snapshots CCD após mudança de LUID
+
+- Data: 2026-11-16
+- Decisão: antes de validar ou aplicar um restore, reconstruir as identidades de adapter/source do snapshot persistido a partir do `Capture(AllPaths)` atual. Os alvos são casados por `DevicePath`, EDID e nome; a rota atual fornece o source id. Se o snapshot reidratado já for semanticamente igual à topologia ativa, não chamar `SetDisplayConfig` e concluir a recuperação sem escrita. Alvo ausente, identidade ambígua ou fonte ambígua falham fechado.
+- Motivo: LUIDs de adapter e alguns source ids não são estáveis entre reinicializações ou resets de driver. O journal de 15/11/2026 usava o AOC em `59140`, enquanto o AOC atual estava em `59029`; o `SetDisplayConfig.Validate` falhava com `win32=87` e o App exibia recuperação incerta.
+- Impacto: o restore continua transacional e com rollback pelo snapshot ativo atual. Journals antigos que já estão no baseline passam a ser concluídos sem alterar a tela. O caminho de escrita usa as identidades atuais e continua dependendo de validação, verificação e decisão armada.
+- Evidência: `DisplaySnapshotRehydratorTests`; journal real de 15/11/2026 reidratado contra o snapshot atual (`STRICT=False`, `REHYDRATED=True`); build/testes/smoke.
+
 ## Formato de nova decisão
 
 ```md

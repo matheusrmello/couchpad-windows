@@ -1,11 +1,11 @@
 # Fila de validação sequencial
 
-- Data: 2026-11-13
+- Data: 2026-11-16
 - Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
-- Estado atual: build 0 avisos/0 erros; **259 testes**; smoke OK; tag de
-  hardware `v0.6.0-hardware` criada na P6.
+- Estado atual: build Debug/Release 0 avisos/0 erros; **280 testes**; smoke OK;
+  candidato `1.0.11` instalado localmente; publicação do instalador pendente.
 
 ## Status das fases
 
@@ -88,8 +88,25 @@
 - **Validado:** regressão Debug e Release, 259 testes por configuração, smoke, watchdog e rescue, instalação sem elevação, padrões de primeiro uso, bandeja, autostart, reinstalação e desinstalação em conta padrão.
 - **Evidência:** `docs/install-validation.md`, SHA-256 do instalador, notas v1.0.0 e tag `v1.0.0`. Distribuição sem Authenticode (D067).
 
+### 8. Correção de recuperação após mudança de LUID (1.0.11)
+
+- **Dono:** DeepSeek/Codex na revisão.
+- **Status:** corrigido e instalado como candidato local `1.0.11`; publicação pendente.
+- **Implementação:** `DisplaySnapshotRehydrator` remapeia adapter/source do
+  journal por `DevicePath`/EDID para as identidades atuais. Se a topologia
+  reidratada já é o baseline ativo, o restore termina sem `SetDisplayConfig`.
+- **Evidência:** journal real de 15/11/2026 com AOC `59140` reidratado para
+  `59029` (`STRICT=False`, `REHYDRATED=True`); `DisplaySnapshotRehydratorTests`;
+  build Debug/Release 0/0; 280 testes; smoke; instalação 1.0.11 sem elevação;
+  abertura sem banner de recuperação; tasks de logon preservadas.
+- **Pendente:** publicar o instalador 1.0.11 com SHA-256 e release notes;
+  repetir a recuperação assistida em hardware em uma janela controlada, se
+  necessário.
+
 ## Próxima ação
 
-O instalador e o SHA-256 estão publicados na [release v1.0.0](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.0).
-A reconexão do watcher durante a contagem ainda carece de evidência
-independente. HDR e notificações nativas seguem adiados.
+O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
+O candidato `1.0.11` corrige a reidratação do journal e está instalado
+localmente, mas ainda não foi publicado. A reconexão do watcher durante a
+contagem continua sem evidência independente; HDR e notificações nativas
+seguem adiados.
