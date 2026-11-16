@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.0.12 (candidato)
+
+- Adiciona perfis de ambiente: cada perfil guarda TV, monitor interno e saída de áudio, com seletor, criação, renomeação e exclusão. O perfil ativo é persistido e espelhado nos campos de startup; configurações antigas migram para um perfil padrão.
+- Trocar de perfil desliga a automação quando o hardware composto é diferente e exige **Aplicar configuração** para reiniciar com as novas escolhas.
+- Build Debug/Release 0/0, 290 testes e smoke. Troca de perfil validada por UIAutomation com escritas de hardware desligadas.
+- Instalação e publicação desta versão pendentes.
+
 ## 1.0.11 (candidato)
 
 - Corrige a recuperação de display quando o Windows muda os LUIDs de adapter ou os source ids entre sessões. O snapshot do journal é reidratado pelas identidades estáveis de `DevicePath`/EDID; se a tela já está no baseline, o restore termina sem escrever.

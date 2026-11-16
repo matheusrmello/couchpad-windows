@@ -41,6 +41,8 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
         Assert.Null(settings.InternalEdidManufacturer);
         Assert.Null(settings.InternalEdidProduct);
         Assert.Null(settings.InternalExactName);
+        Assert.Null(settings.ActiveProfileId);
+        Assert.Null(settings.EnvironmentProfiles);
     }
 
     [Fact]
@@ -73,12 +75,42 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
             InternalEdidManufacturer = 58117,
             InternalEdidProduct = 9986,
             InternalExactName = "27G2G4",
+            ActiveProfileId = "sala",
+            EnvironmentProfiles =
+            [
+                new EnvironmentProfile
+                {
+                    Id = "sala",
+                    Name = "Sala",
+                    TvAudioEndpointId = "endpoint-sala",
+                    TvDevicePath = @"\\?\DISPLAY#SAM7167#sala",
+                    TvEdidManufacturer = 11596,
+                    TvEdidProduct = 29031,
+                    TvExactName = "SAMSUNG",
+                    InternalDevicePath = @"\\?\DISPLAY#AOC2702#monitor",
+                    InternalEdidManufacturer = 58117,
+                    InternalEdidProduct = 9986,
+                    InternalExactName = "27G2G4",
+                },
+                new EnvironmentProfile
+                {
+                    Id = "quarto",
+                    Name = "Quarto",
+                    TvAudioEndpointId = "endpoint-quarto",
+                    TvDevicePath = @"\\?\DISPLAY#LGTV#quarto",
+                    TvEdidManufacturer = 7789,
+                    TvEdidProduct = 301,
+                    TvExactName = "LG TV",
+                },
+            ],
         };
 
         store.Save(expected);
         var actual = store.Load();
 
-        Assert.Equal(expected, actual);
+        Assert.Equal(expected with { EnvironmentProfiles = null }, actual with { EnvironmentProfiles = null });
+        Assert.NotNull(actual.EnvironmentProfiles);
+        Assert.Equal(expected.EnvironmentProfiles, actual.EnvironmentProfiles);
     }
 
     [Fact]

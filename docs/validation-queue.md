@@ -4,8 +4,8 @@
 - Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
-- Estado atual: build Debug/Release 0 avisos/0 erros; **286 testes**; smoke OK;
-  candidato `1.0.11` instalado localmente; publicação do instalador pendente.
+- Estado atual: build Debug/Release 0 avisos/0 erros; **290 testes**; smoke OK;
+  candidato `1.0.12` com perfis de ambiente; instalação e publicação pendentes.
 
 ## Status das fases
 
@@ -97,17 +97,30 @@
   reidratada já é o baseline ativo, o restore termina sem `SetDisplayConfig`.
 - **Evidência:** journal real de 15/11/2026 com AOC `59140` reidratado para
   `59029` (`STRICT=False`, `REHYDRATED=True`); `DisplaySnapshotRehydratorTests`;
-  build Debug/Release 0/0; 286 testes; smoke; instalação 1.0.11 sem elevação;
-  abertura sem banner de recuperação; tasks de logon preservadas.
-- **Pendente:** publicar o instalador 1.0.11 com SHA-256 e release notes;
+  build Debug/Release 0/0; 286 testes na época; smoke; instalação 1.0.11 sem
+  elevação; abertura sem banner de recuperação; tasks de logon preservadas.
+- **Pendente:** publicar o instalador 1.0.11/1.0.12 com SHA-256 e release notes;
   repetir a recuperação assistida em hardware em uma janela controlada, se
-  necessário. Instalador local: 84.286.297 bytes, SHA-256
+  necessário. Instalador local 1.0.11: 84.286.297 bytes, SHA-256
   `74605662FFD3437E78448AC2D0B300FBFA3B561D479E8A7D38F953715584A1EC`.
+
+### 9. Perfis de ambiente (1.0.12)
+
+- **Dono:** DeepSeek.
+- **Status:** implementado; instalação e publicação pendentes.
+- **Implementação:** `AppSettings.ActiveProfileId` + `EnvironmentProfiles`;
+  migração de configurações antigas para perfil padrão; seletor, criação,
+  renomeação e exclusão na tela de Display; espelhamento do perfil ativo nos
+  campos de hardware de startup.
+- **Evidência:** `JsonAppSettingsStoreTests`, `EnvironmentProfileTests`,
+  troca de perfil via UIAutomation com escritas de hardware desligadas,
+  build/testes/smoke e captura de tela.
+- **Pendente:** validar visualmente nos três breakpoints e publicar.
 
 ## Próxima ação
 
 O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
-O candidato `1.0.11` corrige a reidratação do journal e está instalado
-localmente, mas ainda não foi publicado. A reconexão do watcher durante a
-contagem continua sem evidência independente; HDR e notificações nativas
-seguem adiados.
+O candidato `1.0.12` adiciona perfis de ambiente e inclui a correção de
+reidratação do journal da `1.0.11`; instalação e publicação pendentes. A
+reconexão do watcher durante a contagem continua sem evidência independente;
+HDR e notificações nativas seguem adiados.

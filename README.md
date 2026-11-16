@@ -29,8 +29,8 @@ em cada configuração. [Notas da versão](docs/release-notes-draft.md).
 
 ## Instalação
 
-Baixe o instalador e o arquivo SHA-256 na [release v1.0.0](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.0).
-Execute `CouchPad-Setup-1.0.0-win-x64.exe` na conta que vai usar o App.
+Baixe o instalador e o arquivo SHA-256 na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
+Execute `CouchPad-Setup-1.0.10-win-x64.exe` na conta que vai usar o App.
 Ele inclui o runtime .NET, instala sem elevação e cria um atalho no menu Iniciar.
 Consulte o SHA-256 e o resultado do teste em [Validação do instalador](docs/install-validation.md).
 O instalador está sem assinatura Authenticode e pode receber um aviso do SmartScreen.
@@ -83,6 +83,8 @@ Para simular em desenvolvimento, execute `CouchPad.exe --simulate`.
 - Áudio real: seleção explícita de endpoint, troca/restore e recuperação.
 - Watcher XInput opt-in, launcher Steam/Hydra Big Picture, bandeja, autostart,
   rescue no logon e recuperação assistida.
+- Perfis de ambiente nomeados para alternar TV, monitor interno e saída de
+  áudio entre salas/configurações.
 - HDR e notificações nativas: adiados; não declarar suportados.
 
 ## Lacunas conhecidas

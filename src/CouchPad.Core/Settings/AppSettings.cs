@@ -64,6 +64,15 @@ public sealed record AppSettings
     public string? InternalExactName { get; init; }
 
     /// <summary>
+    /// Active named hardware profile. The top-level TV/internal/audio fields are
+    /// kept mirrored to this profile so startup composition keeps the existing
+    /// single-configuration contract.
+    /// </summary>
+    public string? ActiveProfileId { get; init; }
+
+    public List<EnvironmentProfile>? EnvironmentProfiles { get; init; }
+
+    /// <summary>
     /// Preserva chaves desconhecidas ao regravar o arquivo, para não perder
     /// configurações de versões futuras ou de outros componentes.
     /// </summary>

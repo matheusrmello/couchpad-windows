@@ -734,32 +734,7 @@ public partial class MainWindowViewModel : ObservableObject
             CustomLauncherPath = settings.CustomLauncherPath;
             AllowDisplayWrites = settings.AllowDisplayWrites;
             AllowAudioWrites = settings.AllowAudioWrites;
-            if (!string.IsNullOrWhiteSpace(settings.TvAudioEndpointId))
-                SelectedTvAudioEndpoint = new AudioEndpointOption(settings.TvAudioEndpointId, null);
-
-            var tv = CreateSavedTarget(
-                settings.TvDevicePath,
-                settings.TvEdidManufacturer,
-                settings.TvEdidProduct,
-                settings.TvExactName);
-            var internalDisplay = CreateSavedTarget(
-                settings.InternalDevicePath,
-                settings.InternalEdidManufacturer,
-                settings.InternalEdidProduct,
-                settings.InternalExactName);
-
-            if (tv is not null)
-            {
-                AddTarget(tv);
-            }
-
-            if (internalDisplay is not null)
-            {
-                AddTarget(internalDisplay);
-            }
-
-            SelectedTvTarget = tv;
-            SelectedInternalTarget = internalDisplay;
+            LoadEnvironmentProfiles(settings);
             if (IsProductionMode && (!HardwareMatchesSelection || !settings.UseWindowsGamepad ||
                 !settings.AllowDisplayWrites || !settings.AllowAudioWrites || IsRecoveryUncertain))
                 AutomationEnabled = false;
@@ -795,9 +770,12 @@ public partial class MainWindowViewModel : ObservableObject
 
         try
         {
+            SyncSelectedProfileFromSelection();
             var current = _settings.Load();
             _settings.Save(current with
             {
+                ActiveProfileId = SelectedEnvironmentProfile?.Id,
+                EnvironmentProfiles = EnvironmentProfiles.Select(profile => profile.ToModel()).ToList(),
                 AutomationEnabled = AutomationEnabled,
                 CheckForUpdates = CheckForUpdates,
                 IncludePreviewUpdates = IncludePreviewUpdates,

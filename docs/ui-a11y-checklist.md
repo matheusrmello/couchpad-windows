@@ -66,6 +66,9 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 - [x] Launcher: erro com live region e contraste de perigo.
 - [x] Bandeja: itens com cabeçalhos localizados (`Abrir`, `Ativar/Desativar`,
   `Sair`) e tooltip usando `app.name`.
+- [x] Perfis: combo com nome/ajuda, botões Novo/Excluir nomeados e campo de
+  nome rotulado; Excluir fica desabilitado quando só há um perfil.
+- [ ] Anúncio da troca de perfil por Narrator/NVDA (manual pendente).
 - [ ] Navegação por teclado/leitor de tela dentro do menu nativo da bandeja
   (depende do shell do Windows; não automatizada).
 
@@ -80,7 +83,7 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 
 ## 5. i18n e conteúdo
 
-- [x] pt-BR e inglês em paridade (157 chaves).
+- [x] pt-BR e inglês em paridade (191 chaves).
 - [x] Nenhuma string visível fora dos catálogos.
 - [x] Fallback inglês.
 - [x] Erros e dicas traduzidos.

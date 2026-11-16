@@ -286,6 +286,15 @@
 - Impacto: o restore continua transacional e com rollback pelo snapshot ativo atual. Journals antigos que já estão no baseline passam a ser concluídos sem alterar a tela. O caminho de escrita usa as identidades atuais e continua dependendo de validação, verificação e decisão armada.
 - Evidência: `DisplaySnapshotRehydratorTests`; journal real de 15/11/2026 reidratado contra o snapshot atual (`STRICT=False`, `REHYDRATED=True`); build/testes/smoke.
 
+## D076 — Perfis de ambiente
+
+- Data: 2026-11-16
+- Decisão: as configurações passam a guardar uma lista de `EnvironmentProfile` com nome, TV, monitor interno e endpoint de áudio, além de `ActiveProfileId`. Os campos de hardware no topo de `AppSettings` continuam existindo e são espelhados a partir do perfil ativo, preservando a composição de startup que lê uma única configuração. Configurações antigas sem perfis migram para um perfil padrão com os valores existentes.
+- A troca de perfil carrega os seletores; se o perfil não corresponder ao hardware já composto, a automação é desligada e o usuário precisa usar **Aplicar configuração**, que reinicia o App. O perfil ativo é persistido imediatamente. Pelo menos um perfil permanece; o último não pode ser excluído.
+- Motivo: quem tem mais de uma TV/monitor precisava reconfigurar manualmente TV, monitor e saída de áudio a cada troca de ambiente.
+- Impacto: `AppSettings` ganha `ActiveProfileId` e `EnvironmentProfiles`; o App ganha seletor, criação, renomeação e exclusão de perfis. Nenhuma mudança em `Platform.Windows`, no rescue ou no contrato de display/áudio.
+- Evidência: `JsonAppSettingsStoreTests`, `EnvironmentProfileTests`, troca de perfil via UIAutomation com escritas desligadas, build/testes/smoke e captura de tela.
+
 ## Formato de nova decisão
 
 ```md

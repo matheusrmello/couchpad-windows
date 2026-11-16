@@ -181,6 +181,9 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
   incerto; erro e ajuda com live region.
 - **Autostart**: toggle reflete a tarefa por usuário; erro reverte e anuncia.
 - **Acessibilidade**: ordem de foco alinhada à ordem visual nos 3 breakpoints.
+- **Perfis de ambiente (1.0.12)**: seletor no card Display com nome editável,
+  criação, exclusão e ajuda; cada perfil guarda TV, monitor interno e saída de
+  áudio. O perfil ativo é o mesmo usado na composição de startup.
 
 ---
 
@@ -330,14 +333,14 @@ captura de combinação, bandeja, autostart e rescue no logon.
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: 259 aprovados — catálogos/i18n, composição do shell, temas,
+- Testes: 290 aprovados — catálogos/i18n, composição do shell, temas,
   estados da galeria, state machine, atrasos/cancelamento, journal, settings,
   composição Windows, guard, áudio, launcher e P6.
 - Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em
   telas 720p), troca pt/en, título `CouchPad`.
 - Galeria: `CouchPad.dll --gallery` abre em `1100 × 720`; todos os estados
   visíveis e navegáveis por teclado.
-- Capturas oficiais P7a (13/11/2026, versão 0.6.0):
+- Capturas oficiais atualizadas (16/11/2026, versão 1.0.12):
   `docs/screenshots/p7a-3col-pt.png`, `p7a-2col-pt.png`, `p7a-1col-pt.png`,
   `p7a-3col-en.png`, `p7a-2col-en.png`, `p7a-1col-en.png`.
 - Checklist de acessibilidade: `docs/ui-a11y-checklist.md`; UIAutomation

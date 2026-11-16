@@ -7,6 +7,7 @@ using CouchPad.Core.Settings;
 
 namespace CouchPad.App.Tests;
 
+[Collection("Localization")]
 public sealed class MainWindowViewModelDisplayTests
 {
     [Theory]
