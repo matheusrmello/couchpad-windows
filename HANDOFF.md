@@ -1,6 +1,6 @@
 # CouchPad Windows — Handoff e Bootstrap
 
-**1.0.11 (candidato, 16/11/2026):** recuperação de display reidrata snapshots CCD antigos por `DevicePath`/EDID e source atual, em vez de reutilizar LUIDs de adapter que mudam entre reinícios/resets. Se a topologia reidratada já é o baseline ativo, o restore não escreve. Incidente do journal de 15/11/2026 validado com `STRICT=False` e `REHYDRATED=True`; decisão D075. Build Debug/Release 0/0, 280 testes e smoke. Instalação local validada sem elevação; publicação do instalador e SHA-256 pendentes.
+**1.0.11 (candidato, 16/11/2026):** recuperação de display reidrata snapshots CCD antigos por `DevicePath`/EDID e source atual, em vez de reutilizar LUIDs de adapter que mudam entre reinícios/resets. Se a topologia reidratada já é o baseline ativo, o restore não escreve. Incidente do journal de 15/11/2026 validado com `STRICT=False` e `REHYDRATED=True`; decisão D075. Build Debug/Release 0/0, 286 testes e smoke. Instalação local validada sem elevação; publicação do instalador e SHA-256 pendentes.
 
 **1.0.10 (pré-release):** configuração guiada de TV/monitor/áudio, aplicação com reabertura segura e teste de som por endpoint. Decisão D074. Build Release 0/0, 275 testes e smoke. Probe Windows detectou AOC ativo, Samsung HDMI inativa e dois endpoints Samsung indisponíveis. O stream WASAPI concluiu no endpoint AOC com os três padrões preservados. Confirmação auditiva na Samsung e aplicação pelo instalador ainda pendentes.
 

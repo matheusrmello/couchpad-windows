@@ -4,7 +4,7 @@
 - Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
-- Estado atual: build Debug/Release 0 avisos/0 erros; **280 testes**; smoke OK;
+- Estado atual: build Debug/Release 0 avisos/0 erros; **286 testes**; smoke OK;
   candidato `1.0.11` instalado localmente; publicação do instalador pendente.
 
 ## Status das fases
@@ -97,7 +97,7 @@
   reidratada já é o baseline ativo, o restore termina sem `SetDisplayConfig`.
 - **Evidência:** journal real de 15/11/2026 com AOC `59140` reidratado para
   `59029` (`STRICT=False`, `REHYDRATED=True`); `DisplaySnapshotRehydratorTests`;
-  build Debug/Release 0/0; 280 testes; smoke; instalação 1.0.11 sem elevação;
+  build Debug/Release 0/0; 286 testes; smoke; instalação 1.0.11 sem elevação;
   abertura sem banner de recuperação; tasks de logon preservadas.
 - **Pendente:** publicar o instalador 1.0.11 com SHA-256 e release notes;
   repetir a recuperação assistida em hardware em uma janela controlada, se

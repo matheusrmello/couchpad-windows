@@ -3,8 +3,8 @@
 ## 1.0.11 (candidato)
 
 - Corrige a recuperação de display quando o Windows muda os LUIDs de adapter ou os source ids entre sessões. O snapshot do journal é reidratado pelas identidades estáveis de `DevicePath`/EDID; se a tela já está no baseline, o restore termina sem escrever.
-- Adiciona `DisplaySnapshotRehydratorTests` cobrindo LUID antigo, alvo indisponível, restauração sem escrita e aplicação com identidades atuais.
-- Build Debug 0/0, 280 testes e smoke aprovados. Validação com o journal real de 15/11/2026: `STRICT=False`, `REHYDRATED=True`.
+- Adiciona `DisplaySnapshotRehydratorTests` cobrindo LUID antigo, `DevicePath` alterado com EDID/nome, extend com sources distintas, alvo conectado mas inativo, colapso de sources, ambiguidade, alvo indisponível, restauração sem escrita, aplicação com identidades atuais e rollback pelo snapshot ativo.
+- Build Debug 0/0, 286 testes e smoke aprovados. Validação com o journal real de 15/11/2026: `STRICT=False`, `REHYDRATED=True`.
 - Instalação local validada sem elevação; publicação do instalador e SHA-256 pendentes.
 
 ## 1.0.10 (pré-release)

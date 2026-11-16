@@ -29,6 +29,21 @@ public static class DisplaySnapshotRehydrator
     {
         ArgumentNullException.ThrowIfNull(expected);
         ArgumentNullException.ThrowIfNull(available);
+        try
+        {
+            return RehydrateCore(expected, available);
+        }
+        catch (DisplaySnapshotRehydrationException) { throw; }
+        catch (Exception ex) when (ex is InvalidOperationException or FormatException)
+        {
+            throw new DisplaySnapshotRehydrationException("Display recovery snapshot could not be rehydrated.", ex);
+        }
+    }
+
+    private static WindowsDisplayService.Snapshot RehydrateCore(
+        WindowsDisplayService.Snapshot expected,
+        WindowsDisplayService.Snapshot available)
+    {
         if (expected.SchemaVersion != 1 || expected.QueryFlags != ActivePaths ||
             expected.PathSize != PathSize || expected.ModeSize != ModeSize)
             throw new InvalidOperationException("Unsupported display snapshot.");
@@ -70,6 +85,8 @@ public static class DisplaySnapshotRehydrator
             }
 
             var oldSource = SourceKey(expectedPaths, offset);
+            // Offset 60 is targetAvailable. A connected but inactive second
+            // monitor still reports it, which is required for extend restores.
             var candidates = currentPaths
                 .Where(path => TargetKey(path, 0) == newTarget && ReadU32(path, 60) != 0)
                 .ToArray();
@@ -133,46 +150,53 @@ public static class DisplaySnapshotRehydrator
         WindowsDisplayService.Target expected,
         IEnumerable<WindowsDisplayService.Target> available)
     {
-        var matches = available.Where(candidate => StableIdentityMatches(expected, candidate)).ToArray();
-        if (matches.Length == 0)
-        {
-            var byKey = available.Where(candidate => KeyOf(candidate) == KeyOf(expected)).ToArray();
-            return byKey.Length switch
-            {
-                0 => null,
-                1 => byKey[0],
-                _ => throw new InvalidOperationException("Recovery target identity is ambiguous."),
-            };
-        }
-        return matches.Length == 1 ? matches[0] : throw new InvalidOperationException("Recovery target identity is ambiguous.");
-    }
+        var candidates = available.ToArray();
 
-    private static bool StableIdentityMatches(
-        WindowsDisplayService.Target expected,
-        WindowsDisplayService.Target candidate)
-    {
+        // Target ids and device paths can also change, so a path miss must
+        // still fall back to the stable EDID/name identity of the monitor.
         if (!string.IsNullOrWhiteSpace(expected.DevicePath))
         {
-            if (!string.Equals(expected.DevicePath, candidate.DevicePath, StringComparison.OrdinalIgnoreCase))
-                return false;
-            if (expected.EdidManufacturer is { } manufacturer && candidate.EdidManufacturer != manufacturer)
-                return false;
-            if (expected.EdidProduct is { } product && candidate.EdidProduct != product)
-                return false;
-            return true;
+            var byPath = candidates.Where(candidate =>
+                string.Equals(expected.DevicePath, candidate.DevicePath, StringComparison.OrdinalIgnoreCase) &&
+                (expected.EdidManufacturer is not { } pathManufacturer || candidate.EdidManufacturer == pathManufacturer) &&
+                (expected.EdidProduct is not { } pathProduct || candidate.EdidProduct == pathProduct)).ToArray();
+            if (byPath.Length == 1) return byPath[0];
+            if (byPath.Length > 1) throw new InvalidOperationException("Recovery target identity is ambiguous.");
         }
 
-        if (expected.EdidManufacturer is { } expectedManufacturer &&
-            expected.EdidProduct is { } expectedProduct)
+        if (expected.EdidManufacturer is { } manufacturer && expected.EdidProduct is { } product)
         {
-            if (candidate.EdidManufacturer != expectedManufacturer || candidate.EdidProduct != expectedProduct)
-                return false;
-            return string.IsNullOrWhiteSpace(expected.FriendlyName) ||
-                string.Equals(expected.FriendlyName, candidate.FriendlyName, StringComparison.OrdinalIgnoreCase);
+            var byEdid = candidates.Where(candidate =>
+                candidate.EdidManufacturer == manufacturer &&
+                candidate.EdidProduct == product &&
+                (string.IsNullOrWhiteSpace(expected.FriendlyName) ||
+                 string.Equals(expected.FriendlyName, candidate.FriendlyName, StringComparison.OrdinalIgnoreCase))).ToArray();
+            if (byEdid.Length == 1) return byEdid[0];
+            if (byEdid.Length > 1) throw new InvalidOperationException("Recovery target identity is ambiguous.");
         }
 
-        return !string.IsNullOrWhiteSpace(expected.FriendlyName) &&
-            string.Equals(expected.FriendlyName, candidate.FriendlyName, StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(expected.FriendlyName) &&
+            expected.EdidManufacturer is null && expected.EdidProduct is null)
+        {
+            var byName = candidates.Where(candidate =>
+                candidate.EdidManufacturer is null && candidate.EdidProduct is null &&
+                string.Equals(expected.FriendlyName, candidate.FriendlyName, StringComparison.OrdinalIgnoreCase)).ToArray();
+            if (byName.Length == 1) return byName[0];
+            if (byName.Length > 1) throw new InvalidOperationException("Recovery target identity is ambiguous.");
+        }
+
+        // Legacy snapshots without any stable metadata can only be reused when
+        // the adapter identity itself did not change.
+        if (string.IsNullOrWhiteSpace(expected.DevicePath) &&
+            expected.EdidManufacturer is null && expected.EdidProduct is null &&
+            string.IsNullOrWhiteSpace(expected.FriendlyName))
+        {
+            var byKey = candidates.Where(candidate => KeyOf(candidate) == KeyOf(expected)).ToArray();
+            if (byKey.Length == 1) return byKey[0];
+            if (byKey.Length > 1) throw new InvalidOperationException("Recovery target identity is ambiguous.");
+        }
+
+        return null;
     }
 
     private static byte[] Decode(string value, int size, string name)
@@ -210,4 +234,13 @@ public static class DisplaySnapshotRehydrator
 
     private static int ReadI32(byte[] bytes, int offset) =>
         BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(offset, 4));
+}
+
+/// <summary>Raised before any display write when a persisted snapshot cannot be rebound safely.</summary>
+public sealed class DisplaySnapshotRehydrationException : InvalidOperationException
+{
+    public DisplaySnapshotRehydrationException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 }
