@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CouchPad — Concept moderno</title>
+<style>
+  :root {
+    --bg: #05070b;
+    --panel: rgba(18, 25, 33, .88);
+    --panel-2: rgba(12, 18, 24, .92);
+    --panel-3: rgba(29, 39, 50, .72);
+    --line: rgba(255, 255, 255, .075);
+    --line-strong: rgba(255, 255, 255, .13);
+    --text: #f3f7fa;
+    --muted: #8d9aa8;
+    --muted-2: #64717f;
+    --accent: #4fe3c1;
+    --accent-2: #69a8ff;
+    --warning: #ffc46b;
+    --danger: #ff7c86;
+    --radius: 22px;
+    --shadow: 0 22px 50px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .045);
+    font-family: "Segoe UI Variable", "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); }
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 28px;
+    color: var(--text);
+    background:
+      radial-gradient(circle at 16% 8%, rgba(79, 227, 193, .12), transparent 28%),
+      radial-gradient(circle at 86% 6%, rgba(105, 168, 255, .12), transparent 30%),
+      radial-gradient(circle at 50% 100%, rgba(79, 227, 193, .05), transparent 40%),
+      linear-gradient(180deg, #070a0f 0%, #040609 100%);
+  }
+
+  .canvas {
+    width: 1368px;
+    height: 1000px;
+    flex: 0 0 auto;
+    padding: 34px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 32px;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(79, 227, 193, .10), transparent 26%),
+      radial-gradient(circle at 84% 0%, rgba(105, 168, 255, .11), transparent 28%),
+      linear-gradient(180deg, rgba(13, 18, 24, .98), rgba(7, 10, 15, .99));
+    border: 1px solid rgba(255, 255, 255, .08);
+    box-shadow: 0 50px 120px rgba(0, 0, 0, .62), inset 0 1px 0 rgba(255, 255, 255, .055);
+  }
+
+  .canvas::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: .22;
+    background-image: radial-gradient(rgba(255, 255, 255, .12) .7px, transparent .7px);
+    background-size: 22px 22px;
+    mask-image: linear-gradient(180deg, black, transparent 55%);
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-sm { width: 15px; height: 15px; }
+  .icon-lg { width: 26px; height: 26px; }
+
+  /* Header */
+  header { display: flex; align-items: center; justify-content: space-between; min-height: 68px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 52px; height: 52px; border-radius: 16px;
+    display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(79, 227, 193, .22), rgba(105, 168, 255, .16));
+    border: 1px solid rgba(114, 232, 210, .35);
+    box-shadow: 0 0 32px rgba(79, 227, 193, .14), inset 0 1px 0 rgba(255, 255, 255, .18);
+    color: var(--accent);
+  }
+  .logo svg { width: 30px; height: 30px; }
+  .brand h1 { margin: 0; font-size: 23px; letter-spacing: -.02em; font-weight: 660; }
+  .brand p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; letter-spacing: .01em; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: rgba(255, 255, 255, .035);
+    color: var(--muted); font-size: 11.5px; font-weight: 560; letter-spacing: .02em;
+  }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted-2); }
+  .pill.live { color: var(--accent); border-color: rgba(79, 227, 193, .25); background: rgba(79, 227, 193, .075); }
+  .pill.live .dot { background: var(--accent); box-shadow: 0 0 0 4px rgba(79, 227, 193, .10); }
+  .pill.good { color: var(--accent); border-color: rgba(79, 227, 193, .24); background: rgba(79, 227, 193, .07); }
+  .pill.warn { color: var(--warning); border-color: rgba(255, 196, 107, .25); background: rgba(255, 196, 107, .07); }
+  .pill.neutral { color: var(--muted); }
+
+  .profile-chip {
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 13px; border-radius: 12px; border: 1px solid var(--line);
+    background: rgba(255, 255, 255, .035); color: var(--text); font-size: 12px;
+  }
+  .profile-chip .label { color: var(--muted-2); font-size: 10px; text-transform: uppercase; letter-spacing: .11em; }
+  .profile-chip strong { font-weight: 600; }
+  .avatar { width: 24px; height: 24px; border-radius: 8px; background: linear-gradient(135deg, rgba(79, 227, 193, .24), rgba(105, 168, 255, .22)); display: grid; place-items: center; color: var(--accent); }
+
+  /* Layout */
+  .main {
+    flex: 1; min-height: 0;
+    display: grid;
+    grid-template-columns: 330px minmax(0, 1fr) 368px;
+    gap: 18px;
+  }
+  .col { display: flex; flex-direction: column; gap: 18px; min-height: 0; }
+  .col.left .card.automation { flex: 1.2; }
+  .col.left .card.gamepad { flex: .72; }
+  .col.left .card.combo { flex: .62; }
+  .col.right .card.countdown { flex: .78; }
+  .col.right .card.transition { flex: .82; }
+  .col.right .card.launchers { flex: .62; }
+  .col.right .card.settings { flex: .54; }
+
+  .card {
+    position: relative; min-height: 0; overflow: hidden;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: linear-gradient(160deg, rgba(25, 34, 44, .88), rgba(11, 16, 22, .94));
+    box-shadow: var(--shadow);
+    padding: 19px 20px;
+    display: flex; flex-direction: column;
+  }
+  .card::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(130deg, rgba(255, 255, 255, .035), transparent 38%);
+  }
+  .card-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; position: relative; z-index: 1; }
+  .card-title { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .card-title .badge { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: rgba(255, 255, 255, .045); border: 1px solid var(--line); color: var(--accent); flex: 0 0 auto; }
+  .card-title h2 { margin: 0; font-size: 12.5px; letter-spacing: .09em; text-transform: uppercase; font-weight: 640; color: #dce6ee; }
+  .card-title h2 span { color: var(--muted-2); font-weight: 500; }
+  .card-action { color: var(--muted); font-size: 11.5px; display: flex; align-items: center; gap: 5px; }
+  .card-body { position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+  /* Toggle */
+  .switch { width: 46px; height: 26px; border-radius: 999px; background: rgba(255, 255, 255, .10); border: 1px solid rgba(255, 255, 255, .10); position: relative; flex: 0 0 auto; }
+  .switch::after { content: ""; position: absolute; width: 20px; height: 20px; top: 2px; left: 2px; border-radius: 50%; background: #a7b3be; transition: .2s; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+  .switch.on { background: linear-gradient(135deg, rgba(79, 227, 193, .95), rgba(105, 168, 255, .90)); border-color: rgba(79, 227, 193, .45); box-shadow: 0 0 20px rgba(79, 227, 193, .20); }
+  .switch.on::after { left: 22px; background: #04120f; }
+
+  /* Buttons */
+  .btn { border: 0; border-radius: 12px; font-family: inherit; font-size: 12px; font-weight: 620; letter-spacing: .01em; padding: 11px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn.primary { color: #04120f; background: linear-gradient(135deg, #4fe3c1, #69a8ff); box-shadow: 0 10px 24px rgba(79, 227, 193, .16); }
+  .btn.secondary { color: #c9d5df; background: rgba(255, 255, 255, .055); border: 1px solid var(--line-strong); }
+  .btn.ghost { color: var(--muted); background: transparent; border: 1px solid transparent; }
+  .btn.small { padding: 8px 10px; border-radius: 10px; font-size: 11px; }
+
+  /* Automation */
+  .auto-hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .auto-hero h3 { margin: 0; font-size: 18px; letter-spacing: -.02em; font-weight: 620; }
+  .auto-hero p { margin: 5px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.45; max-width: 220px; }
+  .auto-actions { display: flex; gap: 8px; margin: 12px 0 16px; }
+  .auto-actions .btn { flex: 1; }
+  .status-list { display: flex; flex-direction: column; gap: 2px; margin-top: auto; }
+  .status-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid rgba(255, 255, 255, .055); }
+  .status-row:first-child { border-top: 0; }
+  .status-row .icon-box { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: rgba(255, 255, 255, .04); color: var(--muted); flex: 0 0 auto; }
+  .status-row .meta { min-width: 0; flex: 1; }
+  .status-row .meta span { display: block; color: var(--muted-2); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+  .status-row .meta strong { display: block; margin-top: 2px; color: #dde7ef; font-size: 12px; font-weight: 560; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-row .mini-pill { color: var(--muted); font-size: 10px; padding: 4px 7px; border-radius: 999px; background: rgba(255, 255, 255, .045); border: 1px solid var(--line); white-space: nowrap; }
+  .status-row .mini-pill.live { color: var(--accent); border-color: rgba(79, 227, 193, .20); background: rgba(79, 227, 193, .06); }
+
+  /* Display */
+  .col.center .card.display-card { flex: 1; }
+  .display-card { padding-bottom: 18px; }
+  .profile-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .profile-row .label { color: var(--muted-2); font-size: 10px; text-transform: uppercase; letter-spacing: .11em; white-space: nowrap; }
+  .select-like { flex: 1; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: rgba(255, 255, 255, .035); display: flex; align-items: center; justify-content: space-between; padding: 0 12px; color: #dce6ee; font-size: 12px; }
+  .select-like .left { display: flex; align-items: center; gap: 8px; }
+  .avatar.sm { width: 20px; height: 20px; border-radius: 6px; font-size: 10px; }
+  .text-btn { color: var(--muted); font-size: 11px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .text-btn.accent { color: var(--accent); }
+
+  .topology { display: grid; grid-template-columns: 1fr 34px 1fr; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .screen-card { border-radius: 14px; border: 1px solid var(--line); background: linear-gradient(160deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .015)); padding: 12px; min-width: 0; }
+  .screen-card.active { border-color: rgba(79, 227, 193, .22); box-shadow: 0 0 0 1px rgba(79, 227, 193, .04), 0 10px 30px rgba(0, 0, 0, .12); }
+  .screen-card .screen-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .screen-card .screen-head .name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .screen-card .screen-head .name strong { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .screen-card .screen-head .name span { color: var(--muted-2); font-size: 10px; }
+  .screen-card .screen-visual { height: 44px; border-radius: 8px; background: linear-gradient(135deg, rgba(79, 227, 193, .12), rgba(105, 168, 255, .08)); border: 1px solid rgba(255, 255, 255, .06); position: relative; overflow: hidden; }
+  .screen-card .screen-visual::before { content: ""; position: absolute; inset: 7px 10px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, .10); background: linear-gradient(180deg, rgba(255, 255, 255, .04), transparent); }
+  .screen-card .screen-visual::after { content: ""; position: absolute; width: 44%; height: 2px; left: 28%; top: 50%; border-radius: 2px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .16), transparent); }
+  .screen-card .screen-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; color: var(--muted); font-size: 10.5px; }
+  .arrow { display: grid; place-items: center; color: var(--muted-2); }
+  .arrow svg { width: 20px; height: 20px; }
+
+  .selection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { color: var(--muted-2); font-size: 10px; text-transform: uppercase; letter-spacing: .10em; }
+  .field .select-like { height: 40px; }
+  .field .hint { color: var(--muted-2); font-size: 10.5px; }
+
+  .session-panel { margin-top: 12px; flex: 1; min-height: 105px; position: relative; overflow: hidden; border-radius: 16px; border: 1px solid rgba(255, 255, 255, .065); background: linear-gradient(135deg, rgba(105, 168, 255, .065), rgba(79, 227, 193, .035)); padding: 14px; display: flex; flex-direction: column; }
+  .session-panel::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .35; background-image: radial-gradient(rgba(255, 255, 255, .14) .6px, transparent .6px); background-size: 18px 18px; mask-image: linear-gradient(90deg, transparent, black 30%, black 70%, transparent); }
+  .session-head { display: flex; align-items: center; gap: 8px; position: relative; z-index: 1; }
+  .session-head strong { font-size: 11.5px; font-weight: 600; letter-spacing: .02em; }
+  .session-head .pill { margin-left: auto; padding: 4px 8px; font-size: 9px; }
+  .session-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(79, 227, 193, .10); }
+  .session-steps { display: flex; align-items: center; gap: 8px; margin-top: 13px; position: relative; z-index: 1; }
+  .session-step { display: flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 10px; background: rgba(5, 10, 14, .25); border: 1px solid rgba(255, 255, 255, .07); color: #dce7ee; font-size: 10.5px; white-space: nowrap; }
+  .session-step span { width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; background: rgba(79, 227, 193, .14); color: var(--accent); font-size: 9px; font-weight: 650; }
+  .session-arrow { color: var(--muted-2); font-size: 11px; }
+  .session-meta { margin-top: auto; padding-top: 10px; color: var(--muted-2); font-size: 10px; position: relative; z-index: 1; }
+  .session-visual { flex: 1; min-height: 86px; margin-top: 12px; border-radius: 13px; border: 1px solid rgba(255, 255, 255, .055); background: radial-gradient(circle at 50% 28%, rgba(105, 168, 255, .12), transparent 55%), linear-gradient(180deg, rgba(255, 255, 255, .022), transparent); display: grid; place-items: center; position: relative; overflow: hidden; }
+  .session-visual::before { content: ""; position: absolute; width: 70%; height: 1px; bottom: 25%; background: linear-gradient(90deg, transparent, rgba(79, 227, 193, .28), transparent); }
+  .tv-frame { width: 190px; position: relative; z-index: 1; }
+  .tv-screen { height: 86px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .13); background: linear-gradient(135deg, rgba(105, 168, 255, .17), rgba(79, 227, 193, .07)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 20px 40px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .10); }
+  .tv-brand { font-size: 15px; letter-spacing: .20em; font-weight: 650; color: #e8f7ff; }
+  .tv-sub { font-size: 8.5px; letter-spacing: .13em; color: var(--muted); text-transform: uppercase; }
+  .tv-stand { width: 58px; height: 5px; margin: 0 auto; border-radius: 0 0 6px 6px; background: rgba(255, 255, 255, .12); }
+  .diagnosis { margin-top: 12px; border-radius: 15px; border: 1px solid rgba(79, 227, 193, .18); background: linear-gradient(135deg, rgba(79, 227, 193, .07), rgba(105, 168, 255, .035)); padding: 13px 14px; }
+  .diagnosis-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .diagnosis-head .title { display: flex; align-items: center; gap: 8px; color: #dce8ef; font-size: 11.5px; font-weight: 600; }
+  .diagnosis-head .title .icon-box { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; background: rgba(79, 227, 193, .09); color: var(--accent); }
+  .diagnosis .line { display: flex; gap: 7px; color: var(--muted); font-size: 10.8px; line-height: 1.5; margin-top: 4px; }
+  .diagnosis .line b { color: #dbe5ed; font-weight: 600; }
+  .confidence { color: var(--accent); font-size: 10px; font-weight: 650; padding: 4px 8px; border-radius: 999px; background: rgba(79, 227, 193, .09); border: 1px solid rgba(79, 227, 193, .20); white-space: nowrap; }
+
+  /* Countdown */
+  .countdown-hero { display: flex; align-items: center; gap: 16px; }
+  .ring { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; position: relative; flex: 0 0 auto; background: conic-gradient(var(--accent) 0 72%, rgba(255, 255, 255, .075) 72% 100%); box-shadow: 0 0 30px rgba(79, 227, 193, .10); }
+  .ring::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #0b1117; border: 1px solid rgba(255, 255, 255, .06); }
+  .ring .value { position: relative; text-align: center; line-height: 1; }
+  .ring .value strong { font-size: 28px; font-weight: 650; letter-spacing: -.04em; }
+  .ring .value span { display: block; margin-top: 4px; color: var(--muted-2); font-size: 9px; letter-spacing: .10em; text-transform: uppercase; }
+  .countdown-copy h3 { margin: 0; font-size: 14px; font-weight: 620; }
+  .countdown-copy p { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+  .slider-row { margin-top: 12px; }
+  .slider-row .top { display: flex; justify-content: space-between; color: var(--muted); font-size: 10.5px; margin-bottom: 7px; }
+  .slider-row .top b { color: #dce6ee; font-weight: 600; }
+  .track { height: 5px; border-radius: 999px; background: rgba(255, 255, 255, .08); position: relative; }
+  .track .fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #4fe3c1, #69a8ff); }
+  .track .knob { position: absolute; width: 13px; height: 13px; border-radius: 50%; top: -4px; background: #e8fffa; box-shadow: 0 0 0 4px rgba(79, 227, 193, .12), 0 2px 6px rgba(0, 0, 0, .4); }
+
+  /* Transition */
+  .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, .18); }
+  .segmented .seg { padding: 8px 10px; border-radius: 9px; text-align: center; font-size: 11px; color: var(--muted); }
+  .segmented .seg.active { color: #071310; background: linear-gradient(135deg, #4fe3c1, #69a8ff); font-weight: 650; box-shadow: 0 6px 16px rgba(79, 227, 193, .13); }
+  .mini-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+  .mini-row .label { color: var(--muted-2); font-size: 10px; text-transform: uppercase; letter-spacing: .10em; }
+  .mini-row .value { display: flex; align-items: center; gap: 8px; color: #dce6ee; font-size: 11.5px; }
+  .mini-row .value .icon-box { width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center; background: rgba(255, 255, 255, .045); color: var(--muted); }
+
+  /* Launchers / settings */
+  .launcher-row { display: flex; align-items: center; gap: 11px; padding: 10px; border-radius: 13px; border: 1px solid var(--line); background: rgba(255, 255, 255, .025); }
+  .launcher-row .logo-mini { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(105, 168, 255, .22), rgba(79, 227, 193, .12)); color: #cfe8ff; }
+  .launcher-row .meta { flex: 1; min-width: 0; }
+  .launcher-row .meta strong { display: block; font-size: 12px; font-weight: 600; }
+  .launcher-row .meta span { display: block; margin-top: 2px; color: var(--muted); font-size: 10.5px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid rgba(255, 255, 255, .055); }
+  .toggle-row:first-child { border-top: 0; }
+  .toggle-row .label { color: #d5dfe7; font-size: 11.5px; }
+  .toggle-row .sub { color: var(--muted-2); font-size: 10px; margin-top: 2px; }
+
+  /* Gamepad */
+  .gamepad-hero { display: flex; align-items: center; gap: 13px; }
+  .gamepad-art { width: 64px; height: 64px; border-radius: 19px; display: grid; place-items: center; background: radial-gradient(circle at 35% 25%, rgba(79, 227, 193, .20), rgba(105, 168, 255, .08)); border: 1px solid rgba(79, 227, 193, .16); color: var(--accent); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); }
+  .gamepad-art svg { width: 38px; height: 38px; }
+  .gamepad-copy h3 { margin: 0; font-size: 13.5px; font-weight: 620; }
+  .gamepad-copy p { margin: 4px 0 0; color: var(--muted); font-size: 10.8px; }
+  .battery { display: flex; align-items: center; gap: 6px; margin-top: 9px; color: var(--accent); font-size: 10px; }
+  .battery .bar { width: 42px; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+  .battery .bar span { display: block; width: 82%; height: 100%; background: linear-gradient(90deg, #4fe3c1, #69a8ff); }
+
+  /* Combo */
+  .combo-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .key { min-width: 33px; height: 33px; border-radius: 9px; display: inline-grid; place-items: center; border: 1px solid rgba(255, 255, 255, .12); background: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .035)); color: #e7f0f6; font-size: 11px; font-weight: 650; box-shadow: 0 4px 0 rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .10); }
+  .plus { color: var(--muted-2); font-size: 11px; }
+  .combo-caption { margin-top: 10px; color: var(--muted); font-size: 10.5px; line-height: 1.45; }
+  .combo-caption b { color: #dce6ee; font-weight: 600; }
+
+  /* Footer */
+  footer { display: flex; align-items: center; justify-content: space-between; min-height: 28px; color: var(--muted-2); font-size: 10.5px; }
+  .footer-left { display: flex; align-items: center; gap: 10px; }
+  .footer-left .pill { padding: 5px 8px; font-size: 9.5px; }
+  .footer-links { display: flex; align-items: center; gap: 18px; }
+  .footer-links span { color: var(--muted); }
+  .language { display: flex; align-items: center; gap: 8px; padding: 6px 9px; border-radius: 9px; border: 1px solid var(--line); background: rgba(255, 255, 255, .035); color: #cfd9e2; }
+
+  .glow-line { height: 1px; background: linear-gradient(90deg, transparent, rgba(79, 227, 193, .30), rgba(105, 168, 255, .22), transparent); opacity: .8; }
+</style>
+</head>
+<body>
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 5 13h6l-1 9 9-12h-6l1-8Z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  <symbol id="i-gamepad" viewBox="0 0 24 24"><path d="M7 8h10a5 5 0 0 1 4.7 6.7l-1 2.8a2.3 2.3 0 0 1-3.9.8L14.5 16h-5l-2.3 2.3a2.3 2.3 0 0 1-3.9-.8l-1-2.8A5 5 0 0 1 7 8Z"/><path d="M8 12h3M9.5 10.5v3M15.5 11.5h.01M17.5 13.5h.01"/></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M14 4c3.5 0 6 2.5 6 6-2.8 5.2-6.3 7.5-10 8.5L7 15.5C8 11.8 10.3 8.3 14 4Z"/><path d="m8 16-3 3M10 18l-1 3M6 14l-3 1M14 9h.01"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h6M14 6h6M4 12h10M18 12h2M4 18h2M10 18h10"/><circle cx="12" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 10v3l2 2M9 2h6M12 2v3M19 5l1.5-1.5"/></symbol>
+  <symbol id="i-launcher" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h5M8 16h7"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.5 2.8 8.1 7 10 4.2-1.9 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2 2-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-2.8v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-2-2 .1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H4.7v-2.8h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 2-2 .1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h2.8v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 2 2-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.2V15h-.2a1.7 1.7 0 0 0-1.5 1Z"/></symbol>
+</svg>
+
+<div class="canvas" role="img" aria-label="CouchPad modern concept">
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 11.5c0-2 1.6-3.5 3.5-3.5h11c2 0 3.5 1.6 3.5 3.5v7.8c0 2.4-2 4.4-4.4 4.4h-1.4c-1.3 0-2.5-.7-3.2-1.8L15 18h-2l-1.5 3.9A3.6 3.6 0 0 1 8.3 24H7.5A4.5 4.5 0 0 1 3 19.5v-4c0-1.7 1.3-3 3-3h1Z"/>
+            <path d="M10.5 13.5h4M12.5 11.5v4M20 13h.01M22 15h.01"/>
+          </svg>
+        </div>
+        <div>
+          <h1>CouchPad</h1>
+          <p>Jogando no conforto do sofá</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="profile-chip">
+          <div class="avatar"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-gamepad"/></svg></div>
+          <div><div class="label">Perfil</div><strong>Sala</strong></div>
+          <svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--muted-2)"><use href="#i-chevron"/></svg>
+        </div>
+        <div class="pill live"><span class="dot"></span>Ativo</div>
+      </div>
+    </header>
+
+    <div class="main">
+      <div class="col left">
+        <section class="card automation">
+          <div class="card-header">
+            <div class="card-title"><div class="badge"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-bolt"/></svg></div><h2>Automação</h2></div>
+            <div class="switch on"></div>
+          </div>
+          <div class="card-body">
+            <div class="auto-hero">
+              <div><h3>Ouvindo gamepad</h3><p>Troca tela e áudio automaticamente quando o controle conectar.</p></div>
+            </div>
+            <div class="auto-actions">
+              <button class="btn primary"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-check"/></svg>Aplicar configuração</button>
+              <button class="btn secondary"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-search"/></svg>Sugerir</button>
+            </div>
+            <div class="status-list">
+              <div class="status-row">
+                <div class="icon-box"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-gamepad"/></svg></div>
+                <div class="meta"><span>Gamepad</span><strong>8BitDo Ultimate 2</strong></div>
+                <div class="mini-pill live">Conectado</div>
+              </div>
+              <div class="status-row">
+                <div class="icon-box"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-monitor"/></svg></div>
+                <div class="meta"><span>Tela</span><strong>SAMSUNG · HDMI</strong></div>
+                <div class="mini-pill">TV</div>
+              </div>
+              <div class="status-row">
+                <div class="icon-box"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-speaker"/></svg></div>
+                <div class="meta"><span>Áudio</span><strong>SAMSUNG</strong></div>
+                <div class="mini-pill">HDMI</div>
+              </div>
+              <div class="status-row">
+                <div class="icon-box"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-rocket"/></svg></div>
+                <div class="meta"><span>Launcher</span><strong>Steam Big Picture</strong></div>
+                <div class="mini-pill">Pronto</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card gamepad">
+          <div class="card-header">
+            <div class="card-title"><div class="badge"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-gamepad"/></svg></div><h2>Gamepad</h2></div>
+            <div class="pill live" style="padding:5px 8px;font-size:9.5px"><span class="dot"></span>USB</div>
+          </div>
+          <div class="card-body">
+            <div class="gamepad-hero">
+              <div class="gamepad-art"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 16h18a10 10 0 0 1 9.4 13.4l-2 5.6a4.5 4.5 0 0 1-7.7 1.5L28.5 32h-9l-4.2 4.5a4.5 4.5 0 0 1-7.7-1.5l-2-5.6A10 10 0 0 1 15 16Z"/><path d="M15 24h6M18 21v6M31 23h.01M35 26h.01"/></svg></div>
+              <div class="gamepad-copy"><h3>8BitDo Ultimate 2</h3><p>Controle conectado ao Windows</p><div class="battery"><span class="bar"><span></span></span>82%</div></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card combo">
+          <div class="card-header">
+            <div class="card-title"><div class="badge"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-sliders"/></svg></div><h2>Combinação</h2></div>
+            <div class="card-action">Atalho</div>
+          </div>
+          <div class="card-body">
+            <div class="combo-line">
+              <span class="key">LB</span><span class="plus">+</span><span class="key">RB</span><span class="plus">+</span><span class="key">A</span>
+            </div>
+            <div class="combo-caption">Ativa a automação com o controle.<br><b>Funciona em qualquer tela.</b></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="col center">
+        <section class="card display-card">
+          <div class="card-header">
+            <div class="card-title"><div class="badge"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-monitor"/></svg></div><h2>Display <span>· Sala</span></h2></div>
+            <div class="card-action"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-sliders"/></svg>Atualizar</div>
+          </div>
+          <div class="card-body">
+            <div class="profile-row">
+              <span class="label">Perfil de ambiente</span>
+              <div class="select-like"><div class="left"><div class="avatar sm">S</div><strong>Sala</strong></div><svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--muted-2)"><use href="#i-chevron"/></svg></div>
+              <span class="text-btn accent"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-plus"/></svg>Novo</span>
+            </div>
+
+            <div class="topology">
+              <div class="screen-card active">
+                <div class="screen-head"><div class="name"><svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--accent)"><use href="#i-monitor"/></svg><strong>AOC 27G2G4</strong></div><span class="pill good" style="padding:4px 7px;font-size:9px">Interno</span></div>
+                <div class="screen-visual"></div>
+                <div class="screen-foot"><span>Ativo · 1920×1080</span><span>Display principal</span></div>
+              </div>
+              <div class="arrow"><svg class="icon" viewBox="0 0 24 24"><use href="#i-arrow"/></svg></div>
+              <div class="screen-card">
+                <div class="screen-head"><div class="name"><svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--accent-2)"><use href="#i-monitor"/></svg><strong>SAMSUNG</strong></div><span class="pill warn" style="padding:4px 7px;font-size:9px">TV</span></div>
+                <div class="screen-visual" style="background:linear-gradient(135deg,rgba(105,168,255,.12),rgba(79,227,193,.06))"></div>
+                <div class="screen-foot"><span>Inativa · HDMI</span><span>Destino</span></div>
+              </div>
+            </div>
+
+            <div class="selection-grid">
+              <div class="field"><label>TV</label><div class="select-like"><div class="left"><strong>SAMSUNG</strong><span style="color:var(--muted-2);font-size:10px">Sala</span></div><svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--muted-2)"><use href="#i-chevron"/></svg></div><div class="hint">HDMI · EDID 11596/29031</div></div>
+              <div class="field"><label>Monitor interno</label><div class="select-like"><div class="left"><strong>AOC 27G2G4</strong></div><svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--muted-2)"><use href="#i-chevron"/></svg></div><div class="hint">Ativo · não-HDMI</div></div>
+            </div>
+
+            <div class="session-panel">
+              <div class="session-head"><span class="session-dot"></span><strong>Sessão pronta</strong><span class="pill good">Tudo conectado</span></div>
+              <div class="session-steps">
+                <div class="session-step"><span>1</span>Controle</div>
+                <div class="session-arrow">→</div>
+                <div class="session-step"><span>2</span>TV Samsung</div>
+                <div class="session-arrow">→</div>
+                <div class="session-step"><span>3</span>Áudio Samsung</div>
+              </div>
+              <div class="session-visual">
+                <div class="tv-frame">
+                  <div class="tv-screen"><div class="tv-brand">SAMSUNG</div><div class="tv-sub">TV · HDMI · 4K</div></div>
+                  <div class="tv-stand"></div>
+                </div>
+              </div>
+              <div class="session-meta">Última troca hoje · 20:14 · contagem de 5 s</div>
+            </div>
+
+            <div class="diagnosis">
+              <div class="diagnosis-head">
+                <div class="title"><div class="icon-box"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-shield"/></svg></div>Diagnóstico da identificação</div>
+                <span class="confidence">Confiança alta</span>
+              </div>
+              <div class="line"><span style="color:var(--accent)">✓</span><span><b>TV</b> SAMSUNG · EDID 11596/29031 · HDMI inativa · único candidato.</span></div>
+              <div class="line"><span style="color:var(--accent)">✓</span><span><b>Monitor</b> AOC 27G2G4 · EDID 58117/9986 · ativo e não-HDMI.</span></div>
+              <div class="line"><span style="color:var(--accent)">✓</span><span><b>Áudio</b> SAMSUNG · nome do endpoint igual ao nome da TV.</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="col right">
+        <section class="card countdown">
+          <div class="card-header">
+            <div class="card-title"><div class="badge"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-timer"/></svg></div><h2>Contagem regressiva</h2></div>
+            <div class="card-action">5 s</div>
+          </div>
+          <div class="card-body">
+            <div class="countdown-hero">
+              <div class="ring"><div class="value"><strong>5</strong><span>segundos</span></div></div>
+              <div class="countdown-copy"><h3>Espere antes de trocar</h3><p>Evita trocas acidentais ao ligar ou desligar o controle.</p></div>
+            </div>
+            <div class="slider-row"><div class="top"><span>Ativar</span><b>5 s</b></div><div class="track"><div class="fill" style="width:62%"></div><span class="knob" style="left:60%"></span></div></div>
+            <div class="slider-row"><div class="top"><span>Desativar</span><b>2 s</b></div><div class="track"><div class="fill" style="width:32%"></div><span class="knob" style="left:30%"></span></div></div>
+          </div>
+        </section>
+
+        <section class="card transition">
+          <div class="card-header">
+            <div class="card-title"><div class="badge"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-sliders"/></svg></div><h2>Transição</h2></div>
+          </div>
+          <div class="card-body">
+            <div class="field"><label>Modo de tela</label><div class="segmented"><div class="seg active">Somente TV</div><div class="seg">Estender</div></div></div>
+            <div class="mini-row"><div class="label">Áudio</div><div class="value"><div class="icon-box"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-speaker"/></svg></div>Mover para TV</div></div>
+            <div class="mini-row"><div class="label">Saída</div><div class="value"><div class="icon-box"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-check"/></svg></div>SAMSUNG</div></div>
+          </div>
+        </section>
+
+        <section class="card launchers">
+          <div class="card-header">
+            <div class="card-title"><div class="badge"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-rocket"/></svg></div><h2>Launchers</h2></div>
+            <div class="switch on"></div>
+          </div>
+          <div class="card-body">
+            <div class="launcher-row">
+              <div class="logo-mini"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-launcher"/></svg></div>
+              <div class="meta"><strong>Steam Big Picture</strong><span>Abrir ao ativar</span></div>
+              <span class="pill neutral" style="padding:5px 8px;font-size:9px">Padrão</span>
+            </div>
+            <div class="combo-caption" style="margin-top:10px">Fecha o modo de jogo ao restaurar a tela.</div>
+          </div>
+        </section>
+
+        <section class="card settings">
+          <div class="card-header">
+            <div class="card-title"><div class="badge"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-settings"/></svg></div><h2>Parâmetros</h2></div>
+          </div>
+          <div class="card-body">
+            <div class="toggle-row"><div><div class="label">Iniciar com o Windows</div><div class="sub">Tarefa por usuário</div></div><div class="switch on"></div></div>
+            <div class="toggle-row"><div><div class="label">Minimizar para a bandeja</div></div><div class="switch on"></div></div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="glow-line"></div>
+
+    <footer>
+      <div class="footer-left"><span>CouchPad</span><span class="pill neutral" style="padding:5px 8px;font-size:9.5px">v1.0.13</span><span>100% gratuito · sem telemetria</span></div>
+      <div class="footer-links"><span>Redefinir</span><span>Sobre</span><div class="language">Português (Brasil)<svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-chevron"/></svg></div></div>
+    </footer>
+  </div>
+</div>
+</body>
+</html>

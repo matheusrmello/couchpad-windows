@@ -34,3 +34,9 @@
 - A validação com Narrator/NVDA não foi executada nesta máquina.
 - As capturas usam o build Debug de `1.0.13`; o instalador local foi validado,
   mas a publicação ainda está pendente.
+
+## Concept de redesign (não implementado)
+
+- `couchpad-modern-concept.png` e `couchpad-modern-concept.html`: exploração
+  visual com cards de vidro, tipografia mais forte, prévia da TV e diagnóstico
+  em destaque. **Não representa a UI atual** e não foi implementado no App.
