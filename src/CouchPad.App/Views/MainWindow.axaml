@@ -242,6 +242,15 @@
                        IsVisible="{Binding HasDisplayTargetsError}"
                        AutomationProperties.LiveSetting="Polite"
                        TextWrapping="Wrap" />
+
+            <Expander Header="{loc:Tr diagnosis.title}"
+                      IsExpanded="False"
+                      AutomationProperties.Name="{loc:Tr diagnosis.title}"
+                      AutomationProperties.HelpText="{loc:Tr diagnosis.help}">
+              <TextBlock Text="{Binding HardwareDiagnosisText}"
+                         TextWrapping="Wrap"
+                         Margin="0,6,0,0" />
+            </Expander>
           </StackPanel>
         </controls:Card>
 

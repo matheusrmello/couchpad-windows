@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.0.13 (candidato)
+
+- Adiciona diagnóstico explicável da identificação de TV, monitor e saída de áudio, com motivo, estado do dispositivo e confiança alta/média/baixa.
+- O diagnóstico fica em um expander no card Display e não altera hardware; nomes, EDID, HDMI, ativo/disponível e associação do endpoint são mostrados no idioma atual.
+- Build Debug/Release 0/0, 294 testes e smoke. Diagnóstico coberto por testes de confiança e conteúdo.
+- Instalação e publicação desta versão pendentes.
+
 ## 1.0.12 (candidato)
 
 - Adiciona perfis de ambiente: cada perfil guarda TV, monitor interno e saída de áudio, com seletor, criação, renomeação e exclusão. O perfil ativo é persistido e espelhado nos campos de startup; configurações antigas migram para um perfil padrão.

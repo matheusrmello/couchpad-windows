@@ -4,8 +4,8 @@
 - Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
-- Estado atual: build Debug/Release 0 avisos/0 erros; **290 testes**; smoke OK;
-  candidato `1.0.12` com perfis de ambiente instalado localmente; publicação
+- Estado atual: build Debug/Release 0 avisos/0 erros; **294 testes**; smoke OK;
+  candidato `1.0.13` com diagnóstico de identificação; publicação
   pendente.
 
 ## Status das fases
@@ -120,10 +120,20 @@
   Instalador local: 84.294.096 bytes, SHA-256
   `E5DE69BFBFCB7CA8EC5F513B1070007C8D8B819F31E642C50C36C2523DA6F84A`.
 
+### 10. Diagnóstico da identificação (1.0.13)
+
+- **Dono:** DeepSeek.
+- **Status:** implementado; instalação e publicação pendentes.
+- **Implementação:** expander no card Display com perfil, TV, monitor e áudio;
+  EDID, HDMI, ativo/disponível, motivo da escolha e confiança alta/média/baixa.
+  Nenhuma escrita de display/áudio.
+- **Evidência:** `HardwareDiagnosisTests`, build/testes/smoke e captura; falta
+  validar o expander no executável instalado e publicar.
+
 ## Próxima ação
 
 O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
-O candidato `1.0.12` adiciona perfis de ambiente, inclui a correção de
-reidratação do journal da `1.0.11` e está instalado localmente; publicação
-pendente. A reconexão do watcher durante a contagem continua sem evidência
-independente; HDR e notificações nativas seguem adiados.
+O candidato `1.0.13` adiciona diagnóstico de identificação e inclui os perfis
+da `1.0.12` e a correção de reidratação do journal da `1.0.11`; instalação e
+publicação pendentes. A reconexão do watcher durante a contagem continua sem
+evidência independente; HDR e notificações nativas seguem adiados.

@@ -239,6 +239,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(CanToggleAutomation));
         OnPropertyChanged(nameof(ShowHardwareSetup));
         OnPropertyChanged(nameof(HardwareSetupText));
+        OnPropertyChanged(nameof(HardwareDiagnosisText));
         ApplyHardwareCommand.NotifyCanExecuteChanged();
         SuggestHardwareCommand.NotifyCanExecuteChanged();
         TestAudioCommand.NotifyCanExecuteChanged();
@@ -900,6 +901,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(HardwareSetupText));
         OnPropertyChanged(nameof(HardwareApplyStatus));
         OnPropertyChanged(nameof(HardwareSuggestionText));
+        OnPropertyChanged(nameof(HardwareDiagnosisText));
         OnPropertyChanged(nameof(AudioSetupText));
         OnPropertyChanged(nameof(IsPortuguese));
         OnPropertyChanged(nameof(IsEnglish));

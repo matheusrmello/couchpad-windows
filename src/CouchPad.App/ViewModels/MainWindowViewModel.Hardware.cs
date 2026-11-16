@@ -52,13 +52,8 @@ public partial class MainWindowViewModel
         _hardwareSuggestionStatus = null;
         RefreshDisplayTargets();
         RefreshAudioEndpoints();
-        var displays = DisplayTargets.Where(target => target.IsAvailable &&
-            target.EdidManufacturer.HasValue && target.EdidProduct.HasValue).ToArray();
-
-        // A single active non-HDMI display and a single inactive HDMI display
-        // are a useful hint. Two HDMI displays, or more targets, need a choice.
-        if (displays.Length == 2 && displays.FirstOrDefault(target => target.IsActive && !target.IsHdmi) is { } monitor &&
-            displays.FirstOrDefault(target => !target.IsActive && target.IsHdmi) is { } tv)
+        var suggestion = FindHardwareSuggestion();
+        if (suggestion.Monitor is { } monitor && suggestion.Tv is { } tv)
         {
             if (SelectedInternalTarget is null && !monitor.Matches(SelectedTvTarget))
                 SelectedInternalTarget = monitor;
@@ -66,21 +61,50 @@ public partial class MainWindowViewModel
                 SelectedTvTarget = tv;
         }
 
-        if (SelectedTvAudioEndpoint is null && !_audioInventoryFailed &&
-            SelectedTvTarget?.FriendlyName is { Length: > 0 } name)
+        var candidates = FindAudioCandidates(SelectedTvTarget?.FriendlyName);
+        if (SelectedTvAudioEndpoint is null && !_audioInventoryFailed && candidates.Length > 0)
         {
-            var candidates = AudioEndpoints.Where(endpoint => endpoint.IsDisplayAudio &&
-                (endpoint.IsAvailable || endpoint.CanAppearAfterDisplayChange) && endpoint.Name is { } audioName &&
-                (audioName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                 audioName.StartsWith(name + " (", StringComparison.OrdinalIgnoreCase) ||
-                 audioName.StartsWith(name + " -", StringComparison.OrdinalIgnoreCase))).Take(2).ToArray();
             if (candidates.Length == 1) SelectedTvAudioEndpoint = candidates[0];
             if (candidates.Length > 1) _hardwareSuggestionStatus = "automation.suggest_audio_ambiguous";
         }
         _hardwareSuggestionStatus ??= HasCompleteSelection ? "automation.suggest_review" : "automation.suggest_manual";
         OnPropertyChanged(nameof(HardwareSuggestionText));
         OnPropertyChanged(nameof(HasHardwareSuggestion));
+        OnPropertyChanged(nameof(HardwareDiagnosisText));
     }
+
+    private HardwareSuggestion FindHardwareSuggestion()
+    {
+        var displays = DisplayTargets.Where(target => target.IsAvailable &&
+            target.EdidManufacturer.HasValue && target.EdidProduct.HasValue).ToArray();
+        if (displays.Length == 2 &&
+            displays.FirstOrDefault(target => target.IsActive && !target.IsHdmi) is { } monitor &&
+            displays.FirstOrDefault(target => !target.IsActive && target.IsHdmi) is { } tv)
+        {
+            return new(tv, monitor, displays.Length);
+        }
+
+        return new(null, null, displays.Length);
+    }
+
+    private AudioEndpointOption[] FindAudioCandidates(string? tvName)
+    {
+        if (string.IsNullOrWhiteSpace(tvName))
+        {
+            return [];
+        }
+
+        return AudioEndpoints.Where(endpoint => endpoint.IsDisplayAudio &&
+            (endpoint.IsAvailable || endpoint.CanAppearAfterDisplayChange) && endpoint.Name is { } audioName &&
+            (audioName.Equals(tvName, StringComparison.OrdinalIgnoreCase) ||
+             audioName.StartsWith(tvName + " (", StringComparison.OrdinalIgnoreCase) ||
+             audioName.StartsWith(tvName + " -", StringComparison.OrdinalIgnoreCase))).Take(2).ToArray();
+    }
+
+    private readonly record struct HardwareSuggestion(
+        DisplayTargetOption? Tv,
+        DisplayTargetOption? Monitor,
+        int AvailableDisplayCount);
 
     [RelayCommand(CanExecute = nameof(CanApplyHardware))]
     private async Task ApplyHardwareAsync()

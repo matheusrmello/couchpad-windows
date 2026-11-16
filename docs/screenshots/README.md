@@ -1,8 +1,8 @@
 # Screenshots oficiais — P7a
 
 - Data: 2026-11-16
-- Estado: **capturas atualizadas após a 1.0.12**; aceite final pendente
-- Versão exibida: `1.0.12`
+- Estado: **capturas atualizadas após a 1.0.13**; aceite final pendente
+- Versão exibida: `1.0.13`
 - Simulação: display/áudio sem escrita real; seletores vazios de propósito
 - Leitor de tela: validação manual ainda pendente (ver checklist)
 
@@ -21,6 +21,9 @@
   `AllowAudioWrites` ficam desligados.
 - A seção **Perfis de ambiente** aparece no card Display, com perfil padrão,
   criação, renomeação e exclusão. O perfil ativo é o mesmo usado pelo startup.
+- O expander **Diagnóstico da identificação** mostra a decisão de TV, monitor
+  e áudio, com motivo e confiança. As capturas o deixam recolhido; o conteúdo
+  completo é validado por UIAutomation.
 - A opção **Iniciar com o Windows** pode refletir a tarefa real da máquina; ela
   não executa escrita de display/áudio durante a captura.
 - O tema é escuro; não há captura de tema claro.
@@ -29,5 +32,5 @@
 - Em 1020×780 o conteúdo usa a barra de rolagem; as capturas mostram o topo da
   tela. A ordem de foco foi validada via UIAutomation em 3/2/1 colunas.
 - A validação com Narrator/NVDA não foi executada nesta máquina.
-- As capturas usam o build Debug de `1.0.12`; o instalador local foi validado,
+- As capturas usam o build Debug de `1.0.13`; o instalador local foi validado,
   mas a publicação ainda está pendente.
