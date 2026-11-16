@@ -66,3 +66,13 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - Abertura com automação/escritas temporariamente desligadas: sem banner de recuperação e toggle de automação habilitado. `settings.json` restaurado com hash idêntico.
 - `CouchPad.Rescue.exe --startup-recovery` sem journal retornou 0 e não criou journal.
 - Instalador `CouchPad-Setup-1.0.11-win-x64.exe`: 84.286.297 bytes, SHA-256 `74605662FFD3437E78448AC2D0B300FBFA3B561D479E8A7D38F953715584A1EC`. Publicação no GitHub pendente.
+
+## Candidato 1.0.12
+
+- Recurso: perfis de ambiente nomeados, com TV, monitor interno e saída de áudio; migração de configurações antigas para perfil padrão; seletor, criação, renomeação e exclusão.
+- Build Debug/Release 0/0, 290 testes e smoke.
+- Troca Sala → Quarto via UIAutomation no build e no executável instalado, com `AllowDisplayWrites=false`, `AllowAudioWrites=false`, automação desligada e XInput desligado. O TV selecionado mudou para `tv-quarto`, `activeProfileId` virou `quarto`, o topo de settings foi espelhado e os dois perfis permaneceram.
+- Instalação per-user sem elevação por cima da instalação existente: exit 0. App e rescue reportaram `1.0.12.0`; ProductVersion `1.0.12+5563af889f35e78079773d2b0fc00cc0a3d1b423`.
+- Tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal ausente. `settings.json` restaurado após o teste.
+- Capturas oficiais de 16/11/2026 atualizadas para `1.0.12` em `docs/screenshots/`.
+- Instalador `CouchPad-Setup-1.0.12-win-x64.exe`: 84.294.096 bytes, SHA-256 `E5DE69BFBFCB7CA8EC5F513B1070007C8D8B819F31E642C50C36C2523DA6F84A`. Publicação no GitHub pendente.

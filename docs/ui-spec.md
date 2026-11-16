@@ -1,7 +1,7 @@
 # CouchPad — Especificação de UI (P1–P7a)
 
-- Data: 2026-11-13
-- Fases: P1–P6 implementadas; P7a em revisão de a11y/i18n/screenshots
+- Data: 2026-11-16
+- Fases: P1–P7 implementadas; UI atual em 1.0.12 com perfis de ambiente
 - Base visual: referência do ShiftPad 2.2.0, recriada com identidade própria
 - Plataforma: Avalonia 12.1.4 / .NET 10 (`net10.0`)
 

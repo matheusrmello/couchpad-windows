@@ -1,7 +1,7 @@
 # Checklist de acessibilidade — P7a
 
-- Data: 2026-11-13
-- Aceite do usuário: 2026-11-13
+- Data: 2026-11-16
+- Aceite do usuário: 2026-11-13 (P7a); perfis adicionados em 2026-11-16
 - Escopo: shell Avalonia, cards, controles, bandeja, autostart, recuperação
   assistida, i18n e estados de erro
 - Base: WCAG 2.2 AA (alvos principais), teclado, leitor de tela e contraste
@@ -128,7 +128,7 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 ```
 
 - Build 0 avisos/0 erros.
-- 259 testes.
+- 290 testes.
 - Smoke OK.
 - Capturas oficiais em `docs/screenshots/` nos 3 breakpoints × 2 idiomas.
 - UIAutomation: ordem de foco e nomes em 3/2/1 colunas.

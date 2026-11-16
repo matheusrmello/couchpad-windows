@@ -5,7 +5,8 @@
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
 - Estado atual: build Debug/Release 0 avisos/0 erros; **290 testes**; smoke OK;
-  candidato `1.0.12` com perfis de ambiente; instalação e publicação pendentes.
+  candidato `1.0.12` com perfis de ambiente instalado localmente; publicação
+  pendente.
 
 ## Status das fases
 
@@ -107,20 +108,22 @@
 ### 9. Perfis de ambiente (1.0.12)
 
 - **Dono:** DeepSeek.
-- **Status:** implementado; instalação e publicação pendentes.
+- **Status:** implementado e instalado localmente; publicação pendente.
 - **Implementação:** `AppSettings.ActiveProfileId` + `EnvironmentProfiles`;
   migração de configurações antigas para perfil padrão; seletor, criação,
   renomeação e exclusão na tela de Display; espelhamento do perfil ativo nos
   campos de hardware de startup.
 - **Evidência:** `JsonAppSettingsStoreTests`, `EnvironmentProfileTests`,
-  troca de perfil via UIAutomation com escritas de hardware desligadas,
-  build/testes/smoke e captura de tela.
-- **Pendente:** validar visualmente nos três breakpoints e publicar.
+  troca Sala → Quarto via UIAutomation com escritas de hardware desligadas no
+  build e no executável instalado; 6 capturas atualizadas; build/testes/smoke.
+- **Pendente:** publicar o instalador 1.0.12 com SHA-256 e release notes.
+  Instalador local: 84.294.096 bytes, SHA-256
+  `E5DE69BFBFCB7CA8EC5F513B1070007C8D8B819F31E642C50C36C2523DA6F84A`.
 
 ## Próxima ação
 
 O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
-O candidato `1.0.12` adiciona perfis de ambiente e inclui a correção de
-reidratação do journal da `1.0.11`; instalação e publicação pendentes. A
-reconexão do watcher durante a contagem continua sem evidência independente;
-HDR e notificações nativas seguem adiados.
+O candidato `1.0.12` adiciona perfis de ambiente, inclui a correção de
+reidratação do journal da `1.0.11` e está instalado localmente; publicação
+pendente. A reconexão do watcher durante a contagem continua sem evidência
+independente; HDR e notificações nativas seguem adiados.

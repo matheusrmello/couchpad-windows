@@ -29,5 +29,5 @@
 - Em 1020×780 o conteúdo usa a barra de rolagem; as capturas mostram o topo da
   tela. A ordem de foco foi validada via UIAutomation em 3/2/1 colunas.
 - A validação com Narrator/NVDA não foi executada nesta máquina.
-- As capturas usam o build Debug de `1.0.12`; o instalador e a publicação ainda
-  estão pendentes.
+- As capturas usam o build Debug de `1.0.12`; o instalador local foi validado,
+  mas a publicação ainda está pendente.

@@ -5,7 +5,7 @@
 - Adiciona perfis de ambiente: cada perfil guarda TV, monitor interno e saída de áudio, com seletor, criação, renomeação e exclusão. O perfil ativo é persistido e espelhado nos campos de startup; configurações antigas migram para um perfil padrão.
 - Trocar de perfil desliga a automação quando o hardware composto é diferente e exige **Aplicar configuração** para reiniciar com as novas escolhas.
 - Build Debug/Release 0/0, 290 testes e smoke. Troca de perfil validada por UIAutomation com escritas de hardware desligadas.
-- Instalação e publicação desta versão pendentes.
+- Instalação local validada sem elevação: App/rescue 1.0.12, tasks preservadas, abertura normal e troca Sala → Quarto no executável instalado. Instalador com 84.294.096 bytes e SHA-256 `E5DE69BFBFCB7CA8EC5F513B1070007C8D8B819F31E642C50C36C2523DA6F84A`; publicação pendente.
 
 ## 1.0.11 (candidato)
 
