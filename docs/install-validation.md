@@ -55,3 +55,14 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 
 - Builds isolados Debug e Release com 0 avisos e 0 erros. Em cada configuração, 259 testes (232 Core e 27 App) e smoke passaram.
 - SHA-256 reconferido. A distribuição usa o mesmo EXE que passou pelo ciclo de instalação, reinstalação e desinstalação na conta `Teste`. O pacote foi gerado com a versão 1.0.0 definida no comando de build. O código-fonte agora declara a mesma versão por padrão.
+
+## Candidato 1.0.11
+
+- Correção: snapshots CCD do journal são reidratados por `DevicePath` exato e, se ele mudou, por EDID/nome; se a topologia já é o baseline ativo, o restore não escreve. Falha de reidratação é fail-closed e registrada como `DisplaySnapshotRehydrationException`.
+- Evidência read-only com o journal real de 15/11/2026: `STRICT=False`, `REHYDRATED=True`, AOC `59140:24646` para `59029:24646`.
+- Build Debug/Release 0/0, 286 testes e smoke.
+- Instalação per-user sem elevação por cima da instalação existente: exit 0. App e rescue reportaram `1.0.11.0`; ProductVersion `1.0.11+fa6967fe8fa8e69d0c9a1bd02c512fb608bf9dca`.
+- Tarefas `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`, apontando para `%LOCALAPPDATA%\Programs\CouchPad\CouchPad.Rescue.exe`.
+- Abertura com automação/escritas temporariamente desligadas: sem banner de recuperação e toggle de automação habilitado. `settings.json` restaurado com hash idêntico.
+- `CouchPad.Rescue.exe --startup-recovery` sem journal retornou 0 e não criou journal.
+- Instalador `CouchPad-Setup-1.0.11-win-x64.exe`: 84.286.297 bytes, SHA-256 `74605662FFD3437E78448AC2D0B300FBFA3B561D479E8A7D38F953715584A1EC`. Publicação no GitHub pendente.

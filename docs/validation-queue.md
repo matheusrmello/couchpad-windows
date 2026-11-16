@@ -101,7 +101,8 @@
   abertura sem banner de recuperação; tasks de logon preservadas.
 - **Pendente:** publicar o instalador 1.0.11 com SHA-256 e release notes;
   repetir a recuperação assistida em hardware em uma janela controlada, se
-  necessário.
+  necessário. Instalador local: 84.286.297 bytes, SHA-256
+  `74605662FFD3437E78448AC2D0B300FBFA3B561D479E8A7D38F953715584A1EC`.
 
 ## Próxima ação
 
