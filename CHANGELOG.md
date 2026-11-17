@@ -6,6 +6,7 @@
 - Barras de percentual e proporção ganham largura mínima de 2 px, para que valores baixos (1%) continuem visíveis.
 - Novo teste de regressão: todo `{DynamicResource CouchPad.*}` usado no XAML precisa existir em `Themes/Tokens.axaml`.
 - Build Debug/Release 0/0, **310 testes** e smoke. Correção verificada no HUD real com GPU em 1–8%.
+- Instalação local validada sem elevação: App/rescue 1.0.15. HUD real abriu com GPU em 0%; em simulação, GPU 74% e VRAM 7,2/12,0 GB com as barras azuis. Tasks preservadas, journal ausente e `settings.json` restaurado por hash. Instalador com 84.333.243 bytes e SHA-256 `9DEF26147CD7B2DF66715B448B7C9E7B69BC328D605B7AB7B9A2B016D8748A6B`; publicação pendente.
 
 ## 1.0.14 (candidato)
 

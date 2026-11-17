@@ -104,4 +104,7 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - Barras ganham largura mínima de 2 px para valores baixos; GPU em 1% continua visível.
 - Build Debug/Release 0/0, **310 testes** e smoke. Novo teste garante que todo `{DynamicResource CouchPad.*}` do XAML exista em `Themes/Tokens.axaml`.
 - Captura do HUD real confirmou CPU 8%, GPU 1%, RAM, VRAM, processo e resolução com as barras desenhadas.
-- Instalação no executável instalado e publicação pendentes.
+- Instalação per-user sem elevação por cima da 1.0.14: exit 0. App e rescue reportaram `1.0.15.0`; ProductVersion `1.0.15+15f759a723d1b3b1110166af9d4a61a56fe25203`.
+- Executável instalado: HUD real abriu com GPU em 0% e, em modo simulação, GPU 74% e VRAM 7,2/12,0 GB com as barras azuis desenhadas. Tasks de autostart/rescue permaneceram `Ready`; journal ausente.
+- `settings.json` restaurado ao conteúdo original (hash conferido); chord físico em controle real ainda pendente.
+- Instalador `CouchPad-Setup-1.0.15-win-x64.exe`: 84.333.243 bytes, SHA-256 `9DEF26147CD7B2DF66715B448B7C9E7B69BC328D605B7AB7B9A2B016D8748A6B`. Publicação no GitHub pendente.

@@ -153,8 +153,8 @@
 ### 12. Correção das barras de GPU/VRAM do HUD (1.0.15)
 
 - **Dono:** OpenCode.
-- **Status:** corrigido; instalação e validação no executável instalado
-  pendentes.
+- **Status:** corrigido, instalado e validado no executável 1.0.15; publicação
+  pendente.
 - **Causa:** o XAML do HUD e do modal usava `{DynamicResource CouchPad.Accent2}`,
   token que não existe em `Themes/Tokens.axaml`. O recurso não resolvia e a
   barra ficava invisível.
@@ -163,8 +163,12 @@
 - **Evidência:** build Debug/Release 0/0, **310 testes**, smoke; captura do HUD
   real mostrando CPU 8%, GPU 1% e barras desenhadas. Novo teste
   `Dynamic_theme_resources_used_in_xaml_exist_in_tokens` cobre a regressão.
-- **Pendente:** instalar 1.0.15, confirmar as barras no executável instalado e
-  publicar. Chord físico segue pendente (item 11).
+- **Instalação:** executável 1.0.15 validado; HUD real com GPU 0% e modo
+  simulação com GPU 74%/VRAM 7,2 GB exibindo as barras azuis. Tasks
+  preservadas, journal ausente, `settings.json` restaurado por hash.
+  Instalador: 84.333.243 bytes, SHA-256
+  `9DEF26147CD7B2DF66715B448B7C9E7B69BC328D605B7AB7B9A2B016D8748A6B`.
+- **Pendente:** publicar. Chord físico segue pendente (item 11).
 
 ## Próxima ação
 
