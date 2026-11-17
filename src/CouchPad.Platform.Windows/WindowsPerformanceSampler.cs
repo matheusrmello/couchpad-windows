@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using CouchPad.Core.Performance;
+using Microsoft.Win32;
 
 namespace CouchPad.Platform.Windows;
 
@@ -10,9 +12,16 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
 {
     private const uint PdhFmtDouble = 0x00000200;
     private const uint PdhMoreData = 0x800007D2;
+    private const uint PdhCStatusValidData = 0;
     private const int SmCxScreen = 0;
     private const int SmCyScreen = 1;
     private const int VRefresh = 116;
+    private const string DisplayClassKeyPath =
+        @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}";
+    private const string AdapterMemorySizeValueName = "HardwareInformation.qwMemorySize";
+
+    // Total VRAM is fixed for the session; probe the display class registry once.
+    private static readonly Lazy<ulong?> AdapterMemoryTotalBytes = new(ReadAdapterMemoryTotalBytes);
 
     private readonly object _sync = new();
     private readonly IFrameRateSource _frameRate;
@@ -56,7 +65,7 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
             }
             catch (Exception) { fps = null; }
             var memory = ReadMemory();
-            var gpu = ReadGpu();
+            var gpu = ReadGpu(process.Pid);
             var vram = ReadVram();
             var display = ReadDisplay();
             return new PerformanceSnapshot(
@@ -66,7 +75,7 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
                 memory.Used,
                 memory.Total,
                 vram,
-                null,
+                AdapterMemoryTotalBytes.Value,
                 process.Name,
                 display.Width,
                 display.Height,
@@ -146,20 +155,14 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
         return (status.TotalPhys - status.AvailPhys, status.TotalPhys);
     }
 
-    private double? ReadGpu()
+    private double? ReadGpu(int? processId)
     {
+        if (processId is not { } pid) return null;
         var values = ReadCounter(_gpuQuery, _gpuCounter)
-            .Where(item => item.Name.Contains("engtype_3D", StringComparison.OrdinalIgnoreCase))
+            .Where(item => GpuCounterFilter.IsProcess3D(item.Name, pid))
             .Select(item => item.Value)
             .Where(value => double.IsFinite(value))
             .ToArray();
-        if (values.Length == 0)
-        {
-            values = ReadCounter(_gpuQuery, _gpuCounter)
-                .Select(item => item.Value)
-                .Where(value => double.IsFinite(value))
-                .ToArray();
-        }
         return values.Length == 0 ? null : Math.Clamp(values.Max(), 0, 100);
     }
 
@@ -171,6 +174,37 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
             .ToArray();
         return values.Length == 0 ? null : (ulong)Math.Min(values.Max(), (double)ulong.MaxValue);
     }
+
+    private static ulong? ReadAdapterMemoryTotalBytes()
+    {
+        if (!OperatingSystem.IsWindows()) return null;
+        try
+        {
+            using var classKey = Registry.LocalMachine.OpenSubKey(DisplayClassKeyPath, writable: false);
+            if (classKey is null) return null;
+            ulong total = 0;
+            foreach (var subKeyName in classKey.GetSubKeyNames())
+            {
+                if (!int.TryParse(subKeyName, NumberStyles.None, CultureInfo.InvariantCulture, out _)) continue;
+                using var adapterKey = classKey.OpenSubKey(subKeyName, writable: false);
+                var bytes = ToByteCount(adapterKey?.GetValue(AdapterMemorySizeValueName, null));
+                if (bytes > total) total = bytes;
+            }
+            return total > 0 ? total : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private static ulong ToByteCount(object? raw) => raw switch
+    {
+        long value when value > 0 => (ulong)value,
+        int value when value > 0 => (ulong)value,
+        ulong value => value,
+        _ => 0ul,
+    };
 
     private static (int? Width, int? Height, int? Refresh) ReadDisplay()
     {
@@ -220,6 +254,7 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
             {
                 var item = Marshal.PtrToStructure<PdhFmtCounterValueItem>(buffer + index * itemSize);
                 var name = Marshal.PtrToStringUni(item.Name) ?? "";
+                if (item.Value.CStatus != PdhCStatusValidData) continue;
                 result.Add((name, item.Value.DoubleValue));
             }
             return result;
@@ -316,7 +351,7 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
     [DllImport("pdh.dll")]
     private static extern uint PdhCollectQueryData(IntPtr query);
 
-    [DllImport("pdh.dll")]
+    [DllImport("pdh.dll", CharSet = CharSet.Unicode)]
     private static extern uint PdhGetFormattedCounterArray(
         IntPtr counter, uint format, ref uint bufferSize, ref uint itemCount, IntPtr buffer);
 

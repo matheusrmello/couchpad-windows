@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**1.0.19 (candidato, 17/11/2026):** corrige GPU (PDH Unicode, CStatus, filtro por PID/engtype_3D) e VRAM (total do adaptador via registro; barra funciona). 342 testes, build 0/0, smoke. Instalação e publicação pendentes.
+
 **1.0.18 (candidato, 17/11/2026):** corrige o chord LB+RB+Y do HUD (evento reportado a cada poll; teste de regressão do hold). Chord validado no controle físico (8BitDo Ultimate 2, XInput). 333 testes, build 0/0, smoke. Instalado em 17/11/2026 (App/rescue `1.0.18.0`, exit 0, smoke, tasks `Ready`, journal ausente, `settings.json` preservado por hash); publicação pendente.
 
 **1.0.17 (candidato, 17/11/2026):** métrica FPS no HUD via RTSS shared memory (read-only, opt-in). Validada com RTSS real (Silent Hill 2); correções de layout/teto/janela. 332 testes, build 0/0, smoke. Decisão D080. Instalado em 17/11/2026 (App/rescue `1.0.17.0`, exit 0, smoke, tasks `Ready`, journal ausente, `settings.json` preservado por hash); publicação pendente.

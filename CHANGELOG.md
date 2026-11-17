@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.0.19 (candidato)
+
+- Corrige a leitura de GPU: PDH em Unicode, validação de `CStatus` e filtro das instâncias 3D do processo em primeiro plano (antes o HUD mostrava o pico global e oscilava 0/100%).
+- Corrige a barra de VRAM: o total do adaptador é lido do registro (`HardwareInformation.qwMemorySize`, maior adaptador); o texto passa a mostrar usado/total e a barra funciona.
+- 342 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.18 (candidato)
 
 - Corrige o atalho do HUD no controle: o estado do gamepad agora é reportado a cada poll (~30 Hz), permitindo ao detector medir o hold de 800 ms. Antes o evento só disparava em mudanças e o chord nunca era detectado.
