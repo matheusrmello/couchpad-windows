@@ -17,6 +17,9 @@
   <Color x:Key="CouchPad.Color.AccentMutedPressed">#0C2E1C</Color>
   <Color x:Key="CouchPad.Color.Info">#8CC6FF</Color>
   <Color x:Key="CouchPad.Color.InfoMuted">#15304F</Color>
+  <Color x:Key="CouchPad.Color.HudSurface">#F20B1117</Color>
+  <Color x:Key="CouchPad.Color.HudBorder">#26FFFFFF</Color>
+  <Color x:Key="CouchPad.Color.HudTrack">#22FFFFFF</Color>
   <Color x:Key="CouchPad.Color.Warning">#F2C94C</Color>
   <Color x:Key="CouchPad.Color.WarningMuted">#3A3117</Color>
   <Color x:Key="CouchPad.Color.Danger">#EB5757</Color>
@@ -37,6 +40,9 @@
   <SolidColorBrush x:Key="CouchPad.AccentMutedPressed" Color="{StaticResource CouchPad.Color.AccentMutedPressed}" />
   <SolidColorBrush x:Key="CouchPad.Info" Color="{StaticResource CouchPad.Color.Info}" />
   <SolidColorBrush x:Key="CouchPad.InfoMuted" Color="{StaticResource CouchPad.Color.InfoMuted}" />
+  <SolidColorBrush x:Key="CouchPad.HudSurface" Color="{StaticResource CouchPad.Color.HudSurface}" />
+  <SolidColorBrush x:Key="CouchPad.HudBorder" Color="{StaticResource CouchPad.Color.HudBorder}" />
+  <SolidColorBrush x:Key="CouchPad.HudTrack" Color="{StaticResource CouchPad.Color.HudTrack}" />
   <SolidColorBrush x:Key="CouchPad.Warning" Color="{StaticResource CouchPad.Color.Warning}" />
   <SolidColorBrush x:Key="CouchPad.WarningMuted" Color="{StaticResource CouchPad.Color.WarningMuted}" />
   <SolidColorBrush x:Key="CouchPad.Danger" Color="{StaticResource CouchPad.Color.Danger}" />
@@ -64,5 +70,6 @@
   <CornerRadius x:Key="CouchPad.Radius.Control">8</CornerRadius>
   <CornerRadius x:Key="CouchPad.Radius.Card">12</CornerRadius>
   <CornerRadius x:Key="CouchPad.Radius.CardLarge">14</CornerRadius>
+  <CornerRadius x:Key="CouchPad.Radius.Hud">16</CornerRadius>
   <CornerRadius x:Key="CouchPad.Radius.Pill">999</CornerRadius>
 </ResourceDictionary>

@@ -98,6 +98,14 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
 
+## Candidato 1.0.16
+
+- Redesenho do shell: cabeçalho com logo em bloco, regra de acento e status à direita.
+- Card HUD em linha inteira na primeira tela, com toggle, configurar, estado, posição, atalho, sessão, chips de métricas e prévia fiel.
+- Cards reorganizados e ordem de foco atualizada nos três breakpoints; tokens `HudSurface`, `HudBorder`, `HudTrack` e `Radius.Hud` compartilhados.
+- Build Debug/Release 0/0, **310 testes** e smoke; capturas `p7a-*` em 3 breakpoints × 2 idiomas.
+- Instalação e publicação pendentes.
+
 ## Candidato 1.0.15
 
 - Correção: as barras de GPU/VRAM do HUD e da prévia usavam `CouchPad.Accent2`, token inexistente, e não eram desenhadas. Passam a usar `CouchPad.Info`.

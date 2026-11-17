@@ -170,12 +170,25 @@
   `9DEF26147CD7B2DF66715B448B7C9E7B69BC328D605B7AB7B9A2B016D8748A6B`.
 - **Pendente:** publicar. Chord físico segue pendente (item 11).
 
+### 13. Redesenho do shell com card HUD (1.0.16)
+
+- **Dono:** OpenCode.
+- **Status:** implementado e validado em capturas; instalação e aceite
+  pendentes.
+- **Implementação:** cabeçalho com logo em bloco, regra de acento e status;
+  card HUD em linha inteira na primeira tela com toggle, configurar, estado,
+  posição, atalho, sessão, chips e prévia; cards reorganizados; ordem de foco
+  por breakpoint; tokens de HUD compartilhados; `HudText` centraliza chaves.
+- **Evidência:** build Debug/Release 0/0, **310 testes**, smoke; capturas
+  `p7a-*` atualizadas em 3 colunas (1020), 2 (780) e 1 (640) nos dois idiomas.
+- **Pendente:** instalar 1.0.16, validar no executável instalado e publicar.
+
 ## Próxima ação
 
 O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
-O candidato `1.0.15` corrige as barras de GPU/VRAM do HUD e inclui o HUD de
-desempenho da `1.0.14`, o diagnóstico da `1.0.13`, os perfis da `1.0.12` e a
-correção de reidratação do journal da `1.0.11`. Falta instalar, confirmar as
-barras no executável instalado, validar o chord físico e publicar. A reconexão
-do watcher durante a contagem continua sem evidência independente; HDR e
-notificações nativas seguem adiados.
+O candidato `1.0.16` redesenha o shell com card HUD em destaque e inclui a
+correção das barras de GPU/VRAM da `1.0.15`, o HUD da `1.0.14`, o diagnóstico
+da `1.0.13`, os perfis da `1.0.12` e a correção do journal da `1.0.11`. Falta
+instalar, validar o chord físico e publicar. A reconexão do watcher durante a
+contagem continua sem evidência independente; HDR e notificações nativas
+seguem adiados.

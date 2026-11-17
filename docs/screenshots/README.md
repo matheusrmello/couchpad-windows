@@ -1,8 +1,8 @@
 # Screenshots oficiais — P7a
 
 - Data: 2026-11-16
-- Estado: **capturas atualizadas após a 1.0.15**; aceite final pendente
-- Versão exibida: `1.0.15`
+- Estado: **capturas atualizadas após a 1.0.16**; aceite final pendente
+- Versão exibida: `1.0.16`
 - Simulação: display/áudio sem escrita real; seletores vazios de propósito
 - Leitor de tela: validação manual ainda pendente (ver checklist)
 
@@ -32,7 +32,7 @@
 - Em 1020×780 o conteúdo usa a barra de rolagem; as capturas mostram o topo da
   tela. A ordem de foco foi validada via UIAutomation em 3/2/1 colunas.
 - A validação com Narrator/NVDA não foi executada nesta máquina.
-- As capturas usam o executável instalado de `1.0.15`; a publicação ainda está pendente.
+- As capturas usam o executável instalado de `1.0.16`; a publicação ainda está pendente.
 
 ## Concept de redesign (não implementado)
 
@@ -49,6 +49,8 @@
 
 - `hud-fase1-overlay.png`: HUD instalado em simulação, com CPU, GPU, RAM, VRAM,
   processo e resolução; barras de GPU/VRAM corrigidas na 1.0.15.
+- Capturas `p7a-*` da 1.0.16 mostram o novo shell, com o card HUD em linha
+  inteira na primeira tela, nos três breakpoints e nos dois idiomas.
 - `hud-fase1-settings.png`: modal de configuração com métricas, atalho,
   aparência e prévia.
 - `couchpad-performance-hud-concept.png` e `.html`: concept original aprovado;

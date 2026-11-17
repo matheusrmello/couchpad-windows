@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 1.0.16 (candidato)
+
+- Redesenha o shell: cabeçalho com logo em bloco, regra de acento e status à direita.
+- Novo **card HUD de desempenho** em linha inteira na primeira tela: ativar/desativar, configurar, estado, posição, atalho, “só durante a sessão”, chips das métricas ativas e prévia fiel do overlay.
+- Reorganiza os cards em três linhas equilibradas (HUD; Automação + Display; Gamepad + Combinação + Contagem; Transição + Launchers + Parâmetros) e atualiza as ordens de foco nos três breakpoints.
+- Extrai `HudText`, adiciona tokens `CouchPad.HudSurface`, `HudBorder`, `HudTrack` e `Radius.Hud`, usados também pelo overlay e pelo modal.
+- Novos estilos `Border.chip`, `TextBlock.chipLabel` e `TextBlock.value.mono`.
+- Build Debug/Release 0/0, **310 testes** e smoke; capturas atualizadas em 3 breakpoints × 2 idiomas.
+
 ## 1.0.15 (candidato)
 
 - Corrige as barras de GPU e VRAM do HUD, que usavam `CouchPad.Accent2`, token inexistente no tema. Agora usam `CouchPad.Info`.

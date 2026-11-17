@@ -92,7 +92,7 @@ public partial class MainWindow : Window
             grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         }
 
-        var rows = columns switch { 3 => 3, 2 => 4, _ => 8 };
+        var rows = columns switch { 3 => 4, 2 => 5, _ => 9 };
         grid.RowDefinitions.Clear();
         for (var i = 0; i < rows; i++)
         {
@@ -101,14 +101,15 @@ public partial class MainWindow : Window
 
         var cards = new (string Name, Control? Card)[]
         {
+            ("HudCard", this.FindControl<Control>("HudCard")),
             ("AutomationCard", this.FindControl<Control>("AutomationCard")),
             ("DisplayCard", this.FindControl<Control>("DisplayCard")),
             ("GamepadCard", this.FindControl<Control>("GamepadCard")),
             ("ComboCard", this.FindControl<Control>("ComboCard")),
             ("CountdownCard", this.FindControl<Control>("CountdownCard")),
-            ("SettingsCard", this.FindControl<Control>("SettingsCard")),
             ("TransitionCard", this.FindControl<Control>("TransitionCard")),
             ("LaunchersCard", this.FindControl<Control>("LaunchersCard")),
+            ("SettingsCard", this.FindControl<Control>("SettingsCard")),
         };
 
         for (var index = 0; index < cards.Length; index++)
@@ -160,28 +161,30 @@ public partial class MainWindow : Window
         {
             return name switch
             {
-                "AutomationCard" => (0, 0, 1, 1),
-                "DisplayCard" => (0, 1, 1, 1),
-                "GamepadCard" => (1, 0, 1, 1),
-                "ComboCard" => (1, 1, 1, 1),
-                "TransitionCard" => (2, 0, 1, 1),
-                "LaunchersCard" => (2, 1, 1, 1),
+                "HudCard" => (0, 0, 1, 2),
+                "AutomationCard" => (1, 0, 1, 1),
+                "DisplayCard" => (1, 1, 1, 1),
+                "GamepadCard" => (2, 0, 1, 1),
+                "ComboCard" => (2, 1, 1, 1),
                 "CountdownCard" => (3, 0, 1, 1),
-                "SettingsCard" => (3, 1, 1, 1),
+                "TransitionCard" => (3, 1, 1, 1),
+                "LaunchersCard" => (4, 0, 1, 1),
+                "SettingsCard" => (4, 1, 1, 1),
                 _ => (index, 0, 1, 1),
             };
         }
 
         return name switch
         {
-            "AutomationCard" => (0, 0, 1, 1),
-            "DisplayCard" => (0, 1, 1, 2),
-            "GamepadCard" => (1, 0, 1, 1),
-            "ComboCard" => (1, 1, 1, 1),
-            "CountdownCard" => (1, 2, 1, 1),
-            "SettingsCard" => (2, 2, 1, 1),
-            "TransitionCard" => (2, 0, 1, 1),
-            "LaunchersCard" => (2, 1, 1, 1),
+            "HudCard" => (0, 0, 1, 3),
+            "AutomationCard" => (1, 0, 1, 1),
+            "DisplayCard" => (1, 1, 1, 2),
+            "GamepadCard" => (2, 0, 1, 1),
+            "ComboCard" => (2, 1, 1, 1),
+            "CountdownCard" => (2, 2, 1, 1),
+            "TransitionCard" => (3, 0, 1, 1),
+            "LaunchersCard" => (3, 1, 1, 1),
+            "SettingsCard" => (3, 2, 1, 1),
             _ => (index, 0, 1, 1),
         };
     }

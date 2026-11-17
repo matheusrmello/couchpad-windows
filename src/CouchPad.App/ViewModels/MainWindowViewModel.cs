@@ -259,13 +259,41 @@ public partial class MainWindowViewModel : ObservableObject
             _hudSettings = _hudSettings with { Enabled = value };
             _performanceHud?.ApplySettings(_hudSettings);
             PersistSettings();
-            OnPropertyChanged();
+            NotifyHudChanged();
+        }
+    }
+
+    public bool PerformanceHudShowOnlyInSession
+    {
+        get => _hudSettings.ShowOnlyInSession;
+        set
+        {
+            if (_isLoadingSettings || _hudSettings.ShowOnlyInSession == value) return;
+            _hudSettings = _hudSettings with { ShowOnlyInSession = value };
+            _performanceHud?.ApplySettings(_hudSettings);
+            PersistSettings();
+            NotifyHudChanged();
         }
     }
 
     public bool CanConfigurePerformanceHud => _performanceHud is not null;
 
     public PerformanceHudSettings CurrentHudSettings => _hudSettings;
+
+    public string HudStatusText => _localization[_hudSettings.Enabled ? "hud.state.on" : "hud.state.off"];
+
+    public string HudPositionText => _localization[HudText.PositionKey(_hudSettings.Position)];
+
+    public string HudChordText => _localization[HudText.ChordKey(_hudSettings.ChordKey)];
+
+    public bool HudShowsCpu => _hudSettings.Metrics.Contains(PerformanceMetric.Cpu);
+    public bool HudShowsCpuProcess => _hudSettings.Metrics.Contains(PerformanceMetric.CpuProcess);
+    public bool HudShowsGpu => _hudSettings.Metrics.Contains(PerformanceMetric.Gpu);
+    public bool HudShowsRam => _hudSettings.Metrics.Contains(PerformanceMetric.Ram);
+    public bool HudShowsVram => _hudSettings.Metrics.Contains(PerformanceMetric.Vram);
+    public bool HudShowsProcess => _hudSettings.Metrics.Contains(PerformanceMetric.Process);
+    public bool HudShowsDisplay => _hudSettings.Metrics.Contains(PerformanceMetric.Display);
+    public bool HudHasMetrics => _hudSettings.Metrics.Count > 0;
 
     public event EventHandler? HudSettingsRequested;
 
@@ -277,8 +305,25 @@ public partial class MainWindowViewModel : ObservableObject
         _hudSettings = settings ?? throw new ArgumentNullException(nameof(settings));
         _performanceHud?.ApplySettings(settings);
         PersistSettings();
-        OnPropertyChanged(nameof(PerformanceHudEnabled));
         OnPropertyChanged(nameof(CurrentHudSettings));
+        NotifyHudChanged();
+    }
+
+    private void NotifyHudChanged()
+    {
+        OnPropertyChanged(nameof(PerformanceHudEnabled));
+        OnPropertyChanged(nameof(PerformanceHudShowOnlyInSession));
+        OnPropertyChanged(nameof(HudStatusText));
+        OnPropertyChanged(nameof(HudPositionText));
+        OnPropertyChanged(nameof(HudChordText));
+        OnPropertyChanged(nameof(HudShowsCpu));
+        OnPropertyChanged(nameof(HudShowsCpuProcess));
+        OnPropertyChanged(nameof(HudShowsGpu));
+        OnPropertyChanged(nameof(HudShowsRam));
+        OnPropertyChanged(nameof(HudShowsVram));
+        OnPropertyChanged(nameof(HudShowsProcess));
+        OnPropertyChanged(nameof(HudShowsDisplay));
+        OnPropertyChanged(nameof(HudHasMetrics));
     }
 
     public bool CanRetryRecovery => _canStartRecovery && IsRecoveryUncertain;
@@ -774,6 +819,7 @@ public partial class MainWindowViewModel : ObservableObject
             AllowAudioWrites = settings.AllowAudioWrites;
             _hudSettings = PerformanceHudSettings.FromAppSettings(settings);
             _performanceHud?.ApplySettings(_hudSettings);
+            NotifyHudChanged();
             LoadEnvironmentProfiles(settings);
             if (IsProductionMode && (!HardwareMatchesSelection || !settings.UseWindowsGamepad ||
                 !settings.AllowDisplayWrites || !settings.AllowAudioWrites || IsRecoveryUncertain))
@@ -965,5 +1011,6 @@ public partial class MainWindowViewModel : ObservableObject
 
         OnPropertyChanged(nameof(VersionText));
         OnPropertyChanged(nameof(UpdateNoticeText));
+        NotifyHudChanged();
     }
 }

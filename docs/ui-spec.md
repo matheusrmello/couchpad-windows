@@ -30,8 +30,8 @@
 
 | Largura da janela | Colunas | Organização |
 |---|---|---|
-| `>= 1000 px` | 3 | Automação + Display; Gamepad + Combinação + Parâmetros; Transição + Launchers |
-| `720–999 px` | 2 | Automação + Display; Gamepad + Combinação; Transição + Launchers; Parâmetros em linha inteira |
+| `>= 1000 px` | 3 | HUD em linha inteira; Automação + Display; Gamepad + Combinação + Contagem; Transição + Launchers + Parâmetros |
+| `720–999 px` | 2 | HUD em linha inteira; Automação + Display; Gamepad + Combinação; Contagem + Transição; Launchers + Parâmetros |
 | `< 720 px` | 1 | Cards empilhados na ordem de leitura |
 
 - Janela padrão: `1020 × 780`.
@@ -45,16 +45,19 @@
 
 | Card | 3 colunas | 2 colunas | 1 coluna |
 |---|---|---|---|
-| Automação | (0,0) | (0,0) | linha 0 |
-| Display | (0,1) span 2 | (0,1) | linha 1 |
-| Gamepad | (1,0) | (1,0) | linha 2 |
-| Combinação | (1,1) | (1,1) | linha 3 |
-| Parâmetros | (1,2) span 2 linhas | (3,0) span 2 | linha 6 |
-| Transição | (2,0) | (2,0) | linha 4 |
-| Launchers | (2,1) | (2,1) | linha 5 |
+| HUD | (0,0) span 3 | (0,0) span 2 | linha 0 |
+| Automação | (1,0) | (1,0) | linha 1 |
+| Display | (1,1) span 2 | (1,1) | linha 2 |
+| Gamepad | (2,0) | (2,0) | linha 3 |
+| Combinação | (2,1) | (2,1) | linha 4 |
+| Contagem | (2,2) | (3,0) | linha 5 |
+| Transição | (3,0) | (3,1) | linha 6 |
+| Launchers | (3,1) | (4,0) | linha 7 |
+| Parâmetros | (3,2) | (4,1) | linha 8 |
 
-Na configuração de 3 colunas, `Parâmetros` ocupa `(1,2)` com `RowSpan=2` e a
-célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
+O card de HUD vem primeiro por ser a superfície nova: fica inteiro na primeira
+tela em 1020×780 e apresenta estado, posição, atalho, métricas e prévia. Os
+demais cards mantêm a ordem de leitura em todos os breakpoints.
 
 ---
 
@@ -62,9 +65,10 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 
 ### 3.1 Cabeçalho
 
-- Marca textual `C` em bloco com `AccentMuted`.
+- Bloco do logo com fundo `Surface`, borda `Border` e ícone do app.
 - Nome (`app.name`) e tagline (`app.tagline`).
-- Pill `Grátis` (`status.free`) em acento.
+- Regra horizontal: 96 px em `Accent` e o restante em `Border`.
+- Aviso de atualização opcional (`update.notice`) em pílula informativa.
 - Pill de estado com `StatusDot` + texto, dirigida pela state machine:
   - `Idle` → `status.idle` (neutro);
   - `WaitingForGamepad` → `status.waiting` (âmbar);
@@ -189,6 +193,24 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 - **HUD de desempenho (1.0.14)**: modal com métricas selecionáveis, atalho
   LB+RB+Y, posição/opacidade/escala e “só durante a sessão”; HUD flutuante
   click-through, sem foco, com CPU/GPU/RAM/VRAM/processo/resolução.
+- **Card HUD (1.0.16)**: primeiro card do shell, em linha inteira. Mostra
+  toggle de ativação, `Configurar`, estado, posição, atalho, “só durante a
+  sessão”, chips das métricas ativas e prévia ilustrativa com a mesma
+  linguagem do overlay. Métricas vêm de `PerformanceHudSettings`; nada é
+  escrito em hardware.
+
+### 3.12 Card HUD
+
+- Título `section.hud`; ação de cabeçalho com `hud.configure` e
+  `hud.enabled`.
+- Corpo em duas colunas: controles à esquerda e prévia à direita.
+- Linha de estado: `hud.status` + `hud.state.on|off`, posição curta
+  (`hud.position.short.*`) e atalho (`hud.chord.preset.*`).
+- `CheckBox` de `hud.session_only` persiste em `PerformanceHudShowOnlyInSession`.
+- Chips usam `Border.chip` + `TextBlock.chipLabel`; métricas não selecionadas
+  ficam ocultas. Sem métricas, mostra `hud.overlay.empty`.
+- Prévia usa os tokens `CouchPad.HudSurface`, `HudBorder`, `HudTrack` e
+  `Radius.Hud`, os mesmos do overlay e do modal, com valores de `hud.preview.*`.
 
 ---
 
@@ -209,11 +231,15 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 | `TextDisabled` | `#5F6368` | desabilitado |
 | `Accent` | `#2FD07A` | ação e estado ativo |
 | `AccentMuted` | `#123D28` | fundo de destaque |
-| `Info` | `#2F80ED` | reservado |
+| `Info` | `#8CC6FF` | GPU, VRAM e informação |
+| `InfoMuted` | `#15304F` | fundo informativo |
+| `HudSurface` | `#F20B1117` | fundo do HUD e da prévia |
+| `HudBorder` | `#26FFFFFF` | borda do HUD |
+| `HudTrack` | `#22FFFFFF` | trilho das barras |
 | `Warning` | `#F2C94C` | aguardando |
 | `WarningMuted` | `#3A3117` | fundo de aviso |
 | `Danger` | `#EB5757` | erro |
-| `DangerMuted` | `#3A1D1E` | fundo de erro |
+| `DangerMuted` | `#35191B` | fundo de erro |
 
 ### 4.2 Tipografia
 
@@ -234,7 +260,7 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
 - Padding do card: `16`.
 - Gap entre cards: `10`.
 - Altura de controle: `36`; controle pequeno: `32`.
-- Raio de controle: `8`; card: `12–14`; pill: `999`.
+- Raio de controle: `8`; card: `12–14`; HUD: `16`; pill: `999`.
 
 ---
 

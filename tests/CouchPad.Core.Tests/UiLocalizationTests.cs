@@ -14,6 +14,7 @@ public sealed class UiLocalizationTests
         "section.display",
         "section.gamepad",
         "section.combo",
+        "section.hud",
         "section.settings",
         "section.transition",
         "section.launchers",
@@ -25,6 +26,7 @@ public sealed class UiLocalizationTests
         "DisplayCard",
         "GamepadCard",
         "ComboCard",
+        "HudCard",
         "SettingsCard",
         "CountdownCard",
         "TransitionCard",
@@ -83,7 +85,7 @@ public sealed class UiLocalizationTests
     }
 
     [Fact]
-    public void Main_window_references_all_seven_sections_and_cards()
+    public void Main_window_references_all_sections_and_cards()
     {
         var path = Path.Combine(ViewsDirectory(), "MainWindow.axaml");
         var xaml = File.ReadAllText(path);

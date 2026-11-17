@@ -44,7 +44,7 @@ public partial class PerformanceHudSettingsViewModel : ObservableObject
     {
         var localization = LocalizationService.Instance;
         ChordOptions = new(GamepadChordPresets.All.Select(preset =>
-            new HudChordOption(preset.Key, localization[ChordLabelKey(preset.Key)])));
+            new HudChordOption(preset.Key, localization[HudText.ChordKey(preset.Key)])));
         PositionOptions = new(
         [
             new("topLeft", localization["hud.position.top_left"]),
@@ -92,11 +92,4 @@ public partial class PerformanceHudSettingsViewModel : ObservableObject
     }
 
     private void NotifyPreview() => OnPropertyChanged(nameof(ShowEmptyPreview));
-
-    private static string ChordLabelKey(string key) => key switch
-    {
-        "LB+RB+X" => "hud.chord.preset.lbrbx",
-        "LB+RB+Back" => "hud.chord.preset.lbrbback",
-        _ => "hud.chord.preset.lbrby",
-    };
 }

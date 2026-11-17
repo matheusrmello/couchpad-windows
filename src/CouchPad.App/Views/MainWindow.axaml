@@ -21,41 +21,54 @@
   <Grid RowDefinitions="Auto,*,Auto" Margin="{DynamicResource CouchPad.Padding.Window}">
 
     <!-- Cabeçalho -->
-    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="0,0,0,12">
-      <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-        <Image Width="34" Height="34"
-               Source="avares://CouchPad/Assets/couchpad.png"
-               Stretch="Uniform" />
-        <StackPanel VerticalAlignment="Center">
-          <TextBlock Text="{loc:Tr app.name}"
-                     FontSize="{DynamicResource CouchPad.FontSize.H1}"
-                     FontWeight="SemiBold" />
-          <TextBlock Text="{loc:Tr app.tagline}"
-                     FontSize="{DynamicResource CouchPad.FontSize.Caption}"
-                     Foreground="{DynamicResource CouchPad.TextSecondary}" />
-        </StackPanel>
-      </StackPanel>
-
-      <StackPanel Grid.Column="1"
-                  Orientation="Horizontal"
-                  Spacing="8"
-                  VerticalAlignment="Center">
-        <Button Classes="updateNotice"
-                IsVisible="{Binding HasUpdateNotice}"
-                Command="{Binding OpenUpdateCommand}"
-                AutomationProperties.Name="{Binding UpdateNoticeText}"
-                AutomationProperties.LiveSetting="Polite">
-          <StackPanel Orientation="Horizontal" Spacing="8">
-            <Ellipse Width="8" Height="8" VerticalAlignment="Center"
-                     Fill="{DynamicResource CouchPad.Info}" />
-            <TextBlock Text="{Binding UpdateNoticeText}" VerticalAlignment="Center" />
+    <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,14">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <Border Width="38" Height="38"
+                  CornerRadius="{DynamicResource CouchPad.Radius.Control}"
+                  Background="{DynamicResource CouchPad.Surface}"
+                  BorderBrush="{DynamicResource CouchPad.Border}"
+                  BorderThickness="1">
+            <Image Width="26" Height="26"
+                   Source="avares://CouchPad/Assets/couchpad.png"
+                   Stretch="Uniform" />
+          </Border>
+          <StackPanel VerticalAlignment="Center" Spacing="1">
+            <TextBlock Text="{loc:Tr app.name}"
+                       FontSize="{DynamicResource CouchPad.FontSize.H1}"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="{loc:Tr app.tagline}"
+                       FontSize="{DynamicResource CouchPad.FontSize.Caption}"
+                       Foreground="{DynamicResource CouchPad.TextSecondary}" />
           </StackPanel>
-        </Button>
-        <controls:StatusPill Text="{Binding StatusText}"
-                             Tone="{Binding CurrentStatusTone}"
-                             AutomationProperties.Name="{Binding StatusText}" />
-      </StackPanel>
-    </Grid>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1"
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    VerticalAlignment="Center">
+          <Button Classes="updateNotice"
+                  IsVisible="{Binding HasUpdateNotice}"
+                  Command="{Binding OpenUpdateCommand}"
+                  AutomationProperties.Name="{Binding UpdateNoticeText}"
+                  AutomationProperties.LiveSetting="Polite">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                       Fill="{DynamicResource CouchPad.Info}" />
+              <TextBlock Text="{Binding UpdateNoticeText}" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <controls:StatusPill Text="{Binding StatusText}"
+                               Tone="{Binding CurrentStatusTone}"
+                               AutomationProperties.Name="{Binding StatusText}" />
+        </StackPanel>
+      </Grid>
+
+      <Grid ColumnDefinitions="96,*" Height="1">
+        <Border Background="{DynamicResource CouchPad.Accent}" />
+        <Border Grid.Column="1" Background="{DynamicResource CouchPad.Border}" />
+      </Grid>
+    </StackPanel>
 
     <!-- Cards -->
     <ScrollViewer Grid.Row="1"
@@ -65,12 +78,12 @@
       <Grid x:Name="CardsGrid"
             RowSpacing="10"
             ColumnSpacing="10"
-            RowDefinitions="Auto,Auto,Auto"
+            RowDefinitions="Auto,Auto,Auto,Auto"
             ColumnDefinitions="*,*,*">
 
         <!-- Automação -->
         <controls:Card x:Name="AutomationCard"
-                       Grid.Row="0"
+                       Grid.Row="1"
                        Grid.Column="0"
                        Title="{loc:Tr section.automation}"
                        TitleIcon="M 13,2 L 4,13 H 10 L 9,22 L 20,10 H 13 Z">
@@ -130,7 +143,7 @@
 
         <!-- Display -->
         <controls:Card x:Name="DisplayCard"
-                       Grid.Row="0"
+                       Grid.Row="1"
                        Grid.Column="1"
                        Grid.ColumnSpan="2"
                        Title="{loc:Tr section.display}"
@@ -254,9 +267,185 @@
           </StackPanel>
         </controls:Card>
 
+        <!-- HUD de desempenho -->
+        <controls:Card x:Name="HudCard"
+                       Grid.Row="0"
+                       Grid.Column="0"
+                       Grid.ColumnSpan="3"
+                       Title="{loc:Tr section.hud}"
+                       TitleIcon="M 4,20 H 7 V 12 H 4 Z M 10,20 H 13 V 6 H 10 Z M 16,20 H 19 V 9 H 16 Z">
+          <controls:Card.HeaderAction>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <Button Classes="link"
+                      Content="{loc:Tr hud.configure}"
+                      Command="{Binding OpenHudSettingsCommand}"
+                      IsEnabled="{Binding CanConfigurePerformanceHud}"
+                      AutomationProperties.Name="{loc:Tr hud.configure}" />
+              <TextBlock Classes="caption"
+                         Text="{loc:Tr hud.enabled}"
+                         VerticalAlignment="Center" />
+              <ToggleSwitch IsChecked="{Binding PerformanceHudEnabled, Mode=TwoWay}"
+                            IsEnabled="{Binding CanConfigurePerformanceHud}"
+                            AutomationProperties.Name="{loc:Tr hud.enabled}"
+                            AutomationProperties.HelpText="{loc:Tr hud.help}" />
+            </StackPanel>
+          </controls:Card.HeaderAction>
+
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="18">
+            <StackPanel Spacing="10">
+              <TextBlock Classes="hint" Text="{loc:Tr hud.help}" />
+
+              <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="24">
+                <StackPanel Spacing="2">
+                  <TextBlock Classes="caption" Text="{loc:Tr hud.status}" />
+                  <TextBlock Classes="value accent"
+                             Text="{Binding HudStatusText}"
+                             AutomationProperties.LiveSetting="Polite" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                  <TextBlock Classes="caption" Text="{loc:Tr hud.position}" />
+                  <TextBlock Classes="value" Text="{Binding HudPositionText}" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="2">
+                  <TextBlock Classes="caption" Text="{loc:Tr hud.chord}" />
+                  <TextBlock Classes="value mono" Text="{Binding HudChordText}" />
+                </StackPanel>
+              </Grid>
+
+              <CheckBox Content="{loc:Tr hud.session_only}"
+                        IsChecked="{Binding PerformanceHudShowOnlyInSession, Mode=TwoWay}"
+                        IsEnabled="{Binding CanConfigurePerformanceHud}"
+                        AutomationProperties.Name="{loc:Tr hud.session_only}" />
+
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{loc:Tr hud.metrics}" />
+                <WrapPanel>
+                  <Border Classes="chip" IsVisible="{Binding HudShowsCpu}">
+                    <TextBlock Classes="chipLabel" Text="{loc:Tr hud.metric.cpu}" />
+                  </Border>
+                  <Border Classes="chip" IsVisible="{Binding HudShowsCpuProcess}">
+                    <TextBlock Classes="chipLabel" Text="{loc:Tr hud.metric.cpu_process}" />
+                  </Border>
+                  <Border Classes="chip" IsVisible="{Binding HudShowsGpu}">
+                    <TextBlock Classes="chipLabel" Text="{loc:Tr hud.metric.gpu}" />
+                  </Border>
+                  <Border Classes="chip" IsVisible="{Binding HudShowsRam}">
+                    <TextBlock Classes="chipLabel" Text="{loc:Tr hud.metric.ram}" />
+                  </Border>
+                  <Border Classes="chip" IsVisible="{Binding HudShowsVram}">
+                    <TextBlock Classes="chipLabel" Text="{loc:Tr hud.metric.vram}" />
+                  </Border>
+                  <Border Classes="chip" IsVisible="{Binding HudShowsProcess}">
+                    <TextBlock Classes="chipLabel" Text="{loc:Tr hud.metric.process}" />
+                  </Border>
+                  <Border Classes="chip" IsVisible="{Binding HudShowsDisplay}">
+                    <TextBlock Classes="chipLabel" Text="{loc:Tr hud.metric.display}" />
+                  </Border>
+                </WrapPanel>
+                <TextBlock Classes="hint"
+                           Text="{loc:Tr hud.overlay.empty}"
+                           IsVisible="{Binding !HudHasMetrics}" />
+              </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="6">
+              <TextBlock Classes="caption" Text="{loc:Tr hud.preview}" />
+              <Border Width="250" Height="182"
+                      Padding="14"
+                      CornerRadius="{DynamicResource CouchPad.Radius.Hud}"
+                      Background="{DynamicResource CouchPad.HudSurface}"
+                      BorderBrush="{DynamicResource CouchPad.HudBorder}"
+                      BorderThickness="1">
+                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="8">
+                  <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Border Width="6" Height="6" CornerRadius="3"
+                            Background="{DynamicResource CouchPad.Accent}"
+                            VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Margin="7,0,0,0"
+                               Text="{loc:Tr hud.overlay.title}"
+                               FontSize="10" FontWeight="SemiBold"
+                               Foreground="{DynamicResource CouchPad.TextPrimary}" />
+                    <TextBlock Grid.Column="2"
+                               Text="{loc:Tr app.name}"
+                               FontSize="9"
+                               Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                  </Grid>
+
+                  <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <StackPanel Spacing="2" IsVisible="{Binding HudShowsCpu}">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{loc:Tr hud.metric.cpu}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                        <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.cpu_value}" FontSize="10" FontWeight="SemiBold" />
+                      </Grid>
+                      <Border Height="3" CornerRadius="2" Background="{DynamicResource CouchPad.HudTrack}">
+                        <Border Width="38" Height="3" CornerRadius="2" HorizontalAlignment="Left"
+                                Background="{DynamicResource CouchPad.Accent}" />
+                      </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="2" IsVisible="{Binding HudShowsGpu}">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{loc:Tr hud.metric.gpu}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                        <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.gpu_value}" FontSize="10" FontWeight="SemiBold" />
+                      </Grid>
+                      <Border Height="3" CornerRadius="2" Background="{DynamicResource CouchPad.HudTrack}">
+                        <Border Width="100" Height="3" CornerRadius="2" HorizontalAlignment="Left"
+                                Background="{DynamicResource CouchPad.Info}" />
+                      </Border>
+                    </StackPanel>
+                  </Grid>
+
+                  <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <StackPanel Spacing="2" IsVisible="{Binding HudShowsRam}">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{loc:Tr hud.metric.ram}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                        <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.ram_value}" FontSize="9" FontWeight="SemiBold" />
+                      </Grid>
+                      <Border Height="3" CornerRadius="2" Background="{DynamicResource CouchPad.HudTrack}">
+                        <Border Width="47" Height="3" CornerRadius="2" HorizontalAlignment="Left"
+                                Background="{DynamicResource CouchPad.Accent}" />
+                      </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="2" IsVisible="{Binding HudShowsVram}">
+                      <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="{loc:Tr hud.metric.vram}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                        <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.vram_value}" FontSize="9" FontWeight="SemiBold" />
+                      </Grid>
+                      <Border Height="3" CornerRadius="2" Background="{DynamicResource CouchPad.HudTrack}">
+                        <Border Width="66" Height="3" CornerRadius="2" HorizontalAlignment="Left"
+                                Background="{DynamicResource CouchPad.Info}" />
+                      </Border>
+                    </StackPanel>
+                  </Grid>
+
+                  <StackPanel Grid.Row="3" Spacing="3" VerticalAlignment="Bottom">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding HudShowsProcess}">
+                      <TextBlock Text="{loc:Tr hud.metric.process}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                      <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.process}" FontSize="9"
+                                 TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding HudShowsDisplay}">
+                      <TextBlock Text="{loc:Tr hud.metric.display}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                      <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.display_value}" FontSize="9" />
+                    </Grid>
+                  </StackPanel>
+
+                  <TextBlock Grid.Row="4"
+                             Text="{loc:Tr hud.overlay.empty}"
+                             IsVisible="{Binding !HudHasMetrics}"
+                             FontSize="9"
+                             Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                </Grid>
+              </Border>
+              <TextBlock Classes="hint"
+                         Text="{loc:Tr hud.preview_note}"
+                         MaxWidth="250" />
+            </StackPanel>
+          </Grid>
+        </controls:Card>
+
         <!-- Gamepad -->
         <controls:Card x:Name="GamepadCard"
-                       Grid.Row="1"
+                       Grid.Row="2"
                        Grid.Column="0"
                        Title="{loc:Tr section.gamepad}"
                        TitleIcon="F0 M 8,5 H 16 C 19,5 21,7 22,11 L 23,16 C 24,20 20,22 17,19 L 15,17 H 9 L 7,19 C 4,22 0,20 1,16 L 2,11 C 3,7 5,5 8,5 Z M 7,8 H 9 V 10 H 11 V 12 H 9 V 14 H 7 V 12 H 5 V 10 H 7 Z M 15,11 A 1.5,1.5 0 1 0 18,11 A 1.5,1.5 0 1 0 15,11 Z M 18,14 A 1,1 0 1 0 20,14 A 1,1 0 1 0 18,14 Z">
@@ -282,7 +471,7 @@
 
         <!-- Combinação -->
         <controls:Card x:Name="ComboCard"
-                       Grid.Row="1"
+                       Grid.Row="2"
                        Grid.Column="1"
                        Title="{loc:Tr section.combo}"
                        TitleIcon="F0 M 2,4 H 10 V 12 H 2 Z M 4,6 H 8 V 10 H 4 Z M 14,4 H 22 V 12 H 14 Z M 16,6 H 20 V 10 H 16 Z M 2,16 H 10 V 24 H 2 Z M 4,18 H 8 V 22 H 4 Z M 14,16 H 22 V 24 H 14 Z M 16,18 H 20 V 22 H 16 Z">
@@ -307,7 +496,7 @@
 
         <!-- Contagem regressiva -->
         <controls:Card x:Name="CountdownCard"
-                       Grid.Row="1"
+                       Grid.Row="2"
                        Grid.Column="2"
                        Title="{loc:Tr section.countdown}"
                        TitleIcon="F0 M 9,2 H 15 V 4 H 9 Z M 12,6 A 8,8 0 1 0 12,22 A 8,8 0 1 0 12,6 Z M 12,8 A 6,6 0 1 0 12,20 A 6,6 0 1 0 12,8 Z M 11,10 H 13 V 14 H 16 V 16 H 11 Z">
@@ -340,7 +529,7 @@
 
         <!-- Parâmetros -->
         <controls:Card x:Name="SettingsCard"
-                       Grid.Row="2"
+                       Grid.Row="3"
                        Grid.Column="2"
                        Title="{loc:Tr section.settings}"
                        TitleIcon="M 2,5 H 7 V 3 H 10 V 5 H 22 V 7 H 10 V 9 H 7 V 7 H 2 Z M 2,11 H 15 V 9 H 18 V 11 H 22 V 13 H 18 V 15 H 15 V 13 H 2 Z M 2,17 H 7 V 15 H 10 V 17 H 22 V 19 H 10 V 21 H 7 V 19 H 2 Z">
@@ -380,20 +569,6 @@
                               AutomationProperties.Name="{loc:Tr settings.minimize_to_tray}"
                               AutomationProperties.HelpText="{loc:Tr settings.minimize_to_tray_help}" />
               </Grid>
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <TextBlock Text="{loc:Tr hud.title}" VerticalAlignment="Center" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                  <Button Classes="link"
-                          Content="{loc:Tr hud.configure}"
-                          Command="{Binding OpenHudSettingsCommand}"
-                          IsEnabled="{Binding CanConfigurePerformanceHud}" />
-                  <ToggleSwitch IsChecked="{Binding PerformanceHudEnabled, Mode=TwoWay}"
-                                IsEnabled="{Binding CanConfigurePerformanceHud}"
-                                AutomationProperties.Name="{loc:Tr hud.enabled}"
-                                AutomationProperties.HelpText="{loc:Tr hud.help}" />
-                </StackPanel>
-              </Grid>
-              <TextBlock Classes="hint" Text="{loc:Tr hud.help}" TextWrapping="Wrap" />
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding !IsProductionMode}">
                 <TextBlock Text="{loc:Tr settings.allow_display_writes}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"
@@ -416,7 +591,7 @@
 
         <!-- Transição -->
         <controls:Card x:Name="TransitionCard"
-                       Grid.Row="2"
+                       Grid.Row="3"
                        Grid.Column="0"
                        Title="{loc:Tr section.transition}"
                        TitleIcon="M 2,6 H 16 V 3 L 22,8 L 16,13 V 10 H 2 Z M 22,14 H 8 V 11 L 2,16 L 8,21 V 18 H 22 Z">
@@ -481,7 +656,7 @@
 
         <!-- Launchers -->
         <controls:Card x:Name="LaunchersCard"
-                       Grid.Row="2"
+                       Grid.Row="3"
                        Grid.Column="1"
                        Title="{loc:Tr section.launchers}"
                        TitleIcon="F0 M 12,2 A 10,10 0 1 0 12,22 A 10,10 0 1 0 12,2 Z M 12,4 A 8,8 0 1 0 12,20 A 8,8 0 1 0 12,4 Z M 9,7 L 17,12 L 9,17 Z">

@@ -72,6 +72,8 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
   atual; não altera hardware.
 - [x] HUD: modal com labels, checkboxes, combo de atalho e sliders; HUD não
   recebe foco e é click-through.
+- [x] Card HUD: toggle e botão com `AutomationProperties.Name`, checkbox de
+  sessão, estado com live region e chips somente leitura na ordem de foco.
 - [ ] Chord físico do HUD e anúncio do modal por Narrator/NVDA (manual
   pendente).
 - [ ] Navegação por teclado/leitor de tela dentro do menu nativo da bandeja

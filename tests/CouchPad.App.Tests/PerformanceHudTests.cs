@@ -170,6 +170,14 @@ public sealed class PerformanceHudTests
         Assert.True(vm.CanConfigurePerformanceHud);
         Assert.NotNull(hud.Applied);
         Assert.Equal(0.7, hud.Applied!.Opacity);
+        Assert.Equal("Ativo", vm.HudStatusText);
+        Assert.Equal("Inferior direito", vm.HudPositionText);
+        Assert.Equal("LB + RB + X", vm.HudChordText);
+        Assert.True(vm.HudShowsCpu);
+        Assert.True(vm.HudShowsGpu);
+        Assert.False(vm.HudShowsRam);
+        Assert.True(vm.HudHasMetrics);
+        Assert.False(vm.PerformanceHudShowOnlyInSession);
 
         vm.PerformanceHudEnabled = false;
         Assert.False(store.Current.PerformanceHudEnabled);
@@ -190,6 +198,14 @@ public sealed class PerformanceHudTests
         Assert.Equal(changed.Scale, hud.Applied.Scale);
         Assert.Equal(changed.ShowOnlyInSession, hud.Applied.ShowOnlyInSession);
         Assert.Equal(changed.ChordKey, hud.Applied.ChordKey);
+        Assert.True(vm.HudShowsRam);
+        Assert.False(vm.HudShowsCpu);
+        Assert.Equal("Superior esquerdo", vm.HudPositionText);
+        Assert.Equal("LB + RB + Back", vm.HudChordText);
+
+        vm.PerformanceHudShowOnlyInSession = false;
+        Assert.False(store.Current.PerformanceHudShowOnlyInSession);
+        Assert.False(hud.Applied!.ShowOnlyInSession);
     }
 
     private sealed class FakeSampler : IPerformanceSampler
