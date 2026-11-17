@@ -172,7 +172,9 @@ mínimo. Depois é preciso soltar todos os botões para rearmar.
 ```csharp
 public interface IGamepadButtonSource : IDisposable
 {
-    event EventHandler<GamepadButtons>? ButtonsChanged;
+    // Disparado a cada ciclo de poll com o estado atual; a detecção de borda/hold
+    // é responsabilidade do consumidor (GamepadChordDetector).
+    event EventHandler<GamepadButtons>? ButtonsReported;
 }
 ```
 

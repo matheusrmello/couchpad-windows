@@ -138,6 +138,44 @@ public sealed class WindowsGamepadButtonSourceTests
         Assert.False(mapped.HasFlag(GamepadButtons.Start));
         Assert.Equal(GamepadButtons.None, WindowsGamepadButtonSource.Map(0x0001));
     }
+
+    [Fact]
+    public async Task Reports_repeated_state_on_every_poll_tick()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+
+        var source = new WindowsGamepadButtonSource(new HeldChordXInputStateSource(), TimeSpan.FromMilliseconds(10));
+        var reports = 0;
+        try
+        {
+            source.ButtonsReported += (_, e) =>
+            {
+                if (e.Buttons == (GamepadButtons.LeftShoulder | GamepadButtons.RightShoulder | GamepadButtons.Y))
+                    Interlocked.Increment(ref reports);
+            };
+
+            await Task.Delay(300);
+
+            Assert.True(reports >= 2, $"Expected repeated reports while the chord stays held, got {reports}.");
+        }
+        finally
+        {
+            source.Dispose();
+        }
+    }
+
+    private sealed class HeldChordXInputStateSource : IXInputStateSource
+    {
+        public IReadOnlyList<uint> GetConnectedSlots() => [0];
+
+        public string? GetModelName(uint slot) => "fake";
+
+        public bool TryGetButtons(uint slot, out ushort buttons)
+        {
+            buttons = 0x8300;
+            return true;
+        }
+    }
 }
 
 public sealed class SimulatedPerformanceSamplerTests

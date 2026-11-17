@@ -50,7 +50,7 @@ public sealed class PerformanceHudCoordinator : IPerformanceHudController, IDisp
         {
             if (_started || _disposed) return;
             _started = true;
-            _buttons.ButtonsChanged += OnButtonsChanged;
+            _buttons.ButtonsReported += OnButtonsReported;
         }
         _ = Task.Run(LoopAsync);
         UpdateVisibility();
@@ -95,7 +95,7 @@ public sealed class PerformanceHudCoordinator : IPerformanceHudController, IDisp
         UpdateVisibility();
     }
 
-    private void OnButtonsChanged(object? sender, GamepadButtonsChangedEventArgs e)
+    private void OnButtonsReported(object? sender, GamepadButtonsChangedEventArgs e)
     {
         bool fire;
         lock (_sync)
@@ -167,7 +167,7 @@ public sealed class PerformanceHudCoordinator : IPerformanceHudController, IDisp
             if (_disposed) return;
             _disposed = true;
         }
-        _buttons.ButtonsChanged -= OnButtonsChanged;
+        _buttons.ButtonsReported -= OnButtonsReported;
         _stop.Cancel();
         if (_sampler is IDisposable sampler) sampler.Dispose();
         if (_buttons is IDisposable buttons) buttons.Dispose();

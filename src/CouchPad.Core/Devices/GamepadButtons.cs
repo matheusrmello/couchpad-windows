@@ -24,13 +24,18 @@ public sealed class GamepadButtonsChangedEventArgs : EventArgs
 /// <summary>Read-only source of controller button state; it never writes to the controller.</summary>
 public interface IGamepadButtonSource : IDisposable
 {
-    event EventHandler<GamepadButtonsChangedEventArgs>? ButtonsChanged;
+    /// <summary>
+    /// Raised on every poll cycle with the current state, even when it repeats the previous one.
+    /// Edge/level and hold detection are the consumer's responsibility.
+    /// </summary>
+    event EventHandler<GamepadButtonsChangedEventArgs>? ButtonsReported;
 }
 
 /// <summary>No-op source used by simulation and tests without a controller.</summary>
 public sealed class NoopGamepadButtonSource : IGamepadButtonSource
 {
-    public event EventHandler<GamepadButtonsChangedEventArgs>? ButtonsChanged
+    /// <inheritdoc />
+    public event EventHandler<GamepadButtonsChangedEventArgs>? ButtonsReported
     {
         add { }
         remove { }

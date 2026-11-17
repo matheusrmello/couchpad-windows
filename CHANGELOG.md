@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.0.18 (candidato)
+
+- Corrige o atalho do HUD no controle: o estado do gamepad agora é reportado a cada poll (~30 Hz), permitindo ao detector medir o hold de 800 ms. Antes o evento só disparava em mudanças e o chord nunca era detectado.
+- Renomeia `IGamepadButtonSource.ButtonsChanged` para `ButtonsReported` (contrato: estado a cada ciclo de poll; borda/hold no consumidor).
+- 333 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.17 (candidato)
 
 - Adiciona a métrica FPS ao HUD, lida do RTSS shared memory (read-only, opt-in); sem RTSS o HUD mostra "—".

@@ -3,6 +3,10 @@ using CouchPad.Core.Devices;
 namespace CouchPad.Platform.Windows;
 
 /// <summary>Read-only XInput button polling used for the HUD chord.</summary>
+/// <remarks>
+/// The source reports the current button state on every poll tick, including unchanged state, so
+/// stateful consumers (for example hold detectors) keep receiving updates while a chord is held.
+/// </remarks>
 public sealed class WindowsGamepadButtonSource : IGamepadButtonSource
 {
     private readonly IXInputStateSource _source;
@@ -10,7 +14,6 @@ public sealed class WindowsGamepadButtonSource : IGamepadButtonSource
     private readonly CancellationTokenSource _stop = new();
     private readonly Task _worker;
     private readonly object _sync = new();
-    private GamepadButtons _current;
     private bool _disposed;
 
     public WindowsGamepadButtonSource(TimeSpan? pollInterval = null)
@@ -28,7 +31,7 @@ public sealed class WindowsGamepadButtonSource : IGamepadButtonSource
         _worker = Task.Run(PollAsync);
     }
 
-    public event EventHandler<GamepadButtonsChangedEventArgs>? ButtonsChanged;
+    public event EventHandler<GamepadButtonsChangedEventArgs>? ButtonsReported;
 
     internal static GamepadButtons Map(ushort buttons)
     {
@@ -51,15 +54,15 @@ public sealed class WindowsGamepadButtonSource : IGamepadButtonSource
         {
             while (await timer.WaitForNextTickAsync(_stop.Token).ConfigureAwait(false))
             {
-                var next = Read();
+                var current = Read();
                 EventHandler<GamepadButtonsChangedEventArgs>? handler;
                 lock (_sync)
                 {
-                    if (_disposed || next == _current) continue;
-                    _current = next;
-                    handler = ButtonsChanged;
+                    if (_disposed) continue;
+                    handler = ButtonsReported;
                 }
-                handler?.Invoke(this, new GamepadButtonsChangedEventArgs(next));
+                // Report every tick, not only changes: hold detection lives in the consumer.
+                handler?.Invoke(this, new GamepadButtonsChangedEventArgs(current));
             }
         }
         catch (OperationCanceledException) when (_stop.IsCancellationRequested) { }

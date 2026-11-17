@@ -237,8 +237,8 @@ public sealed class PerformanceHudTests
 
     private sealed class FakeButtons : IGamepadButtonSource
     {
-        public event EventHandler<GamepadButtonsChangedEventArgs>? ButtonsChanged;
-        public void Raise(GamepadButtons buttons) => ButtonsChanged?.Invoke(this, new GamepadButtonsChangedEventArgs(buttons));
+        public event EventHandler<GamepadButtonsChangedEventArgs>? ButtonsReported;
+        public void Raise(GamepadButtons buttons) => ButtonsReported?.Invoke(this, new GamepadButtonsChangedEventArgs(buttons));
         public void Dispose() { }
     }
 
