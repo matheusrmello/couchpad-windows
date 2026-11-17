@@ -66,7 +66,7 @@
             <Border Height="3" CornerRadius="2" Background="#22FFFFFF" ClipToBounds="True">
               <Border Width="{Binding GpuBarWidth}" Height="3" CornerRadius="2"
                       HorizontalAlignment="Left"
-                      Background="{DynamicResource CouchPad.Accent2}" />
+                      Background="{DynamicResource CouchPad.Info}" />
             </Border>
           </StackPanel>
         </Grid>
@@ -91,7 +91,7 @@
             <Border Height="3" CornerRadius="2" Background="#22FFFFFF" ClipToBounds="True">
               <Border Width="{Binding VramBarWidth}" Height="3" CornerRadius="2"
                       HorizontalAlignment="Left"
-                      Background="{DynamicResource CouchPad.Accent2}" />
+                      Background="{DynamicResource CouchPad.Info}" />
             </Border>
           </StackPanel>
         </Grid>

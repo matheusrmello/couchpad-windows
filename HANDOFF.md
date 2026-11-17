@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**1.0.15 (candidato, 17/11/2026):** corrige as barras de GPU/VRAM do HUD. Elas referenciavam `CouchPad.Accent2`, que não existia em `Themes/Tokens.axaml`, então a barra não era desenhada. Agora usam `CouchPad.Info`, com largura mínima de 2 px para valores baixos. Teste de regressão garante que todo `{DynamicResource CouchPad.*}` do XAML exista nos tokens. Build Debug/Release 0/0, **310 testes** e smoke; HUD real confirmado com GPU em 1–8%. Instalação e publicação pendentes.
+
 **1.0.14 (candidato, 17/11/2026):** Fase 1 do HUD de desempenho implementada. HUD flutuante click-through/sem foco, com CPU, CPU do jogo, GPU, RAM, VRAM, processo e resolução/refresh; métricas selecionáveis, posição/opacidade/escala, “só durante a sessão” e chord LB+RB+Y. Modal de configuração, sampler Windows via PDH, XInput button source e testes. Build Debug/Release 0/0, **309 testes** e smoke. Validação em simulação e sampler real; instalação 1.0.14 validada com HUD no executável instalado. Chord físico, FPS e publicação pendentes. Instalador: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Plano `docs/hud-phase1-plan.md`; decisão D078.
 
 **Governança, 17/11/2026:** o Codex foi descontinuado. O OpenCode é o único agente de desenvolvimento e passa a ser dono de todas as fases e camadas, incluindo `Platform.Windows`, REA, instalador, assinatura e release. A fronteira arquitetural continua valendo. Decisão D079; documentos do Codex ficam como histórico.

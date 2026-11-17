@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.0.15 (candidato)
+
+- Corrige as barras de GPU e VRAM do HUD, que usavam `CouchPad.Accent2`, token inexistente no tema. Agora usam `CouchPad.Info`.
+- Barras de percentual e proporção ganham largura mínima de 2 px, para que valores baixos (1%) continuem visíveis.
+- Novo teste de regressão: todo `{DynamicResource CouchPad.*}` usado no XAML precisa existir em `Themes/Tokens.axaml`.
+- Build Debug/Release 0/0, **310 testes** e smoke. Correção verificada no HUD real com GPU em 1–8%.
+
 ## 1.0.14 (candidato)
 
 - Adiciona o MVP do **HUD de desempenho**: CPU, CPU do jogo, GPU, RAM, VRAM, processo e resolução/refresh em uma janela flutuante.

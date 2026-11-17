@@ -81,11 +81,17 @@ public partial class PerformanceHudViewModel : ObservableObject
         return refresh is > 0 ? $"{width}×{height} · {refresh} Hz" : $"{width}×{height}";
     }
 
-    private static double BarWidth(double? percent) =>
-        percent is { } value ? Math.Clamp(value, 0, 100) / 100 * BarMax : 0;
+    private static double BarWidth(double? percent)
+    {
+        if (percent is not { } value) return 0;
+        var width = Math.Clamp(value, 0, 100) / 100 * BarMax;
+        return value > 0 ? Math.Max(width, 2) : 0;
+    }
 
-    private static double RatioBar(ulong? used, ulong? total) =>
-        used is { } value && total is > 0 && total is { } max
-            ? Math.Clamp((double)value / max, 0, 1) * BarMax
-            : 0;
+    private static double RatioBar(ulong? used, ulong? total)
+    {
+        if (used is not { } value || total is not > 0 || total is not { } max) return 0;
+        var width = Math.Clamp((double)value / max, 0, 1) * BarMax;
+        return value > 0 ? Math.Max(width, 2) : 0;
+    }
 }

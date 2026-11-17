@@ -97,3 +97,11 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - HUD aberto no executável instalado com métricas reais; tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal ausente.
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
+
+## Candidato 1.0.15
+
+- Correção: as barras de GPU/VRAM do HUD e da prévia usavam `CouchPad.Accent2`, token inexistente, e não eram desenhadas. Passam a usar `CouchPad.Info`.
+- Barras ganham largura mínima de 2 px para valores baixos; GPU em 1% continua visível.
+- Build Debug/Release 0/0, **310 testes** e smoke. Novo teste garante que todo `{DynamicResource CouchPad.*}` do XAML exista em `Themes/Tokens.axaml`.
+- Captura do HUD real confirmou CPU 8%, GPU 1%, RAM, VRAM, processo e resolução com as barras desenhadas.
+- Instalação no executável instalado e publicação pendentes.

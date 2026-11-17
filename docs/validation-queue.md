@@ -150,11 +150,28 @@
   time/temperatura ficam para as próximas fases. Instalador local: 84.337.865
   bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`.
 
+### 12. Correção das barras de GPU/VRAM do HUD (1.0.15)
+
+- **Dono:** OpenCode.
+- **Status:** corrigido; instalação e validação no executável instalado
+  pendentes.
+- **Causa:** o XAML do HUD e do modal usava `{DynamicResource CouchPad.Accent2}`,
+  token que não existe em `Themes/Tokens.axaml`. O recurso não resolvia e a
+  barra ficava invisível.
+- **Implementação:** GPU/VRAM passam a usar `CouchPad.Info`; barras de
+  percentual e proporção recebem largura mínima de 2 px para valores baixos.
+- **Evidência:** build Debug/Release 0/0, **310 testes**, smoke; captura do HUD
+  real mostrando CPU 8%, GPU 1% e barras desenhadas. Novo teste
+  `Dynamic_theme_resources_used_in_xaml_exist_in_tokens` cobre a regressão.
+- **Pendente:** instalar 1.0.15, confirmar as barras no executável instalado e
+  publicar. Chord físico segue pendente (item 11).
+
 ## Próxima ação
 
 O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
-O candidato `1.0.14` implementa o HUD de desempenho e inclui o diagnóstico da
-`1.0.13`, os perfis da `1.0.12` e a correção de reidratação do journal da
-`1.0.11`. Está instalado e validado; falta o chord físico e a publicação. A
-reconexão do watcher durante a contagem continua sem evidência independente;
-HDR e notificações nativas seguem adiados.
+O candidato `1.0.15` corrige as barras de GPU/VRAM do HUD e inclui o HUD de
+desempenho da `1.0.14`, o diagnóstico da `1.0.13`, os perfis da `1.0.12` e a
+correção de reidratação do journal da `1.0.11`. Falta instalar, confirmar as
+barras no executável instalado, validar o chord físico e publicar. A reconexão
+do watcher durante a contagem continua sem evidência independente; HDR e
+notificações nativas seguem adiados.

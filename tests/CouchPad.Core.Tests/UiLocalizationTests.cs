@@ -198,6 +198,22 @@ public sealed class UiLocalizationTests
         }
     }
 
+    [Fact]
+    public void Dynamic_theme_resources_used_in_xaml_exist_in_tokens()
+    {
+        var tokens = File.ReadAllText(Path.Combine(AppDirectory(), "Themes", "Tokens.axaml"));
+        var pattern = new Regex(@"\{DynamicResource\s+(CouchPad\.[A-Za-z0-9_.]+)\s*\}", RegexOptions.Compiled);
+        var missing = Directory
+            .EnumerateFiles(AppDirectory(), "*.axaml", SearchOption.AllDirectories)
+            .SelectMany(path => pattern.Matches(File.ReadAllText(path)).Select(match => match.Groups[1].Value))
+            .Distinct(StringComparer.Ordinal)
+            .Where(key => !tokens.Contains($"x:Key=\"{key}\"", StringComparison.Ordinal))
+            .OrderBy(key => key, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Empty(missing);
+    }
+
     private static readonly string[] ComponentTypes =
     {
         "Card",

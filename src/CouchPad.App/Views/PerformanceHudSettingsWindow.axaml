@@ -103,7 +103,7 @@
               </StackPanel>
               <StackPanel Grid.Column="1" Spacing="2" IsVisible="{Binding GpuSelected}">
                 <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{loc:Tr hud.metric.gpu}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" /><TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.gpu_value}" FontSize="10" FontWeight="SemiBold" /></Grid>
-                <Border Height="3" CornerRadius="2" Background="#22FFFFFF"><Border Width="100" Height="3" CornerRadius="2" HorizontalAlignment="Left" Background="{DynamicResource CouchPad.Accent2}" /></Border>
+                <Border Height="3" CornerRadius="2" Background="#22FFFFFF"><Border Width="100" Height="3" CornerRadius="2" HorizontalAlignment="Left" Background="{DynamicResource CouchPad.Info}" /></Border>
               </StackPanel>
             </Grid>
             <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
@@ -113,7 +113,7 @@
               </StackPanel>
               <StackPanel Grid.Column="1" Spacing="2" IsVisible="{Binding VramSelected}">
                 <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{loc:Tr hud.metric.vram}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" /><TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.vram_value}" FontSize="9" FontWeight="SemiBold" /></Grid>
-                <Border Height="3" CornerRadius="2" Background="#22FFFFFF"><Border Width="66" Height="3" CornerRadius="2" HorizontalAlignment="Left" Background="{DynamicResource CouchPad.Accent2}" /></Border>
+                <Border Height="3" CornerRadius="2" Background="#22FFFFFF"><Border Width="66" Height="3" CornerRadius="2" HorizontalAlignment="Left" Background="{DynamicResource CouchPad.Info}" /></Border>
               </StackPanel>
             </Grid>
             <StackPanel Grid.Row="3" Spacing="3" VerticalAlignment="Bottom">
