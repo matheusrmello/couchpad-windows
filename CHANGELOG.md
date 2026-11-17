@@ -1,8 +1,11 @@
 # Histórico de versões
 
-## Em desenvolvimento (após 1.0.16)
+## 1.0.17 (candidato)
 
-- Adiciona métrica FPS ao HUD, lida do RTSS shared memory (read-only, opt-in); sem RTSS o HUD mostra —; validado com RTSS real (Silent Hill 2) e correções de layout/teto/janela da leitura. Frame time e 1% low ficam para a próxima etapa.
+- Adiciona a métrica FPS ao HUD, lida do RTSS shared memory (read-only, opt-in); sem RTSS o HUD mostra "—".
+- FPS validado com RTSS real (Silent Hill 2, D3D12); corrigidos o layout da entrada, o teto de cópia (16 MiB) e o uso da média de janela.
+- Frame time e 1% low ficam para a próxima etapa; PresentMon/ETW experimental.
+- Build Debug/Release 0/0, 332 testes e smoke.
 
 ## 1.0.16 (candidato)
 
