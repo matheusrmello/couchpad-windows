@@ -106,7 +106,7 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - Smoke do executável instalado: `SMOKE: window opened 1020x780; initial=En; pt='Ouvindo gamepad'; en='Listening for gamepad'; language=En; title='CouchPad'`.
 - Chord LB+RB+Y validado no controle físico no build instalado. Evidência: 8BitDo Ultimate 2 no slot 0 XInput, log do monitor com `0x8300 decoded=Y,LB,RB` segurado por ~2,7 s; o HUD sumiu e voltou com o chord.
 - Tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal (`state\session.json`) ausente.
-- `settings.json` preservado: 2.143 bytes e SHA-256 `7100E8D64E79133D0C016052712D56DE87D083026975E5A156AE1B5EC5BDF0D1` antes e depois da instalação; chord ainda `LB+RB+Y`. O campo `performanceHudShowOnlyInSession` estava `true` no arquivo antes da instalação (o app em execução, fechado para instalar, persistiu o estado em memória ao sair), então a conferência de `false` prevista no brief continua pendente e depende de decidir se o valor deve ser restaurado.
+- `settings.json` preservado: 2.143 bytes e SHA-256 `7100E8D64E79133D0C016052712D56DE87D083026975E5A156AE1B5EC5BDF0D1` antes e depois da instalação; chord `LB+RB+Y`. O campo `performanceHudShowOnlyInSession` apareceu como `true` logo após a instalação porque o app antigo, fechado para instalar, regravou o estado em memória ao sair; o valor foi restaurado para `false` após o fechamento desse app antigo e o `settings.json` final foi validado com chord `LB+RB+Y` e `showOnlyInSession=false`. Sem pendência aberta nesse ponto.
 - Instalador `CouchPad-Setup-1.0.18-win-x64.exe`: 84.348.738 bytes, SHA-256 `C9661F72C97E4A78B66EDA48AF1D129DE394E60650A8A8361548585485F91621`. Publicação no GitHub pendente.
 
 ## Candidato 1.0.17

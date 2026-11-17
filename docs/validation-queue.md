@@ -4,9 +4,9 @@
 - Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
-- Estado atual: build Debug/Release 0 avisos/0 erros; **309 testes**; smoke OK;
-  candidato `1.0.14` com HUD de desempenho instalado e validado; publicação
-  pendente.
+- Estado atual: build Debug/Release 0 avisos/0 erros; **333 testes**; smoke OK;
+  candidato `1.0.18` instalado, com o chord do HUD validado no controle físico;
+  publicação pendente.
 
 ## Status das fases
 
@@ -172,13 +172,12 @@
   preservadas, journal ausente, `settings.json` restaurado por hash.
   Instalador: 84.333.243 bytes, SHA-256
   `9DEF26147CD7B2DF66715B448B7C9E7B69BC328D605B7AB7B9A2B016D8748A6B`.
-- **Pendente:** publicar. Chord físico segue pendente (item 11).
+- **Pendente:** publicar. Chord validado em 1.0.18 (item 15).
 
 ### 13. Redesenho do shell com card HUD (1.0.16)
 
 - **Dono:** OpenCode.
-- **Status:** implementado e validado em capturas; instalação e aceite
-  pendentes.
+- **Status:** implementado, instalado e validado em capturas; aceite pendente.
 - **Implementação:** cabeçalho com logo em bloco, regra de acento e status;
   card HUD em linha inteira na primeira tela com toggle, configurar, estado,
   posição, atalho, sessão, chips e prévia; cards reorganizados; ordem de foco
@@ -190,7 +189,7 @@
   e persistiu `performanceHudEnabled`; `settings.json` restaurado por hash,
   tasks `Ready` e journal ausente. Instalador: 84.339.291 bytes, SHA-256
   `C4D587C97ED53011CDF9BBDC2DF75F43FA947CDCFEC9B46497EFFEFD6971809B`.
-- **Pendente:** publicar e validar o chord físico.
+- **Pendente:** publicar; chord validado no item 15.
 
 ### 14. FPS via RTSS (Fase 2)
 
@@ -239,9 +238,10 @@
 ## Próxima ação
 
 O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
-O candidato `1.0.16` redesenha o shell com card HUD em destaque e inclui a
-correção das barras de GPU/VRAM da `1.0.15`, o HUD da `1.0.14`, o diagnóstico
-da `1.0.13`, os perfis da `1.0.12` e a correção do journal da `1.0.11`. Falta
-instalar, validar o chord físico e publicar. A reconexão do watcher durante a
-contagem continua sem evidência independente; HDR e notificações nativas
-seguem adiados.
+A `1.0.18` está instalada e com o chord do HUD validado no controle físico; ela
+inclui a correção do chord (`ButtonsReported`), o FPS via RTSS da `1.0.17`, o
+redesenho do shell da `1.0.16`, a correção das barras de GPU/VRAM da `1.0.15`, o
+HUD da `1.0.14`, o diagnóstico da `1.0.13`, os perfis da `1.0.12` e a correção do
+journal da `1.0.11`. Falta publicar o instalador (gh ausente; usar a UI web). A
+reconexão do watcher durante a contagem continua sem evidência independente; HDR
+e notificações nativas seguem adiados.
