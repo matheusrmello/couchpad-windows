@@ -1,16 +1,16 @@
 ---
 name: couchpad-handoff
-description: Use ao terminar uma fase ou trocar entre OpenCode/DeepSeek e Codex. Garante ledger atualizado, tag, documentação de handoff e continuidade sem retrabalho.
+description: Use ao terminar uma fase ou pausar o CouchPad. Garante ledger atualizado, tag, documentação de fechamento e continuidade sem retrabalho.
 ---
 
 # CouchPad Handoff
 
 ## Quando usar
 
-- Ao terminar P0, P1, P2, P3, P6, P7a ou P7b.
-- Antes de trocar de agente (DeepSeek ↔ Codex).
+- Ao terminar qualquer fase do roadmap.
 - Antes de criar uma tag de fase.
 - Quando o trabalho for pausado por mais de um dia.
+- Antes de entregar o estado para o usuário ou para uma nova sessão.
 
 ## Quando NÃO usar
 
@@ -49,11 +49,13 @@ description: Use ao terminar uma fase ou trocar entre OpenCode/DeepSeek e Codex.
 - Formato: data, ID, decisão, motivo, impacto.
 - Não reabrir D001–D009 sem pedido explícito.
 
-### 4. Escrever o handoff
+### 4. Escrever o fechamento
 
-- DeepSeek → Codex: `docs/handoff-deepseek-to-codex.md`.
-- Codex → DeepSeek: `docs/handoff-codex-to-deepseek.md`.
-- Use o template em `references/handoff-template.md`.
+- Não há mais troca de agente: o OpenCode é o único desenvolvedor.
+- Registre o fechamento em `docs/handoff-<fase>.md` quando o usuário pedir um
+  documento separado; caso contrário, o ledger em `HANDOFF.md` é suficiente.
+- Use o template em `references/handoff-template.md` como referência de
+  identidade, contratos, evidências e pendências.
 
 ### 5. Commit e tag
 
@@ -84,32 +86,36 @@ A árvore deve estar limpa antes da troca.
 
 ## Leitura ao chegar
 
-O próximo agente deve ler, nesta ordem:
+A próxima sessão deve ler, nesta ordem:
 
 1. `HANDOFF.md` (ledger, decisões, pendências).
 2. `AGENTS.md` (regras sempre ativas).
 3. `docs/decisions.md`.
-4. O handoff da fase anterior.
+4. O fechamento da fase anterior, se existir.
 5. `docs/rea-shiftpad-2.2.0.md`, se for fase de hardware.
 
 ## Regras de não-retrabalho
 
 - Não refazer o que já está marcado como `concluído` sem evidência de regressão.
 - Não mudar interface do Core sem documentar e manter a UI compilando.
-- Não alterar arquivos de outra faixa (DeepSeek não toca em `Platform.Windows`).
+- Não violar a fronteira de camadas: `App` sem P/Invoke/COM, `Core` sem
+  Avalonia/Win32, `Platform.Windows` sem regra de produto.
 - Não reabrir decisões travadas.
 - Se faltar contexto, ler os arquivos acima antes de perguntar.
 - Se uma decisão nova for inevitável, registrar e pedir confirmação.
 
-## Fronteira entre agentes
+## Fronteira de camadas
 
-| Área | Dono |
+| Área | Regra |
 |---|---|
-| `src/CouchPad.App/**` | DeepSeek |
-| `src/CouchPad.Core/**` (interfaces/simulação) | DeepSeek |
-| `src/CouchPad.Platform.Windows/**` | Codex |
-| `analysis/**`, `docs/rea-*` | Codex |
-| `docs/ui-spec.md`, `docs/ui-a11y-checklist.md` | DeepSeek |
+| `src/CouchPad.App/**` | UI, ViewModels, i18n; sem P/Invoke/COM |
+| `src/CouchPad.Core/**` | Modelos, interfaces, simulação, state machine; sem Avalonia/Win32 |
+| `src/CouchPad.Platform.Windows/**` | Implementação Windows; sem regra de produto/texto de UI |
+| `analysis/**`, `docs/rea-*` | Evidência estática do ShiftPad |
+| `docs/decisions.md`, `HANDOFF.md` | Append-only; decisões e ledger |
+
+Todas as áreas pertencem ao OpenCode. Mudanças em `Platform.Windows` exigem
+build/testes e validação de hardware quando aplicável.
 | `docs/decisions.md`, `HANDOFF.md` | Ambos (append-only) |
 
 ## Erros comuns

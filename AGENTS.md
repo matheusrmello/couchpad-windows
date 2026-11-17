@@ -1,6 +1,6 @@
 # AGENTS.md — CouchPad Windows
 
-Regras sempre ativas para qualquer agente (OpenCode/DeepSeek ou Codex).
+Regras sempre ativas para o OpenCode, único agente de desenvolvimento do projeto.
 
 ## Missão
 
@@ -43,26 +43,33 @@ Uma mudança que cruza a fronteira precisa de decisão registrada em
 
 | Fase | Dono | Escopo |
 |---|---|---|
-| P0 bootstrap | DeepSeek | repo, solução, tema, i18n, settings |
-| P1 shell | DeepSeek | header, cards, footer, layout |
-| P2 componentes | DeepSeek | catálogo de controles e estados |
-| P3 simulação | DeepSeek | modelos, fakes, state machine, journal |
-| REA 2.2.0 | Codex | análise estática do binário |
-| P4 display | Codex | CCD, identificação de TV, rollback |
-| P5 áudio/HDR | Codex | endpoint padrão, HDR |
-| P6 rescue/tray | Codex | rescue, bandeja, autostart, tarefa |
-| P7a docs/a11y | DeepSeek | docs, a11y, screenshots |
-| P7b release | Codex | correções, instalador, assinatura |
+| P0 bootstrap | OpenCode | repo, solução, tema, i18n, settings |
+| P1 shell | OpenCode | header, cards, footer, layout |
+| P2 componentes | OpenCode | catálogo de controles e estados |
+| P3 simulação | OpenCode | modelos, fakes, state machine, journal |
+| REA 2.2.0 | OpenCode | análise estática do binário |
+| P4 display | OpenCode | CCD, identificação de TV, rollback |
+| P5 áudio/HDR | OpenCode | endpoint padrão, HDR |
+| P6 rescue/tray | OpenCode | rescue, bandeja, autostart, tarefa |
+| P7a docs/a11y | OpenCode | docs, a11y, screenshots |
+| P7b release | OpenCode | correções, instalador, assinatura |
 
-DeepSeek não escreve em `src/CouchPad.Platform.Windows/**`.
-Codex não reescreve a UI sem manter o contrato do Core.
+O OpenCode pode atuar em todas as camadas. A fronteira da seção anterior
+continua valendo: `App` não faz P/Invoke/COM, `Core` não depende de Avalonia nem
+Win32, e `Platform.Windows` implementa interfaces sem regra de produto.
+
+Mudanças em `Platform.Windows` exigem build/testes e, quando houver hardware
+envolvido, a validação correspondente. Subagentes do OpenCode podem ser usados
+para implementação, revisão e testes; a responsabilidade final é do OpenCode.
+
+O Codex foi descontinuado em 2026-11-17. Perfis, papéis e handoffs antigos em
+`docs/agents/codex/` e `docs/handoff-*codex*.md` são somente históricos.
 
 ## Agents e skills
 
 - OpenCode: `.opencode/agents/*.md` (6 agentes).
-- Codex: perfis em `%USERPROFILE%\.codex\*.config.toml` e papéis em
-  `docs/agents/codex/roles/`.
 - Skills: `.opencode/skills/couchpad-*`.
+- Codex: descontinuado; documentação histórica em `docs/agents/codex/`.
 
 ## Comandos
 

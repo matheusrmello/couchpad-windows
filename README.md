@@ -108,8 +108,11 @@ detalhada em [docs/hud-phase1-plan.md](docs/hud-phase1-plan.md).
 
 ## Agentes
 
-- **OpenCode/DeepSeek:** App/Core, UI, i18n, testes, docs e P7a.
-- **Codex:** REA, `Platform.Windows`, P4–P6 e P7b (instalador/release).
+- **OpenCode:** único agente de desenvolvimento. Atua em App, Core,
+  `Platform.Windows`, UI, i18n, testes, docs, REA, instalador, assinatura e
+  release.
+- **Codex:** descontinuado em 2026-11-17. Perfis e handoffs antigos em
+  `docs/agents/codex/` são somente históricos.
 - Skills: `.opencode/skills/couchpad-*`.
 
 ## Licença

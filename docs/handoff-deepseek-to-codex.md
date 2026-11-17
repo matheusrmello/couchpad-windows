@@ -1,5 +1,10 @@
 # Handoff — P7a (DeepSeek) → P7b (Codex)
 
+> **Documento histórico.** O Codex foi descontinuado em 2026-11-17 (D079); o
+> OpenCode assumiu todas as camadas. Este handoff registra apenas o contexto da
+> transição para a P7b.
+
+
 - Data: 2026-11-13
 - Origem: P7a — a11y, i18n, screenshots, README e notas de release
 - Destino: P7b — regressão final, instalador, assinatura e release v1.0.0

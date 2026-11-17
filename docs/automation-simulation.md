@@ -196,7 +196,7 @@ display/áudio:
 
 `NoopRescueGuard` é usado na simulação. O coordenador usa o guard em
 `ActivateAsync` e `DeactivateAsync`. O Core **não** inicia processo: a
-implementação real (processo separado + journal + timeout) é da P4/Codex em
+implementação real (processo separado + journal + timeout) é da P4/OpenCode em
 `Platform.Windows`.
 
 Sequência normal:

@@ -386,11 +386,11 @@ captura de combinação, bandeja, autostart e rescue no logon.
 - [x] Nenhum hardware real, P/Invoke ou COM novo.
 - [x] Aceite do usuário para avançar à P4/REA.
 
-### Checklist da superfície P4 (DeepSeek)
+### Checklist da superfície P4 (OpenCode)
 
 - [x] Seletores de TV e monitor interno com descoberta read-only.
 - [x] Seletores e `AllowDisplayWrites` persistidos em settings.
 - [x] App só compõe display real + rescue com opt-in e seletores completos.
 - [x] Aviso de recuperação incerta e toggle de automação bloqueado.
 - [x] Testes de composição/settings sem hardware.
-- [ ] Matriz real de TvOnly/Extend/Mirror + rollback (Codex/usuário).
+- [ ] Matriz real de TvOnly/Extend/Mirror + rollback (OpenCode/usuário).

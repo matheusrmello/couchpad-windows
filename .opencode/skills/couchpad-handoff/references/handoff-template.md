@@ -1,113 +1,58 @@
-# Templates de handoff
+# Template de fechamento de fase
 
-## DeepSeek → Codex
-
-Arquivo: `docs/handoff-deepseek-to-codex.md`
+Use em `docs/handoff-<fase>.md` quando o usuário pedir um documento separado.
+O ledger em `HANDOFF.md` continua sendo a fonte principal.
 
 ```md
-# Handoff DeepSeek → Codex
+# Fechamento — <fase>
 
 ## Identidade
 
-- Tag: v0.3.0-sim
+- Fase: <P0/P1/.../roadmap>
+- Dono: OpenCode
+- Tag: <v...>
 - Commit: <sha>
 - Data: AAAA-MM-DD
-- Fases concluídas: P0, P1, P2, P3
+- Estado: implementado / validado / aceito
 
-## Como rodar
+## O que foi entregue
+
+- <item verificável>
+- <item verificável>
+
+## O que ficou de fora
+
+- <item> — motivo.
+- <item> — motivo.
+
+## Contratos e arquivos
+
+- Core: <interfaces/modelos>
+- App: <views/viewmodels>
+- Platform.Windows: <APIs/implementações>
+- Docs: <caminhos>
+
+## Validação
 
 ```powershell
-$env:DOTNET = 'C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe'
-& $env:DOTNET build
-& $env:DOTNET test
-& $env:DOTNET run --project src/CouchPad.App
+$dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
+& $dotnet build CouchPad.slnx -c Debug
+& $dotnet test CouchPad.slnx -c Debug
+& $dotnet src\CouchPad.App\bin\Debug\net10.0\CouchPad.dll --smoke
 ```
 
-## O que está pronto
+- Build: <0/0>
+- Testes: <n/n>
+- Smoke: <resultado>
+- Hardware: <matriz/cenários>
+- Evidências: <screenshots, hashes, logs>
 
-- Tema, i18n pt-BR/en, shell, componentes, estados.
-- Serviço simulado com atrasos, cancelamento e falhas.
-- Testes: <n> passando.
+## Pendências e riscos
 
-## O que é simulado
+- <pendência> — dono OpenCode; próximo passo.
+- <risco> — mitigação/limite.
 
-- `FakeDisplayService`, `FakeAudioService`, `FakeHdrService`, `FakeGamepadService`.
-- Nenhuma chamada real de tela/áudio/HDR.
+## Próximo passo
 
-## Contratos
-
-- `IDisplayService`: <assinatura>
-- `IAudioService`: <assinatura>
-- `IHdrService`: <assinatura>
-- `IGamepadService`: <assinatura>
-- `IRescueStore`: <assinatura>
-
-## TODOs para o Codex
-
-- [ ] Implementar `Platform.Windows` sem quebrar as interfaces.
-- [ ] Confirmar identidade do TV no REA.
-- [ ] Trocar fakes por implementações reais.
-- [ ] Ajustar estados de erro conforme evidência.
-
-## Perguntas abertas
-
-1. <pergunta> — precisa de REA/hardware.
-
-## Evidências
-
-- Screenshots: `docs/screenshots/p3/`
-- Testes: `<comando e resumo>`
-- Tag: `v0.3.0-sim`
+<uma frase com a próxima ação concreta>
 ```
-
-## Codex → DeepSeek
-
-Arquivo: `docs/handoff-codex-to-deepseek.md`
-
-```md
-# Handoff Codex → DeepSeek
-
-## Identidade
-
-- Tag: v0.6.0-hardware
-- Commit: <sha>
-- Data: AAAA-MM-DD
-- Fases concluídas: REA, P4, P5, P6
-
-## O que mudou no comportamento real
-
-- Display: <APIs, ordem, falhas>
-- Áudio: <endpoint, timing, restauração>
-- HDR: <captura/reaplicação>
-- Rescue: <journal, gatilho, decisão>
-
-## Impacto na UI
-
-- Novos estados: <lista>
-- Novos erros: <códigos e textos sugeridos>
-- Ajustes de layout: <lista>
-
-## Limitações e riscos
-
-- <limitação>
-- <desconhecido>
-
-## O que falta
-
-- [ ] P7a: textos, i18n, a11y, screenshots.
-- [ ] Ajustes visuais para estados reais.
-
-## Evidências
-
-- Relatório: `docs/rea-shiftpad-2.2.0.md`
-- IDs: `ev_...`
-- Testes de hardware: `docs/hardware-tests/`
-```
-
-## Regras
-
-- Sem segredos, tokens ou dados pessoais.
-- Caminhos absolutos quando necessários.
-- Sempre incluir tag/commit.
-- Sempre listar o que é real e o que é simulado.
-- Sempre listar desconhecidos.

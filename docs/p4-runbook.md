@@ -1,7 +1,7 @@
 # Runbook — matriz P4 em hardware
 
 - Data: 2026-11-10
-- Dono da execução: Codex, com o usuário presente
+- Dono da execução: OpenCode, com o usuário presente
 - Objetivo: validar display real, rollback e watchdog
 - Regra: se o rollback falhar ou a tela ficar preta, parar imediatamente
 

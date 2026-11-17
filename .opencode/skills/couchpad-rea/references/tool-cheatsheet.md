@@ -3,9 +3,9 @@
 ## Diagnóstico e setup
 
 ```powershell
-npx -y rea-agents@latest doctor --client codex --json
-npx -y rea-agents@latest setup --client codex --dry-run --json
-npx -y rea-agents@latest setup --client codex --yes
+npx -y rea-agents@latest doctor --client opencode --json
+npx -y rea-agents@latest setup --client opencode --dry-run --json
+npx -y rea-agents@latest setup --client opencode --yes
 ```
 
 - `doctor` é somente leitura.

@@ -311,6 +311,14 @@
 - Impacto: Core ganha modelos, interfaces e detector de combo; Platform.Windows ganha coleta via PDH/APIs do Windows e overlay Win32; App ganha HUD, card de configuração e i18n. Rescue, journal e transações de display/áudio não mudam.
 - Evidência: `docs/roadmap.md`; `docs/screenshots/couchpad-performance-hud-concept.png` e `.html`.
 
+## D079 — OpenCode assume todo o desenvolvimento
+
+- Data: 2026-11-17
+- Decisão: o OpenCode passa a ser o único agente de desenvolvimento do CouchPad, incluindo Core, App, `Platform.Windows`, REA, testes, instalador, assinatura e release. O Codex foi descontinuado e não há mais handoff ativo para ele. A fronteira de camadas continua valendo como regra arquitetural, não como divisão de agentes.
+- Motivo: o usuário não possui mais assinatura do Codex e definiu que todo o desenvolvimento será feito pelo OpenCode.
+- Impacto: fases P0–P7b passam a ter dono OpenCode; subagentes do OpenCode podem implementar/revisar, mas a responsabilidade final é do agente principal. `docs/agents/codex/` e handoffs antigos ficam como arquivo histórico. Mudanças em `Platform.Windows` continuam exigindo build/testes e validação de hardware quando aplicável.
+- Evidência: instrução do usuário em 2026-11-17; `AGENTS.md`, `README.md`, `HANDOFF.md` e `docs/roadmap.md` atualizados.
+
 ## Formato de nova decisão
 
 ```md

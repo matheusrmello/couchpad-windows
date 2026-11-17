@@ -25,15 +25,17 @@ description: Use ao analisar estaticamente o binário ShiftPad 2.2.0 com REA, co
 - **Não** contornar proteção/licença.
 - O repositório público não declara licença; use apenas para comparação.
 
-## Setup
+## Setup no OpenCode
 
 ```powershell
-npx -y rea-agents@latest doctor --client codex --json
-npx -y rea-agents@latest setup --client codex --yes
+npx -y rea-agents@latest doctor --client opencode --json
+npx -y rea-agents@latest setup --client opencode --yes
 ```
 
-- Verificar `registration:codex.ok = true`.
-- Reiniciar/reconectar o cliente após o setup.
+- Verificar a registration do cliente OpenCode no resultado do `doctor`.
+- Se a versão do CLI não reconhecer `opencode`, configure o servidor MCP do REA
+  manualmente no OpenCode e valide as ferramentas antes de usá-las.
+- O Codex foi descontinuado em 2026-11-17; não usar `--client codex`.
 - Ghidra/IDA não são necessários para .NET gerenciado.
 - O rescue é NativeAOT; pseudocódigo exigiria Ghidra (passo separado).
 

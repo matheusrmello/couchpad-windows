@@ -1,5 +1,8 @@
 # Matriz de hardware — P4
 
+> **Registro histórico.** As ações atribuídas ao Codex ocorreram antes da D079.
+> Desde 2026-11-17, o OpenCode é o único agente de desenvolvimento.
+
 Estado em 2026-11-11: P4 aceita pelo usuário com a limitação explícita de que não foi comprovada a morte dentro de `SetDisplayConfig`; resultados e riscos estão no histórico abaixo.
 
 Consulta WMI somente leitura detectou dois monitores ativos, IDs de produto `SAM7167` e `AOC2702`. Isso não confirma a identidade de TV, conexão, modo ou capacidade dos dispositivos. O serviço real ainda não está disponível para executar a matriz.

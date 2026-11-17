@@ -1,5 +1,9 @@
 # Handoff do CouchPad 1.0.0
 
+> **Documento histórico.** O Codex foi descontinuado em 2026-11-17 (D079); o
+> OpenCode assumiu todas as camadas. Este handoff registra a validação da P7b.
+
+
 ## P7b validada e aceita pelo usuário
 
 - Tag local `v1.0.0`. Instalador `artifacts/CouchPad-Setup-1.0.0-win-x64.exe`,

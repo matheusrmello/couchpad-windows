@@ -6,17 +6,17 @@ Arquivo: `HANDOFF.md`, seção **Ledger de status**.
 
 | Fase | Dono | Status | Evidência/observação |
 |---|---|---|---|
-| Setup REA | Codex | pendente | — |
-| REA 2.2.0 | Codex | pendente | — |
-| P0 bootstrap | DeepSeek | pendente | — |
-| P1 shell | DeepSeek | pendente | — |
-| P2 componentes | DeepSeek | pendente | — |
-| P3 simulação | DeepSeek | pendente | — |
-| P4 display | Codex | pendente | — |
-| P5 áudio/HDR | Codex | pendente | — |
-| P6 rescue/tray | Codex | pendente | — |
-| P7a docs/a11y | DeepSeek | pendente | — |
-| P7b release | Codex | pendente | — |
+| Setup REA | OpenCode | pendente | — |
+| REA 2.2.0 | OpenCode | pendente | — |
+| P0 bootstrap | OpenCode | pendente | — |
+| P1 shell | OpenCode | pendente | — |
+| P2 componentes | OpenCode | pendente | — |
+| P3 simulação | OpenCode | pendente | — |
+| P4 display | OpenCode | pendente | — |
+| P5 áudio/HDR | OpenCode | pendente | — |
+| P6 rescue/tray | OpenCode | pendente | — |
+| P7a docs/a11y | OpenCode | pendente | — |
+| P7b release | OpenCode | pendente | — |
 
 ## Vocabulário de status
 
@@ -42,7 +42,7 @@ Cada linha concluída deve ter pelo menos um:
 Exemplo:
 
 ```md
-| P3 simulação | DeepSeek | aceito | commit `abc1234`, tag `v0.3.0-sim`; `dotnet test` 42/42; screenshots em `docs/screenshots/p3/` |
+| P3 simulação | OpenCode | aceito | commit `abc1234`, tag `v0.3.0-sim`; `dotnet test` 42/42; screenshots em `docs/screenshots/p3/` |
 ```
 
 ## Registro de decisões

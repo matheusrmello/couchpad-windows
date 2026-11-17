@@ -25,7 +25,7 @@
 
 - **Nome no candidato 1.0.4 (D069):** seleção XInput preservada. O nome é associado ao slot pelo par fabricante/produto. Build Release 0/0, 267 testes e smoke passaram, incluindo IDs do Ultimate 2, Ultimate 2C e fallback. O controle estava desligado durante a consulta, então a identificação na interface aguarda confirmação física.
 
-- **Dono:** Codex.
+- **Dono:** OpenCode.
 - **Implementação:** `WindowsGamepadWatcher` via XInput, polling dos quatro slots; ativação opt-in com `--windows-gamepad`; a simulação segue padrão. Build 0/0, smoke OK e 197 testes aprovados. Dispositivos HID sem XInput estão fora deste slice (D050).
 - **Status:** validação física em andamento; ativação, desligamento e cancelamento de ativação foram observados. A reconexão durante o atraso tem relato visual, mas carece de timestamps/eventos independentes e revisão da evidência. O journal foi limpo nas restaurações posteriores documentadas abaixo. O usuário dispensou trabalho adicional no botão de ativação em 12/11/2026; seu teste físico não é critério pendente.
 - **Confirmação visual:** usuário informou AOC normal e Samsung sem imagem; controle mantido desconectado.
@@ -46,14 +46,14 @@
 
 ### 2. Launcher real
 
-- **Dono:** Codex.
+- **Dono:** OpenCode.
 - **Implementado e validado:** Steam e Hydra Big Picture em hardware, restore de tela/áudio e preservação da instância Hydra preexistente. Steam próprio sai do Big Picture e permanece aberto, conforme escolha do usuário; instâncias preexistentes não são fechadas. Sem kill forçado.
 - **Limites:** launcher ausente foi injetado com serviços reais de hardware e rescue; ausência física e detecção de caminho pelo backend não foram exercitadas. Hydra próprio permaneceu com processos ativos após saída visual. Evidências em `docs/launcher-validation.md`.
 - **Evidência:** hardware + captura/estado.
 
 ### 3. P6 — rescue no logon, bandeja e autostart
 
-- **Dono:** Codex.
+- **Dono:** OpenCode.
 - **Validação sem TV concluída:** instância única na janela real, coordenação de startup com rescue concorrente e nova tentativa assistida com backend falso. O iniciador de produção e o rescue assistido abriram o App com journal ausente. Evidências em `docs/p6-recovery-matrix.md`.
 - **Itens 4–6 verificados:** instalação e remoção da tarefa no Agendador, disparo automático no logon com journal ausente, reabertura pela bandeja, desativação com restauração de tela/áudio na Samsung/AOC e saída em repouso. Build 0/0, 258 testes e smoke após a matriz.
 - **Autostart verificado:** ambas as tarefas por usuário retornaram 0 no logon real e o App abriu pelo rescue. Build final 0/0, 259 testes e smoke.
@@ -66,14 +66,14 @@
 
 ### 5. HDR (adiado)
 
-- **Dono:** futuro/Codex.
+- **Dono:** futuro/OpenCode.
 - **Validar:** detecção de suporte, captura, reaplicação e restore sem forçar
   HDR incompatível.
 - **Evidência:** hardware; não contar como aprovado antes disso.
 
 ### 6. P7a — docs, a11y, screenshots
 
-- **Dono:** DeepSeek.
+- **Dono:** OpenCode.
 - **Status:** aceita em 13/11/2026.
 - **Concluído:** checklist de a11y, contraste, foco/nomes via UIAutomation nos
   3 breakpoints, i18n 157 chaves, fluxos de bandeja/autostart/recuperação
@@ -85,13 +85,13 @@
 
 ### 7. P7b — release
 
-- **Dono:** Codex.
+- **Dono:** OpenCode.
 - **Validado:** regressão Debug e Release, 259 testes por configuração, smoke, watchdog e rescue, instalação sem elevação, padrões de primeiro uso, bandeja, autostart, reinstalação e desinstalação em conta padrão.
 - **Evidência:** `docs/install-validation.md`, SHA-256 do instalador, notas v1.0.0 e tag `v1.0.0`. Distribuição sem Authenticode (D067).
 
 ### 8. Correção de recuperação após mudança de LUID (1.0.11)
 
-- **Dono:** DeepSeek/Codex na revisão.
+- **Dono:** OpenCode.
 - **Status:** corrigido e instalado como candidato local `1.0.11`; publicação pendente.
 - **Implementação:** `DisplaySnapshotRehydrator` remapeia adapter/source do
   journal por `DevicePath`/EDID para as identidades atuais. Se a topologia
@@ -107,7 +107,7 @@
 
 ### 9. Perfis de ambiente (1.0.12)
 
-- **Dono:** DeepSeek.
+- **Dono:** OpenCode.
 - **Status:** implementado e instalado localmente; publicação pendente.
 - **Implementação:** `AppSettings.ActiveProfileId` + `EnvironmentProfiles`;
   migração de configurações antigas para perfil padrão; seletor, criação,
@@ -122,7 +122,7 @@
 
 ### 10. Diagnóstico da identificação (1.0.13)
 
-- **Dono:** DeepSeek.
+- **Dono:** OpenCode.
 - **Status:** implementado e instalado localmente; publicação pendente.
 - **Implementação:** expander no card Display com perfil, TV, monitor e áudio;
   EDID, HDMI, ativo/disponível, motivo da escolha e confiança alta/média/baixa.

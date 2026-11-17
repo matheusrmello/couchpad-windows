@@ -405,12 +405,13 @@ Acessibilidade:
 
 ## 17. Fronteira de camadas
 
-- **DeepSeek/App+Core:** modelos, settings, detector, coordinator, UI, i18n,
+- **OpenCode/App+Core:** modelos, settings, detector, coordinator, UI, i18n,
   testes e docs.
-- **Codex/Platform.Windows:** PDH, APIs Win32, XInput button source, overlay
+- **OpenCode/Platform.Windows:** PDH, APIs Win32, XInput button source, overlay
   interop, testes de plataforma.
-- Se a implementação for feita por um único agente, registrar a exceção em
-  `docs/decisions.md` antes de editar `Platform.Windows`.
+- A divisão acima é arquitetural, não de agentes. O Codex foi descontinuado
+  (D079); o OpenCode pode implementar todas as camadas, mantendo build/testes e
+  validação de hardware quando aplicável.
 
 ## 18. Próximo passo
 

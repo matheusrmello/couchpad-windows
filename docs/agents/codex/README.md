@@ -1,4 +1,9 @@
-# Codex — perfis e uso
+# Codex — perfis e uso (histórico)
+
+> **Descontinuado em 2026-11-17.** O OpenCode é o único agente de
+> desenvolvimento do CouchPad. Este diretório permanece apenas como registro
+> histórico dos perfis e papéis usados antes da D079.
+
 
 ## O que é
 
