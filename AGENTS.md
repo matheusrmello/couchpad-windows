@@ -21,6 +21,13 @@ Estrutura, dependências e comandos ficam no mapa; não os duplique aqui.
 - Demais subagentes (`ui-builder`, `sim-engineer`, `scaffolder`, `reviewer`,
   `docs-writer`) seguem estas mesmas regras.
 
+## Skills
+
+- `couchpad-uiux`: especialista UI/UX — direção visual, HUD, fluxos, a11y e revisão.
+- `couchpad-ui`: implementação Avalonia — XAML, MVVM, tokens, componentes e i18n.
+- `couchpad-hardware`, `couchpad-rea`, `couchpad-release`, `couchpad-handoff`:
+  fases específicas de hardware, análise, release e fechamento.
+
 ## Missão
 
 Recriar de forma limpa e 100% gratuita o comportamento útil do ShiftPad 2.2.0:

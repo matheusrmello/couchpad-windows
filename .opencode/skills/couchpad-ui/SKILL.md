@@ -5,6 +5,9 @@ description: Use ao criar ou revisar telas, componentes, tema, i18n ou acessibil
 
 # CouchPad UI (Avalonia)
 
+> Decisões de design, UX, HUD e revisão: use `couchpad-uiux`. Esta skill cobre
+> a mecânica de implementação em Avalonia.
+
 ## Quando usar
 
 - P0 (bootstrap visual), P1 (shell), P2 (componentes), P7a (docs/a11y/screenshots).
@@ -32,6 +35,7 @@ description: Use ao criar ou revisar telas, componentes, tema, i18n ou acessibil
 src/CouchPad.App/
   App.axaml
   Themes/Tokens.axaml
+  Themes/Components.axaml
   Themes/Controls.axaml
   Localization/Strings.pt-BR.json
   Localization/Strings.en.json
@@ -40,9 +44,15 @@ src/CouchPad.App/
   Views/
   ViewModels/
   Controls/
+  Performance/
 src/CouchPad.Core/
-  Models/
-  Services/          # interfaces + simulação
+  Automation/
+  Audio/
+  Display/
+  Devices/
+  Performance/
+  Settings/
+  Storage/
 tests/CouchPad.Core.Tests/
 ```
 
@@ -64,19 +74,19 @@ tests/CouchPad.Core.Tests/
 
 ## Layout
 
-- Janela padrão ~1020×780; mínimo ~900×700.
-- `>= 1000 px`: 2 colunas principais + sidebar.
-- `720–999 px`: 2 colunas.
-- `< 720 px`: 1 coluna.
-- Cabeçalho com marca + pill de estado.
-- Rodapé com status, “Redefinir”, “Sobre” e idioma.
+- Janela padrão 1020×780; mínimo 640×640.
+- `>= 1000 px`: 3 colunas; 9 cards com o HUD em linha inteira.
+- `720–999 px`: 2 colunas; HUD em linha inteira.
+- `< 720 px`: 1 coluna, na ordem de leitura.
+- Cabeçalho com logo, regra de acento e pill de estado.
+- Rodapé com versão, “Redefinir”, “Sobre” e idioma.
 - Wireframe completo em `docs/ui-spec.md`.
 
 ## Componentes
 
-Catálogo obrigatório: `Card`, `CardHeader`, `StatusDot`, `StatusRow`,
-`ToggleSwitch`, `Select`, `IconButton`, `KeyChip`, `PathPicker`, `Pill`,
-`FooterLink`, `ConfirmDialog`.
+Controles próprios: `Card`, `ActionButton`, `StatusPill`, `StatusRow`,
+`KeyChip`, `PathPicker`. Estilos utilitários: `Border.chip`,
+`TextBlock.chipLabel`, `TextBlock.value.mono`.
 
 Antes de criar um controle novo, verifique se um dos existentes resolve.
 Detalhes de anatomia, propriedades e estados em `references/components.md`.
@@ -90,7 +100,8 @@ Todo componente interativo deve cobrir:
 - texto e contraste em ambos os idiomas.
 
 Status do serviço: `Ativo`, `Aguardando gamepad`, `Aplicando`, `Erro`,
-`Recuperação pendente`.
+`Recuperação pendente`. Estados da automação: `Idle`, `WaitingForGamepad`,
+`Pending`, `Applying`, `Active`, `Error`, `RescuePending`.
 
 ## i18n
 
@@ -113,10 +124,11 @@ Status do serviço: `Ativo`, `Aguardando gamepad`, `Aplicando`, `Erro`,
 
 ## Screenshots
 
-- 3 breakpoints × 2 idiomas.
-- Nome: `docs/screenshots/<fase>/<tela>-<lang>-<largura>.png`.
+- 3 breakpoints × 2 idiomas, a partir do executável instalado.
+- Nome atual: `docs/screenshots/p7a-{3col,2col,1col}-{pt,en}.png`.
+- HUD: `hud-fase1-overlay.png` e `hud-fase1-settings.png`.
 - Sem dados pessoais, IP, serial ou caminho de usuário.
-- Atualize o ledger após gerar.
+- Atualize o índice em `docs/screenshots/README.md` após gerar.
 
 ## Definição de pronto
 
