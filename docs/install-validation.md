@@ -104,6 +104,7 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - Build Debug/Release 0/0, **333 testes** (283 Core + 50 App) e smoke.
 - Instalação per-user sem elevação por cima da instalação existente: exit 0. App e rescue reportaram `1.0.18.0`; ProductVersion `1.0.18+78bf34c74d6af5fa45590117a2e8da6da2eba2dd`.
 - Smoke do executável instalado: `SMOKE: window opened 1020x780; initial=En; pt='Ouvindo gamepad'; en='Listening for gamepad'; language=En; title='CouchPad'`.
+- Chord LB+RB+Y validado no controle físico no build instalado. Evidência: 8BitDo Ultimate 2 no slot 0 XInput, log do monitor com `0x8300 decoded=Y,LB,RB` segurado por ~2,7 s; o HUD sumiu e voltou com o chord.
 - Tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal (`state\session.json`) ausente.
 - `settings.json` preservado: 2.143 bytes e SHA-256 `7100E8D64E79133D0C016052712D56DE87D083026975E5A156AE1B5EC5BDF0D1` antes e depois da instalação; chord ainda `LB+RB+Y`. O campo `performanceHudShowOnlyInSession` estava `true` no arquivo antes da instalação (o app em execução, fechado para instalar, persistiu o estado em memória ao sair), então a conferência de `false` prevista no brief continua pendente e depende de decidir se o valor deve ser restaurado.
 - Instalador `CouchPad-Setup-1.0.18-win-x64.exe`: 84.348.738 bytes, SHA-256 `C9661F72C97E4A78B66EDA48AF1D129DE394E60650A8A8361548585485F91621`. Publicação no GitHub pendente.

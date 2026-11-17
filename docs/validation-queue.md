@@ -136,8 +136,8 @@
 ### 11. HUD de desempenho — Fase 1 (1.0.14)
 
 - **Dono:** OpenCode.
-- **Status:** implementado, instalado e validado em simulação/produção; aceite
-  e chord físico pendentes.
+- **Status:** implementado, instalado e validado em simulação/produção; chord
+  físico validado em 1.0.18 (item 15); aceite pendente.
 - **Implementação:** HUD Avalonia click-through/topmost/sem foco; sampler
   Windows via PDH/GetSystemTimes/GlobalMemoryStatusEx; XInput button source;
   chord LB+RB+Y; modal de métricas/aparência; settings persistidos.
@@ -146,9 +146,13 @@
   simulada; sampler real mostrou CPU/GPU/RAM/VRAM/processo/resolução; estilos
   `WS_EX_TRANSPARENT`, `WS_EX_NOACTIVATE` e `WS_EX_TOOLWINDOW` confirmados;
   HUD aberto no executável instalado 1.0.14, com tasks preservadas.
-- **Pendente:** chord físico em controle real; publicação. FPS/frame
-  time/temperatura ficam para as próximas fases. Instalador local: 84.337.865
-  bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`.
+- **Chord físico:** validado em 1.0.18 no controle físico (8BitDo Ultimate 2,
+  XInput, slot 0), no build instalado: o log do monitor XInput mostrou
+  `0x8300 decoded=Y,LB,RB` segurado por ~2,7 s e o HUD sumiu e voltou. Ver
+  item 15.
+- **Pendente:** publicação. FPS/frame time/temperatura ficam para as próximas
+  fases. Instalador local: 84.337.865 bytes, SHA-256
+  `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`.
 
 ### 12. Correção das barras de GPU/VRAM do HUD (1.0.15)
 
@@ -212,6 +216,25 @@
   `RtssSharedMemoryParserTests` e `PerformanceFrameRateTests` cobrem o parser e
   o contrato.
 - **Decisão:** D080.
+
+### 15. Correção do chord do HUD (1.0.18)
+
+- **Dono:** OpenCode.
+- **Status:** corrigido, instalado e validado no controle físico; publicação
+  pendente.
+- **Causa:** `WindowsGamepadButtonSource` só publicava o evento quando o
+  conjunto de botões mudava. O detector de chord depende do estado contínuo para
+  medir o hold de 800 ms, então recebia um único evento e nunca confirmava
+  `LB+RB+Y`.
+- **Correção:** o contrato passou a reportar o estado a cada poll (~30 Hz) em
+  `IGamepadButtonSource.ButtonsReported`; a detecção de borda/hold fica no
+  consumidor. Teste de regressão cobre o hold.
+- **Evidência:** build Debug/Release 0/0, **333 testes** (283 Core + 50 App) e
+  smoke; no build `1.0.18` instalado, o controle físico (8BitDo Ultimate 2,
+  XInput, slot 0) apareceu no log do monitor XInput como
+  `0x8300 decoded=Y,LB,RB` segurado por ~2,7 s, e o HUD sumiu e voltou com o
+  chord.
+- **Pendente:** publicar.
 
 ## Próxima ação
 

@@ -4,6 +4,7 @@
 
 - Corrige o atalho do HUD no controle: o estado do gamepad agora é reportado a cada poll (~30 Hz), permitindo ao detector medir o hold de 800 ms. Antes o evento só disparava em mudanças e o chord nunca era detectado.
 - Renomeia `IGamepadButtonSource.ButtonsChanged` para `ButtonsReported` (contrato: estado a cada ciclo de poll; borda/hold no consumidor).
+- Chord LB+RB+Y validado no controle físico (8BitDo Ultimate 2, XInput).
 - 333 testes, build Debug/Release 0/0 e smoke.
 
 ## 1.0.17 (candidato)
