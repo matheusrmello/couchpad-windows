@@ -16,6 +16,7 @@ public sealed class SimulatedPerformanceSampler : IPerformanceSampler
         var memoryTotal = 32UL * 1024 * 1024 * 1024;
         var vramUsed = (ulong)(7.2 * 1024 * 1024 * 1024);
         var vramTotal = 12UL * 1024 * 1024 * 1024;
+        var fps = 58 + (tick * 7 % 62);
         return Task.FromResult(new PerformanceSnapshot(
             cpu,
             processCpu,
@@ -28,6 +29,7 @@ public sealed class SimulatedPerformanceSampler : IPerformanceSampler
             1920,
             1080,
             120,
-            DateTimeOffset.UtcNow));
+            DateTimeOffset.UtcNow,
+            fps));
     }
 }

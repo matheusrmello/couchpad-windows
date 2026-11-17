@@ -9,6 +9,7 @@ public enum PerformanceMetric
     Vram,
     Process,
     Display,
+    FramesPerSecond,
 }
 
 public static class PerformanceMetricCatalog
@@ -25,6 +26,7 @@ public static class PerformanceMetricCatalog
         PerformanceMetric.Vram,
         PerformanceMetric.Process,
         PerformanceMetric.Display,
+        PerformanceMetric.FramesPerSecond,
     ];
 
     public static string Key(PerformanceMetric metric) => metric switch
@@ -36,6 +38,7 @@ public static class PerformanceMetricCatalog
         PerformanceMetric.Vram => "vram",
         PerformanceMetric.Process => "process",
         PerformanceMetric.Display => "display",
+        PerformanceMetric.FramesPerSecond => "fps",
         _ => throw new ArgumentOutOfRangeException(nameof(metric)),
     };
 
@@ -50,6 +53,7 @@ public static class PerformanceMetricCatalog
             case "vram": metric = PerformanceMetric.Vram; return true;
             case "process": metric = PerformanceMetric.Process; return true;
             case "display": metric = PerformanceMetric.Display; return true;
+            case "fps" or "framerate": metric = PerformanceMetric.FramesPerSecond; return true;
             default: metric = default; return false;
         }
     }

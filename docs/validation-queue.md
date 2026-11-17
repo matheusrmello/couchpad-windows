@@ -188,6 +188,24 @@
   `C4D587C97ED53011CDF9BBDC2DF75F43FA947CDCFEC9B46497EFFEFD6971809B`.
 - **Pendente:** publicar e validar o chord físico.
 
+### 14. FPS via RTSS (Fase 2)
+
+- **Dono:** OpenCode.
+- **Status:** implementado e validado em simulação; validação com RTSS real
+  pendente (requer jogo aberto).
+- **Implementação:** `IFrameRateSource` no Core; `RtssFrameRateSource`
+  (P/Invoke kernel32 para `RTSSSharedMemoryV2`) e `RtssSharedMemoryParser`
+  (puro) em `Platform.Windows`, integrados ao `WindowsPerformanceSampler`.
+  Métrica opt-in, fora dos defaults; leitura read-only, sem injeção, driver,
+  admin ou encerramento de processos. Sem RTSS ou sem frames, o HUD mostra `—`.
+  Suavização por delta entre amostras de 1 s, fallback para média de vida e
+  teto de 999 FPS. UI no overlay, modal e card, com i18n pt-BR/en.
+- **Evidência:** build Debug/Release 0/0, **335 testes**, smoke; simulação com
+  overlay em 107 FPS e card em 144 FPS. `RtssSharedMemoryParserTests` e
+  `PerformanceFrameRateTests` cobrem o parser e o contrato.
+- **Pendente:** validar com RTSS em execução e jogo apresentando frames.
+- **Decisão:** D080.
+
 ## Próxima ação
 
 O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).

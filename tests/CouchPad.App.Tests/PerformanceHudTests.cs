@@ -52,6 +52,25 @@ public sealed class PerformanceHudTests
     }
 
     [Fact]
+    public void View_model_formats_fps_and_falls_back_to_dash()
+    {
+        var viewModel = new PerformanceHudViewModel();
+        viewModel.ApplySettings(PerformanceHudSettings.Default with
+        {
+            Metrics = [PerformanceMetric.FramesPerSecond],
+        });
+        viewModel.Update(new PerformanceSnapshot(
+            null, null, null, null, null, null, null, null, null, null, null, Start, 144));
+
+        Assert.True(viewModel.ShowFps);
+        Assert.Equal("144 FPS", viewModel.FpsText);
+
+        viewModel.Update(PerformanceSnapshot.Empty);
+
+        Assert.Equal("—", viewModel.FpsText);
+    }
+
+    [Fact]
     public void Coordinator_shows_only_in_session_and_toggles_visibility()
     {
         var settings = PerformanceHudSettings.Default with
@@ -120,7 +139,7 @@ public sealed class PerformanceHudTests
         LocalizationService.Instance.Initialize(store);
         var expected = new PerformanceHudSettings(
             true,
-            [PerformanceMetric.Cpu, PerformanceMetric.Vram, PerformanceMetric.Display],
+            [PerformanceMetric.Cpu, PerformanceMetric.Vram, PerformanceMetric.Display, PerformanceMetric.FramesPerSecond],
             PerformanceHudPosition.BottomLeft,
             0.55,
             1.25,
@@ -134,6 +153,7 @@ public sealed class PerformanceHudTests
         Assert.False(viewModel.GpuSelected);
         Assert.True(viewModel.VramSelected);
         Assert.True(viewModel.DisplaySelected);
+        Assert.True(viewModel.FpsSelected);
         Assert.Equal("LB+RB+Back", viewModel.SelectedChord?.Key);
         Assert.Equal("bottomLeft", viewModel.SelectedPosition?.Key);
         Assert.Equal(expected.Metrics, actual.Metrics);
@@ -184,11 +204,11 @@ public sealed class PerformanceHudTests
         Assert.False(hud.Applied!.Enabled);
 
         var changed = new PerformanceHudSettings(
-            true, [PerformanceMetric.Ram], PerformanceHudPosition.TopLeft, 0.6, 1.2, true, "LB+RB+Back");
+            true, [PerformanceMetric.Ram, PerformanceMetric.FramesPerSecond], PerformanceHudPosition.TopLeft, 0.6, 1.2, true, "LB+RB+Back");
         vm.ApplyHudSettings(changed);
 
         Assert.True(store.Current.PerformanceHudEnabled);
-        Assert.Equal(["ram"], store.Current.PerformanceHudMetrics);
+        Assert.Equal(["ram", "fps"], store.Current.PerformanceHudMetrics);
         Assert.Equal("topLeft", store.Current.PerformanceHudPosition);
         Assert.Equal("LB+RB+Back", store.Current.PerformanceHudToggleChord);
         Assert.Equal(changed.Enabled, hud.Applied!.Enabled);
@@ -199,6 +219,7 @@ public sealed class PerformanceHudTests
         Assert.Equal(changed.ShowOnlyInSession, hud.Applied.ShowOnlyInSession);
         Assert.Equal(changed.ChordKey, hud.Applied.ChordKey);
         Assert.True(vm.HudShowsRam);
+        Assert.True(vm.HudShowsFps);
         Assert.False(vm.HudShowsCpu);
         Assert.Equal("Superior esquerdo", vm.HudPositionText);
         Assert.Equal("LB + RB + Back", vm.HudChordText);

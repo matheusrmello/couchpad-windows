@@ -319,6 +319,19 @@
 - Impacto: fases P0–P7b passam a ter dono OpenCode; subagentes do OpenCode podem implementar/revisar, mas a responsabilidade final é do agente principal. `docs/agents/codex/` e handoffs antigos ficam como arquivo histórico. Mudanças em `Platform.Windows` continuam exigindo build/testes e validação de hardware quando aplicável.
 - Evidência: instrução do usuário em 2026-11-17; `AGENTS.md`, `README.md`, `HANDOFF.md` e `docs/roadmap.md` atualizados.
 
+## D080 — FPS no HUD via RTSS shared memory (Fase 2)
+
+- Decisão: medir FPS lendo o bloco read-only `RTSSSharedMemoryV2` do RTSS, sem
+  injeção, driver, admin ou encerramento de processos. FPS é métrica opt-in
+  (fora dos defaults). Sem RTSS em execução ou sem jogo apresentando frames, o
+  HUD mostra `—`. PresentMon/ETW fica como alternativa experimental posterior;
+  frame time e 1% low são deriváveis da mesma fonte.
+- Fonte: `IFrameRateSource` no Core; `RtssFrameRateSource` (P/Invoke kernel32)
+  e `RtssSharedMemoryParser` (puro) em `Platform.Windows`. Suavização por delta
+  entre amostras de 1 s, fallback para média de vida e teto de 999 FPS.
+- Validação: 335 testes, build 0/0, smoke e validação em simulação; validação
+  com RTSS real pendente (exige jogo em execução).
+
 ## Formato de nova decisão
 
 ```md

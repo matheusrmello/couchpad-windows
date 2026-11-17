@@ -15,6 +15,7 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
     private const int VRefresh = 116;
 
     private readonly object _sync = new();
+    private readonly IFrameRateSource _frameRate;
     private ulong _lastIdle;
     private ulong _lastKernel;
     private ulong _lastUser;
@@ -28,8 +29,9 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
     private IntPtr _vramCounter;
     private bool _disposed;
 
-    public WindowsPerformanceSampler()
+    public WindowsPerformanceSampler(IFrameRateSource? frameRate = null)
     {
+        _frameRate = frameRate ?? new RtssFrameRateSource();
         TryInitializePdh();
     }
 
@@ -47,6 +49,12 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
             var now = DateTimeOffset.UtcNow;
             var cpu = ReadCpu(now);
             var process = ReadProcess(now);
+            double? fps = null;
+            try
+            {
+                if (process.Pid is { } pid) fps = _frameRate.ReadFramesPerSecond(pid, now);
+            }
+            catch (Exception) { fps = null; }
             var memory = ReadMemory();
             var gpu = ReadGpu();
             var vram = ReadVram();
@@ -63,7 +71,8 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
                 display.Width,
                 display.Height,
                 display.Refresh,
-                now);
+                now,
+                fps);
         }
     }
 
@@ -94,17 +103,17 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
         return (percent, null);
     }
 
-    private (double? Cpu, string? Name) ReadProcess(DateTimeOffset now)
+    private (double? Cpu, string? Name, int? Pid) ReadProcess(DateTimeOffset now)
     {
         var window = GetForegroundWindow();
         if (window == IntPtr.Zero)
         {
             _lastProcessId = -1;
-            return (null, null);
+            return (null, null, null);
         }
 
         _ = GetWindowThreadProcessId(window, out var processId);
-        if (processId == 0) return (null, null);
+        if (processId == 0) return (null, null, null);
         try
         {
             var processId32 = (int)processId;
@@ -122,11 +131,11 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
             _lastProcessId = processId32;
             _lastProcessCpu = cpuTime;
             _lastProcessAt = now;
-            return (percent, name);
+            return (percent, name, processId32);
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or Win32Exception or NotSupportedException)
         {
-            return (null, null);
+            return (null, null, null);
         }
     }
 
@@ -234,6 +243,9 @@ public sealed class WindowsPerformanceSampler : IPerformanceSampler, IDisposable
             _gpuQuery = _vramQuery = IntPtr.Zero;
             _gpuCounter = _vramCounter = IntPtr.Zero;
         }
+
+        try { _frameRate.Dispose(); }
+        catch (Exception) { }
     }
 
     [StructLayout(LayoutKind.Sequential)]

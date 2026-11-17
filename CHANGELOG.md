@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## Em desenvolvimento (após 1.0.16)
+
+- Adiciona métrica FPS ao HUD, lida do RTSS shared memory (read-only, opt-in); sem RTSS o HUD mostra —. Frame time e 1% low ficam para a próxima etapa.
+
 ## 1.0.16 (candidato)
 
 - Redesenha o shell: cabeçalho com logo em bloco, regra de acento e status à direita.

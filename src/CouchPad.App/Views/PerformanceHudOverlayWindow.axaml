@@ -97,6 +97,10 @@
         </Grid>
 
         <StackPanel Grid.Row="3" Spacing="3" VerticalAlignment="Bottom">
+          <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding ShowFps}">
+            <TextBlock Text="{loc:Tr hud.metric.fps}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+            <TextBlock Grid.Column="1" Text="{Binding FpsText}" FontSize="9" Foreground="{DynamicResource CouchPad.TextPrimary}" />
+          </Grid>
           <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding ShowProcess}">
             <TextBlock Text="{loc:Tr hud.metric.process}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
             <TextBlock Grid.Column="1" Text="{Binding ProcessText}" FontSize="9" Foreground="{DynamicResource CouchPad.TextPrimary}"

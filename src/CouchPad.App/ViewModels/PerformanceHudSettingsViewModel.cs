@@ -20,6 +20,7 @@ public partial class PerformanceHudSettingsViewModel : ObservableObject
     [ObservableProperty] private bool _vramSelected;
     [ObservableProperty] private bool _processSelected = true;
     [ObservableProperty] private bool _displaySelected;
+    [ObservableProperty] private bool _fpsSelected;
     [ObservableProperty] private double _opacity;
     [ObservableProperty] private double _scale;
     [ObservableProperty] private bool _showOnlyInSession;
@@ -30,7 +31,7 @@ public partial class PerformanceHudSettingsViewModel : ObservableObject
     public ObservableCollection<HudPositionOption> PositionOptions { get; }
 
     public bool ShowEmptyPreview => !(CpuSelected || CpuProcessSelected || GpuSelected ||
-        RamSelected || VramSelected || ProcessSelected || DisplaySelected);
+        RamSelected || VramSelected || ProcessSelected || DisplaySelected || FpsSelected);
 
     partial void OnCpuSelectedChanged(bool value) => NotifyPreview();
     partial void OnCpuProcessSelectedChanged(bool value) => NotifyPreview();
@@ -39,6 +40,7 @@ public partial class PerformanceHudSettingsViewModel : ObservableObject
     partial void OnVramSelectedChanged(bool value) => NotifyPreview();
     partial void OnProcessSelectedChanged(bool value) => NotifyPreview();
     partial void OnDisplaySelectedChanged(bool value) => NotifyPreview();
+    partial void OnFpsSelectedChanged(bool value) => NotifyPreview();
 
     public PerformanceHudSettingsViewModel(PerformanceHudSettings settings)
     {
@@ -61,6 +63,7 @@ public partial class PerformanceHudSettingsViewModel : ObservableObject
         VramSelected = settings.Metrics.Contains(PerformanceMetric.Vram);
         ProcessSelected = settings.Metrics.Contains(PerformanceMetric.Process);
         DisplaySelected = settings.Metrics.Contains(PerformanceMetric.Display);
+        FpsSelected = settings.Metrics.Contains(PerformanceMetric.FramesPerSecond);
         Opacity = settings.Opacity;
         Scale = settings.Scale;
         ShowOnlyInSession = settings.ShowOnlyInSession;
@@ -79,6 +82,7 @@ public partial class PerformanceHudSettingsViewModel : ObservableObject
         if (VramSelected) metrics.Add(PerformanceMetric.Vram);
         if (ProcessSelected) metrics.Add(PerformanceMetric.Process);
         if (DisplaySelected) metrics.Add(PerformanceMetric.Display);
+        if (FpsSelected) metrics.Add(PerformanceMetric.FramesPerSecond);
         if (metrics.Count == 0) metrics.AddRange(PerformanceMetricCatalog.DefaultMetrics);
 
         return new PerformanceHudSettings(

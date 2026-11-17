@@ -13,8 +13,9 @@ public sealed record PerformanceSnapshot(
     int? ScreenWidth,
     int? ScreenHeight,
     int? RefreshHz,
-    DateTimeOffset CapturedAt)
+    DateTimeOffset CapturedAt,
+    double? FramesPerSecond = null)
 {
     public static PerformanceSnapshot Empty { get; } = new(
-        null, null, null, null, null, null, null, null, null, null, null, DateTimeOffset.MinValue);
+        null, null, null, null, null, null, null, null, null, null, null, DateTimeOffset.MinValue, null);
 }

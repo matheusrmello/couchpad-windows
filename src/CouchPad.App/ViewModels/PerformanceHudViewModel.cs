@@ -15,6 +15,7 @@ public partial class PerformanceHudViewModel : ObservableObject
     [ObservableProperty] private bool _showVram;
     [ObservableProperty] private bool _showProcess;
     [ObservableProperty] private bool _showDisplay;
+    [ObservableProperty] private bool _showFps;
 
     [ObservableProperty] private string _cpuText = Unavailable;
     [ObservableProperty] private string _cpuGameText = Unavailable;
@@ -23,13 +24,14 @@ public partial class PerformanceHudViewModel : ObservableObject
     [ObservableProperty] private string _vramText = Unavailable;
     [ObservableProperty] private string _processText = Unavailable;
     [ObservableProperty] private string _displayText = Unavailable;
+    [ObservableProperty] private string _fpsText = Unavailable;
 
     [ObservableProperty] private double _cpuBarWidth;
     [ObservableProperty] private double _gpuBarWidth;
     [ObservableProperty] private double _ramBarWidth;
     [ObservableProperty] private double _vramBarWidth;
 
-    public bool HasMetrics => ShowCpu || ShowCpuProcess || ShowGpu || ShowRam || ShowVram || ShowProcess || ShowDisplay;
+    public bool HasMetrics => ShowCpu || ShowCpuProcess || ShowGpu || ShowRam || ShowVram || ShowProcess || ShowDisplay || ShowFps;
 
     public bool ShowEmpty => !HasMetrics;
 
@@ -42,6 +44,7 @@ public partial class PerformanceHudViewModel : ObservableObject
         ShowVram = settings.Metrics.Contains(PerformanceMetric.Vram);
         ShowProcess = settings.Metrics.Contains(PerformanceMetric.Process);
         ShowDisplay = settings.Metrics.Contains(PerformanceMetric.Display);
+        ShowFps = settings.Metrics.Contains(PerformanceMetric.FramesPerSecond);
         OnPropertyChanged(nameof(HasMetrics));
         OnPropertyChanged(nameof(ShowEmpty));
     }
@@ -57,6 +60,7 @@ public partial class PerformanceHudViewModel : ObservableObject
             ? Unavailable
             : snapshot.ForegroundProcessName;
         DisplayText = FormatDisplay(snapshot.ScreenWidth, snapshot.ScreenHeight, snapshot.RefreshHz);
+        FpsText = snapshot.FramesPerSecond is { } fps ? $"{fps:0} FPS" : Unavailable;
 
         CpuBarWidth = BarWidth(snapshot.CpuTotalPercent);
         GpuBarWidth = BarWidth(snapshot.GpuPercent);

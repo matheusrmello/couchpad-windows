@@ -293,6 +293,7 @@ public partial class MainWindowViewModel : ObservableObject
     public bool HudShowsVram => _hudSettings.Metrics.Contains(PerformanceMetric.Vram);
     public bool HudShowsProcess => _hudSettings.Metrics.Contains(PerformanceMetric.Process);
     public bool HudShowsDisplay => _hudSettings.Metrics.Contains(PerformanceMetric.Display);
+    public bool HudShowsFps => _hudSettings.Metrics.Contains(PerformanceMetric.FramesPerSecond);
     public bool HudHasMetrics => _hudSettings.Metrics.Count > 0;
 
     public event EventHandler? HudSettingsRequested;
@@ -323,6 +324,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(HudShowsVram));
         OnPropertyChanged(nameof(HudShowsProcess));
         OnPropertyChanged(nameof(HudShowsDisplay));
+        OnPropertyChanged(nameof(HudShowsFps));
         OnPropertyChanged(nameof(HudHasMetrics));
     }
 

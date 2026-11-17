@@ -72,6 +72,8 @@ driver de kernel e sem telemetria.
 
 ### Fase 2 — FPS e frame time
 
+- **Status:** FPS implementado (RTSS shared memory, read-only, opt-in); frame
+  time e 1% low pendentes; PresentMon/ETW experimental pendente.
 - **RTSS shared memory** quando o RTSS estiver instalado:
   - FPS;
   - frame time;

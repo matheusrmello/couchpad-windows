@@ -53,5 +53,11 @@
   inteira na primeira tela, nos três breakpoints e nos dois idiomas.
 - `hud-fase1-settings.png`: modal de configuração com métricas, atalho,
   aparência e prévia.
+- `hud-fase2-overlay.png`: overlay em simulação com a métrica **FPS** ativa
+  (Fase 2, RTSS shared memory); os demais campos seguem o HUD da Fase 1.
+- `hud-fase2-card.png`: card HUD com chip/prévia de FPS, após o redesenho do
+  shell da 1.0.16.
+- As duas capturas de Fase 2 são de simulação; o journal de simulação foi
+  zerado depois da captura.
 - `couchpad-performance-hud-concept.png` e `.html`: concept original aprovado;
   a implementação mantém a mesma direção visual.

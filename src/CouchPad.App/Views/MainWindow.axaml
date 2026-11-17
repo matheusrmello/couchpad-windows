@@ -341,6 +341,9 @@
                   <Border Classes="chip" IsVisible="{Binding HudShowsDisplay}">
                     <TextBlock Classes="chipLabel" Text="{loc:Tr hud.metric.display}" />
                   </Border>
+                  <Border Classes="chip" IsVisible="{Binding HudShowsFps}">
+                    <TextBlock Classes="chipLabel" Text="{loc:Tr hud.metric.fps}" />
+                  </Border>
                 </WrapPanel>
                 <TextBlock Classes="hint"
                            Text="{loc:Tr hud.overlay.empty}"
@@ -418,6 +421,11 @@
                   </Grid>
 
                   <StackPanel Grid.Row="3" Spacing="3" VerticalAlignment="Bottom">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding HudShowsFps}">
+                      <TextBlock Text="{loc:Tr hud.metric.fps}" FontSize="9"
+                                 Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                      <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.fps_value}" FontSize="9" />
+                    </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding HudShowsProcess}">
                       <TextBlock Text="{loc:Tr hud.metric.process}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
                       <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.process}" FontSize="9"
