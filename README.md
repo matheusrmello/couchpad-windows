@@ -99,6 +99,12 @@ Para simular em desenvolvimento, execute `CouchPad.exe --simulate`.
   reproduzidos; ver limitações nas matrizes.
 - Narrator/NVDA completo ainda não foi executado; UIAutomation foi validado.
 
+## Roadmap
+
+O próximo recurso aprovado é o **HUD de desempenho**: métricas locais
+selecionáveis, opt-in e toggle por combinação no controle. O plano completo,
+fases e limites estão em [docs/roadmap.md](docs/roadmap.md).
+
 ## Agentes
 
 - **OpenCode/DeepSeek:** App/Core, UI, i18n, testes, docs e P7a.

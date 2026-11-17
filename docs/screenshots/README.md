@@ -43,4 +43,5 @@
 - `couchpad-performance-hud-concept.png` e
   `couchpad-performance-hud-concept.html`: concept do card **HUD de
   desempenho**, com métricas selecionáveis, atalho LB+RB+Y e prévia do HUD.
-  Também é somente um concept, não implementado.
+  Aprovado para implementação em 2026-11-17; ainda não implementado. Plano em
+  `docs/roadmap.md`.

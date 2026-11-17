@@ -303,6 +303,14 @@
 - Impacto: somente App/localização. Nenhuma mudança em `Platform.Windows`, rescue ou contratos do Core.
 - Evidência: `HardwareDiagnosisTests`, expander aberto por UIAutomation no build e no executável instalado, captura de tela, build/testes/smoke e instalação local.
 
+## D078 — HUD de desempenho aprovado para implementação
+
+- Data: 2026-11-17
+- Decisão: implementar um HUD de desempenho local, opt-in e read-only, com métricas selecionáveis e toggle por combinação no controle. O MVP cobre CPU, GPU, RAM, VRAM, processo e resolução/refresh; FPS/frame time ficam para a fase 2 via RTSS shared memory ou PresentMon/ETW. Combinação padrão LB+RB+Y por 0,8 s, configurável entre presets. Sem injeção, kernel driver, admin, overclock, encerramento de processos ou telemetria.
+- Motivo: o usuário aprovou o concept e pediu o recurso no roadmap. O HUD complementa a sessão de TV sem acoplar o CouchPad a um overlay de terceiros.
+- Impacto: Core ganha modelos, interfaces e detector de combo; Platform.Windows ganha coleta via PDH/APIs do Windows e overlay Win32; App ganha HUD, card de configuração e i18n. Rescue, journal e transações de display/áudio não mudam.
+- Evidência: `docs/roadmap.md`; `docs/screenshots/couchpad-performance-hud-concept.png` e `.html`.
+
 ## Formato de nova decisão
 
 ```md
