@@ -1,7 +1,7 @@
 # CouchPad — Roadmap
 
 - Atualizado: 2026-11-17
-- Estado atual: 1.0.14 candidato validado; instalação e publicação pendentes
+- Estado atual: 1.0.14 instalado e validado; publicação e chord físico pendentes
 - Invariantes: 100% gratuito, sem telemetria, sem admin por padrão, fail-closed
 - Fila de validação: `docs/validation-queue.md`
 - Decisões: `docs/decisions.md`

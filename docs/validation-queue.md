@@ -5,7 +5,7 @@
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
 - Estado atual: build Debug/Release 0 avisos/0 erros; **309 testes**; smoke OK;
-  candidato `1.0.14` com HUD de desempenho validado; instalação e publicação
+  candidato `1.0.14` com HUD de desempenho instalado e validado; publicação
   pendente.
 
 ## Status das fases
@@ -136,23 +136,25 @@
 ### 11. HUD de desempenho — Fase 1 (1.0.14)
 
 - **Dono:** OpenCode.
-- **Status:** implementado e validado em simulação/produção; instalação e
-  aceite pendentes.
+- **Status:** implementado, instalado e validado em simulação/produção; aceite
+  e chord físico pendentes.
 - **Implementação:** HUD Avalonia click-through/topmost/sem foco; sampler
   Windows via PDH/GetSystemTimes/GlobalMemoryStatusEx; XInput button source;
   chord LB+RB+Y; modal de métricas/aparência; settings persistidos.
 - **Evidência:** build Debug/Release 0/0, **309 testes**, smoke; modal aberto e
   salvo por clique real; HUD oculto antes da sessão e visível após automação
   simulada; sampler real mostrou CPU/GPU/RAM/VRAM/processo/resolução; estilos
-  `WS_EX_TRANSPARENT`, `WS_EX_NOACTIVATE` e `WS_EX_TOOLWINDOW` confirmados.
-- **Pendente:** chord físico em controle real; instalar 1.0.14; publicação.
-  FPS/frame time/temperatura ficam para as próximas fases.
+  `WS_EX_TRANSPARENT`, `WS_EX_NOACTIVATE` e `WS_EX_TOOLWINDOW` confirmados;
+  HUD aberto no executável instalado 1.0.14, com tasks preservadas.
+- **Pendente:** chord físico em controle real; publicação. FPS/frame
+  time/temperatura ficam para as próximas fases. Instalador local: 84.337.865
+  bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`.
 
 ## Próxima ação
 
 O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
 O candidato `1.0.14` implementa o HUD de desempenho e inclui o diagnóstico da
 `1.0.13`, os perfis da `1.0.12` e a correção de reidratação do journal da
-`1.0.11`. Falta instalar, validar o chord físico e publicar. A reconexão do
-watcher durante a contagem continua sem evidência independente; HDR e
-notificações nativas seguem adiados.
+`1.0.11`. Está instalado e validado; falta o chord físico e a publicação. A
+reconexão do watcher durante a contagem continua sem evidência independente;
+HDR e notificações nativas seguem adiados.

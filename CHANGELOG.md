@@ -7,7 +7,8 @@
 - Combinação no controle LB+RB+Y (0,8 s), com presets; detecção de borda, debounce e cooldown.
 - Card/modal de configuração com métricas selecionáveis, atalho, aparência e prévia ilustrativa.
 - FPS, frame time, temperatura e integração RTSS/PresentMon ficam para as próximas fases.
-- Build Debug/Release 0/0, **309 testes** e smoke. Validação em simulação (modal, HUD, sessão) e sampler real em produção com escritas desligadas. Instalação e publicação pendentes.
+- Build Debug/Release 0/0, **309 testes** e smoke. Validação em simulação (modal, HUD, sessão) e sampler real em produção com escritas desligadas.
+- Instalação local validada sem elevação: App/rescue 1.0.14, HUD aberto no executável instalado com CPU/GPU/RAM/VRAM/processo/resolução; tasks preservadas. Instalador com 84.337.865 bytes e SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`; publicação pendente.
 
 ## 1.0.13 (candidato)
 

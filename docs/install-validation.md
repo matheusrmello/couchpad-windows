@@ -86,3 +86,14 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - Tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal ausente. `settings.json` foi restaurado ao conteúdo original após os testes.
 - Capturas oficiais de 16/11/2026 atualizadas para `1.0.13` em `docs/screenshots/`.
 - Instalador `CouchPad-Setup-1.0.13-win-x64.exe`: 84.283.279 bytes, SHA-256 `109DE17A9AF1E24AAA1000DB373B95EAB28B20C4D4F20BFC7EB707349722F373`. Publicação no GitHub pendente.
+
+## Candidato 1.0.14
+
+- Recurso: MVP do HUD de desempenho com CPU, CPU do jogo, GPU, RAM, VRAM, processo e resolução/refresh; métricas selecionáveis, chord LB+RB+Y, posição/opacidade/escala e “só durante a sessão”.
+- Build Debug/Release 0/0, **309 testes** e smoke.
+- Modal de configuração aberto e salvo por clique real; HUD oculto antes da sessão e visível após ativação simulada; estilos `WS_EX_TRANSPARENT`, `WS_EX_NOACTIVATE` e `WS_EX_TOOLWINDOW` confirmados.
+- Sampler real em produção mostrou CPU, GPU, RAM, VRAM, processo e 1920×1080 · 120 Hz com escritas desligadas.
+- Instalação per-user sem elevação por cima da instalação existente: exit 0. App e rescue reportaram `1.0.14.0`; ProductVersion `1.0.14+78aeadd6ff848f7eab25b26f525c7de021895ecb`.
+- HUD aberto no executável instalado com métricas reais; tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal ausente.
+- `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
+- Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
