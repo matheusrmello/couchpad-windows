@@ -98,6 +98,16 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
 
+## Candidato 1.0.17
+
+- Recurso: métrica de FPS no HUD via shared memory do RTSS (`RTSSSharedMemoryV2`, read-only, opt-in), com `IFrameRateSource` no Core e `RtssFrameRateSource`/`RtssSharedMemoryParser` em `Platform.Windows`; validada com RTSS real (Silent Hill 2) e correções de layout da entrada, teto de 16 MiB e janela de frames. Decisão D080.
+- Build Debug/Release 0/0, **332 testes** e smoke.
+- Instalação per-user sem elevação por cima da instalação existente: exit 0. App e rescue reportaram `1.0.17.0`; ProductVersion `1.0.17+b001ec995b045436e611e1383979d31a320c39dd`.
+- Smoke do executável instalado: `SMOKE: window opened 1020x780; initial=En; pt='Ouvindo gamepad'; en='Listening for gamepad'; language=En; title='CouchPad'`.
+- Tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal (`state\session.json`) ausente.
+- `settings.json` preservado: 2.131 bytes e SHA-256 `DAC235DB0EDA05DE602C3BF3562C607A620D8B2374783800EDBB929307FFBD41` antes e depois da instalação.
+- Instalador `CouchPad-Setup-1.0.17-win-x64.exe`: 84.343.548 bytes, SHA-256 `3C7BFA792F1D4C28290A39F684BD74B0646B9F7372F3DFC66D9649315408F307`. Publicação no GitHub pendente.
+
 ## Candidato 1.0.16
 
 - Redesenho do shell: cabeçalho com logo em bloco, regra de acento e status à direita.

@@ -1,6 +1,6 @@
 # CouchPad Windows — Handoff e Bootstrap
 
-**1.0.17 (candidato, 17/11/2026):** métrica FPS no HUD via RTSS shared memory (read-only, opt-in). Validada com RTSS real (Silent Hill 2); correções de layout/teto/janela. 332 testes, build 0/0, smoke. Decisão D080. Instalação e publicação pendentes.
+**1.0.17 (candidato, 17/11/2026):** métrica FPS no HUD via RTSS shared memory (read-only, opt-in). Validada com RTSS real (Silent Hill 2); correções de layout/teto/janela. 332 testes, build 0/0, smoke. Decisão D080. Instalado em 17/11/2026 (App/rescue `1.0.17.0`, exit 0, smoke, tasks `Ready`, journal ausente, `settings.json` preservado por hash); publicação pendente.
 
 **1.0.16 (candidato, 17/11/2026):** redesenho do shell com foco no HUD. Cabeçalho com logo em bloco, regra de acento e status; novo card HUD em linha inteira na primeira tela com toggle, configurar, estado, posição, atalho, “só durante a sessão”, chips de métricas e prévia; cards reorganizados e ordem de foco atualizada nos três breakpoints. Tokens de HUD (`HudSurface`, `HudBorder`, `HudTrack`, `Radius.Hud`) compartilhados entre card, overlay e modal. Build Debug/Release 0/0, **310 testes**, smoke e capturas em 3 breakpoints × 2 idiomas. Instalação 1.0.16 validada: App/rescue `1.0.16.0`, toggle do card criou o overlay e persistiu a configuração, tasks `Ready`, journal ausente e `settings.json` restaurado por hash. Instalador: 84.339.291 bytes, SHA-256 `C4D587C97ED53011CDF9BBDC2DF75F43FA947CDCFEC9B46497EFFEFD6971809B`; publicação pendente.
 
