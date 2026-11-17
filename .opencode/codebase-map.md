@@ -1,173 +1,74 @@
 # Mapa do codebase — CouchPad Windows
 
-> Documento de orientação para um agente novo. Todo o conteúdo abaixo deriva de leitura direta dos arquivos do repositório em `C:\Users\Usuario\Documents\couchpad windows` (estado da versão 1.0.16). Nada aqui descreve código que não exista no checkout.
+> Resumo operacional para orquestração. Detalhes em `docs/codebase-map.md`.
+> Estado: 1.0.16 · atualizado em 2026-11-17.
 
-## 1. Visão geral
+## Stack
 
-O CouchPad Windows recria, de forma clean-room e 100% gratuita, o comportamento útil do ShiftPad 2.2.0: ao conectar um gamepad, muda a tela para a TV, roteia o áudio para o HDMI e, opcionalmente, abre um launcher; ao desconectar, restaura tela, áudio e launcher. Inclui journal de recuperação, rescue separado com watchdog e um HUD de desempenho local. O escopo declara HDR como adiado (`README.md`, `docs/roadmap.md`).
+- C# / .NET 10 (`net10.0`; Notifications usa `net10.0-windows10.0.18362.0`).
+- Avalonia 12.1.4 + Fluent, bindings compilados; CommunityToolkit.Mvvm 8.4.0.
+- xUnit 2.9.3; Inno Setup 6.7.4 para o instalador.
+- SDK local fora do repo: `C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe` (10.0.403).
+- Versão única em `Directory.Build.props`; licença MIT; sem CI e sem lint separado.
 
-| Item | Valor | Evidência |
-|---|---|---|
-| UI | Avalonia 12.1.4 (`Avalonia.Desktop`, `Avalonia.Themes.Fluent`) | `src/CouchPad.App/CouchPad.App.csproj` |
-| Runtime | .NET 10, `net10.0` (Notifications usa `net10.0-windows10.0.18362.0`) | todos os `.csproj` |
-| MVVM | CommunityToolkit.Mvvm 8.4.0 | `src/CouchPad.App/CouchPad.App.csproj` |
-| Versão | `1.0.16` | `Directory.Build.props` |
-| Identidade | Company/Product `CouchPad`, autor Matheus Mello, licença MIT | `Directory.Build.props`, `LICENSE` |
-| Build | `Nullable`, `ImplicitUsings`, `Deterministic`, `LangVersion=latest`, `NeutralLanguage=en` | `Directory.Build.props` |
-| Testes | xUnit 2.9.3, `Microsoft.NET.Test.Sdk` 17.14.1 | `tests/*/*.csproj` |
-| Instalador | Inno Setup (`packaging/CouchPad.iss`, compilado por `packaging/Build-Installer.ps1`) | script + docs |
+## Estrutura
 
-## 2. Árvore de pastas
+| Caminho | Papel |
+|---|---|
+| `src/CouchPad.App` | Shell Avalonia, Views, ViewModels, tema, i18n, HUD, updates, bandeja |
+| `src/CouchPad.Core` | Contratos, state machine, journal, settings, simulação (sem Win32/Avalonia) |
+| `src/CouchPad.Platform.Windows` | Implementações Windows: CCD, Core Audio, XInput, PDH, tasks, rescue |
+| `src/CouchPad.Rescue` | Exe de rescue/watchdog; o App copia o artefato |
+| `src/CouchPad.Notifications.Windows` | Notificação nativa experimental; fora do payload |
+| `tests/CouchPad.Core.Tests` | Testes de Core + Platform.Windows com fakes |
+| `tests/CouchPad.App.Tests` | Testes de ViewModels, i18n, HUD, updates |
+| `tools/` | 15 harnesses console manuais de hardware/processo |
+| `docs/` | Decisões, specs, roadmap, validação, screenshots, REA |
+| `packaging/` | `Build-Installer.ps1`, `CouchPad.iss` |
+| `.opencode/` | Agentes, skills `couchpad-*` e este mapa |
 
-```text
-src/           5 projetos de produção (App, Core, Platform.Windows, Notifications.Windows, Rescue)
-tests/         2 projetos xUnit (Core.Tests, App.Tests)
-docs/          decisões, specs, roadmap, validações, capturas, REA
-packaging/     Build-Installer.ps1, Copy-InstallerToDownloads.ps1, CouchPad.iss
-tools/         15 harnesses de hardware/processo (console, fora da solução)
-.opencode/     agents/ (6) e skills/ (5 pacotes couchpad-*)
-analysis/      diretório reservado à REA (`analysis/shiftpad-2.2.0`, vazio no checkout)
-.build/        não existe neste repositório; AGENTS.md aponta o SDK local em `C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe`
-artifacts/     local e ignorado pelo Git (logs e instaladores por versão)
-```
+Dependências: `App → Core, Platform.Windows` (+ artefatos Rescue/Notifications);
+`Platform.Windows → Core`; `Rescue → Platform.Windows`;
+`Core.Tests → Core, Platform.Windows`; `App.Tests → App`; `tools/* → Platform.Windows`.
 
-- `docs/agents/codex/` e `docs/handoff-*codex*.md` são históricos (D079).
-- `bin/`, `obj/`, `artifacts/`, `.artifacts/` não fazem parte do mapa.
-
-## 3. Projetos da solução `CouchPad.slnx`
-
-| Caminho | Tipo | O que faz | Arquivos/classes principais |
-|---|---|---|---|
-| `src/CouchPad.App/CouchPad.App.csproj` | WinExe Avalonia (`AssemblyName=CouchPad`) | Shell, tema, i18n, ViewModels, HUD, updates, bandeja | `App.axaml(.cs)`, `Program.cs`, `Views/MainWindow.axaml(.cs)`, `ViewModels/MainWindowViewModel*.cs`, `Performance/PerformanceHudCoordinator.cs`, `Localization/LocalizationService.cs` |
-| `src/CouchPad.Core/CouchPad.Core.csproj` | Biblioteca `net10.0` sem pacotes | Contratos, state machine, modelos, journal, settings, simulação | `Automation/AutomationCoordinator.cs`, `Display/DisplayService.cs`, `Audio/AudioService.cs`, `Settings/AppSettings.cs`, `Storage/AppPaths.cs` |
-| `src/CouchPad.Platform.Windows/CouchPad.Platform.Windows.csproj` | Biblioteca `net10.0` | Implementações Windows: CCD, Core Audio, XInput, PDH, Task Scheduler, Win32, watchdog | `WindowsDisplayService.cs`, `WindowsAudioService.cs`, `WindowsRescueGuard.cs`, `DisplayTransaction.cs`, `WindowsPerformanceSampler.cs`, `README.md` |
-| `src/CouchPad.Notifications.Windows/CouchPad.Notifications.Windows.csproj` | Exe WinAppSDK experimental (`net10.0-windows10.0.18362.0`, `win-x64`) | Contagem regressiva em notificação nativa; opcional e excluída do payload do instalador | `Program.cs` |
-| `src/CouchPad.Rescue/CouchPad.Rescue.csproj` | Exe `net10.0` | Processo de rescue separado: startup recovery, watchdog, tarefas de logon, recuperação assistida | `Program.cs` |
-| `tests/CouchPad.Core.Tests/CouchPad.Core.Tests.csproj` | xUnit | Testes de Core + Platform.Windows, fakes e processos com backend falso | `AutomationCoordinatorTests.cs` (44 casos), `DisplayTopologySerializationTests.cs` (29), `UiLocalizationTests.cs` |
-| `tests/CouchPad.App.Tests/CouchPad.App.Tests.csproj` | xUnit | Testes de ViewModels, i18n, HUD, updates e composição | `MainWindowViewModelDisplayTests.cs` (18), `WindowsDisplayCompositionTests.cs` (8), `PerformanceHudTests.cs` |
-
-Os `tools/*` são executáveis independentes (`AudioProbe`, `DisplayProbe`, `RescueDryRun`, `RescueProcessTests`, `StartupRecoveryProcessTests`, `DisplayFailureHardware`, `AudioSwitchHardware`, entre outros), todos referenciando `Platform.Windows` e executados manualmente.
-
-## 4. Dependências e fronteira de camadas
-
-```text
-App ──► Core
- │       ▲
- ├──► Platform.Windows ──► Core
- ├──► Rescue ──► Platform.Windows        (artefato copiado; ReferenceOutputAssembly=false)
- └──► Notifications.Windows             (artefato copiado; ReferenceOutputAssembly=false)
-
-Core.Tests ──► Core, Platform.Windows
-App.Tests  ──► App
-tools/*    ──► Platform.Windows
-```
-
-| Camada | Pode | Não pode |
-|---|---|---|
-| `src/CouchPad.App` | Views, ViewModels, tema, i18n, navegação, composição raiz | P/Invoke, COM, `SetDisplayConfig`, Core Audio, Task Scheduler |
-| `src/CouchPad.Core` | Modelos, interfaces, simulação, state machine, journal, testes puros | Depender de Avalonia, Win32 ou hardware |
-| `src/CouchPad.Platform.Windows` | Implementar interfaces do Core com APIs do Windows | Regra de produto, texto de UI, decisão de fluxo |
-| `tests/*` | Testes puros, fakes, journal, state machine | Hardware real, tela, áudio |
-
-Verificação factual: todos os `DllImport` estão em `Platform.Windows` (`WindowsDisplayService`, `WindowsPerformanceSampler` com 13, `WindowsLauncherService` com 9, `WindowsGamepadWatcher`, `WindowsOverlayWindow`, `WindowsAudioProbe`, `WindowsAudioTestTone`, `DisplayTopologyValidator`); `App` e `Core` não contêm `DllImport`, `LibraryImport` nem `Marshal.`. Exceção conhecida: o csproj do App tem `BuiltInComInteropSupport` (necessário ao Avalonia), sem código COM.
-
-## 5. Módulos por assunto
-
-| Assunto | Arquivos-chave | Notas |
-|---|---|---|
-| Automação / state machine | `Core/Automation/AutomationCoordinator.cs`, `AutomationState.cs`, `AutomationSnapshot.cs`, `AutomationSettings.cs`, `DelayOptions.cs`, `DelayScheduler.cs` | Estados `Idle`, `WaitingForGamepad`, `Pending`, `Applying`, `Active`, `Error`, `RescuePending`; `SemaphoreSlim` + CTS cancelável |
-| Display / CCD | `Core/Display/DisplayService.cs` (`IDisplayService`, `IDisplayWriteControl`, `SimulatedDisplayService`); `Platform.Windows/WindowsDisplayService.cs`, `DisplayTopologyPlanner.cs`, `DisplayTopologyValidator.cs`, `DisplaySnapshotComparer.cs`, `DisplaySnapshotRehydrator.cs`, `DisplayTransaction.cs`, `DisplayMutationLock.cs`, `DisplaySessionOwner.cs` | Modos `TvOnly`, `Extend`, `InternalOnly`; `Mirror` rejeitado (D043); topologia opaca em `DisplayState.Topology` |
-| Áudio / Core Audio | `Core/Audio/AudioService.cs` (`IAudioService`, `IAudioBaselineService`, `AudioBaseline`); `Platform.Windows/WindowsAudioService.cs`, `WindowsAudioProbe.cs`, `WindowsAudioTestTone.cs`, `AudioRecoveryTransaction.cs`, `GuardedAudioRecovery.cs`, `WindowsAudioRecoveryBackend.cs`, `WindowsAudioRescueGuard.cs` | Baseline versionado dos três papéis (console/multimídia/comunicações); escrita exige transação armada |
-| Gamepad / XInput | `Core/Devices/GamepadDevice.cs`, `GamepadButtons.cs`, `GamepadChordDetector.cs`; `Platform.Windows/WindowsGamepadWatcher.cs`, `WindowsGamepadButtonSource.cs` | Polling read-only dos 4 slots; `GamepadChordPresets` (LB+RB+Y padrão, 800 ms) |
-| HUD de desempenho | `Core/Performance/IPerformanceSampler.cs`, `PerformanceSnapshot.cs`, `PerformanceMetric.cs`, `PerformanceHudSettings.cs`, `SimulatedPerformanceSampler.cs`; `App/Performance/PerformanceHudCoordinator.cs`, `PerformanceHudPresenter.cs`, `IPerformanceHudPresenter.cs`; `App/ViewModels/PerformanceHud*.cs`; `App/Views/PerformanceHudOverlayWindow.axaml`, `PerformanceHudSettingsWindow.axaml`; `Platform.Windows/WindowsPerformanceSampler.cs`, `WindowsOverlayWindow.cs` | Loop de 1 s com `PeriodicTimer`; overlay `Topmost`, `Focusable=False`, click-through via `WS_EX_TRANSPARENT/NOACTIVATE`; sampler PDH + `GetSystemMetrics` |
-| Perfis de ambiente | `Core/Settings/EnvironmentProfile.cs`; `App/ViewModels/MainWindowViewModel.Profiles.cs`, `EnvironmentProfileOption.cs` | `ActiveProfileId` espelhado nos campos de hardware (D076) |
-| Journal / rescue | `Core/Automation/SessionJournalEntry.cs`, `JsonSessionJournalStore.cs`, `RescueGuard.cs`; `Platform.Windows/RescueTransactionContext.cs`, `RescueDecisionStore.cs`, `RescueWatchdogLoop.cs`, `RescueLogonTask.cs`, `StartupRecovery.cs`, `StartupRecoveryAttempts.cs`, `StartupLaunchSequence.cs`, `RescueFailureLog.cs`, `WindowsAssistedRecovery.cs`; `src/CouchPad.Rescue/Program.cs` | Journal `pending` antes do apply e `active` depois; `IRescueLease` com `commit/abort/abandon` e `FailureToken` |
-| Settings / persistência | `Core/Settings/AppSettings.cs`, `JsonAppSettingsStore.cs`, `Storage/AppPaths.cs` | JSON camelCase, escrita atômica `.tmp` + move, `.bak` de arquivo corrompido, `JsonExtensionData` preserva chaves desconhecidas |
-| Localização | `Core/Localization/AppLanguage.cs`; `App/Localization/LocalizationService.cs`, `TrExtension.cs`, `Strings.pt-BR.json`, `Strings.en.json` | 271 chaves planas em cada catálogo |
-| Tema / componentes | `App/Themes/Tokens.axaml` (63 chaves `CouchPad.*`), `Components.axaml` (6 `ControlTheme`), `Controls.axaml` (52 `Style`); `App/Controls/Card.cs`, `ActionButton.cs`, `StatusPill.cs`, `StatusRow.cs`, `KeyChip.cs`, `PathPicker.cs` | `ActionButton` com `Variant` e `State` e pseudo-classes |
-| Updates | `App/Updates/GitHubUpdateCheck.cs`, `App/ViewModels/MainWindowViewModel.Updates.cs` | Consulta releases públicas do GitHub, cache de 1 dia em `update-cache.json`, `TimeProvider` injetado |
-| Launchers | `Core/Launchers/LauncherService.cs`; `Platform.Windows/WindowsLauncherService.cs` | `Steam` e `Hydra`; só fecha processo que ele próprio iniciou |
-| Bandeja / autostart | `App/App.axaml.cs` (TrayIcon, menu, minimizar); `Platform.Windows/WindowsStartupRegistration.cs`, `WindowsScheduledStartup.cs`, `WindowsAppInstance.cs`, `WindowsCountdownNotifications.cs`; `App/ViewModels/CountdownNotificationPresenter.cs` | Instância única por perfil; startup só para o próprio executável |
-
-## 6. Padrões de código observados
-
-- **MVVM com source generators**: `MainWindowViewModel` é `partial : ObservableObject` dividido em `MainWindowViewModel.cs`, `.Hardware.cs`, `.Profiles.cs`, `.Diagnosis.cs`, `.Updates.cs`. Há 59 `[ObservableProperty]`, 14 `[RelayCommand]` e 30 `partial void OnXChanged` nos ViewModels (ex.: `PerformanceHudSettingsViewModel.OnGpuSelectedChanged`).
-- **Composição/DI manual**: `App.OnFrameworkInitializationCompleted` (`src/CouchPad.App/App.axaml.cs`) escolhe produção x simulação por flags (`--smoke`, `--simulate`, `--gallery`), cria stores, serviços e o `MainWindowViewModel` por construtor com delegates (`discoverTargets`, `configureStartup`, `productionMode`). Não há container de DI.
-- **Interfaces no Core + implementação Windows + fake/simulação**: `IDisplayService`/`SimulatedDisplayService`, `IAudioService`/`SimulatedAudioService`, `IPerformanceSampler`/`SimulatedPerformanceSampler`, `IGamepadWatcher`/`SimulatedGamepadWatcher`, `IRescueGuard`/`NoopRescueGuard`, `IGamepadButtonSource`/`NoopGamepadButtonSource`.
-- **Fail-closed**: o coordenador grava journal `pending` e aborta se a gravação falhar (D037); após qualquer mutação tentada executa `TryRestoreAsync`; perda do watchdog marca `_recoveryUncertain` e bloqueia novas transições (D034/D038); `DisplayTransaction` faz rollback obrigatório; `DisplaySessionOwner` garante posse exclusiva do journal.
-- **Tempo e cancelamento**: `TimeProvider` injetável em `AutomationCoordinator`, `PerformanceHudCoordinator` e `GitHubUpdateCheck`; `IDelayScheduler`/`SystemDelayScheduler` para atrasos testáveis; todo método de hardware recebe `CancellationToken` e há `CreateLinkedTokenSource` com o `FailureToken` do lease.
-- **Records para modelos**: `AppSettings`, `EnvironmentProfile`, `AutomationSnapshot`, `DisplayState`, `PerformanceSnapshot`, `PerformanceHudSettings`, `SessionJournalEntry`, `GamepadChord`, `AudioBaseline`.
-- **Convenções**: file-scoped namespaces `CouchPad.Core.*`, `CouchPad.App.*`, `CouchPad.Platform.Windows`; campos privados `_camelCase`; `sealed` por padrão; XML docs em português nos contratos (`DisplayService.cs`, `AutomationCoordinator.cs`); erros de plataforma traduzidos para `InvalidOperationException`/`NotSupportedException` com mensagens em inglês.
-
-## 7. Padrões de UI
-
-- XAML declarativo com `x:DataType` e `AvaloniaUseCompiledBindingsByDefault=true`; todo o texto visível vem de `{loc:Tr chave}` (295 ocorrências em `Views/*.axaml`).
-- Tokens centralizados em `Themes/Tokens.axaml` (`CouchPad.Background`, `CouchPad.Accent`, `CouchPad.HudSurface`, `CouchPad.Radius.Hud`, tipografia, espaçamento), consumidos por `{DynamicResource ...}`.
-- Componentes como `TemplatedControl`/`ContentControl` com `ControlTheme` em `Themes/Components.axaml`; variações por classe em `Themes/Controls.axaml` (`TextBlock.cardTitle`, `Button.loading`, `Button.updateNotice`).
-- Breakpoints e layout em `Views/MainWindow.axaml.cs`: `WideBreakpoint = 1000`, `MediumBreakpoint = 720`; `ApplyLayout` recria colunas/linhas do `CardsGrid`, posiciona 9 cards e reordena os filhos para alinhar a ordem de Tab à ordem visual.
-- Acessibilidade: 64 usos de `AutomationProperties` em `Views/*.axaml`, incluindo `AutomationProperties.Name` e `LiveSetting="Polite"`; foco visível de 2 px, estados com texto além de cor (`docs/ui-spec.md`); checklist em `docs/ui-a11y-checklist.md`.
-- HUD: `PerformanceHudOverlayWindow` usa `ShowActivated=False`, `ShowInTaskbar=False`, `WindowDecorations=None`, `Topmost`, `TransparencyLevelHint="Transparent"`, `IsHitTestVisible=False`; `PerformanceHudPresenter` posiciona na tela primária conforme `PerformanceHudPosition` e aplica opacidade/escala.
-
-## 8. Padrões de i18n
-
-- Dois catálogos planos: `src/CouchPad.App/Localization/Strings.pt-BR.json` e `Strings.en.json`, ambos com 271 chaves e cópia `PreserveNewest` para `Localization/`.
-- `LocalizationService` (singleton `Lazy`) indexa por chave, faz fallback para inglês, incrementa `Revision` e persiste `Language` em `AppSettings` sem derrubar a UI em falha.
-- `TrExtension`/`TrConverter` criam um `Binding` em `Revision`, então a UI se atualiza ao trocar idioma (inclusive bandeja, que reassina `PropertyChanged`).
-- Paridade validada por `tests/CouchPad.App.Tests/LocalizationCatalogTests.cs` (mesmas chaves nos dois arquivos, valores não vazios).
-- Ausência de texto hardcoded validada por `tests/CouchPad.Core.Tests/UiLocalizationTests.cs`: extrai `{loc:Tr ...}` do XAML, exige as chaves nos dois catálogos e falha em `Text`/`Content`/`Title`/`AutomationProperties.*`/`ToolTip.Tip` literais (D019).
-
-## 9. Build, testes e empacotamento
+## Comandos
 
 ```powershell
 $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
+
 & $dotnet build CouchPad.slnx -c Debug
+& $dotnet build CouchPad.slnx -c Release
 & $dotnet test CouchPad.slnx -c Debug
 & $dotnet src\CouchPad.App\bin\Debug\net10.0\CouchPad.dll --smoke
 ```
 
-- `--smoke` abre a janela, imprime uma linha (tamanho, idioma, título) e fecha; `--gallery` abre `ComponentGalleryWindow`; `--simulate` força simulação.
-- Flags de produção em `App.axaml.cs`/`Program.cs`: `--windows-display`, `--windows-gamepad`, `--experimental-windows-notifications`, `--apply-hardware-after`, `--hardware-applied`, `--recovery-succeeded`, `--recovery-failed`.
-- Contagem de testes: o `HANDOFF.md` registra **310 testes** na 1.0.16; o código contém 249 `[Fact]` + 19 `[Theory]` (com ~51 `[InlineData]`), sendo 43 `[Fact]` em `tests/CouchPad.App.Tests` e 206 em `tests/CouchPad.Core.Tests`. Trate o total como aprox.
-- `packaging/Build-Installer.ps1` recebe `-Dotnet`, `-Iscc`, `-Version` (default lido de `Directory.Build.props`) e `-SkipDownloadsCopy`; publica `App` e `Rescue` self-contained `win-x64` com `-p:CouchPadInstallerPublish=true`, copia o rescue para o payload, recusa payload com `notifications`, gera um `CouchPad.InstallCheck.exe` de pré-voo, compila `CouchPad.iss` e imprime o SHA-256 do `CouchPad-Setup-<versão>-win-x64.exe` em `artifacts/installer-<versão>`.
-- Versionamento: `Version` única em `Directory.Build.props`; releases por tag `vX.Y.Z` no GitHub (`README.md`, `docs/install-validation.md`).
+- **Lint:** não existe `dotnet format`, script de lint nem CI. O gate é build
+  Debug **e** Release com 0 avisos/0 erros + testes + smoke. `.editorconfig`
+  define estilo, sem enforcement automático.
+- Instalador: `packaging\Build-Installer.ps1 -Dotnet $dotnet -Iscc <ISCC.exe> -Version X.Y.Z`.
+- Flags: `--smoke`, `--simulate`, `--gallery`, `--windows-display`, `--windows-gamepad`,
+  `--experimental-windows-notifications`, `--recovery-succeeded`, `--recovery-failed`.
 
-## 10. Convenções e invariantes
+## Convenções
 
-1. 100% gratuito: sem licença, trial, ativação, assinatura paga ou telemetria; nenhum contato com servidor de licença.
-2. pt-BR + inglês desde a primeira versão; nenhuma string visível fora dos dois dicionários (D002, D019).
-3. UI inspirada na referência visual, sem copiar ícone, texto, imagem, XAML ou código do ShiftPad (D004).
-4. REA somente estático: não executar o ShiftPad, não gerar tráfego de ativação, não contornar proteções (D005).
-5. Fail-closed: capturar antes, aplicar, verificar e reverter em falha; nunca deixar a máquina sem display utilizável (D008).
-6. Sem admin por padrão; dados por usuário em `%LOCALAPPDATA%\CouchPad` (`settings.json`, `state/session.json`, `logs/`) (D015).
-7. Sem telemetria; logs e diagnóstico ficam locais.
-8. Não encerrar, atualizar ou modificar processos de terceiros.
-9. Fronteira de camadas do AGENTS.md: `App` sem P/Invoke/COM, `Core` puro, `Platform.Windows` só implementa interfaces.
-10. Publicação: copiar o EXE para Downloads, registrar SHA-256 e validação, commit + tag, release com binários fora do histórico Git.
+- Namespaces file-scoped iguais ao caminho; campos `_camelCase`; `sealed` por padrão;
+  records para modelos; interfaces no Core + `Simulated*`/fake + implementação Windows.
+- MVVM com `[ObservableProperty]`/`[RelayCommand]`; `MainWindowViewModel` dividido por
+  assunto (`.Hardware`, `.Profiles`, `.Diagnosis`, `.Updates`). DI manual em `App.axaml.cs`.
+- Fronteira: `App` sem P/Invoke/COM; `Core` puro; `Platform.Windows` sem regra de produto.
+- i18n obrigatório: `Strings.pt-BR.json` + `Strings.en.json` (271 chaves cada),
+  `{loc:Tr chave}`; nenhuma string visível hardcoded.
+- UI usa tokens de `Themes/Tokens.axaml`; componentes em `Themes/Components.axaml`.
+- Fail-closed: journal `pending` → apply → `active`, rollback e `_recoveryUncertain`.
+- Testes puros em `tests/`, sem hardware real; nomes descritivos em inglês.
 
-## 11. Documentos de referência
+## Gotchas
 
-| Documento | Conteúdo |
-|---|---|
-| `AGENTS.md` | Regras ativas, missão, invariantes, fronteira de camadas, fases, comandos, definição de pronto, handoff |
-| `HANDOFF.md` | Ledger cronológico por versão (1.0.16 → P0), evidências, decisões e pendências |
-| `docs/decisions.md` | Decisões registradas até D079 (perfis, diagnóstico, HUD, OpenCode assume tudo) |
-| `docs/ui-spec.md` | Shell, breakpoints, mapa de cards, estados e critérios visuais |
-| `docs/roadmap.md` | Estado 1.0.16, publicação pendente, HUD fase 1 e fase 2 (FPS/frame time) |
-| `docs/validation-queue.md` | Fila sequencial de validação e status por fase |
-| `docs/hud-phase1-plan.md` | Escopo do HUD MVP, métricas, chord, overlay e card |
-| `docs/install-validation.md` | Validação do instalador, per-user, desinstalação, hashes |
-| `docs/rea-shiftpad-2.2.0.md` | REA estática: evidências de CCD/áudio no binário e lacunas |
-| `docs/automation-simulation.md`, `docs/p4-runbook.md`, `docs/p5-audio-hdr.md`, `docs/p6-recovery-matrix.md`, `docs/ui-components.md`, `docs/ui-a11y-checklist.md` | Detalhes por fase |
-| `.opencode/agents/*.md` | 6 agentes: `orchestrator` (primary), `ui-builder`, `sim-engineer`, `scaffolder`, `reviewer`, `docs-writer` |
-| `.opencode/skills/couchpad-*` | `couchpad-ui`, `couchpad-hardware`, `couchpad-rea`, `couchpad-release`, `couchpad-handoff` (cada um com `SKILL.md` + `references/`) |
-
-## 12. Como navegar
-
-1. **Composição e flags** — `src/CouchPad.App/App.axaml.cs`: decide produção x simulação, cria serviços reais, monta o `MainWindowViewModel`, registra bandeja, updates e HUD.
-2. **Estado da automação** — `src/CouchPad.Core/Automation/AutomationCoordinator.cs` com `AutomationState.cs` e `JsonSessionJournalStore.cs`: fluxo connect → pending journal → apply → active → restore.
-3. **P/Invoke e hardware** — `src/CouchPad.Platform.Windows/` (comece por `README.md`, depois `WindowsDisplayService.cs`, `WindowsAudioService.cs`, `WindowsRescueGuard.cs`).
-4. **Shell e layout** — `src/CouchPad.App/Views/MainWindow.axaml` + `MainWindow.axaml.cs` (`ApplyLayout`), com `Themes/Tokens.axaml` e `Themes/Components.axaml`.
-5. **HUD** — `src/CouchPad.App/Performance/PerformanceHudCoordinator.cs` → `PerformanceHudPresenter.cs` → `Core/Performance/PerformanceHudSettings.cs` → `Platform.Windows/WindowsPerformanceSampler.cs`.
-6. **Rescue** — `src/CouchPad.Rescue/Program.cs` → `Platform.Windows/StartupRecovery.cs`, `RescueDecisionStore.cs`, `RescueWatchdogLoop.cs`.
-7. **Contratos e fakes** — `tests/CouchPad.Core.Tests/` (state machine, journal, display, áudio) e `tests/CouchPad.App.Tests/` (i18n, HUD, updates); os fakes vivem no próprio Core.
-8. **Regras do projeto** — leia `AGENTS.md`, depois `HANDOFF.md` (topo) e `docs/decisions.md` (últimas decisões) antes de alterar qualquer camada.
+- O `dotnet` do PATH não tem SDK; use o caminho absoluto acima.
+- Buildar só o App em árvore limpa não gera `CouchPad.Rescue.exe`; use a solução.
+- `--smoke` exige sessão gráfica interativa; é isolado em `%TEMP%\couchpad-smoke`.
+- Estado real em `%LOCALAPPDATA%\CouchPad`; journal `active` bloqueia autostart/rescue.
+- Escritas de display/áudio são opt-in e exigem runbook; falha de rollback = parar.
+- Instalador exige árvore limpa, Inno 6.7.4 e `-p:CouchPadInstallerPublish=true`.
+- Sem admin por padrão; não encerrar processos de terceiros; sem telemetria.
+- Codex está descontinuado (D079); vale `HANDOFF.md` + `docs/decisions.md`.
