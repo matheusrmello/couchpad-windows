@@ -17,6 +17,7 @@
 
 Concept visual: `docs/screenshots/couchpad-performance-hud-concept.png`.
 Fonte do mockup: `docs/screenshots/couchpad-performance-hud-concept.html`.
+Plano detalhado da Fase 1: `docs/hud-phase1-plan.md`.
 
 ### Objetivo
 

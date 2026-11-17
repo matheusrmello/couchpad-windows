@@ -139,6 +139,7 @@ O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](http
 O candidato `1.0.13` adiciona diagnóstico de identificação, inclui os perfis
 da `1.0.12` e a correção de reidratação do journal da `1.0.11`; está instalado
 localmente e a publicação está pendente. O roadmap aprovou o **HUD de
-desempenho** (`docs/roadmap.md`), ainda não iniciado. A reconexão do watcher
+desempenho** (`docs/roadmap.md`), com plano detalhado em
+`docs/hud-phase1-plan.md`; ainda não iniciado. A reconexão do watcher
 durante a contagem continua sem evidência independente; HDR e notificações
 nativas seguem adiados.

@@ -103,7 +103,8 @@ Para simular em desenvolvimento, execute `CouchPad.exe --simulate`.
 
 O próximo recurso aprovado é o **HUD de desempenho**: métricas locais
 selecionáveis, opt-in e toggle por combinação no controle. O plano completo,
-fases e limites estão em [docs/roadmap.md](docs/roadmap.md).
+fases e limites estão em [docs/roadmap.md](docs/roadmap.md); a Fase 1 está
+detalhada em [docs/hud-phase1-plan.md](docs/hud-phase1-plan.md).
 
 ## Agentes
 
