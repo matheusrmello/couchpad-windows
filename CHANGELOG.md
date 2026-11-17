@@ -2,7 +2,7 @@
 
 ## Em desenvolvimento (após 1.0.16)
 
-- Adiciona métrica FPS ao HUD, lida do RTSS shared memory (read-only, opt-in); sem RTSS o HUD mostra —. Frame time e 1% low ficam para a próxima etapa.
+- Adiciona métrica FPS ao HUD, lida do RTSS shared memory (read-only, opt-in); sem RTSS o HUD mostra —; validado com RTSS real (Silent Hill 2) e correções de layout/teto/janela da leitura. Frame time e 1% low ficam para a próxima etapa.
 
 ## 1.0.16 (candidato)
 

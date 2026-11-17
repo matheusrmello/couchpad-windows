@@ -25,16 +25,31 @@ public static class RtssSharedMemoryParser
     private const int AppArrOffsetOffset = 12;
     private const int AppArrSizeOffset = 16;
 
-    // Prefixo estável da entrada de app:
-    // pid=0, flags=4, name=8..267 (260), renderApi=268, frames=272, time0=276, time1=280.
+    // Prefixo estável da entrada de app, conforme o layout real do RTSS 2.x
+    // (confirmado em 0x00020015 com appEntrySize=12416): não existe dwFlags.
+    //   +0   dwProcessID
+    //   +4   szName[260]      (4..263)
+    //   +264 dwRenderAPI
+    //   +268 dwTime0
+    //   +272 dwTime1
+    //   +276 dwFrames
+    //   +280 dwFrameTime      (microssegundos, não usado)
+    // Só o prefixo até +280 é lido; o restante da entrada e o stride continuam
+    // valendo por appEntrySize.
     private const int PidOffset = 0;
-    private const int FramesOffset = 272;
-    private const int Time0Offset = 276;
-    private const int Time1Offset = 280;
+    private const int Time0Offset = 268;
+    private const int Time1Offset = 272;
+    private const int FramesOffset = 276;
 
     /// <summary>
     /// Localiza a entrada do processo informado e devolve seus contadores de frame.
     /// </summary>
+    /// <remarks>
+    /// O prefixo lido da entrada segue o layout real do RTSS 2.x:
+    /// <c>dwProcessID</c> em +0, <c>dwRenderAPI</c> em +264, <c>dwTime0</c> em +268,
+    /// <c>dwTime1</c> em +272 e <c>dwFrames</c> em +276. As entradas são percorridas
+    /// com stride <c>dwAppEntrySize</c> a partir de <c>dwAppArrOffset</c>.
+    /// </remarks>
     /// <param name="view">Visão somente leitura do bloco mapeado.</param>
     /// <param name="processId">PID do app procurado.</param>
     /// <returns>Contadores do app ou <c>null</c> quando a visão é inválida ou o PID não existe.</returns>
@@ -82,7 +97,12 @@ public static class RtssSharedMemoryParser
     /// <summary>
     /// Calcula o FPS médio a partir do contador de frames e do intervalo em milissegundos.
     /// </summary>
-    /// <param name="frames">Frames acumulados no intervalo.</param>
+    /// <remarks>
+    /// O RTSS reinicia <c>dwFrames</c> a cada janela (~1 s), então o contador é
+    /// por janela, nunca acumulado entre leituras. Esta é a única fórmula de FPS
+    /// usada pela fonte: não existe caminho de delta entre amostras.
+    /// </remarks>
+    /// <param name="frames">Frames contados na janela (não acumulados entre leituras).</param>
     /// <param name="time0">Início da janela, em milissegundos.</param>
     /// <param name="time1">Fim da janela, em milissegundos.</param>
     /// <returns>FPS médio ou <c>null</c> quando não há frames ou o intervalo é inválido.</returns>
@@ -95,30 +115,10 @@ public static class RtssSharedMemoryParser
 
         return frames * 1000.0 / (time1 - time0);
     }
-
-    /// <summary>
-    /// Calcula o FPS instantâneo entre duas amostras do mesmo processo.
-    /// </summary>
-    /// <param name="frames">Frames acumulados na amostra atual.</param>
-    /// <param name="lastFrames">Frames acumulados na amostra anterior.</param>
-    /// <param name="time1">Fim da janela atual, em milissegundos.</param>
-    /// <param name="lastTime1">Fim da janela anterior, em milissegundos.</param>
-    /// <returns>FPS do intervalo ou <c>null</c> em wrap/reset ou intervalo sem frames.</returns>
-    public static double? DeltaFramesPerSecond(uint frames, uint lastFrames, uint time1, uint lastTime1)
-    {
-        if (time1 < lastTime1 || frames < lastFrames)
-            return null; // wrap/reset
-
-        var deltaMs = time1 - lastTime1;
-        var deltaFrames = frames - lastFrames;
-        if (deltaMs == 0 || deltaFrames == 0)
-            return null;
-        return deltaFrames * 1000.0 / deltaMs;
-    }
 }
 
 /// <summary>Contadores de frame lidos de um app no RTSS.</summary>
-/// <param name="Frames">Frames acumulados na janela atual.</param>
+/// <param name="Frames">Frames contados na janela atual (o RTSS zera a cada ~1 s).</param>
 /// <param name="Time0">Início da janela, em milissegundos.</param>
 /// <param name="Time1">Fim da janela, em milissegundos.</param>
 public readonly record struct RtssAppCounters(uint Frames, uint Time0, uint Time1);

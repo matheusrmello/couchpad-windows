@@ -5,11 +5,13 @@ namespace CouchPad.Platform.Windows;
 
 /// <summary>Fonte de FPS por processo via memória compartilhada do RTSS.</summary>
 /// <remarks>
-/// Somente leitura: abre o bloco <c>RTSSSharedMemoryV2</c>, copia uma janela de
-/// até 512 KiB e fecha tudo na mesma chamada. Não injeta nada em jogos, não
-/// escreve na memória do RTSS e não exige privilégio de administrador. Quando o
-/// RTSS não está instalado, o mapeamento global é negado ou o processo não tem
-/// entrada, a leitura devolve <c>null</c>.
+/// Somente leitura: abre o bloco <c>RTSSSharedMemoryV2</c>, copia a região
+/// mapeada inteira (limitada a 16 MiB por sanidade) e fecha tudo na mesma
+/// chamada. Não injeta nada em jogos, não escreve na memória do RTSS e não
+/// exige privilégio de administrador. Quando o RTSS não está instalado, o
+/// mapeamento global é negado ou o processo não tem entrada, a leitura
+/// devolve <c>null</c>. A fonte é sem estado: cada chamada devolve a média da
+/// janela corrente publicada pelo RTSS, sem comparar amostras anteriores.
 /// </remarks>
 public sealed class RtssFrameRateSource : IFrameRateSource
 {
@@ -18,18 +20,17 @@ public sealed class RtssFrameRateSource : IFrameRateSource
     /// <summary>Teto de sanidade para descartar leituras corrompidas do bloco.</summary>
     private const double MaxFramesPerSecond = 999;
 
-    /// <summary>Limite de bytes copiados; o bloco real é bem menor.</summary>
-    private const ulong MaxViewBytes = 512 * 1024;
+    /// <summary>
+    /// Limite de bytes copiados do mapeamento. O array de apps fica em
+    /// <c>dwAppArrOffset</c> (~2,3 MiB no RTSS 2.x real), então o teto precisa
+    /// cobrir o bloco inteiro (região de ~5,5 MiB); 16 MiB só protege contra
+    /// tamanhos absurdos reportados pelo sistema.
+    /// </summary>
+    private const ulong MaxViewBytes = 16 * 1024 * 1024;
 
     // O RTSS publica o bloco na sessão global para que outros usuários leiam.
     // A segunda tentativa cobre instalações que publicam apenas no namespace local.
     private static readonly string[] MappingNames = [@"Global\RTSSSharedMemoryV2", "RTSSSharedMemoryV2"];
-
-    private readonly object _sync = new();
-    private int _lastProcessId = -1;
-    private uint _lastFrames;
-    private uint _lastTime1;
-    private bool _hasSample;
 
     /// <inheritdoc />
     public double? ReadFramesPerSecond(int processId, DateTimeOffset now)
@@ -49,23 +50,13 @@ public sealed class RtssFrameRateSource : IFrameRateSource
             if (counters is null)
                 return null;
 
+            // O RTSS reinicia dwFrames a cada janela (~1 s), então o contador é
+            // POR JANELA e não acumulado: a única leitura correta é a média da
+            // janela corrente (frames / (time1 - time0)). Derivar entre amostras
+            // produz valores espúrios (ex.: ~1 FPS).
             var value = counters.Value;
-            double? framesPerSecond;
-            lock (_sync)
-            {
-                framesPerSecond = _hasSample && _lastProcessId == processId
-                    ? RtssSharedMemoryParser.DeltaFramesPerSecond(
-                          value.Frames, _lastFrames, value.Time1, _lastTime1)
-                      ?? RtssSharedMemoryParser.AverageFramesPerSecond(value.Frames, value.Time0, value.Time1)
-                    : RtssSharedMemoryParser.AverageFramesPerSecond(value.Frames, value.Time0, value.Time1);
-
-                // Estado só avança com contadores lidos; entradas ausentes não mexem no histórico.
-                _hasSample = true;
-                _lastProcessId = processId;
-                _lastFrames = value.Frames;
-                _lastTime1 = value.Time1;
-            }
-
+            var framesPerSecond = RtssSharedMemoryParser.AverageFramesPerSecond(
+                value.Frames, value.Time0, value.Time1);
             if (framesPerSecond is null)
                 return null;
             var result = framesPerSecond.Value;

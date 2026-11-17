@@ -191,19 +191,26 @@
 ### 14. FPS via RTSS (Fase 2)
 
 - **Dono:** OpenCode.
-- **Status:** implementado e validado em simulação; validação com RTSS real
-  pendente (requer jogo aberto).
+- **Status:** validado com RTSS real; implementação, correções de leitura e
+  validação concluídas.
 - **Implementação:** `IFrameRateSource` no Core; `RtssFrameRateSource`
   (P/Invoke kernel32 para `RTSSSharedMemoryV2`) e `RtssSharedMemoryParser`
   (puro) em `Platform.Windows`, integrados ao `WindowsPerformanceSampler`.
   Métrica opt-in, fora dos defaults; leitura read-only, sem injeção, driver,
   admin ou encerramento de processos. Sem RTSS ou sem frames, o HUD mostra `—`.
-  Suavização por delta entre amostras de 1 s, fallback para média de vida e
-  teto de 999 FPS. UI no overlay, modal e card, com i18n pt-BR/en.
-- **Evidência:** build Debug/Release 0/0, **335 testes**, smoke; simulação com
-  overlay em 107 FPS e card em 144 FPS. `RtssSharedMemoryParserTests` e
-  `PerformanceFrameRateTests` cobrem o parser e o contrato.
-- **Pendente:** validar com RTSS em execução e jogo apresentando frames.
+  A fonte usa a média de janela (`dwFrames`/`dwTime0..dwTime1`) e teto de
+  999 FPS; a leitura usa o bloco local `RTSSSharedMemoryV2` (o `Global\` é
+  negado nesta máquina e o fallback cobre). UI no overlay, modal e card, com
+  i18n pt-BR/en.
+- **Evidência:** build Debug/Release 0/0, **332 testes**, smoke; simulação com
+  overlay em 107 FPS e card em 144 FPS; validação real com Silent Hill 2
+  (`SHProto-Win64-Shipping`, D3D12, PID 19248 em foreground): 40/40 amostras
+  numéricas, sem `null` e sem outliers de ~1 FPS, com o FPS acompanhando o jogo
+  (run 1 48,2–49,2; runs seguintes 35,9–39,4 conforme variação de cena/GPU do
+  próprio jogo). Correções aplicadas: layout real da entrada (sem dwFlags;
+  time0@268, time1@272, frames@276), teto de cópia 16 MiB e média de janela.
+  `RtssSharedMemoryParserTests` e `PerformanceFrameRateTests` cobrem o parser e
+  o contrato.
 - **Decisão:** D080.
 
 ## Próxima ação

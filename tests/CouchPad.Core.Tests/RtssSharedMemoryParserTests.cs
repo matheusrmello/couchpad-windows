@@ -69,6 +69,33 @@ public sealed class RtssSharedMemoryParserTests
     }
 
     [Fact]
+    public void FindApp_finds_app_array_beyond_512_kib_prefix()
+    {
+        // Regressão: no RTSS 2.x real o array começa em ~2,3 MiB, muito além do
+        // antigo teto de 512 KiB do buffer copiado. O parser precisa achar o app
+        // quando a cópia cobre a região inteira (5,5 MiB).
+        const uint appArrOffset = 2_396_256;
+        const uint appArrSize = 256;
+        var view = new byte[5_574_752];
+
+        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(0, 4), RtssSharedMemoryParser.Signature);
+        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(4, 4), 0x00020015); // version real
+        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(8, 4), SyntheticEntrySize);
+        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(12, 4), appArrOffset);
+        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(16, 4), appArrSize);
+
+        WriteApp(view, (int)appArrOffset, pid: 1234, frames: 600, time0: 0, time1: 10000);
+
+        var counters = RtssSharedMemoryParser.FindApp(view, 1234);
+
+        Assert.NotNull(counters);
+        Assert.Equal(new RtssAppCounters(600, 0, 10000), counters!.Value);
+        var fps = RtssSharedMemoryParser.AverageFramesPerSecond(
+            counters.Value.Frames, counters.Value.Time0, counters.Value.Time1);
+        Assert.Equal(60d, fps!.Value, precision: 6);
+    }
+
+    [Fact]
     public void FindApp_returns_null_when_pid_is_missing()
     {
         var view = CreateView(appArrSize: 2);
@@ -106,33 +133,12 @@ public sealed class RtssSharedMemoryParserTests
     }
 
     [Fact]
-    public void DeltaFramesPerSecond_scales_delta_window()
+    public void AverageFramesPerSecond_handles_short_one_second_window()
     {
-        Assert.Equal(60d, RtssSharedMemoryParser.DeltaFramesPerSecond(660, 600, 2000, 1000)!.Value, precision: 6);
-    }
-
-    [Fact]
-    public void DeltaFramesPerSecond_rejects_frame_counter_reset()
-    {
-        Assert.Null(RtssSharedMemoryParser.DeltaFramesPerSecond(500, 600, 2000, 1000));
-    }
-
-    [Fact]
-    public void DeltaFramesPerSecond_rejects_time_wrap()
-    {
-        Assert.Null(RtssSharedMemoryParser.DeltaFramesPerSecond(660, 600, 900, 1000));
-    }
-
-    [Fact]
-    public void DeltaFramesPerSecond_rejects_zero_elapsed_time()
-    {
-        Assert.Null(RtssSharedMemoryParser.DeltaFramesPerSecond(660, 600, 2000, 2000));
-    }
-
-    [Fact]
-    public void DeltaFramesPerSecond_rejects_stalled_counter()
-    {
-        Assert.Null(RtssSharedMemoryParser.DeltaFramesPerSecond(600, 600, 2000, 1000));
+        // Janela típica do RTSS (~1 s): o contador reinicia a cada janela. Um
+        // caminho de delta entre amostras produziria ~1 FPS aqui.
+        Assert.Equal(60d, RtssSharedMemoryParser.AverageFramesPerSecond(60, 1000, 2000)!.Value, precision: 6);
+        Assert.Equal(58.25d, RtssSharedMemoryParser.AverageFramesPerSecond(233, 5000, 9000)!.Value, precision: 6);
     }
 
     private static byte[] CreateView(
@@ -153,9 +159,10 @@ public sealed class RtssSharedMemoryParserTests
 
     private static void WriteApp(byte[] view, int offset, uint pid, uint frames, uint time0, uint time1)
     {
+        // Layout real do RTSS 2.x: pid=+0, time0=+268, time1=+272, frames=+276.
         BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(offset, 4), pid);
-        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(offset + 272, 4), frames);
-        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(offset + 276, 4), time0);
-        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(offset + 280, 4), time1);
+        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(offset + 268, 4), time0);
+        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(offset + 272, 4), time1);
+        BinaryPrimitives.WriteUInt32LittleEndian(view.AsSpan(offset + 276, 4), frames);
     }
 }

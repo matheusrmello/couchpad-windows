@@ -327,10 +327,15 @@
   HUD mostra `—`. PresentMon/ETW fica como alternativa experimental posterior;
   frame time e 1% low são deriváveis da mesma fonte.
 - Fonte: `IFrameRateSource` no Core; `RtssFrameRateSource` (P/Invoke kernel32)
-  e `RtssSharedMemoryParser` (puro) em `Platform.Windows`. Suavização por delta
-  entre amostras de 1 s, fallback para média de vida e teto de 999 FPS.
-- Validação: 335 testes, build 0/0, smoke e validação em simulação; validação
-  com RTSS real pendente (exige jogo em execução).
+  e `RtssSharedMemoryParser` (puro) em `Platform.Windows`. Leitura sem estado:
+  média da janela corrente publicada pelo RTSS (`dwFrames`/`dwTime0..dwTime1`),
+  sem comparar amostras anteriores; fallback do bloco `Global\` para o local;
+  teto de 999 FPS.
+- Validação: 332 testes, build 0/0, smoke, validação em simulação e validação
+  real com RTSS (Silent Hill 2, D3D12, ~48→36 FPS conforme a cena, leitura
+  estável sem outliers). Corrigidos na implementação: layout real da entrada
+  (sem dwFlags; time0@268, time1@272, frames@276), teto de cópia 16 MiB e uso
+  da média de janela (dwFrames é por janela, não acumulado).
 
 ## Formato de nova decisão
 
