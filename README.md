@@ -87,6 +87,9 @@ Para simular em desenvolvimento, execute `CouchPad.exe --simulate`.
   áudio entre salas/configurações.
 - Diagnóstico explicável da identificação de TV, monitor e áudio, com motivo e
   confiança, sem alterar hardware.
+- HUD de desempenho local e opt-in: CPU, GPU, RAM, VRAM, processo e resolução,
+  com métricas selecionáveis e atalho no controle. FPS/temperatura ficam para
+  as próximas fases.
 - HDR e notificações nativas: adiados; não declarar suportados.
 
 ## Lacunas conhecidas

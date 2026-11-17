@@ -2,7 +2,9 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CouchPad.App.ViewModels;
+using CouchPad.Core.Performance;
 
 namespace CouchPad.App.Views;
 
@@ -37,6 +39,7 @@ public partial class MainWindow : Window
         if (_viewModel is not null)
         {
             _viewModel.FolderPickerRequested -= OnFolderPickerRequested;
+            _viewModel.HudSettingsRequested -= OnHudSettingsRequested;
         }
 
         _viewModel = DataContext as MainWindowViewModel;
@@ -44,6 +47,7 @@ public partial class MainWindow : Window
         if (_viewModel is not null)
         {
             _viewModel.FolderPickerRequested += OnFolderPickerRequested;
+            _viewModel.HudSettingsRequested += OnHudSettingsRequested;
         }
     }
 
@@ -52,6 +56,7 @@ public partial class MainWindow : Window
         if (_viewModel is not null)
         {
             _viewModel.FolderPickerRequested -= OnFolderPickerRequested;
+            _viewModel.HudSettingsRequested -= OnHudSettingsRequested;
         }
     }
 
@@ -212,5 +217,23 @@ public partial class MainWindow : Window
     {
         var about = new AboutWindow { DataContext = DataContext };
         await about.ShowDialog(this);
+    }
+
+    private void OnHudSettingsRequested(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(async () =>
+        {
+            if (_viewModel is null) return;
+            try
+            {
+                var dialog = new PerformanceHudSettingsWindow(_viewModel.CurrentHudSettings);
+                var result = await dialog.ShowDialog<PerformanceHudSettings?>(this);
+                if (result is not null) _viewModel.ApplyHudSettings(result);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
+        });
     }
 }

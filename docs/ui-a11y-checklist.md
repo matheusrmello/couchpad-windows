@@ -70,7 +70,9 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
   nome rotulado; Excluir fica desabilitado quando só há um perfil.
 - [x] Diagnóstico: expander com nome/ajuda e texto somente leitura no idioma
   atual; não altera hardware.
-- [ ] Anúncio da troca de perfil e do diagnóstico por Narrator/NVDA (manual
+- [x] HUD: modal com labels, checkboxes, combo de atalho e sliders; HUD não
+  recebe foco e é click-through.
+- [ ] Chord físico do HUD e anúncio do modal por Narrator/NVDA (manual
   pendente).
 - [ ] Navegação por teclado/leitor de tela dentro do menu nativo da bandeja
   (depende do shell do Windows; não automatizada).
@@ -86,7 +88,7 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 
 ## 5. i18n e conteúdo
 
-- [x] pt-BR e inglês em paridade (223 chaves).
+- [x] pt-BR e inglês em paridade (258 chaves).
 - [x] Nenhuma string visível fora dos catálogos.
 - [x] Fallback inglês.
 - [x] Erros e dicas traduzidos.
@@ -131,7 +133,7 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 ```
 
 - Build 0 avisos/0 erros.
-- 294 testes.
+- 309 testes.
 - Smoke OK.
 - Capturas oficiais em `docs/screenshots/` nos 3 breakpoints × 2 idiomas.
 - UIAutomation: ordem de foco e nomes em 3/2/1 colunas.

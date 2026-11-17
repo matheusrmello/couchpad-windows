@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**1.0.14 (candidato, 17/11/2026):** Fase 1 do HUD de desempenho implementada. HUD flutuante click-through/sem foco, com CPU, CPU do jogo, GPU, RAM, VRAM, processo e resolução/refresh; métricas selecionáveis, posição/opacidade/escala, “só durante a sessão” e chord LB+RB+Y. Modal de configuração, sampler Windows via PDH, XInput button source e testes. Build Debug/Release 0/0, **309 testes** e smoke. Validação em simulação e sampler real; chord físico, FPS e install/release pendentes. Plano `docs/hud-phase1-plan.md`; decisão D078.
+
 **Governança, 17/11/2026:** o Codex foi descontinuado. O OpenCode é o único agente de desenvolvimento e passa a ser dono de todas as fases e camadas, incluindo `Platform.Windows`, REA, instalador, assinatura e release. A fronteira arquitetural continua valendo. Decisão D079; documentos do Codex ficam como histórico.
 
 **Roadmap, 17/11/2026:** HUD de desempenho aprovado para implementação. MVP com CPU, GPU, RAM, VRAM, processo e resolução/refresh; toggle por LB+RB+Y (0,8 s), métricas selecionáveis, HUD read-only sem injeção. FPS/frame time ficam para a fase 2 via RTSS shared memory ou PresentMon. Plano em `docs/roadmap.md` e `docs/hud-phase1-plan.md`; decisão D078; concept em `docs/screenshots/couchpad-performance-hud-concept.png`.

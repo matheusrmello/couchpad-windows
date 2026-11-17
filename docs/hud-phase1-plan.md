@@ -1,6 +1,6 @@
 # Fase 1 — HUD de desempenho (MVP)
 
-- Status: **planejada, não iniciada**
+- Status: **Fase 1 implementada; chord físico e aceite pendentes**
 - Data: 2026-11-17
 - Roadmap: `docs/roadmap.md`
 - Concept: `docs/screenshots/couchpad-performance-hud-concept.png`
@@ -83,7 +83,7 @@ Adicionar em `AppSettings`:
 public bool PerformanceHudEnabled { get; init; }
 public List<string>? PerformanceHudMetrics { get; init; }
 public string? PerformanceHudPosition { get; init; }
-public double PerformanceHudOpacity { get; init; } = 0.82;
+public double PerformanceHudOpacity { get; init; } = 0.9;
 public double PerformanceHudScale { get; init; } = 1.0;
 public bool PerformanceHudShowOnlyInSession { get; init; } = true;
 public string? PerformanceHudToggleChord { get; init; }
@@ -95,7 +95,7 @@ Padrões:
 enabled = false
 metrics = cpu, gpu, ram, process
 position = top-right
-opacity = 0.82
+opacity = 0.9
 scale = 1.0
 showOnlyInSession = true
 chord = LB+RB+Y
@@ -376,19 +376,19 @@ Acessibilidade:
 
 ## 15. Critérios de aceite
 
-- [ ] HUD desligado por padrão.
-- [ ] HUD abre/fecha pelo combo LB+RB+Y.
-- [ ] Métricas selecionadas aparecem; não selecionadas não aparecem.
-- [ ] CPU/GPU/RAM/VRAM/processo/resolução atualizam a cada 1 s.
-- [ ] Métrica indisponível mostra `—`.
-- [ ] HUD é click-through e não rouba foco.
-- [ ] “Só durante a sessão” funciona.
-- [ ] Settings persistem e migram.
-- [ ] Sem escrita de display/áudio, sem journal, sem admin.
-- [ ] Nenhuma telemetria ou rede.
-- [ ] Build 0/0, testes e smoke.
-- [ ] Validação manual registrada.
-- [ ] Capturas e docs atualizados.
+- [x] HUD desligado por padrão.
+- [ ] HUD abre/fecha pelo combo LB+RB+Y no controle físico. O detector está coberto por testes unitários.
+- [x] Métricas selecionadas aparecem; não selecionadas não aparecem.
+- [x] CPU/GPU/RAM/VRAM/processo/resolução atualizam a cada 1 s.
+- [x] Métrica indisponível mostra `—`.
+- [x] HUD é click-through e não rouba foco.
+- [x] “Só durante a sessão” funciona.
+- [x] Settings persistem e migram.
+- [x] Sem escrita de display/áudio, sem journal, sem admin.
+- [x] Nenhuma telemetria ou rede.
+- [x] Build 0/0, 309 testes e smoke.
+- [ ] Validação manual do chord físico e aceite do usuário.
+- [x] Capturas do HUD/modal e docs atualizados.
 
 ## 16. Riscos e mitigação
 

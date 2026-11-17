@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 1.0.14 (candidato)
+
+- Adiciona o MVP do **HUD de desempenho**: CPU, CPU do jogo, GPU, RAM, VRAM, processo e resolução/refresh em uma janela flutuante.
+- HUD sempre no topo, sem foco e click-through; posição, opacidade e escala configuráveis; opção de mostrar só durante a sessão.
+- Combinação no controle LB+RB+Y (0,8 s), com presets; detecção de borda, debounce e cooldown.
+- Card/modal de configuração com métricas selecionáveis, atalho, aparência e prévia ilustrativa.
+- FPS, frame time, temperatura e integração RTSS/PresentMon ficam para as próximas fases.
+- Build Debug/Release 0/0, **309 testes** e smoke. Validação em simulação (modal, HUD, sessão) e sampler real em produção com escritas desligadas. Instalação e publicação pendentes.
+
 ## 1.0.13 (candidato)
 
 - Adiciona diagnóstico explicável da identificação de TV, monitor e saída de áudio, com motivo, estado do dispositivo e confiança alta/média/baixa.

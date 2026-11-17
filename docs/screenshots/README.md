@@ -1,8 +1,8 @@
 # Screenshots oficiais — P7a
 
 - Data: 2026-11-16
-- Estado: **capturas atualizadas após a 1.0.13**; aceite final pendente
-- Versão exibida: `1.0.13`
+- Estado: **capturas atualizadas após a 1.0.14**; aceite final pendente
+- Versão exibida: `1.0.14`
 - Simulação: display/áudio sem escrita real; seletores vazios de propósito
 - Leitor de tela: validação manual ainda pendente (ver checklist)
 
@@ -32,7 +32,7 @@
 - Em 1020×780 o conteúdo usa a barra de rolagem; as capturas mostram o topo da
   tela. A ordem de foco foi validada via UIAutomation em 3/2/1 colunas.
 - A validação com Narrator/NVDA não foi executada nesta máquina.
-- As capturas usam o build Debug de `1.0.13`; o instalador local foi validado,
+- As capturas usam o build Debug de `1.0.14`; o instalador local foi validado,
   mas a publicação ainda está pendente.
 
 ## Concept de redesign (não implementado)
@@ -43,5 +43,13 @@
 - `couchpad-performance-hud-concept.png` e
   `couchpad-performance-hud-concept.html`: concept do card **HUD de
   desempenho**, com métricas selecionáveis, atalho LB+RB+Y e prévia do HUD.
-  Aprovado para implementação em 2026-11-17; ainda não implementado. Plano em
+  Aprovado para implementação em 2026-11-17; implementado na 1.0.14. Plano em
   `docs/roadmap.md`.
+
+## HUD de desempenho — implementação 1.0.14
+
+- `hud-fase1-overlay.png`: HUD real em simulação, com CPU, GPU, RAM e processo.
+- `hud-fase1-settings.png`: modal de configuração com métricas, atalho,
+  aparência e prévia.
+- `couchpad-performance-hud-concept.png` e `.html`: concept original aprovado;
+  a implementação mantém a mesma direção visual.

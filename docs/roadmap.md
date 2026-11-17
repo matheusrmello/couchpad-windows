@@ -1,23 +1,25 @@
 # CouchPad — Roadmap
 
 - Atualizado: 2026-11-17
-- Estado atual: 1.0.13 instalado localmente; publicação da release pendente
+- Estado atual: 1.0.14 candidato validado; instalação e publicação pendentes
 - Invariantes: 100% gratuito, sem telemetria, sem admin por padrão, fail-closed
 - Fila de validação: `docs/validation-queue.md`
 - Decisões: `docs/decisions.md`
 
 ## Agora
 
-1. **Publicar a 1.0.13** com tag, SHA-256 e release notes. Ela inclui a
-   reidratação do journal (1.0.11), os perfis de ambiente (1.0.12) e o
-   diagnóstico de identificação (1.0.13).
-2. **Implementar o HUD de desempenho** aprovado em 2026-11-17.
+1. **Publicar a 1.0.14** com tag, SHA-256 e release notes. Ela inclui o HUD
+   MVP (1.0.14), o diagnóstico de identificação (1.0.13), os perfis de ambiente
+   (1.0.12) e a reidratação do journal (1.0.11).
+2. **Validar o chord físico do HUD** com um controle real e publicar.
 
-## HUD de desempenho — aprovado para implementação
+## HUD de desempenho — Fase 1 implementada
 
 Concept visual: `docs/screenshots/couchpad-performance-hud-concept.png`.
 Fonte do mockup: `docs/screenshots/couchpad-performance-hud-concept.html`.
 Plano detalhado da Fase 1: `docs/hud-phase1-plan.md`.
+Status da Fase 1: **implementada em 2026-11-17**; validação do chord em controle
+físico pendente.
 
 ### Objetivo
 

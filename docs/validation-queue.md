@@ -4,8 +4,8 @@
 - Regra: `AGENTS.md` — uma validação por vez, com evidência registrada antes
   da próxima; continuar automaticamente; pedir apenas ação física indispensável;
   parar em falha de rollback, tela preta ou watchdog que não restaura.
-- Estado atual: build Debug/Release 0 avisos/0 erros; **294 testes**; smoke OK;
-  candidato `1.0.13` com diagnóstico de identificação instalado localmente; publicação
+- Estado atual: build Debug/Release 0 avisos/0 erros; **309 testes**; smoke OK;
+  candidato `1.0.14` com HUD de desempenho validado; instalação e publicação
   pendente.
 
 ## Status das fases
@@ -133,13 +133,26 @@
   saídas Samsung, sem selecionar nem escrever. Instalador local: 84.283.279
   bytes, SHA-256 `109DE17A9AF1E24AAA1000DB373B95EAB28B20C4D4F20BFC7EB707349722F373`.
 
+### 11. HUD de desempenho — Fase 1 (1.0.14)
+
+- **Dono:** OpenCode.
+- **Status:** implementado e validado em simulação/produção; instalação e
+  aceite pendentes.
+- **Implementação:** HUD Avalonia click-through/topmost/sem foco; sampler
+  Windows via PDH/GetSystemTimes/GlobalMemoryStatusEx; XInput button source;
+  chord LB+RB+Y; modal de métricas/aparência; settings persistidos.
+- **Evidência:** build Debug/Release 0/0, **309 testes**, smoke; modal aberto e
+  salvo por clique real; HUD oculto antes da sessão e visível após automação
+  simulada; sampler real mostrou CPU/GPU/RAM/VRAM/processo/resolução; estilos
+  `WS_EX_TRANSPARENT`, `WS_EX_NOACTIVATE` e `WS_EX_TOOLWINDOW` confirmados.
+- **Pendente:** chord físico em controle real; instalar 1.0.14; publicação.
+  FPS/frame time/temperatura ficam para as próximas fases.
+
 ## Próxima ação
 
 O instalador e o SHA-256 da `1.0.10` estão publicados na [release v1.0.10](https://github.com/matheusrmello/couchpad-windows/releases/tag/v1.0.10).
-O candidato `1.0.13` adiciona diagnóstico de identificação, inclui os perfis
-da `1.0.12` e a correção de reidratação do journal da `1.0.11`; está instalado
-localmente e a publicação está pendente. O roadmap aprovou o **HUD de
-desempenho** (`docs/roadmap.md`), com plano detalhado em
-`docs/hud-phase1-plan.md`; ainda não iniciado. A reconexão do watcher
-durante a contagem continua sem evidência independente; HDR e notificações
-nativas seguem adiados.
+O candidato `1.0.14` implementa o HUD de desempenho e inclui o diagnóstico da
+`1.0.13`, os perfis da `1.0.12` e a correção de reidratação do journal da
+`1.0.11`. Falta instalar, validar o chord físico e publicar. A reconexão do
+watcher durante a contagem continua sem evidência independente; HDR e
+notificações nativas seguem adiados.

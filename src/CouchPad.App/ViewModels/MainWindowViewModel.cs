@@ -7,12 +7,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CouchPad.App.Controls;
 using CouchPad.App.Localization;
+using CouchPad.App.Performance;
 using CouchPad.Core.Audio;
 using CouchPad.Core.Automation;
 using CouchPad.Core.Devices;
 using CouchPad.Core.Display;
 using CouchPad.Core.Localization;
 using CouchPad.Core.Launchers;
+using CouchPad.Core.Performance;
 using CouchPad.Core.Settings;
 
 namespace CouchPad.App.ViewModels;
@@ -25,6 +27,8 @@ public partial class MainWindowViewModel : ObservableObject
 {
     private readonly LocalizationService _localization;
     private readonly IAppSettingsStore _settings;
+    private readonly IPerformanceHudController? _performanceHud;
+    private PerformanceHudSettings _hudSettings = PerformanceHudSettings.Default;
     private readonly IGamepadWatcher _gamepad;
     private readonly ISimulatedGamepad? _gamepadSimulator;
     private readonly AutomationCoordinator _coordinator;
@@ -132,11 +136,13 @@ public partial class MainWindowViewModel : ObservableObject
         AppSettings? configuredHardware = null,
         Action? restartForHardware = null,
         Action<string>? playAudioTest = null,
-        bool hardwareApplied = false)
+        bool hardwareApplied = false,
+        IPerformanceHudController? performanceHud = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
         _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
+        _performanceHud = performanceHud;
         _discoverTargets = discoverTargets;
         _discoverAudioEndpoints = discoverAudioEndpoints;
         _revokeAudioWrites = revokeAudioWrites;
@@ -244,6 +250,37 @@ public partial class MainWindowViewModel : ObservableObject
         SuggestHardwareCommand.NotifyCanExecuteChanged();
         TestAudioCommand.NotifyCanExecuteChanged();
     }
+    public bool PerformanceHudEnabled
+    {
+        get => _hudSettings.Enabled;
+        set
+        {
+            if (_isLoadingSettings || _hudSettings.Enabled == value) return;
+            _hudSettings = _hudSettings with { Enabled = value };
+            _performanceHud?.ApplySettings(_hudSettings);
+            PersistSettings();
+            OnPropertyChanged();
+        }
+    }
+
+    public bool CanConfigurePerformanceHud => _performanceHud is not null;
+
+    public PerformanceHudSettings CurrentHudSettings => _hudSettings;
+
+    public event EventHandler? HudSettingsRequested;
+
+    [RelayCommand]
+    private void OpenHudSettings() => HudSettingsRequested?.Invoke(this, EventArgs.Empty);
+
+    public void ApplyHudSettings(PerformanceHudSettings settings)
+    {
+        _hudSettings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _performanceHud?.ApplySettings(settings);
+        PersistSettings();
+        OnPropertyChanged(nameof(PerformanceHudEnabled));
+        OnPropertyChanged(nameof(CurrentHudSettings));
+    }
+
     public bool CanRetryRecovery => _canStartRecovery && IsRecoveryUncertain;
 
     [RelayCommand]
@@ -735,6 +772,8 @@ public partial class MainWindowViewModel : ObservableObject
             CustomLauncherPath = settings.CustomLauncherPath;
             AllowDisplayWrites = settings.AllowDisplayWrites;
             AllowAudioWrites = settings.AllowAudioWrites;
+            _hudSettings = PerformanceHudSettings.FromAppSettings(settings);
+            _performanceHud?.ApplySettings(_hudSettings);
             LoadEnvironmentProfiles(settings);
             if (IsProductionMode && (!HardwareMatchesSelection || !settings.UseWindowsGamepad ||
                 !settings.AllowDisplayWrites || !settings.AllowAudioWrites || IsRecoveryUncertain))
@@ -772,7 +811,7 @@ public partial class MainWindowViewModel : ObservableObject
         try
         {
             SyncSelectedProfileFromSelection();
-            var current = _settings.Load();
+            var current = _hudSettings.ApplyTo(_settings.Load());
             _settings.Save(current with
             {
                 ActiveProfileId = SelectedEnvironmentProfile?.Id,
@@ -860,6 +899,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void OnAutomationStateChanged(object? sender, AutomationStateChangedEventArgs e)
     {
+        _performanceHud?.SetSessionActive(e.State == AutomationState.Active);
+
         void Notify()
         {
             var duration = IsGamepadConnected ? _coordinator.Settings.ActivationDelay : _coordinator.Settings.DeactivationDelay;

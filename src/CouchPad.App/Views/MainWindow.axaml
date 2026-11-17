@@ -380,6 +380,20 @@
                               AutomationProperties.Name="{loc:Tr settings.minimize_to_tray}"
                               AutomationProperties.HelpText="{loc:Tr settings.minimize_to_tray_help}" />
               </Grid>
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <TextBlock Text="{loc:Tr hud.title}" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                  <Button Classes="link"
+                          Content="{loc:Tr hud.configure}"
+                          Command="{Binding OpenHudSettingsCommand}"
+                          IsEnabled="{Binding CanConfigurePerformanceHud}" />
+                  <ToggleSwitch IsChecked="{Binding PerformanceHudEnabled, Mode=TwoWay}"
+                                IsEnabled="{Binding CanConfigurePerformanceHud}"
+                                AutomationProperties.Name="{loc:Tr hud.enabled}"
+                                AutomationProperties.HelpText="{loc:Tr hud.help}" />
+                </StackPanel>
+              </Grid>
+              <TextBlock Classes="hint" Text="{loc:Tr hud.help}" TextWrapping="Wrap" />
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding !IsProductionMode}">
                 <TextBlock Text="{loc:Tr settings.allow_display_writes}" VerticalAlignment="Center" />
                 <ToggleSwitch Grid.Column="1"

@@ -1,0 +1,146 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:CouchPad.App.Localization"
+        xmlns:vm="using:CouchPad.App.ViewModels"
+        x:Class="CouchPad.App.Views.PerformanceHudSettingsWindow"
+        x:DataType="vm:PerformanceHudSettingsViewModel"
+        Title="{loc:Tr hud.title}"
+        Width="800"
+        Height="720"
+        CanResize="False"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource CouchPad.Background}"
+        Foreground="{DynamicResource CouchPad.TextPrimary}">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="24">
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="0,0,0,18">
+      <StackPanel Spacing="4">
+        <TextBlock Text="{loc:Tr hud.title}" FontSize="22" FontWeight="SemiBold" />
+        <TextBlock Text="{loc:Tr hud.help}" Classes="hint" TextWrapping="Wrap" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+        <TextBlock Text="{loc:Tr hud.enabled}" VerticalAlignment="Center" />
+        <ToggleSwitch IsChecked="{Binding Enabled, Mode=TwoWay}"
+                      AutomationProperties.Name="{loc:Tr hud.enabled}" />
+      </StackPanel>
+    </Grid>
+
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <Grid ColumnDefinitions="1.15*,0.85*" ColumnSpacing="20">
+      <StackPanel Spacing="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="{loc:Tr hud.metrics}" Classes="caption" />
+          <TextBlock Text="{loc:Tr hud.metrics_help}" Classes="hint" TextWrapping="Wrap" />
+          <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="4">
+            <CheckBox Content="{loc:Tr hud.metric.cpu}" IsChecked="{Binding CpuSelected, Mode=TwoWay}" />
+            <CheckBox Grid.Column="1" Content="{loc:Tr hud.metric.gpu}" IsChecked="{Binding GpuSelected, Mode=TwoWay}" />
+            <CheckBox Grid.Row="1" Content="{loc:Tr hud.metric.cpu_process}" IsChecked="{Binding CpuProcessSelected, Mode=TwoWay}" />
+            <CheckBox Grid.Row="1" Grid.Column="1" Content="{loc:Tr hud.metric.ram}" IsChecked="{Binding RamSelected, Mode=TwoWay}" />
+            <CheckBox Grid.Row="2" Content="{loc:Tr hud.metric.vram}" IsChecked="{Binding VramSelected, Mode=TwoWay}" />
+            <CheckBox Grid.Row="2" Grid.Column="1" Content="{loc:Tr hud.metric.process}" IsChecked="{Binding ProcessSelected, Mode=TwoWay}" />
+            <CheckBox Grid.Row="3" Content="{loc:Tr hud.metric.display}" IsChecked="{Binding DisplaySelected, Mode=TwoWay}" />
+          </Grid>
+          <TextBlock Text="{loc:Tr hud.phase2_note}" Classes="hint" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="{loc:Tr hud.chord}" Classes="caption" />
+          <ComboBox ItemsSource="{Binding ChordOptions}"
+                    SelectedItem="{Binding SelectedChord, Mode=TwoWay}"
+                    AutomationProperties.Name="{loc:Tr hud.chord}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:HudChordOption">
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <TextBlock Text="{loc:Tr hud.chord.help}" Classes="hint" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Spacing="8">
+          <TextBlock Text="{loc:Tr hud.position}" Classes="caption" />
+          <ComboBox ItemsSource="{Binding PositionOptions}"
+                    SelectedItem="{Binding SelectedPosition, Mode=TwoWay}"
+                    AutomationProperties.Name="{loc:Tr hud.position}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:HudPositionOption">
+                <TextBlock Text="{Binding Label}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+            <TextBlock Text="{loc:Tr hud.opacity}" VerticalAlignment="Center" />
+            <Slider Grid.Column="1" Minimum="0.4" Maximum="1" TickFrequency="0.05"
+                    Value="{Binding Opacity, Mode=TwoWay}" />
+            <TextBlock Grid.Column="2" Text="{Binding Opacity}" VerticalAlignment="Center" Width="34" />
+          </Grid>
+          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+            <TextBlock Text="{loc:Tr hud.scale}" VerticalAlignment="Center" />
+            <Slider Grid.Column="1" Minimum="0.75" Maximum="1.5" TickFrequency="0.05"
+                    Value="{Binding Scale, Mode=TwoWay}" />
+            <TextBlock Grid.Column="2" Text="{Binding Scale}" VerticalAlignment="Center" Width="34" />
+          </Grid>
+          <CheckBox Content="{loc:Tr hud.session_only}" IsChecked="{Binding ShowOnlyInSession, Mode=TwoWay}" />
+        </StackPanel>
+      </StackPanel>
+
+      <StackPanel Grid.Column="1" Spacing="8">
+        <TextBlock Text="{loc:Tr hud.preview}" Classes="caption" />
+        <Border Width="260" Height="190" Padding="14" CornerRadius="16"
+                Background="#FF0B1117" BorderBrush="#26FFFFFF" BorderThickness="1"
+                HorizontalAlignment="Left">
+          <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="8">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <Border Width="6" Height="6" CornerRadius="3" Background="{DynamicResource CouchPad.Accent}" VerticalAlignment="Center" />
+              <TextBlock Grid.Column="1" Margin="7,0,0,0" Text="{loc:Tr hud.overlay.title}" FontSize="10" FontWeight="SemiBold" />
+              <TextBlock Grid.Column="2" Text="{loc:Tr app.name}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+            </Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="10">
+              <StackPanel Spacing="2" IsVisible="{Binding CpuSelected}">
+                <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{loc:Tr hud.metric.cpu}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" /><TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.cpu_value}" FontSize="10" FontWeight="SemiBold" /></Grid>
+                <Border Height="3" CornerRadius="2" Background="#22FFFFFF"><Border Width="38" Height="3" CornerRadius="2" HorizontalAlignment="Left" Background="{DynamicResource CouchPad.Accent}" /></Border>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Spacing="2" IsVisible="{Binding GpuSelected}">
+                <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{loc:Tr hud.metric.gpu}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" /><TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.gpu_value}" FontSize="10" FontWeight="SemiBold" /></Grid>
+                <Border Height="3" CornerRadius="2" Background="#22FFFFFF"><Border Width="100" Height="3" CornerRadius="2" HorizontalAlignment="Left" Background="{DynamicResource CouchPad.Accent2}" /></Border>
+              </StackPanel>
+            </Grid>
+            <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
+              <StackPanel Spacing="2" IsVisible="{Binding RamSelected}">
+                <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{loc:Tr hud.metric.ram}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" /><TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.ram_value}" FontSize="9" FontWeight="SemiBold" /></Grid>
+                <Border Height="3" CornerRadius="2" Background="#22FFFFFF"><Border Width="47" Height="3" CornerRadius="2" HorizontalAlignment="Left" Background="{DynamicResource CouchPad.Accent}" /></Border>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Spacing="2" IsVisible="{Binding VramSelected}">
+                <Grid ColumnDefinitions="*,Auto"><TextBlock Text="{loc:Tr hud.metric.vram}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" /><TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.vram_value}" FontSize="9" FontWeight="SemiBold" /></Grid>
+                <Border Height="3" CornerRadius="2" Background="#22FFFFFF"><Border Width="66" Height="3" CornerRadius="2" HorizontalAlignment="Left" Background="{DynamicResource CouchPad.Accent2}" /></Border>
+              </StackPanel>
+            </Grid>
+            <StackPanel Grid.Row="3" Spacing="3" VerticalAlignment="Bottom">
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding ProcessSelected}">
+                <TextBlock Text="{loc:Tr hud.metric.process}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.process}" FontSize="9" />
+              </Grid>
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" IsVisible="{Binding DisplaySelected}">
+                <TextBlock Text="{loc:Tr hud.metric.display}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}" />
+                <TextBlock Grid.Column="1" Text="{loc:Tr hud.preview.display_value}" FontSize="9" />
+              </Grid>
+            </StackPanel>
+            <TextBlock Grid.Row="4" Text="{loc:Tr hud.overlay.empty}" FontSize="9" Foreground="{DynamicResource CouchPad.TextSecondary}"
+                       IsVisible="{Binding ShowEmptyPreview}" />
+          </Grid>
+        </Border>
+        <TextBlock Text="{loc:Tr hud.preview_note}" Classes="hint" TextWrapping="Wrap" MaxWidth="300" />
+      </StackPanel>
+    </Grid>
+    </ScrollViewer>
+
+    <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,18,0,0">
+      <TextBlock Text="{loc:Tr hud.help}" Classes="hint" VerticalAlignment="Center" TextWrapping="Wrap" />
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+        <Button Content="{loc:Tr hud.cancel}" Click="OnCancelClick" Classes="secondary" />
+        <Button Content="{loc:Tr hud.save}" Click="OnSaveClick" Classes="primary" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>

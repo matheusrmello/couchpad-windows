@@ -1,7 +1,7 @@
 # CouchPad — Especificação de UI (P1–P7a)
 
 - Data: 2026-11-16
-- Fases: P1–P7 implementadas; UI atual em 1.0.13 com perfis de ambiente
+- Fases: P1–P7 implementadas; UI atual em 1.0.14 com perfis de ambiente
 - Base visual: referência do ShiftPad 2.2.0, recriada com identidade própria
 - Plataforma: Avalonia 12.1.4 / .NET 10 (`net10.0`)
 
@@ -186,6 +186,9 @@ célula `(2,2)` fica vazia por desenho (o card alto equilibra a coluna direita).
   áudio. O perfil ativo é o mesmo usado na composição de startup.
 - **Diagnóstico da identificação (1.0.13)**: expander read-only com perfil,
   TV, monitor, áudio, EDID, HDMI, estado, motivo e confiança alta/média/baixa.
+- **HUD de desempenho (1.0.14)**: modal com métricas selecionáveis, atalho
+  LB+RB+Y, posição/opacidade/escala e “só durante a sessão”; HUD flutuante
+  click-through, sem foco, com CPU/GPU/RAM/VRAM/processo/resolução.
 
 ---
 
@@ -335,7 +338,7 @@ captura de combinação, bandeja, autostart e rescue no logon.
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: 294 aprovados — catálogos/i18n, composição do shell, temas,
+- Testes: 309 aprovados — catálogos/i18n, composição do shell, temas,
   estados da galeria, state machine, atrasos/cancelamento, journal, settings,
   composição Windows, guard, áudio, launcher e P6.
 - Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em
