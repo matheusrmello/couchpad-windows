@@ -98,6 +98,18 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
 
+## Candidato 1.0.19
+
+- Correção da GPU: PDH consultado em Unicode, `CStatus` validado e instâncias `engtype_3D` filtradas pelo PID do processo em primeiro plano. Antes o HUD mostrava o pico global e oscilava entre 0% e 100%.
+- Correção da VRAM: o total do adaptador é lido do registro (`HardwareInformation.qwMemorySize`, maior adaptador); o texto passa a mostrar usado/total e a barra é desenhada.
+- Build Debug/Release 0/0, **342 testes** e smoke.
+- Instalação per-user sem elevação por cima da instalação existente: exit 0. App e rescue reportaram `1.0.19.0`.
+- Smoke do executável instalado aprovado. Tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal (`state\session.json`) ausente; `settings.json` preservado.
+- HUD no executável instalado: VRAM passou a mostrar `4,7 / 12,0 GB`; com Elden Ring em foco, `4,8 / 12,0 GB`. O total presente confirma a leitura do registro.
+- Numa amostra válida com o jogo em foco, **GPU 67%** e **FPS 60**, com `Processo=eldenring`; o valor por processo substitui o pico global anterior.
+- Ressalva: o Elden Ring crashou (`0xc0000374`, corrupção de heap em `ntdll.dll`) cerca de 3 s após o foco, antes de completar as três amostras de estabilidade. Não há evidência de causalidade com o HUD; a estabilidade da GPU por processo segue pendente.
+- Instalador `CouchPad-Setup-1.0.19-win-x64.exe`: 84.352.177 bytes, SHA-256 `7FA72E6E3F0DAF75EDEA5A76381F28EAC3C2216E543D2D185D5F0A44589D785E`. Publicação no GitHub pendente.
+
 ## Candidato 1.0.18
 
 - Correção do chord do HUD: `IGamepadButtonSource` só reportava mudanças de botão, então o detector nunca conseguia medir o hold de 800 ms e `LB+RB+Y` não disparava. O contrato passou a ser `ButtonsReported` (estado a cada poll, ~30 Hz) e a detecção de borda/hold ficou no consumidor; teste de regressão cobre o hold.

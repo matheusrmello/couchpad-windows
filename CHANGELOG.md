@@ -5,6 +5,7 @@
 - Corrige a leitura de GPU: PDH em Unicode, validação de `CStatus` e filtro das instâncias 3D do processo em primeiro plano (antes o HUD mostrava o pico global e oscilava 0/100%).
 - Corrige a barra de VRAM: o total do adaptador é lido do registro (`HardwareInformation.qwMemorySize`, maior adaptador); o texto passa a mostrar usado/total e a barra funciona.
 - 342 testes, build Debug/Release 0/0 e smoke.
+- Validado no HUD instalado: VRAM com total (`x / 12,0 GB`) e GPU por processo (67% no Elden Ring).
 
 ## 1.0.18 (candidato)
 
