@@ -98,6 +98,16 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
 
+## Candidato 1.0.18
+
+- Correção do chord do HUD: `IGamepadButtonSource` só reportava mudanças de botão, então o detector nunca conseguia medir o hold de 800 ms e `LB+RB+Y` não disparava. O contrato passou a ser `ButtonsReported` (estado a cada poll, ~30 Hz) e a detecção de borda/hold ficou no consumidor; teste de regressão cobre o hold.
+- Build Debug/Release 0/0, **333 testes** (283 Core + 50 App) e smoke.
+- Instalação per-user sem elevação por cima da instalação existente: exit 0. App e rescue reportaram `1.0.18.0`; ProductVersion `1.0.18+78bf34c74d6af5fa45590117a2e8da6da2eba2dd`.
+- Smoke do executável instalado: `SMOKE: window opened 1020x780; initial=En; pt='Ouvindo gamepad'; en='Listening for gamepad'; language=En; title='CouchPad'`.
+- Tasks `CouchPad-Autostart-*` e `CouchPad-Rescue-*` permaneceram `Ready`; journal (`state\session.json`) ausente.
+- `settings.json` preservado: 2.143 bytes e SHA-256 `7100E8D64E79133D0C016052712D56DE87D083026975E5A156AE1B5EC5BDF0D1` antes e depois da instalação; chord ainda `LB+RB+Y`. O campo `performanceHudShowOnlyInSession` estava `true` no arquivo antes da instalação (o app em execução, fechado para instalar, persistiu o estado em memória ao sair), então a conferência de `false` prevista no brief continua pendente e depende de decidir se o valor deve ser restaurado.
+- Instalador `CouchPad-Setup-1.0.18-win-x64.exe`: 84.348.738 bytes, SHA-256 `C9661F72C97E4A78B66EDA48AF1D129DE394E60650A8A8361548585485F91621`. Publicação no GitHub pendente.
+
 ## Candidato 1.0.17
 
 - Recurso: métrica de FPS no HUD via shared memory do RTSS (`RTSSSharedMemoryV2`, read-only, opt-in), com `IFrameRateSource` no Core e `RtssFrameRateSource`/`RtssSharedMemoryParser` em `Platform.Windows`; validada com RTSS real (Silent Hill 2) e correções de layout da entrada, teto de 16 MiB e janela de frames. Decisão D080.
