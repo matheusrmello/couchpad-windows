@@ -104,7 +104,7 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - Card HUD em linha inteira na primeira tela, com toggle, configurar, estado, posição, atalho, sessão, chips de métricas e prévia fiel.
 - Cards reorganizados e ordem de foco atualizada nos três breakpoints; tokens `HudSurface`, `HudBorder`, `HudTrack` e `Radius.Hud` compartilhados.
 - Build Debug/Release 0/0, **310 testes** e smoke; capturas `p7a-*` em 3 breakpoints × 2 idiomas.
-- Instalação e publicação pendentes.
+- Instalação local validada sem elevação: App/rescue `1.0.16.0`, ProductVersion `1.0.16+7d35e20d4b933b044c981923f3cd5e6950236ee4`. O toggle do card criou o overlay e persistiu a configuração; `settings.json` restaurado, tasks `Ready`, journal ausente. Instalador `CouchPad-Setup-1.0.16-win-x64.exe`: 84.339.291 bytes, SHA-256 `C4D587C97ED53011CDF9BBDC2DF75F43FA947CDCFEC9B46497EFFEFD6971809B`. Publicação pendente.
 
 ## Candidato 1.0.15
 

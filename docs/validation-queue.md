@@ -180,8 +180,13 @@
   posição, atalho, sessão, chips e prévia; cards reorganizados; ordem de foco
   por breakpoint; tokens de HUD compartilhados; `HudText` centraliza chaves.
 - **Evidência:** build Debug/Release 0/0, **310 testes**, smoke; capturas
-  `p7a-*` atualizadas em 3 colunas (1020), 2 (780) e 1 (640) nos dois idiomas.
-- **Pendente:** instalar 1.0.16, validar no executável instalado e publicar.
+  `p7a-*` atualizadas a partir do executável instalado em 3 colunas (1020),
+  2 (780) e 1 (640) nos dois idiomas.
+- **Instalação:** 1.0.16 validada; toggle do card criou o overlay `Desempenho`
+  e persistiu `performanceHudEnabled`; `settings.json` restaurado por hash,
+  tasks `Ready` e journal ausente. Instalador: 84.339.291 bytes, SHA-256
+  `C4D587C97ED53011CDF9BBDC2DF75F43FA947CDCFEC9B46497EFFEFD6971809B`.
+- **Pendente:** publicar e validar o chord físico.
 
 ## Próxima ação
 

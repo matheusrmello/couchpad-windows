@@ -8,6 +8,7 @@
 - Extrai `HudText`, adiciona tokens `CouchPad.HudSurface`, `HudBorder`, `HudTrack` e `Radius.Hud`, usados também pelo overlay e pelo modal.
 - Novos estilos `Border.chip`, `TextBlock.chipLabel` e `TextBlock.value.mono`.
 - Build Debug/Release 0/0, **310 testes** e smoke; capturas atualizadas em 3 breakpoints × 2 idiomas.
+- Instalação local validada sem elevação: App/rescue `1.0.16.0`; o toggle do card HUD criou o overlay `Desempenho` e persistiu `performanceHudEnabled`; `settings.json` restaurado por hash, tasks `Ready` e journal ausente. Instalador com 84.339.291 bytes e SHA-256 `C4D587C97ED53011CDF9BBDC2DF75F43FA947CDCFEC9B46497EFFEFD6971809B`; publicação pendente.
 
 ## 1.0.15 (candidato)
 
