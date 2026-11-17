@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CouchPad — HUD de desempenho</title>
+<style>
+  :root {
+    --bg: #05070b;
+    --panel: rgba(17, 24, 32, .94);
+    --panel-2: rgba(10, 15, 21, .96);
+    --line: rgba(255, 255, 255, .08);
+    --line-strong: rgba(255, 255, 255, .14);
+    --text: #f3f7fa;
+    --muted: #8d9aa8;
+    --muted-2: #64717f;
+    --accent: #4fe3c1;
+    --accent-2: #69a8ff;
+    --warning: #ffc46b;
+    font-family: "Segoe UI Variable", "Segoe UI", Inter, system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); }
+  body {
+    display: flex; justify-content: center; align-items: flex-start;
+    padding: 30px;
+    color: var(--text);
+    background:
+      radial-gradient(circle at 20% 8%, rgba(79, 227, 193, .14), transparent 30%),
+      radial-gradient(circle at 82% 10%, rgba(105, 168, 255, .13), transparent 30%),
+      linear-gradient(180deg, #070a0f, #040609);
+  }
+  .canvas {
+    width: 1340px; height: 880px; flex: 0 0 auto; position: relative; overflow: hidden;
+    border-radius: 30px; padding: 28px;
+    border: 1px solid rgba(255, 255, 255, .08);
+    background: linear-gradient(180deg, rgba(12, 17, 23, .98), rgba(7, 10, 15, .99));
+    box-shadow: 0 50px 120px rgba(0, 0, 0, .62), inset 0 1px 0 rgba(255, 255, 255, .05);
+  }
+  .canvas::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .20;
+    background-image: radial-gradient(rgba(255, 255, 255, .12) .7px, transparent .7px);
+    background-size: 22px 22px; mask-image: linear-gradient(180deg, black, transparent 55%);
+  }
+  .app { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; gap: 18px; }
+
+  .icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-sm { width: 14px; height: 14px; }
+  .icon-lg { width: 24px; height: 24px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; min-height: 56px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center;
+    background: linear-gradient(145deg, rgba(79, 227, 193, .22), rgba(105, 168, 255, .16));
+    border: 1px solid rgba(114, 232, 210, .35); color: var(--accent);
+    box-shadow: 0 0 28px rgba(79, 227, 193, .13), inset 0 1px 0 rgba(255, 255, 255, .16);
+  }
+  .logo svg { width: 27px; height: 27px; }
+  .brand h1 { margin: 0; font-size: 21px; letter-spacing: -.02em; font-weight: 660; }
+  .brand p { margin: 4px 0 0; color: var(--muted); font-size: 11.5px; }
+  .header-right { display: flex; align-items: center; gap: 9px; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, .035); color: var(--muted); font-size: 11px; font-weight: 550; }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted-2); }
+  .pill.live { color: var(--accent); border-color: rgba(79, 227, 193, .25); background: rgba(79, 227, 193, .075); }
+  .pill.live .dot { background: var(--accent); box-shadow: 0 0 0 4px rgba(79, 227, 193, .10); }
+  .profile-chip { display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, .035); font-size: 11.5px; }
+  .profile-chip .label { color: var(--muted-2); font-size: 9px; text-transform: uppercase; letter-spacing: .11em; }
+  .avatar { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, rgba(79, 227, 193, .24), rgba(105, 168, 255, .22)); display: grid; place-items: center; color: var(--accent); }
+
+  /* dimmed app background */
+  .backdrop { position: absolute; inset: 68px 0 0; opacity: .28; filter: blur(2px); display: grid; grid-template-columns: 280px 1fr 300px; gap: 16px; padding: 0 4px; pointer-events: none; }
+  .ghost-card { border-radius: 18px; border: 1px solid rgba(255, 255, 255, .06); background: linear-gradient(160deg, rgba(25, 34, 44, .8), rgba(11, 16, 22, .92)); }
+  .ghost-col { display: flex; flex-direction: column; gap: 16px; }
+  .ghost-card.a { height: 250px; } .ghost-card.b { height: 145px; } .ghost-card.c { height: 120px; }
+  .ghost-card.center-card { height: 100%; }
+  .ghost-card.right-a { height: 190px; } .ghost-card.right-b { height: 160px; } .ghost-card.right-c { height: 130px; }
+
+  /* modal */
+  .modal {
+    position: relative; z-index: 2; margin: 34px auto 0; width: 1120px; max-width: 100%;
+    border-radius: 24px; border: 1px solid rgba(255, 255, 255, .10);
+    background: linear-gradient(160deg, rgba(23, 31, 40, .98), rgba(10, 15, 21, .99));
+    box-shadow: 0 40px 100px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .06);
+    overflow: hidden;
+  }
+  .modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 22px 24px 18px; border-bottom: 1px solid rgba(255, 255, 255, .065); }
+  .modal-title { display: flex; align-items: center; gap: 12px; }
+  .modal-title .badge { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(79, 227, 193, .09); border: 1px solid rgba(79, 227, 193, .18); color: var(--accent); }
+  .modal-title h2 { margin: 0; font-size: 17px; letter-spacing: -.02em; font-weight: 650; }
+  .modal-title p { margin: 4px 0 0; color: var(--muted); font-size: 11.5px; }
+  .header-controls { display: flex; align-items: center; gap: 10px; }
+  .switch { width: 44px; height: 25px; border-radius: 999px; background: rgba(255, 255, 255, .10); border: 1px solid rgba(255, 255, 255, .10); position: relative; flex: 0 0 auto; }
+  .switch::after { content: ""; position: absolute; width: 19px; height: 19px; top: 2px; left: 2px; border-radius: 50%; background: #a7b3be; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); }
+  .switch.on { background: linear-gradient(135deg, rgba(79, 227, 193, .95), rgba(105, 168, 255, .90)); border-color: rgba(79, 227, 193, .45); box-shadow: 0 0 20px rgba(79, 227, 193, .20); }
+  .switch.on::after { left: 21px; background: #04120f; }
+
+  .modal-body { display: grid; grid-template-columns: minmax(0, 1fr) 424px; gap: 22px; padding: 20px 24px 18px; }
+  .settings { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .section-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+  .section-title h3 { margin: 0; color: #dbe6ee; font-size: 10.5px; letter-spacing: .10em; text-transform: uppercase; font-weight: 650; }
+  .section-title span { color: var(--muted-2); font-size: 10px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .metric {
+    position: relative; display: flex; align-items: center; gap: 9px; min-height: 45px;
+    padding: 9px 10px; border-radius: 11px; border: 1px solid var(--line);
+    background: rgba(255, 255, 255, .025); color: #d5e0e8; font-size: 11px;
+  }
+  .metric .metric-icon { width: 25px; height: 25px; border-radius: 8px; display: grid; place-items: center; background: rgba(255, 255, 255, .045); color: var(--muted); flex: 0 0 auto; }
+  .metric .check { margin-left: auto; width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .16); display: grid; place-items: center; color: transparent; }
+  .metric.selected { border-color: rgba(79, 227, 193, .28); background: rgba(79, 227, 193, .055); }
+  .metric.selected .metric-icon { color: var(--accent); background: rgba(79, 227, 193, .10); }
+  .metric.selected .check { color: #04120f; background: var(--accent); border-color: var(--accent); }
+  .metric .sub { display: block; color: var(--muted-2); font-size: 9px; margin-top: 2px; }
+  .metric.optional { border-style: dashed; }
+
+  .combo-panel { border-radius: 13px; border: 1px solid rgba(255, 255, 255, .07); background: rgba(255, 255, 255, .022); padding: 12px; display: flex; align-items: center; gap: 10px; }
+  .key { min-width: 31px; height: 31px; border-radius: 8px; display: inline-grid; place-items: center; border: 1px solid rgba(255, 255, 255, .13); background: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .035)); color: #e7f0f6; font-size: 10.5px; font-weight: 650; box-shadow: 0 3px 0 rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .10); }
+  .plus { color: var(--muted-2); font-size: 10px; }
+  .combo-copy { flex: 1; min-width: 0; }
+  .combo-copy strong { display: block; font-size: 11.5px; font-weight: 600; }
+  .combo-copy span { display: block; color: var(--muted); font-size: 10px; margin-top: 2px; }
+  .text-link { color: var(--accent); font-size: 10.5px; white-space: nowrap; }
+
+  .appearance { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field label { display: block; color: var(--muted-2); font-size: 9px; letter-spacing: .10em; text-transform: uppercase; margin-bottom: 6px; }
+  .select-like { height: 34px; border-radius: 9px; border: 1px solid var(--line); background: rgba(255, 255, 255, .03); display: flex; align-items: center; justify-content: space-between; padding: 0 10px; color: #d8e2ea; font-size: 10.5px; }
+  .slider-line { display: flex; align-items: center; gap: 8px; }
+  .track { flex: 1; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, .08); position: relative; }
+  .track .fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #4fe3c1, #69a8ff); }
+  .track .knob { position: absolute; width: 11px; height: 11px; border-radius: 50%; top: -3.5px; background: #e8fffa; box-shadow: 0 0 0 3px rgba(79, 227, 193, .12); }
+  .slider-value { color: #d8e2ea; font-size: 10px; width: 34px; text-align: right; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 10.5px; }
+  .checkbox { width: 16px; height: 16px; border-radius: 5px; border: 1px solid rgba(255, 255, 255, .16); display: grid; place-items: center; color: transparent; }
+  .checkbox.checked { color: #04120f; background: var(--accent); border-color: var(--accent); }
+
+  /* preview */
+  .preview-wrap { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .preview-head { display: flex; align-items: center; justify-content: space-between; }
+  .preview-head span { color: var(--muted-2); font-size: 9px; letter-spacing: .10em; text-transform: uppercase; }
+  .preview-head b { color: #dbe6ee; font-size: 10.5px; font-weight: 600; }
+  .preview {
+    position: relative; flex: 1; min-height: 0; border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .08);
+    background:
+      radial-gradient(circle at 70% 20%, rgba(105, 168, 255, .20), transparent 34%),
+      radial-gradient(circle at 25% 82%, rgba(79, 227, 193, .14), transparent 32%),
+      linear-gradient(145deg, #0c1820, #0b1118 46%, #16131a);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
+  }
+  .preview::before {
+    content: ""; position: absolute; inset: 0; opacity: .30;
+    background-image: linear-gradient(115deg, transparent 20%, rgba(255, 255, 255, .05) 20.2%, transparent 20.6%),
+      linear-gradient(70deg, transparent 40%, rgba(255, 255, 255, .04) 40.2%, transparent 40.6%),
+      radial-gradient(rgba(255, 255, 255, .10) .7px, transparent .7px);
+    background-size: auto, auto, 20px 20px;
+  }
+  .preview::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(3, 6, 9, .52)); }
+  .preview-top { position: absolute; top: 12px; left: 13px; right: 13px; display: flex; justify-content: space-between; z-index: 2; }
+  .preview-top .tag { display: inline-flex; align-items: center; gap: 6px; color: rgba(221, 235, 244, .75); font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
+  .preview-top .tag .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px rgba(79, 227, 193, .10); }
+  .hud {
+    position: absolute; top: 44px; left: 18px; width: 244px; z-index: 3;
+    border-radius: 13px; border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(8, 13, 18, .78); backdrop-filter: blur(14px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .08);
+    padding: 11px 12px;
+  }
+  .hud-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+  .hud-title .name { display: flex; align-items: center; gap: 6px; color: #e5f1f7; font-size: 9.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  .hud-title .name .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .hud-title .drag { color: var(--muted-2); font-size: 12px; letter-spacing: 2px; }
+  .hud-main { display: flex; align-items: flex-end; gap: 9px; }
+  .hud-fps { font-size: 30px; line-height: 1; font-weight: 680; letter-spacing: -.05em; color: #f3fbff; }
+  .hud-fps span { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; letter-spacing: .14em; text-transform: uppercase; }
+  .hud-frame { margin-left: auto; text-align: right; color: var(--muted); font-size: 9px; line-height: 1.5; }
+  .hud-frame b { display: block; color: #dce9f1; font-weight: 600; font-size: 10px; }
+  .hud-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin-top: 10px; padding-top: 9px; border-top: 1px solid rgba(255, 255, 255, .08); }
+  .hud-meter { font-size: 8.5px; color: var(--muted); }
+  .hud-meter .line { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .hud-meter .line b { color: #dce9f1; font-weight: 600; }
+  .bar { height: 3px; border-radius: 999px; background: rgba(255, 255, 255, .09); overflow: hidden; }
+  .bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #4fe3c1, #69a8ff); }
+  .hud-process { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, .08); color: var(--muted); font-size: 8.5px; }
+  .hud-process b { color: #dce9f1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .preview-caption { position: absolute; left: 18px; bottom: 14px; z-index: 3; color: rgba(221, 235, 244, .55); font-size: 9px; letter-spacing: .04em; }
+  .preview-caption b { color: rgba(221, 235, 244, .82); font-weight: 600; }
+
+  .modal-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 24px 18px; border-top: 1px solid rgba(255, 255, 255, .065); }
+  .footer-note { color: var(--muted-2); font-size: 9.5px; }
+  .footer-note b { color: var(--muted); font-weight: 500; }
+  .actions { display: flex; gap: 8px; }
+  .btn { border: 0; border-radius: 10px; font-family: inherit; font-size: 11px; font-weight: 620; padding: 10px 14px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+  .btn.secondary { color: #c9d5df; background: rgba(255, 255, 255, .05); border: 1px solid var(--line-strong); }
+  .btn.primary { color: #04120f; background: linear-gradient(135deg, #4fe3c1, #69a8ff); box-shadow: 0 10px 24px rgba(79, 227, 193, .14); }
+</style>
+</head>
+<body>
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6M7 18h10"/><circle cx="12" cy="18" r="1"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+  <symbol id="i-gpu" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="12" rx="2"/><path d="M8 17v2M16 17v2M8 9h8M8 13h8"/></symbol>
+  <symbol id="i-memory" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 18v2M12 18v2M17 18v2M7 9v6M11 9v6M15 9v6"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  <symbol id="i-gamepad" viewBox="0 0 24 24"><path d="M7 8h10a5 5 0 0 1 4.7 6.7l-1 2.8a2.3 2.3 0 0 1-3.9.8L14.5 16h-5l-2.3 2.3a2.3 2.3 0 0 1-3.9-.8l-1-2.8A5 5 0 0 1 7 8Z"/><path d="M8 12h3M9.5 10.5v3M15.5 11.5h.01M17.5 13.5h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h6M14 6h6M4 12h10M18 12h2M4 18h2M10 18h10"/><circle cx="12" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol>
+</svg>
+
+<div class="canvas" role="img" aria-label="CouchPad performance HUD concept">
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 11.5c0-2 1.6-3.5 3.5-3.5h11c2 0 3.5 1.6 3.5 3.5v7.8c0 2.4-2 4.4-4.4 4.4h-1.4c-1.3 0-2.5-.7-3.2-1.8L15 18h-2l-1.5 3.9A3.6 3.6 0 0 1 8.3 24H7.5A4.5 4.5 0 0 1 3 19.5v-4c0-1.7 1.3-3 3-3h1Z"/>
+            <path d="M10.5 13.5h4M12.5 11.5v4M20 13h.01M22 15h.01"/>
+          </svg>
+        </div>
+        <div><h1>CouchPad</h1><p>Jogando no conforto do sofá</p></div>
+      </div>
+      <div class="header-right">
+        <div class="profile-chip"><div class="avatar"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-gamepad"/></svg></div><div><div class="label">Perfil</div><strong>Sala</strong></div><svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--muted-2)"><use href="#i-chevron"/></svg></div>
+        <div class="pill live"><span class="dot"></span>Ativo</div>
+      </div>
+    </header>
+
+    <div class="backdrop">
+      <div class="ghost-col"><div class="ghost-card a"></div><div class="ghost-card b"></div><div class="ghost-card c"></div></div>
+      <div class="ghost-col"><div class="ghost-card center-card"></div></div>
+      <div class="ghost-col"><div class="ghost-card right-a"></div><div class="ghost-card right-b"></div><div class="ghost-card right-c"></div></div>
+    </div>
+
+    <section class="modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          <div class="badge"><svg class="icon icon-lg" viewBox="0 0 24 24"><use href="#i-gauge"/></svg></div>
+          <div><h2>HUD de desempenho</h2><p>Mostre métricas enquanto a sessão de TV estiver ativa.</p></div>
+        </div>
+        <div class="header-controls"><span class="pill live"><span class="dot"></span>Ativado</span><div class="switch on"></div></div>
+      </div>
+
+      <div class="modal-body">
+        <div class="settings">
+          <div>
+            <div class="section-title"><h3>Métricas</h3><span>5 de 8 selecionadas</span></div>
+            <div class="metric-grid">
+              <div class="metric selected"><div class="metric-icon"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-gauge"/></svg></div><div>FPS<span class="sub">RTSS / PresentMon</span></div><div class="check"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-check"/></svg></div></div>
+              <div class="metric selected"><div class="metric-icon"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-clock"/></svg></div><div>Frame time<span class="sub">ms</span></div><div class="check"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-check"/></svg></div></div>
+              <div class="metric selected"><div class="metric-icon"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-cpu"/></svg></div><div>CPU<span class="sub">total + jogo</span></div><div class="check"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-check"/></svg></div></div>
+              <div class="metric selected"><div class="metric-icon"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-gpu"/></svg></div><div>GPU<span class="sub">uso</span></div><div class="check"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-check"/></svg></div></div>
+              <div class="metric selected"><div class="metric-icon"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-memory"/></svg></div><div>RAM<span class="sub">usada</span></div><div class="check"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-check"/></svg></div></div>
+              <div class="metric"><div class="metric-icon"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-gpu"/></svg></div><div>VRAM<span class="sub">usada</span></div><div class="check"></div></div>
+              <div class="metric"><div class="metric-icon"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-gamepad"/></svg></div><div>Processo<span class="sub">jogo ativo</span></div><div class="check"></div></div>
+              <div class="metric optional"><div class="metric-icon"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-monitor"/></svg></div><div>Temp. GPU<span class="sub">opcional</span></div><div class="check"></div></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title"><h3>Atalho no controle</h3><span>segure por 0,8 s</span></div>
+            <div class="combo-panel">
+              <span class="key">LB</span><span class="plus">+</span><span class="key">RB</span><span class="plus">+</span><span class="key">Y</span>
+              <div class="combo-copy"><strong>Mostrar / ocultar HUD</strong><span>Funciona durante o jogo.</span></div>
+              <span class="text-link">Alterar</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title"><h3>Aparência</h3><span>somente leitura</span></div>
+            <div class="appearance">
+              <div class="field"><label>Posição</label><div class="select-like"><span>TV · canto superior direito</span><svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--muted-2)"><use href="#i-chevron"/></svg></div></div>
+              <div class="field"><label>Escala</label><div class="select-like"><span>100%</span><span style="color:var(--muted-2)">A–</span></div></div>
+              <div class="field"><label>Opacidade</label><div class="slider-line"><div class="track"><div class="fill" style="width:82%"></div><span class="knob" style="left:80%"></span></div><span class="slider-value">82%</span></div></div>
+              <div class="field"><label>Visibilidade</label><div class="checkbox-row"><div class="checkbox checked"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-check"/></svg></div>Só durante a sessão</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="preview-head"><span>Prévia do HUD</span><b>SAMSUNG · 4K · 120 Hz</b></div>
+          <div class="preview">
+            <div class="preview-top"><span class="tag"><span class="dot"></span>Sessão de jogo</span><span class="tag">CouchPad HUD</span></div>
+            <div class="hud">
+              <div class="hud-title"><span class="name"><span class="live-dot"></span>Desempenho</span><span class="drag">•••</span></div>
+              <div class="hud-main"><div class="hud-fps">144<span>FPS</span></div><div class="hud-frame"><b>6.9 ms</b>frame time<br><b>118</b>1% low</div></div>
+              <div class="hud-bars">
+                <div class="hud-meter"><div class="line"><span>CPU</span><b>32%</b></div><div class="bar"><span style="width:32%"></span></div></div>
+                <div class="hud-meter"><div class="line"><span>GPU</span><b>91%</b></div><div class="bar"><span style="width:91%"></span></div></div>
+                <div class="hud-meter"><div class="line"><span>RAM</span><b>12.4 GB</b></div><div class="bar"><span style="width:52%"></span></div></div>
+                <div class="hud-meter"><div class="line"><span>VRAM</span><b>7.2 GB</b></div><div class="bar"><span style="width:60%"></span></div></div>
+              </div>
+              <div class="hud-process"><span>Processo</span><b>Cyberpunk 2077</b></div>
+            </div>
+            <div class="preview-caption">Prévia ilustrativa · <b>métricas de exemplo</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="footer-note"><b>Dados locais.</b> Nenhuma telemetria. FPS requer RTSS ou PresentMon.</div>
+        <div class="actions"><button class="btn secondary">Cancelar</button><button class="btn primary"><svg class="icon icon-sm" viewBox="0 0 24 24"><use href="#i-check"/></svg>Salvar HUD</button></div>
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

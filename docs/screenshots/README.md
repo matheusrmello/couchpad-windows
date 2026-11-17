@@ -40,3 +40,7 @@
 - `couchpad-modern-concept.png` e `couchpad-modern-concept.html`: exploração
   visual com cards de vidro, tipografia mais forte, prévia da TV e diagnóstico
   em destaque. **Não representa a UI atual** e não foi implementado no App.
+- `couchpad-performance-hud-concept.png` e
+  `couchpad-performance-hud-concept.html`: concept do card **HUD de
+  desempenho**, com métricas selecionáveis, atalho LB+RB+Y e prévia do HUD.
+  Também é somente um concept, não implementado.
