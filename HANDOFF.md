@@ -1,6 +1,6 @@
 # CouchPad Windows — Handoff e Bootstrap
 
-**1.0.20 (candidato, 18/11/2026):** remove o HUD de monitoramento de hardware e a integração RTSS (D081); shell volta a 8 cards; foco em automação. 295 testes, build 0/0, smoke. Instalação e publicação pendentes.
+**1.0.20 (candidato, 18/11/2026):** remove o HUD de monitoramento de hardware e a integração RTSS (D081); shell volta a 8 cards; foco em automação. 295 testes, build 0/0, smoke. Instalado em 18/11/2026; 8 cards sem HUD; publicação pendente.
 
 **1.0.19 (candidato, 17/11/2026):** corrige GPU (PDH Unicode, CStatus, filtro por PID/engtype_3D) e VRAM (total do adaptador via registro; barra funciona). 342 testes, build 0/0, smoke. Instalado em 17/11/2026; VRAM com total confirmada; GPU por processo com amostra 67%; estabilidade pendente (jogo crashou); publicação pendente.
 

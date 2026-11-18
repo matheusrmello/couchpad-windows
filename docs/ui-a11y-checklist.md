@@ -76,6 +76,8 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
   sessão, estado com live region e chips somente leitura na ordem de foco.
 - [ ] Chord físico do HUD e anúncio do modal por Narrator/NVDA (manual
   pendente).
+- [ ] Títulos dos cards não são expostos como peers de texto no UIA; revisar
+  template do `Card` (a11y).
 - [ ] Navegação por teclado/leitor de tela dentro do menu nativo da bandeja
   (depende do shell do Windows; não automatizada).
 

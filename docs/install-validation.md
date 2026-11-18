@@ -98,6 +98,14 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
 
+## Candidato 1.0.20
+
+- Remove o HUD de monitoramento de hardware e a integração RTSS (D081); shell com 8 cards, foco em automação.
+- 295 testes; build Debug/Release 0/0; smoke do build e do executável instalado OK.
+- Instalação per-user exit 0; App/rescue `1.0.20.0` (ProductVersion `1.0.20+89831489c20469f2af2d55ed4fa4931723b2462d`); tasks `CouchPad-Autostart-*`/`CouchPad-Rescue-*` `Ready`; journal ausente; `settings.json` sem `performanceHud*`.
+- UIA: nenhuma ocorrência de HUD/FPS; os 8 cards existem no XAML e o conteúdo das 8 áreas está presente. Títulos de card não são expostos como peers de texto no UIA — registrado como pendência de a11y.
+- Instalador `CouchPad-Setup-1.0.20-win-x64.exe`: 84.285.012 bytes, SHA-256 `05AB1EDC6E3D04832EE6346E165CCA2D83B37C8ACE7083C5C7613F3E3F7FD256`. Publicação no GitHub pendente.
+
 ## Candidato 1.0.19
 
 - Correção da GPU: PDH consultado em Unicode, `CStatus` validado e instâncias `engtype_3D` filtradas pelo PID do processo em primeiro plano. Antes o HUD mostrava o pico global e oscilava entre 0% e 100%.
