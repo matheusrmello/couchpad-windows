@@ -337,6 +337,20 @@
   (sem dwFlags; time0@268, time1@272, frames@276), teto de cópia 16 MiB e uso
   da média de janela (dwFrames é por janela, não acumulado).
 
+## D081 — Remover o HUD de monitoramento de hardware
+
+- Data: 2026-11-18
+- Decisão: remover a feature de HUD (CPU, CPU do jogo, GPU, RAM, VRAM, processo
+  e resolução/refresh, incluindo FPS), com overlay, modal, card, chord, sampler
+  PDH, integração RTSS e settings `performanceHud*`. O produto volta a focar na
+  automação de display, áudio, gamepad e rescue.
+- Motivo: o usuário não quer o monitoramento; a remoção reduz superfície de
+  código, a dependência opcional do RTSS e P/Invoke de PDH/registro.
+- Consequências: D078 (HUD aprovado) e D080 (FPS via RTSS) ficam superseded; o
+  shell volta a 8 cards; strings `hud.*` removidas; a feature não volta sem nova
+  decisão.
+- Validação: 295 testes, build Debug/Release 0/0 e smoke.
+
 ## Formato de nova decisão
 
 ```md

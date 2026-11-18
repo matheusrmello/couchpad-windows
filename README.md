@@ -87,9 +87,6 @@ Para simular em desenvolvimento, execute `CouchPad.exe --simulate`.
   áudio entre salas/configurações.
 - Diagnóstico explicável da identificação de TV, monitor e áudio, com motivo e
   confiança, sem alterar hardware.
-- HUD de desempenho local e opt-in: CPU, GPU, RAM, VRAM, processo e resolução,
-  com métricas selecionáveis e atalho no controle. FPS/temperatura ficam para
-  as próximas fases.
 - HDR e notificações nativas: adiados; não declarar suportados.
 
 ## Lacunas conhecidas
@@ -104,10 +101,10 @@ Para simular em desenvolvimento, execute `CouchPad.exe --simulate`.
 
 ## Roadmap
 
-O próximo recurso aprovado é o **HUD de desempenho**: métricas locais
-selecionáveis, opt-in e toggle por combinação no controle. O plano completo,
-fases e limites estão em [docs/roadmap.md](docs/roadmap.md); a Fase 1 está
-detalhada em [docs/hud-phase1-plan.md](docs/hud-phase1-plan.md).
+Não há recurso novo aprovado para a próxima versão. O foco é consolidar a
+automação de display, áudio, gamepad e rescue, com o histórico de decisões em
+[docs/decisions.md](docs/decisions.md) e o estado em
+[docs/roadmap.md](docs/roadmap.md).
 
 ## Agentes
 

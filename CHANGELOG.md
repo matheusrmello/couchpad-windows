@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.0.20 (candidato)
+
+- Remove o HUD de monitoramento de hardware (CPU, CPU do jogo, GPU, RAM, VRAM, processo, resolução e FPS), incluindo overlay, modal, card, chord, sampler PDH, integração RTSS e settings `performanceHud*`.
+- O shell volta a 8 cards; o foco retorna à automação de display, áudio, gamepad e rescue.
+- Remove a dependência opcional do RTSS.
+- 295 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.19 (candidato)
 
 - Corrige a leitura de GPU: PDH em Unicode, validação de `CStatus` e filtro das instâncias 3D do processo em primeiro plano (antes o HUD mostrava o pico global e oscilava 0/100%).

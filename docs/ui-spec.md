@@ -1,7 +1,7 @@
 # CouchPad — Especificação de UI (P1–P7a)
 
 - Data: 2026-11-17
-- Fases: P1–P7 implementadas; UI atual em 1.0.16 com card HUD e shell redesenhado
+- Fases: P1–P7 implementadas; UI atual em 1.0.20, sem HUD de monitoramento
 - Base visual: referência do ShiftPad 2.2.0, recriada com identidade própria
 - Plataforma: Avalonia 12.1.4 / .NET 10 (`net10.0`)
 
@@ -30,8 +30,8 @@
 
 | Largura da janela | Colunas | Organização |
 |---|---|---|
-| `>= 1000 px` | 3 | HUD em linha inteira; Automação + Display; Gamepad + Combinação + Contagem; Transição + Launchers + Parâmetros |
-| `720–999 px` | 2 | HUD em linha inteira; Automação + Display; Gamepad + Combinação; Contagem + Transição; Launchers + Parâmetros |
+| `>= 1000 px` | 3 | Automação + Display; Gamepad + Combinação + Contagem; Transição + Launchers + Parâmetros |
+| `720–999 px` | 2 | Automação + Display; Gamepad + Combinação; Contagem + Transição; Launchers + Parâmetros |
 | `< 720 px` | 1 | Cards empilhados na ordem de leitura |
 
 - Janela padrão: `1020 × 780`.
@@ -45,19 +45,18 @@
 
 | Card | 3 colunas | 2 colunas | 1 coluna |
 |---|---|---|---|
-| HUD | (0,0) span 3 | (0,0) span 2 | linha 0 |
-| Automação | (1,0) | (1,0) | linha 1 |
-| Display | (1,1) span 2 | (1,1) | linha 2 |
-| Gamepad | (2,0) | (2,0) | linha 3 |
-| Combinação | (2,1) | (2,1) | linha 4 |
-| Contagem | (2,2) | (3,0) | linha 5 |
-| Transição | (3,0) | (3,1) | linha 6 |
-| Launchers | (3,1) | (4,0) | linha 7 |
-| Parâmetros | (3,2) | (4,1) | linha 8 |
+| Automação | (0,0) | (0,0) | linha 0 |
+| Display | (0,1) span 2 | (0,1) | linha 1 |
+| Gamepad | (1,0) | (1,0) | linha 2 |
+| Combinação | (1,1) | (1,1) | linha 3 |
+| Contagem | (1,2) | (2,0) | linha 4 |
+| Transição | (2,0) | (2,1) | linha 5 |
+| Launchers | (2,1) | (3,0) | linha 6 |
+| Parâmetros | (2,2) | (3,1) | linha 7 |
 
-O card de HUD vem primeiro por ser a superfície nova: fica inteiro na primeira
-tela em 1020×780 e apresenta estado, posição, atalho, métricas e prévia. Os
-demais cards mantêm a ordem de leitura em todos os breakpoints.
+São 8 cards; nenhum ocupa linha inteira. Os cards seguem a ordem de leitura em
+todos os breakpoints: Automação, Display, Gamepad, Combinação, Contagem,
+Transição, Launchers e Parâmetros.
 
 ---
 
@@ -190,27 +189,6 @@ demais cards mantêm a ordem de leitura em todos os breakpoints.
   áudio. O perfil ativo é o mesmo usado na composição de startup.
 - **Diagnóstico da identificação (1.0.13)**: expander read-only com perfil,
   TV, monitor, áudio, EDID, HDMI, estado, motivo e confiança alta/média/baixa.
-- **HUD de desempenho (1.0.14)**: modal com métricas selecionáveis, atalho
-  LB+RB+Y, posição/opacidade/escala e “só durante a sessão”; HUD flutuante
-  click-through, sem foco, com CPU/GPU/RAM/VRAM/processo/resolução.
-- **Card HUD (1.0.16)**: primeiro card do shell, em linha inteira. Mostra
-  toggle de ativação, `Configurar`, estado, posição, atalho, “só durante a
-  sessão”, chips das métricas ativas e prévia ilustrativa com a mesma
-  linguagem do overlay. Métricas vêm de `PerformanceHudSettings`; nada é
-  escrito em hardware.
-
-### 3.12 Card HUD
-
-- Título `section.hud`; ação de cabeçalho com `hud.configure` e
-  `hud.enabled`.
-- Corpo em duas colunas: controles à esquerda e prévia à direita.
-- Linha de estado: `hud.status` + `hud.state.on|off`, posição curta
-  (`hud.position.short.*`) e atalho (`hud.chord.preset.*`).
-- `CheckBox` de `hud.session_only` persiste em `PerformanceHudShowOnlyInSession`.
-- Chips usam `Border.chip` + `TextBlock.chipLabel`; métricas não selecionadas
-  ficam ocultas. Sem métricas, mostra `hud.overlay.empty`.
-- Prévia usa os tokens `CouchPad.HudSurface`, `HudBorder`, `HudTrack` e
-  `Radius.Hud`, os mesmos do overlay e do modal, com valores de `hud.preview.*`.
 
 ---
 
@@ -231,11 +209,8 @@ demais cards mantêm a ordem de leitura em todos os breakpoints.
 | `TextDisabled` | `#5F6368` | desabilitado |
 | `Accent` | `#2FD07A` | ação e estado ativo |
 | `AccentMuted` | `#123D28` | fundo de destaque |
-| `Info` | `#8CC6FF` | GPU, VRAM e informação |
+| `Info` | `#8CC6FF` | informação |
 | `InfoMuted` | `#15304F` | fundo informativo |
-| `HudSurface` | `#F20B1117` | fundo do HUD e da prévia |
-| `HudBorder` | `#26FFFFFF` | borda do HUD |
-| `HudTrack` | `#22FFFFFF` | trilho das barras |
 | `Warning` | `#F2C94C` | aguardando |
 | `WarningMuted` | `#3A3117` | fundo de aviso |
 | `Danger` | `#EB5757` | erro |
@@ -260,7 +235,7 @@ demais cards mantêm a ordem de leitura em todos os breakpoints.
 - Padding do card: `16`.
 - Gap entre cards: `10`.
 - Altura de controle: `36`; controle pequeno: `32`.
-- Raio de controle: `8`; card: `12–14`; HUD: `16`; pill: `999`.
+- Raio de controle: `8`; card: `12–14`; pill: `999`.
 
 ---
 
@@ -364,7 +339,7 @@ captura de combinação, bandeja, autostart e rescue no logon.
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: 309 aprovados — catálogos/i18n, composição do shell, temas,
+- Testes: 295 aprovados — catálogos/i18n, composição do shell, temas,
   estados da galeria, state machine, atrasos/cancelamento, journal, settings,
   composição Windows, guard, áudio, launcher e P6.
 - Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em
