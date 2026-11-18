@@ -5,7 +5,7 @@
 - Status: **Fase 1 implementada; chord físico e aceite pendentes**
 - Data: 2026-11-17
 - Roadmap: `docs/roadmap.md`
-- Concept: `docs/screenshots/couchpad-performance-hud-concept.png`
+- Concept: `docs/screenshots/couchpad-performance-hud-concept.png` (asset removido na 1.0.20)
 - Decisão: D078
 
 ## 1. Objetivo

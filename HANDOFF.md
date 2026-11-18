@@ -18,7 +18,7 @@
 
 **Governança, 17/11/2026:** o Codex foi descontinuado. O OpenCode é o único agente de desenvolvimento e passa a ser dono de todas as fases e camadas, incluindo `Platform.Windows`, REA, instalador, assinatura e release. A fronteira arquitetural continua valendo. Decisão D079; documentos do Codex ficam como histórico.
 
-**Roadmap, 17/11/2026:** HUD de desempenho aprovado para implementação. MVP com CPU, GPU, RAM, VRAM, processo e resolução/refresh; toggle por LB+RB+Y (0,8 s), métricas selecionáveis, HUD read-only sem injeção. FPS/frame time ficam para a fase 2 via RTSS shared memory ou PresentMon. Plano em `docs/roadmap.md` e `docs/hud-phase1-plan.md`; decisão D078; concept em `docs/screenshots/couchpad-performance-hud-concept.png`.
+**Roadmap, 17/11/2026:** HUD de desempenho aprovado para implementação. MVP com CPU, GPU, RAM, VRAM, processo e resolução/refresh; toggle por LB+RB+Y (0,8 s), métricas selecionáveis, HUD read-only sem injeção. FPS/frame time ficam para a fase 2 via RTSS shared memory ou PresentMon. Plano em `docs/roadmap.md` e `docs/hud-phase1-plan.md`; decisão D078; concept removido na 1.0.20.
 
 **1.0.13 (candidato, 16/11/2026):** diagnóstico explicável da identificação de TV, monitor e áudio no card Display, com nomes, EDID, HDMI, estado, motivo da escolha e confiança alta/média/baixa. Expander read-only; nenhuma escrita de hardware. Build Debug/Release 0/0, 294 testes e smoke. Instalação local validada sem elevação; App/rescue 1.0.13 e diagnóstico expandido no executável instalado. Instalador: 84.283.279 bytes, SHA-256 `109DE17A9AF1E24AAA1000DB373B95EAB28B20C4D4F20BFC7EB707349722F373`; publicação pendente.
 

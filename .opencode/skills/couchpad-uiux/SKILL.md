@@ -29,7 +29,7 @@ Toda decisão precisa caber nos tokens, no i18n e na fronteira de camadas.
    Ruído visual e animação gratuita são defeitos.
 2. **Legibilidade à distância** — números e estados precisam ser lidos na TV,
    não só no monitor.
-3. **Honestidade de estado** — nunca simular sucesso, progresso ou métrica ao
+3. **Honestidade de estado** — nunca simular sucesso, progresso ou valor ao
    vivo. Prévia é prévia; indisponível é `—`.
 4. **Segurança visível** — ações que escrevem hardware mostram consequência,
    estado e como reverter. Fail-closed é requisito de UX, não só de código.
@@ -68,7 +68,7 @@ Toda decisão precisa caber nos tokens, no i18n e na fronteira de camadas.
   Não invente tamanhos intermediários.
 - **Espaçamento:** padding da janela 24, do card 16, gap 10; controles 36/32.
 - **Raios:** controle 8, card 14, pill 999.
-- **Movimento:** só feedback de estado; nada decorativo. Não anime métricas.
+- **Movimento:** só feedback de estado; nada decorativo.
 
 ## Componentes
 
@@ -80,11 +80,9 @@ Toda decisão precisa caber nos tokens, no i18n e na fronteira de camadas.
 | `StatusRow` | resumo label/valor | formulário editável |
 | `KeyChip` | teclas curtas (LB, RB, Y) | texto longo |
 | `PathPicker` | escolher pasta | caminho digitado livre |
-| `Border.chip` | métrica selecionada, somente leitura | botão/filtro clicável |
 | `ToggleSwitch` | liga/desliga imediato | escolha entre 3+ opções |
 | `CheckBox` | múltipla escolha ou confirmação | ação primária |
 | `ComboBox` | 2–6 opções | listas longas sem busca |
-| `Slider` | opacidade/escala | valor exato sem feedback |
 | `Expander` | diagnóstico somente leitura | conteúdo crítico escondido |
 
 Regra: antes de criar controle, prove que o catálogo não resolve. Todo
@@ -129,10 +127,8 @@ Nunca use só cor para diferenciar estado. Loading só quando a ação passa de
 
 ## Dados honestos
 
-- Valores simulados só em prévia rotulada; runtime usa o sampler real.
-- 0% é valor, não "indisponível".
 - Não arredonde para esconder instabilidade; use a precisão definida.
-- Não invente métrica fora do escopo entregue.
+- Não invente dado fora do escopo entregue.
 
 ## Processo de design
 
@@ -166,8 +162,6 @@ Formato do relatório em `references/design-review.md`.
 - Card novo quando `Card` + conteúdo resolve.
 - Texto hardcoded ou concatenado.
 - Estado só por cor; disabled sem motivo.
-- Prévia com números "ao vivo" sem rótulo.
-- Barra de 1% invisível; barra de 0% preenchida.
 - Sidebar ou navegação que não existe no shell atual.
 - Copiar ícone/texto/layout do ShiftPad.
 - Lógica de display/áudio no ViewModel da UI.
