@@ -15,13 +15,13 @@
 
 | Caminho | Papel |
 |---|---|
-| `src/CouchPad.App` | Shell Avalonia, Views, ViewModels, tema, i18n, HUD, updates, bandeja |
+| `src/CouchPad.App` | Shell Avalonia, Views, ViewModels, tema, i18n, updates, bandeja |
 | `src/CouchPad.Core` | Contratos, state machine, journal, settings, simulação (sem Win32/Avalonia) |
-| `src/CouchPad.Platform.Windows` | Implementações Windows: CCD, Core Audio, XInput, PDH, tasks, rescue |
+| `src/CouchPad.Platform.Windows` | Implementações Windows: CCD, Core Audio, XInput, tasks, rescue |
 | `src/CouchPad.Rescue` | Exe de rescue/watchdog; o App copia o artefato |
 | `src/CouchPad.Notifications.Windows` | Notificação nativa experimental; fora do payload |
 | `tests/CouchPad.Core.Tests` | Testes de Core + Platform.Windows com fakes |
-| `tests/CouchPad.App.Tests` | Testes de ViewModels, i18n, HUD, updates |
+| `tests/CouchPad.App.Tests` | Testes de ViewModels, i18n, updates |
 | `tools/` | 15 harnesses console manuais de hardware/processo |
 | `docs/` | Decisões, specs, roadmap, validação, screenshots, REA |
 | `packaging/` | `Build-Installer.ps1`, `CouchPad.iss` |
@@ -56,7 +56,7 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 - MVVM com `[ObservableProperty]`/`[RelayCommand]`; `MainWindowViewModel` dividido por
   assunto (`.Hardware`, `.Profiles`, `.Diagnosis`, `.Updates`). DI manual em `App.axaml.cs`.
 - Fronteira: `App` sem P/Invoke/COM; `Core` puro; `Platform.Windows` sem regra de produto.
-- i18n obrigatório: `Strings.pt-BR.json` + `Strings.en.json` (271 chaves cada),
+- i18n obrigatório: `Strings.pt-BR.json` + `Strings.en.json` (223 chaves cada),
   `{loc:Tr chave}`; nenhuma string visível hardcoded.
 - UI usa tokens de `Themes/Tokens.axaml`; componentes em `Themes/Components.axaml`.
 - Fail-closed: journal `pending` → apply → `active`, rollback e `_recoveryUncertain`.

@@ -1,5 +1,7 @@
 # Fase 1 — HUD de desempenho (MVP)
 
+> **Removido na 1.0.20 (D081).** Documento histórico; a feature de HUD não existe mais.
+
 - Status: **Fase 1 implementada; chord físico e aceite pendentes**
 - Data: 2026-11-17
 - Roadmap: `docs/roadmap.md`

@@ -70,12 +70,6 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
   nome rotulado; Excluir fica desabilitado quando só há um perfil.
 - [x] Diagnóstico: expander com nome/ajuda e texto somente leitura no idioma
   atual; não altera hardware.
-- [x] HUD: modal com labels, checkboxes, combo de atalho e sliders; HUD não
-  recebe foco e é click-through.
-- [x] Card HUD: toggle e botão com `AutomationProperties.Name`, checkbox de
-  sessão, estado com live region e chips somente leitura na ordem de foco.
-- [ ] Chord físico do HUD e anúncio do modal por Narrator/NVDA (manual
-  pendente).
 - [ ] Títulos dos cards não são expostos como peers de texto no UIA; revisar
   template do `Card` (a11y).
 - [ ] Navegação por teclado/leitor de tela dentro do menu nativo da bandeja
@@ -92,7 +86,7 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 
 ## 5. i18n e conteúdo
 
-- [x] pt-BR e inglês em paridade (258 chaves).
+- [x] pt-BR e inglês em paridade (223 chaves).
 - [x] Nenhuma string visível fora dos catálogos.
 - [x] Fallback inglês.
 - [x] Erros e dicas traduzidos.
@@ -125,6 +119,8 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 - A bandeja é nativa do Windows; o menu não foi percorrido por leitor de tela.
 - O anúncio da contagem regressiva pode ser frequente em atrasos de 5 s.
 - HDR e notificações nativas adiados não entram neste checklist.
+- O HUD de monitoramento (card, chip de FPS, chord e overlay) foi removido na
+  1.0.20 (D081); os itens correspondentes saíram deste checklist.
 
 ## 8. Verificação
 
@@ -137,7 +133,7 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 ```
 
 - Build 0 avisos/0 erros.
-- 309 testes.
+- 295 testes.
 - Smoke OK.
 - Capturas oficiais em `docs/screenshots/` nos 3 breakpoints × 2 idiomas.
 - UIAutomation: ordem de foco e nomes em 3/2/1 colunas.
