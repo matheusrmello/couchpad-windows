@@ -5,16 +5,13 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using CouchPad.App.Localization;
-using CouchPad.App.Performance;
 using CouchPad.App.Updates;
 using CouchPad.App.ViewModels;
 using CouchPad.App.Views;
 using CouchPad.Core.Automation;
 using CouchPad.Core.Audio;
-using CouchPad.Core.Devices;
 using CouchPad.Core.Display;
 using CouchPad.Core.Localization;
-using CouchPad.Core.Performance;
 using CouchPad.Core.Settings;
 using CouchPad.Core.Storage;
 using CouchPad.Platform.Windows;
@@ -27,7 +24,6 @@ public partial class App : Application
     private DisplaySessionOwner? _displaySessionOwner;
     private WindowsGamepadWatcher? _gamepadWatcher;
     private WindowsCountdownNotifications? _countdownNotifications;
-    private PerformanceHudCoordinator? _performanceHud;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -50,20 +46,6 @@ public partial class App : Application
             var settingsStore = new JsonAppSettingsStore(settingsPath);
             LocalizationService.Instance.Initialize(settingsStore);
             var appSettings = settingsStore.Load();
-            PerformanceHudCoordinator? performanceHud = null;
-            if (!isGallery && !isSmoke)
-            {
-                var sampler = isProduction
-                    ? (IPerformanceSampler)new WindowsPerformanceSampler()
-                    : new SimulatedPerformanceSampler();
-                var buttons = isProduction
-                    ? (IGamepadButtonSource)new WindowsGamepadButtonSource()
-                    : new NoopGamepadButtonSource();
-                performanceHud = new PerformanceHudCoordinator(
-                    sampler, buttons, new PerformanceHudPresenter(),
-                    PerformanceHudSettings.FromAppSettings(appSettings));
-                _performanceHud = performanceHud;
-            }
             var rescuePath = Path.Combine(AppContext.BaseDirectory, "CouchPad.Rescue.exe");
             var appPath = Path.Combine(AppContext.BaseDirectory, "CouchPad.exe");
             var canUseRescue = isProduction && File.Exists(rescuePath);
@@ -119,17 +101,10 @@ public partial class App : Application
                         configuredHardware: audioGuard is not null ? hardwareSettings : null,
                         restartForHardware: canUseRescue && Program.CanRestartForHardware ? Program.StartHardwareRestart : null,
                         playAudioTest: isProduction ? WindowsAudioTestTone.PlayOnEndpoint : null,
-                        hardwareApplied: desktop.Args?.Contains("--hardware-applied", StringComparer.Ordinal) == true,
-                        performanceHud: performanceHud),
+                        hardwareApplied: desktop.Args?.Contains("--hardware-applied", StringComparer.Ordinal) == true),
                 };
 
             desktop.MainWindow = window;
-
-            if (performanceHud is not null)
-            {
-                window.Opened += (_, _) => performanceHud.Start();
-                desktop.Exit += (_, _) => performanceHud.Dispose();
-            }
 
             if (isProduction && window.DataContext is MainWindowViewModel viewModel)
             {

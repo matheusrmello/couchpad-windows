@@ -43,13 +43,6 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
         Assert.Null(settings.InternalExactName);
         Assert.Null(settings.ActiveProfileId);
         Assert.Null(settings.EnvironmentProfiles);
-        Assert.False(settings.PerformanceHudEnabled);
-        Assert.Null(settings.PerformanceHudMetrics);
-        Assert.Null(settings.PerformanceHudPosition);
-        Assert.Equal(0.9, settings.PerformanceHudOpacity);
-        Assert.Equal(1.0, settings.PerformanceHudScale);
-        Assert.True(settings.PerformanceHudShowOnlyInSession);
-        Assert.Null(settings.PerformanceHudToggleChord);
     }
 
     [Fact]
@@ -110,24 +103,16 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
                     TvExactName = "LG TV",
                 },
             ],
-            PerformanceHudEnabled = true,
-            PerformanceHudMetrics = ["cpu", "gpu", "vram"],
-            PerformanceHudPosition = "bottomLeft",
-            PerformanceHudOpacity = 0.55,
-            PerformanceHudScale = 1.25,
-            PerformanceHudShowOnlyInSession = false,
-            PerformanceHudToggleChord = "LB+RB+Back",
         };
 
         store.Save(expected);
         var actual = store.Load();
 
         Assert.Equal(
-            expected with { EnvironmentProfiles = null, PerformanceHudMetrics = null },
-            actual with { EnvironmentProfiles = null, PerformanceHudMetrics = null });
+            expected with { EnvironmentProfiles = null },
+            actual with { EnvironmentProfiles = null });
         Assert.NotNull(actual.EnvironmentProfiles);
         Assert.Equal(expected.EnvironmentProfiles, actual.EnvironmentProfiles);
-        Assert.Equal(expected.PerformanceHudMetrics, actual.PerformanceHudMetrics);
     }
 
     [Fact]

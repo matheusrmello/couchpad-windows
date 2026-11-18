@@ -25,27 +25,6 @@
     <Setter Property="FontWeight" Value="SemiBold" />
   </Style>
 
-  <Style Selector="TextBlock.value.mono">
-    <Setter Property="FontFamily" Value="{DynamicResource CouchPad.FontFamily.Mono}" />
-    <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Mono}" />
-    <Setter Property="FontWeight" Value="SemiBold" />
-  </Style>
-
-  <!-- Chips de métricas -->
-  <Style Selector="Border.chip">
-    <Setter Property="Background" Value="{DynamicResource CouchPad.SurfaceSunken}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource CouchPad.Border}" />
-    <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="CornerRadius" Value="{DynamicResource CouchPad.Radius.Pill}" />
-    <Setter Property="Padding" Value="9,3" />
-    <Setter Property="Margin" Value="0,0,6,4" />
-  </Style>
-
-  <Style Selector="TextBlock.chipLabel">
-    <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Caption}" />
-    <Setter Property="Foreground" Value="{DynamicResource CouchPad.TextSecondary}" />
-  </Style>
-
   <Style Selector="TextBlock.hint">
     <Setter Property="FontSize" Value="{DynamicResource CouchPad.FontSize.Caption}" />
     <Setter Property="Foreground" Value="{DynamicResource CouchPad.TextSecondary}" />

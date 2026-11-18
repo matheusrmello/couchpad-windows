@@ -7,14 +7,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CouchPad.App.Controls;
 using CouchPad.App.Localization;
-using CouchPad.App.Performance;
 using CouchPad.Core.Audio;
 using CouchPad.Core.Automation;
 using CouchPad.Core.Devices;
 using CouchPad.Core.Display;
 using CouchPad.Core.Localization;
 using CouchPad.Core.Launchers;
-using CouchPad.Core.Performance;
 using CouchPad.Core.Settings;
 
 namespace CouchPad.App.ViewModels;
@@ -27,8 +25,6 @@ public partial class MainWindowViewModel : ObservableObject
 {
     private readonly LocalizationService _localization;
     private readonly IAppSettingsStore _settings;
-    private readonly IPerformanceHudController? _performanceHud;
-    private PerformanceHudSettings _hudSettings = PerformanceHudSettings.Default;
     private readonly IGamepadWatcher _gamepad;
     private readonly ISimulatedGamepad? _gamepadSimulator;
     private readonly AutomationCoordinator _coordinator;
@@ -136,13 +132,11 @@ public partial class MainWindowViewModel : ObservableObject
         AppSettings? configuredHardware = null,
         Action? restartForHardware = null,
         Action<string>? playAudioTest = null,
-        bool hardwareApplied = false,
-        IPerformanceHudController? performanceHud = null)
+        bool hardwareApplied = false)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
         _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
-        _performanceHud = performanceHud;
         _discoverTargets = discoverTargets;
         _discoverAudioEndpoints = discoverAudioEndpoints;
         _revokeAudioWrites = revokeAudioWrites;
@@ -249,83 +243,6 @@ public partial class MainWindowViewModel : ObservableObject
         ApplyHardwareCommand.NotifyCanExecuteChanged();
         SuggestHardwareCommand.NotifyCanExecuteChanged();
         TestAudioCommand.NotifyCanExecuteChanged();
-    }
-    public bool PerformanceHudEnabled
-    {
-        get => _hudSettings.Enabled;
-        set
-        {
-            if (_isLoadingSettings || _hudSettings.Enabled == value) return;
-            _hudSettings = _hudSettings with { Enabled = value };
-            _performanceHud?.ApplySettings(_hudSettings);
-            PersistSettings();
-            NotifyHudChanged();
-        }
-    }
-
-    public bool PerformanceHudShowOnlyInSession
-    {
-        get => _hudSettings.ShowOnlyInSession;
-        set
-        {
-            if (_isLoadingSettings || _hudSettings.ShowOnlyInSession == value) return;
-            _hudSettings = _hudSettings with { ShowOnlyInSession = value };
-            _performanceHud?.ApplySettings(_hudSettings);
-            PersistSettings();
-            NotifyHudChanged();
-        }
-    }
-
-    public bool CanConfigurePerformanceHud => _performanceHud is not null;
-
-    public PerformanceHudSettings CurrentHudSettings => _hudSettings;
-
-    public string HudStatusText => _localization[_hudSettings.Enabled ? "hud.state.on" : "hud.state.off"];
-
-    public string HudPositionText => _localization[HudText.PositionKey(_hudSettings.Position)];
-
-    public string HudChordText => _localization[HudText.ChordKey(_hudSettings.ChordKey)];
-
-    public bool HudShowsCpu => _hudSettings.Metrics.Contains(PerformanceMetric.Cpu);
-    public bool HudShowsCpuProcess => _hudSettings.Metrics.Contains(PerformanceMetric.CpuProcess);
-    public bool HudShowsGpu => _hudSettings.Metrics.Contains(PerformanceMetric.Gpu);
-    public bool HudShowsRam => _hudSettings.Metrics.Contains(PerformanceMetric.Ram);
-    public bool HudShowsVram => _hudSettings.Metrics.Contains(PerformanceMetric.Vram);
-    public bool HudShowsProcess => _hudSettings.Metrics.Contains(PerformanceMetric.Process);
-    public bool HudShowsDisplay => _hudSettings.Metrics.Contains(PerformanceMetric.Display);
-    public bool HudShowsFps => _hudSettings.Metrics.Contains(PerformanceMetric.FramesPerSecond);
-    public bool HudHasMetrics => _hudSettings.Metrics.Count > 0;
-
-    public event EventHandler? HudSettingsRequested;
-
-    [RelayCommand]
-    private void OpenHudSettings() => HudSettingsRequested?.Invoke(this, EventArgs.Empty);
-
-    public void ApplyHudSettings(PerformanceHudSettings settings)
-    {
-        _hudSettings = settings ?? throw new ArgumentNullException(nameof(settings));
-        _performanceHud?.ApplySettings(settings);
-        PersistSettings();
-        OnPropertyChanged(nameof(CurrentHudSettings));
-        NotifyHudChanged();
-    }
-
-    private void NotifyHudChanged()
-    {
-        OnPropertyChanged(nameof(PerformanceHudEnabled));
-        OnPropertyChanged(nameof(PerformanceHudShowOnlyInSession));
-        OnPropertyChanged(nameof(HudStatusText));
-        OnPropertyChanged(nameof(HudPositionText));
-        OnPropertyChanged(nameof(HudChordText));
-        OnPropertyChanged(nameof(HudShowsCpu));
-        OnPropertyChanged(nameof(HudShowsCpuProcess));
-        OnPropertyChanged(nameof(HudShowsGpu));
-        OnPropertyChanged(nameof(HudShowsRam));
-        OnPropertyChanged(nameof(HudShowsVram));
-        OnPropertyChanged(nameof(HudShowsProcess));
-        OnPropertyChanged(nameof(HudShowsDisplay));
-        OnPropertyChanged(nameof(HudShowsFps));
-        OnPropertyChanged(nameof(HudHasMetrics));
     }
 
     public bool CanRetryRecovery => _canStartRecovery && IsRecoveryUncertain;
@@ -819,9 +736,6 @@ public partial class MainWindowViewModel : ObservableObject
             CustomLauncherPath = settings.CustomLauncherPath;
             AllowDisplayWrites = settings.AllowDisplayWrites;
             AllowAudioWrites = settings.AllowAudioWrites;
-            _hudSettings = PerformanceHudSettings.FromAppSettings(settings);
-            _performanceHud?.ApplySettings(_hudSettings);
-            NotifyHudChanged();
             LoadEnvironmentProfiles(settings);
             if (IsProductionMode && (!HardwareMatchesSelection || !settings.UseWindowsGamepad ||
                 !settings.AllowDisplayWrites || !settings.AllowAudioWrites || IsRecoveryUncertain))
@@ -859,7 +773,7 @@ public partial class MainWindowViewModel : ObservableObject
         try
         {
             SyncSelectedProfileFromSelection();
-            var current = _hudSettings.ApplyTo(_settings.Load());
+            var current = _settings.Load();
             _settings.Save(current with
             {
                 ActiveProfileId = SelectedEnvironmentProfile?.Id,
@@ -947,8 +861,6 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void OnAutomationStateChanged(object? sender, AutomationStateChangedEventArgs e)
     {
-        _performanceHud?.SetSessionActive(e.State == AutomationState.Active);
-
         void Notify()
         {
             var duration = IsGamepadConnected ? _coordinator.Settings.ActivationDelay : _coordinator.Settings.DeactivationDelay;
@@ -1013,6 +925,5 @@ public partial class MainWindowViewModel : ObservableObject
 
         OnPropertyChanged(nameof(VersionText));
         OnPropertyChanged(nameof(UpdateNoticeText));
-        NotifyHudChanged();
     }
 }

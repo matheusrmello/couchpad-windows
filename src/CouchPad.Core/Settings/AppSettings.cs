@@ -72,20 +72,6 @@ public sealed record AppSettings
 
     public List<EnvironmentProfile>? EnvironmentProfiles { get; init; }
 
-    public bool PerformanceHudEnabled { get; init; }
-
-    public List<string>? PerformanceHudMetrics { get; init; }
-
-    public string? PerformanceHudPosition { get; init; }
-
-    public double PerformanceHudOpacity { get; init; } = 0.9;
-
-    public double PerformanceHudScale { get; init; } = 1.0;
-
-    public bool PerformanceHudShowOnlyInSession { get; init; } = true;
-
-    public string? PerformanceHudToggleChord { get; init; }
-
     /// <summary>
     /// Preserva chaves desconhecidas ao regravar o arquivo, para não perder
     /// configurações de versões futuras ou de outros componentes.

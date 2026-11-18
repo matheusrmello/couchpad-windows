@@ -85,7 +85,6 @@ internal interface IXInputStateSource
 {
     IReadOnlyList<uint> GetConnectedSlots();
     string? GetModelName(uint slot);
-    bool TryGetButtons(uint slot, out ushort buttons);
 }
 
 internal sealed class NativeXInputStateSource : IXInputStateSource
@@ -144,18 +143,6 @@ internal sealed class NativeXInputStateSource : IXInputStateSource
             catch (EntryPointNotFoundException) { throw new InvalidOperationException("Windows XInput is unavailable."); }
         }
         return result;
-    }
-
-    public bool TryGetButtons(uint slot, out ushort buttons)
-    {
-        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
-        if (XInputGetState(slot, out var state) != 0)
-        {
-            buttons = 0;
-            return false;
-        }
-        buttons = state.Gamepad.Buttons;
-        return true;
     }
 
     [DllImport("xinput1_4.dll", EntryPoint = "XInputGetState", ExactSpelling = true)]
