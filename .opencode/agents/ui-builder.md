@@ -23,7 +23,7 @@ Você é o construtor de UI do CouchPad Windows.
 ## Tarefa
 
 Implementar o shell e os componentes conforme `couchpad-ui` (mecânica) e
-`couchpad-uiux` (direção visual, estados, HUD, a11y e revisão):
+`couchpad-uiux` (direção visual, estados, a11y e revisão):
 
 - Header, cards, sidebar, footer.
 - `Card`, `CardHeader`, `StatusDot`, `StatusRow`, `ToggleSwitch`, `Select`,

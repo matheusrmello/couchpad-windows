@@ -48,24 +48,7 @@ for confirmado → `Recovery uncertain`, que bloqueia novas ativações.
 "restaurado" sem confirmação. Se o app for fechado no meio, o journal e o rescue
 assumem no próximo start.
 
-## 4. HUD de desempenho
-
-**Gatilho:** usuário ativa o HUD no card, configura ou usa o chord.
-
-1. Card mostra estado, posição, atalho, "só durante a sessão", métricas e prévia.
-2. Ativar mostra o overlay; desativar esconde. "Só na sessão" só exibe durante
-   `Active`.
-3. Configurar abre o modal com prévia; salvar aplica na hora e persiste.
-4. Chord LB+RB+Y por 800 ms alterna a visibilidade quando o HUD está ativo.
-5. Métrica sem leitura mostra `—`; GPU em 0% tem barra vazia.
-
-**Falhas:** sampler indisponível não pode derrubar a UI; chord não deve disparar
-com botões parciais. O overlay nunca bloqueia clique nem aparece na barra de
-tarefas.
-
-**Regras:** prévia é ilustrativa e rotulada; o overlay não tem controles.
-
-## 5. Recuperação incerta e rescue
+## 4. Recuperação incerta e rescue
 
 **Gatilho:** watchdog perdido, falha de rollback ou journal inconsistente.
 
@@ -77,7 +60,7 @@ tarefas.
 **Regras:** nunca esconder o risco atrás de um expander. Não ofereça "ignorar"
 como saída fácil. Falha de tela preta ou rollback: parar e reportar.
 
-## 6. Erros, vazio e indisponível
+## 5. Erros, vazio e indisponível
 
 - Erro sempre tem causa + próximo passo; não use "algo deu errado".
 - Lista vazia explica o que fazer (ex.: "Atualizar alvos"), não só "nenhum".
@@ -85,7 +68,7 @@ como saída fácil. Falha de tela preta ou rollback: parar e reportar.
 - `Loading` só depois de ~300 ms; mantenha o layout estável.
 - Após erro recuperável, a ação primária volta a ficar disponível.
 
-## 7. Atualizações e launchers
+## 6. Atualizações e launchers
 
 - Aviso de atualização é informativo, no cabeçalho; não interrompe a sessão.
 - Abrir launcher é ação explícita; falha mostra caminho/configuração esperada.

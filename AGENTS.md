@@ -23,7 +23,7 @@ Estrutura, dependências e comandos ficam no mapa; não os duplique aqui.
 
 ## Skills
 
-- `couchpad-uiux`: especialista UI/UX — direção visual, HUD, fluxos, a11y e revisão.
+- `couchpad-uiux`: especialista UI/UX — direção visual, fluxos, a11y e revisão.
 - `couchpad-ui`: implementação Avalonia — XAML, MVVM, tokens, componentes e i18n.
 - `couchpad-hardware`, `couchpad-rea`, `couchpad-release`, `couchpad-handoff`:
   fases específicas de hardware, análise, release e fechamento.

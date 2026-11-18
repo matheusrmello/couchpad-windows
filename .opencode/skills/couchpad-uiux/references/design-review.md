@@ -16,7 +16,6 @@ navegação por teclado.
 ## Hierarquia e conteúdo
 
 - [ ] A ação primária de cada card é óbvia em 3 segundos.
-- [ ] O card HUD aparece inteiro na primeira tela em 1020×780.
 - [ ] Estado global fica no cabeçalho, não repetido em cada card.
 - [ ] Nenhum dado falso é apresentado como ao vivo.
 - [ ] Textos explicam consequência antes de ação que escreve hardware.
@@ -37,7 +36,6 @@ navegação por teclado.
 - [ ] Padding 16 no card, 24 na janela, gap 10.
 - [ ] Contraste ≥ 4.5:1 texto e ≥ 3:1 componentes.
 - [ ] Estado não depende só de cor.
-- [ ] GPU/VRAM em `Info`; CPU/RAM em `Accent`; trilho em `HudTrack`.
 
 ## Componentes e estados
 
@@ -63,18 +61,8 @@ navegação por teclado.
 - [ ] `HelpText` em ação destrutiva ou desabilitada.
 - [ ] Status importante com `LiveSetting=Polite`.
 - [ ] Alvos ≥ 32 px; foco visível.
-- [ ] HUD não recebe foco; modal recebe e devolve.
+- [ ] Modal recebe foco e devolve ao fechar.
 - [ ] Narrator/NVDA: leitura básica verificada quando o fluxo mudou.
-
-## HUD
-
-- [ ] Prévia rotulada como ilustrativa.
-- [ ] 0% vazio; > 0 com no mínimo 2 px.
-- [ ] Indisponível mostra `—`.
-- [ ] GPU/VRAM em `Info`; sem token inexistente.
-- [ ] Opacidade, escala, posição e sessão persistem.
-- [ ] Chord exige botões exatos por 800 ms.
-- [ ] Overlay continua click-through e sem foco.
 
 ## Arquitetura e higiene
 

@@ -5,7 +5,7 @@ arquivos de referência carregados sob demanda.
 
 | Skill | Dono | Quando carregar |
 |---|---|---|
-| `couchpad-uiux` | OpenCode | UI/UX: direção visual, HUD, fluxos, a11y, revisão |
+| `couchpad-uiux` | OpenCode | UI/UX: direção visual, fluxos, a11y, revisão |
 | `couchpad-ui` | OpenCode | P0–P2, P7a: implementação de telas, tema, i18n, a11y |
 | `couchpad-handoff` | OpenCode | Fim de fase / pausa / continuidade |
 | `couchpad-rea` | OpenCode | REA do ShiftPad 2.2.0 |

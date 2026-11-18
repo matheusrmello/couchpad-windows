@@ -5,7 +5,7 @@ description: Use ao criar ou revisar telas, componentes, tema, i18n ou acessibil
 
 # CouchPad UI (Avalonia)
 
-> Decisões de design, UX, HUD e revisão: use `couchpad-uiux`. Esta skill cobre
+> Decisões de design, UX e revisão: use `couchpad-uiux`. Esta skill cobre
 > a mecânica de implementação em Avalonia.
 
 ## Quando usar
@@ -75,8 +75,8 @@ tests/CouchPad.Core.Tests/
 ## Layout
 
 - Janela padrão 1020×780; mínimo 640×640.
-- `>= 1000 px`: 3 colunas; 9 cards com o HUD em linha inteira.
-- `720–999 px`: 2 colunas; HUD em linha inteira.
+- `>= 1000 px`: 3 colunas.
+- `720–999 px`: 2 colunas.
 - `< 720 px`: 1 coluna, na ordem de leitura.
 - Cabeçalho com logo, regra de acento e pill de estado.
 - Rodapé com versão, “Redefinir”, “Sobre” e idioma.
@@ -126,7 +126,6 @@ Status do serviço: `Ativo`, `Aguardando gamepad`, `Aplicando`, `Erro`,
 
 - 3 breakpoints × 2 idiomas, a partir do executável instalado.
 - Nome atual: `docs/screenshots/p7a-{3col,2col,1col}-{pt,en}.png`.
-- HUD: `hud-fase1-overlay.png` e `hud-fase1-settings.png`.
 - Sem dados pessoais, IP, serial ou caminho de usuário.
 - Atualize o índice em `docs/screenshots/README.md` após gerar.
 

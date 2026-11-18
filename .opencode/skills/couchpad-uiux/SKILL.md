@@ -1,6 +1,6 @@
 ---
 name: couchpad-uiux
-description: Especialista de UI/UX do CouchPad Windows. Use para direção visual, hierarquia, fluxos, estados, HUD, copy pt-BR/en, acessibilidade, screenshots e revisão de telas em Avalonia. Decide o porquê e valida; a mecânica de XAML fica em couchpad-ui.
+description: Especialista de UI/UX do CouchPad Windows. Use para direção visual, hierarquia, fluxos, estados, copy pt-BR/en, acessibilidade, screenshots e revisão de telas em Avalonia. Decide o porquê e valida; a mecânica de XAML fica em couchpad-ui.
 ---
 
 # CouchPad UI/UX — especialista
@@ -11,7 +11,7 @@ Toda decisão precisa caber nos tokens, no i18n e na fronteira de camadas.
 
 ## Quando usar
 
-- Desenhar ou redesenhar o shell, cards, modal do HUD, overlay ou estados.
+- Desenhar ou redesenhar o shell, cards, modal ou estados.
 - Revisar hierarquia, densidade, contraste, alinhamento e consistência.
 - Definir comportamento visual de erro, carregamento e recuperação.
 - Revisar copy pt-BR/en e acessibilidade antes de um handoff.
@@ -37,14 +37,12 @@ Toda decisão precisa caber nos tokens, no i18n e na fronteira de camadas.
    reutilizar; não é aceitável hex novo na View.
 6. **Uma ação primária por card** — o resto é secundário ou link.
 
-## Estado atual (1.0.16)
+## Estado atual (1.0.20)
 
-- Shell de 9 cards: HUD em linha inteira na primeira tela; depois Automação,
-  Display, Gamepad, Combinação, Contagem, Transição, Launchers, Parâmetros.
+- Shell de 8 cards: Automação e Display na primeira tela; depois Gamepad,
+  Combinação, Contagem, Transição, Launchers e Parâmetros.
 - Cabeçalho: logo em bloco, nome/tagline, regra de acento e pill de estado.
-- HUD: overlay 300×210, topmost, sem foco, click-through, quatro cantos,
-  opacidade 0.9, escala 0.75–1.5, chord LB+RB+Y por 800 ms.
-- 63 tokens `CouchPad.*`; 271 chaves em cada catálogo; 310 testes.
+- 56 tokens `CouchPad.*`; 223 chaves em cada catálogo; 295 testes.
 - Referências: `docs/ui-spec.md`, `docs/ui-a11y-checklist.md`,
   `docs/screenshots/README.md`, `docs/decisions.md` (D078).
 
@@ -52,33 +50,31 @@ Toda decisão precisa caber nos tokens, no i18n e na fronteira de camadas.
 
 | Largura | Colunas | Ordem |
 |---|---|---|
-| ≥ 1000 px | 3 | HUD; Automação + Display; Gamepad + Combinação + Contagem; Transição + Launchers + Parâmetros |
-| 720–999 px | 2 | HUD; Automação + Display; Gamepad + Combinação; Contagem + Transição; Launchers + Parâmetros |
-| < 720 px | 1 | HUD, Automação, Display, Gamepad, Combinação, Contagem, Transição, Launchers, Parâmetros |
+| ≥ 1000 px | 3 | Automação + Display; Gamepad + Combinação + Contagem; Transição + Launchers + Parâmetros |
+| 720–999 px | 2 | Automação + Display; Gamepad + Combinação; Contagem + Transição; Launchers + Parâmetros |
+| < 720 px | 1 | Automação, Display, Gamepad, Combinação, Contagem, Transição, Launchers, Parâmetros |
 
 - Janela padrão 1020×780; mínimo 640×640; conteúdo rola, cabeçalho/rodapé ficam.
-- O card HUD precisa caber inteiro na primeira tela em 1020×780.
 - Sem scroll horizontal. Em 1 coluna, nada de cortar à direita.
 - Agrupe cards de altura parecida; evite células com vazio gigante.
 - A ordem de Tab segue a ordem visual em cada breakpoint (`ApplyLayout`).
 
 ## Linguagem visual
 
-- **Cores por papel:** `Accent` = ação, estado ativo, CPU/RAM; `Info` = GPU,
-  VRAM e informação; `Warning` = pendência/atenção; `Danger` = erro;
-  `Surface/SurfaceRaised/SurfaceSunken` = profundidade; `HudSurface`,
-  `HudBorder`, `HudTrack` = superfície do HUD.
+- **Cores por papel:** `Accent` = ação, estado ativo; `Info` = informação;
+  `Warning` = pendência/atenção; `Danger` = erro;
+  `Surface/SurfaceRaised/SurfaceSunken` = profundidade.
 - **Tipografia:** H1 20, título de card 15, corpo 13, caption 11, mono 12.
   Não invente tamanhos intermediários.
 - **Espaçamento:** padding da janela 24, do card 16, gap 10; controles 36/32.
-- **Raios:** controle 8, card 14, HUD 16, pill 999.
+- **Raios:** controle 8, card 14, pill 999.
 - **Movimento:** só feedback de estado; nada decorativo. Não anime métricas.
 
 ## Componentes
 
 | Componente | Use para | Evite |
 |---|---|---|
-| `Card` | seções do shell e HUD | modal, popup |
+| `Card` | seções do shell | modal, popup |
 | `ActionButton` | ação com `State` (Idle/Loading/Success/Error) | link de navegação |
 | `StatusPill` | estado global no cabeçalho | repetir em cada card |
 | `StatusRow` | resumo label/valor | formulário editável |
@@ -129,26 +125,14 @@ Nunca use só cor para diferenciar estado. Loading só quando a ação passa de
 - `AutomationProperties.HelpText` em ação destrutiva ou desabilitada.
 - Status importante com `LiveSetting=Polite`; erro com assertividade.
 - DPI 100–200% sem corte; 1 coluna em 640 px sem sobreposição.
-- HUD não recebe foco por design; o modal recebe e devolve ao fechar.
-
-## HUD
-
-Leia `references/hud.md`. Regras que não podem regredir:
-
-- Prévia sempre rotulada como ilustrativa; nunca fingir ser ao vivo.
-- Barra em 0% fica vazia; qualquer valor > 0 tem no mínimo 2 px.
-- Percentual limita 0–100; proporção limita 0–1; indisponível vira `—`.
-- GPU/VRAM usam `Info`; CPU/RAM usam `Accent`; trilho usa `HudTrack`.
-- Overlay é click-through, sem foco, topmost; não adicione controles nele.
-- Chord exige os botões exatos por 800 ms; parcial ou com extra não dispara.
-- "Só durante a sessão" precisa ser compreensível sem abrir o modal.
+- O modal recebe foco e devolve ao fechar.
 
 ## Dados honestos
 
 - Valores simulados só em prévia rotulada; runtime usa o sampler real.
 - 0% é valor, não "indisponível".
 - Não arredonde para esconder instabilidade; use a precisão definida.
-- Não invente FPS, frame time ou temperatura: estão fora da fase 1.
+- Não invente métrica fora do escopo entregue.
 
 ## Processo de design
 
@@ -190,7 +174,6 @@ Formato do relatório em `references/design-review.md`.
 
 ## Referências
 
-- `references/hud.md` — anatomia, métricas, barras e validação do HUD.
 - `references/design-review.md` — checklist e severidade.
 - `references/ux-flows.md` — fluxos e falhas esperadas.
 - `couchpad-ui` — implementação Avalonia, tokens e componentes.
@@ -198,6 +181,5 @@ Formato do relatório em `references/design-review.md`.
 
 ## Exemplos de pedido
 
-- "Redesenhe o card de HUD para destacar o atalho e manter a prévia."
 - "Revise o shell em 640 px e 200% DPI; liste blockers e majors."
 - "Defina os estados e o copy do fluxo de recuperação incerta."
