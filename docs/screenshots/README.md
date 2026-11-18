@@ -1,8 +1,9 @@
 # Screenshots oficiais — P7a
 
-- Data: 2026-11-16
-- Estado: **capturas atualizadas após a 1.0.16**; aceite final pendente
-- Versão exibida: `1.0.16`
+- Data: 2026-11-18
+- Versão exibida: `1.0.20`
+- Estado: **capturas refeitas na 1.0.20**; aceite final pendente
+- Shell: 8 cards, sem card de monitoramento de desempenho (removido na 1.0.20)
 - Simulação: display/áudio sem escrita real; seletores vazios de propósito
 - Leitor de tela: validação manual ainda pendente (ver checklist)
 
@@ -15,10 +16,20 @@
 | `p7a-2col-en.png` | 780 DIP, 2 colunas | inglês |
 | `p7a-1col-en.png` | 640 DIP, 1 coluna | inglês |
 
+## Layout
+
+- 8 cards: Automação, Display, Gamepad, Combinação, Contagem regressiva,
+  Parâmetros, Transição e Launchers. Não há card, overlay nem modal de
+  monitoramento de desempenho.
+- As larguras de cliente de 1004, 764 e 640 px correspondem a 3, 2 e 1 coluna
+  de cards, respectivamente.
+- Em 1020×780 o conteúdo usa a barra de rolagem; as capturas mostram o topo da
+  tela.
+
 ## Notas
 
 - As capturas usam settings seguros de simulação; `AllowDisplayWrites` e
-  `AllowAudioWrites` ficam desligados.
+  `AllowAudioWrites` ficam desligados, com automação desativada.
 - A seção **Perfis de ambiente** aparece no card Display, com perfil padrão,
   criação, renomeação e exclusão. O perfil ativo é o mesmo usado pelo startup.
 - O expander **Diagnóstico da identificação** mostra a decisão de TV, monitor
@@ -29,35 +40,12 @@
 - O tema é escuro; não há captura de tema claro.
 - O ícone/janela e os assets são originais do CouchPad.
 - A largura é a da janela configurada; a imagem inclui a moldura do Windows.
-- Em 1020×780 o conteúdo usa a barra de rolagem; as capturas mostram o topo da
-  tela. A ordem de foco foi validada via UIAutomation em 3/2/1 colunas.
+- As capturas usam o executável instalado de `1.0.20`; a publicação ainda está
+  pendente.
 - A validação com Narrator/NVDA não foi executada nesta máquina.
-- As capturas usam o executável instalado de `1.0.16`; a publicação ainda está pendente.
 
 ## Concept de redesign (não implementado)
 
 - `couchpad-modern-concept.png` e `couchpad-modern-concept.html`: exploração
   visual com cards de vidro, tipografia mais forte, prévia da TV e diagnóstico
   em destaque. **Não representa a UI atual** e não foi implementado no App.
-- `couchpad-performance-hud-concept.png` e
-  `couchpad-performance-hud-concept.html`: concept do card **HUD de
-  desempenho**, com métricas selecionáveis, atalho LB+RB+Y e prévia do HUD.
-  Aprovado para implementação em 2026-11-17; implementado na 1.0.14. Plano em
-  `docs/roadmap.md`.
-
-## HUD de desempenho — implementação 1.0.14/1.0.15
-
-- `hud-fase1-overlay.png`: HUD instalado em simulação, com CPU, GPU, RAM, VRAM,
-  processo e resolução; barras de GPU/VRAM corrigidas na 1.0.15.
-- Capturas `p7a-*` da 1.0.16 mostram o novo shell, com o card HUD em linha
-  inteira na primeira tela, nos três breakpoints e nos dois idiomas.
-- `hud-fase1-settings.png`: modal de configuração com métricas, atalho,
-  aparência e prévia.
-- `hud-fase2-overlay.png`: overlay em simulação com a métrica **FPS** ativa
-  (Fase 2, RTSS shared memory); os demais campos seguem o HUD da Fase 1.
-- `hud-fase2-card.png`: card HUD com chip/prévia de FPS, após o redesenho do
-  shell da 1.0.16.
-- As duas capturas de Fase 2 são de simulação; o journal de simulação foi
-  zerado depois da captura.
-- `couchpad-performance-hud-concept.png` e `.html`: concept original aprovado;
-  a implementação mantém a mesma direção visual.
