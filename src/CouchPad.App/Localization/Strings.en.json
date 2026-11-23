@@ -80,7 +80,7 @@
 
   "display.current": "Current",
   "display.target": "Target",
-  "display.current_value": "Primary monitor · 1920×1080",
+  "display.current_value": "Current display",
   "display.target_value": "TV · HDMI",
   "display.active.tv_only": "TV · HDMI",
   "display.active.extend": "Primary monitor + TV · HDMI",

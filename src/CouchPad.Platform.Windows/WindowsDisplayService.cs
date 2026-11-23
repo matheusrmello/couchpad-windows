@@ -28,13 +28,13 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private readonly Func<uint, Snapshot>? _captureOverride;
     private readonly Func<byte[], byte[], uint, int>? _setOverride;
     private readonly Func<string, byte[]?>? _edidOverride;
-    private readonly Lazy<IReadOnlyList<DisplayModeOption>> _availableModes;
+    private readonly Lazy<IReadOnlyList<DisplayModeOption>> _edidModes;
 
     public WindowsDisplayService(WindowsDisplayOptions options, RescueTransactionContext? transaction = null)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _transaction = transaction;
-        _availableModes = new Lazy<IReadOnlyList<DisplayModeOption>>(LoadAvailableModes);
+        _edidModes = new Lazy<IReadOnlyList<DisplayModeOption>>(LoadEdidModes);
     }
 
     private WindowsDisplayService(WindowsDisplayOptions options, RescueTransactionContext transaction, bool recoveryWriter)
@@ -149,9 +149,9 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
 
     private readonly SemaphoreSlim _writeGate = new(1, 1);
 
-    public IReadOnlyList<DisplayModeOption> GetAvailableModes() => _availableModes.Value;
+    public IReadOnlyList<DisplayModeOption> GetAvailableModes() => MergeModes(_edidModes.Value, EnumerateWindowsModes());
 
-    private IReadOnlyList<DisplayModeOption> LoadAvailableModes()
+    private IReadOnlyList<DisplayModeOption> LoadEdidModes()
     {
         try
         {
@@ -162,6 +162,61 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
         {
             return Array.Empty<DisplayModeOption>();
         }
+    }
+
+    /// <summary>
+    /// Merges the modes advertised by the EDID with the modes Windows exposes for
+    /// the TV, dropping duplicates and sorting by pixel area then refresh rate
+    /// descending. Pure and deterministic.
+    /// </summary>
+    internal static IReadOnlyList<DisplayModeOption> MergeModes(
+        IReadOnlyList<DisplayModeOption> edid,
+        IReadOnlyList<DisplayModeOption> windows)
+    {
+        ArgumentNullException.ThrowIfNull(edid);
+        ArgumentNullException.ThrowIfNull(windows);
+        var seen = new HashSet<(int Width, int Height, int RefreshHz)>();
+        var merged = new List<DisplayModeOption>(edid.Count + windows.Count);
+        foreach (var mode in edid.Concat(windows))
+        {
+            if (mode.Width <= 0 || mode.Height <= 0 || mode.RefreshHz <= 0) continue;
+            if (seen.Add((mode.Width, mode.Height, mode.RefreshHz))) merged.Add(mode);
+        }
+        return merged
+            .OrderByDescending(mode => (long)mode.Width * mode.Height)
+            .ThenByDescending(mode => mode.RefreshHz)
+            .ThenByDescending(mode => mode.Width)
+            .ToArray();
+    }
+
+    /// <summary>Reads every 32-bit mode Windows exposes for the TV; empty when the TV has no GDI device.</summary>
+    private IReadOnlyList<DisplayModeOption> EnumerateWindowsModes()
+    {
+        if (!OperatingSystem.IsWindows()) return Array.Empty<DisplayModeOption>();
+        string? deviceName;
+        try
+        {
+            deviceName = TryResolveGdiDeviceName();
+        }
+        catch
+        {
+            return Array.Empty<DisplayModeOption>();
+        }
+        if (string.IsNullOrEmpty(deviceName)) return Array.Empty<DisplayModeOption>();
+
+        var modes = new List<DisplayModeOption>();
+        for (uint index = 0; index < 512; index++)
+        {
+            var candidate = CreateDevMode();
+            if (!EnumDisplaySettingsW(deviceName, index, ref candidate)) break;
+            if (candidate.dmBitsPerPel != 32 ||
+                candidate.dmPelsWidth == 0 ||
+                candidate.dmPelsHeight == 0 ||
+                candidate.dmDisplayFrequency == 0)
+                continue;
+            modes.Add(new DisplayModeOption((int)candidate.dmPelsWidth, (int)candidate.dmPelsHeight, (int)candidate.dmDisplayFrequency));
+        }
+        return modes;
     }
 
     public Task<DisplayState> ApplyAsync(DisplayMode mode, DisplayPreference? preference = null, CancellationToken cancellationToken = default)
@@ -399,6 +454,11 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private string ResolveGdiDeviceName()
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
+        return TryResolveGdiDeviceName() ?? throw new InvalidOperationException("TV display device could not be found.");
+    }
+
+    private string? TryResolveGdiDeviceName()
+    {
         var monitorId = ExtractMonitorId(_options.DevicePath);
         for (uint adapterIndex = 0; ; adapterIndex++)
         {
@@ -416,7 +476,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             }
             if (match) return adapter.DeviceName;
         }
-        throw new InvalidOperationException("TV display device could not be found.");
+        return null;
     }
 
     private bool IsTvDevice(string? monitorId, string? deviceId, string? deviceString)

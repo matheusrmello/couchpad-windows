@@ -30,7 +30,7 @@ public sealed class WindowsDisplayModesTests
     }
 
     [Fact]
-    public void Available_modes_are_loaded_once_and_cached()
+    public void Edid_modes_are_loaded_once_and_cached()
     {
         var reads = 0;
         var service = new WindowsDisplayService(
@@ -45,9 +45,41 @@ public sealed class WindowsDisplayModesTests
         var first = service.GetAvailableModes();
         var second = service.GetAvailableModes();
 
-        Assert.Same(first, second);
+        Assert.Equal(first, second);
         Assert.Equal(1, reads);
         Assert.Equal([new DisplayModeOption(3840, 2160, 30), new DisplayModeOption(1920, 1080, 60)], second);
+    }
+
+    [Fact]
+    public void Merge_modes_adds_windows_modes_and_deduplicates_by_resolution_and_refresh()
+    {
+        var edid = new[] { new DisplayModeOption(3840, 2160, 30), new DisplayModeOption(1920, 1080, 60) };
+        var windows = new[]
+        {
+            new DisplayModeOption(3840, 2160, 60),
+            new DisplayModeOption(1920, 1080, 60),
+            new DisplayModeOption(3840, 2160, 30),
+        };
+
+        var merged = WindowsDisplayService.MergeModes(edid, windows);
+
+        Assert.Equal(
+            [
+                new DisplayModeOption(3840, 2160, 60),
+                new DisplayModeOption(3840, 2160, 30),
+                new DisplayModeOption(1920, 1080, 60),
+            ],
+            merged);
+    }
+
+    [Fact]
+    public void Available_modes_fall_back_to_edid_when_the_tv_has_no_gdi_device()
+    {
+        var service = CreateService(WithCeaVideoBlock(CreateEdid((29700, 3840, 560, 2160, 90)), 16));
+
+        Assert.Equal(
+            [new DisplayModeOption(3840, 2160, 30), new DisplayModeOption(1920, 1080, 60)],
+            service.GetAvailableModes());
     }
 
     [Fact]

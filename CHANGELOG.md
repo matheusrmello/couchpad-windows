@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.0.23 (candidato)
+
+- Inclui na lista os modos que o Windows expõe para a TV (GDI) mesclados ao EDID; 4K60 aparece quando o driver o oferece, mesmo que o EDID não o declare.
+- Corrige o resumo do display para "Tela atual", sem afirmar uma resolução fixa.
+- 360 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.22 (candidato)
 
 - Corrige o modo Automático da TV: selecionar "Automático" agora limpa resolução e taxa do perfil (a escala é preservada), em vez de manter o último modo e aplicá-lo sem aviso.

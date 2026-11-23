@@ -80,7 +80,7 @@
 
   "display.current": "Atual",
   "display.target": "Destino",
-  "display.current_value": "Monitor principal · 1920×1080",
+  "display.current_value": "Tela atual",
   "display.target_value": "TV · HDMI",
   "display.active.tv_only": "TV · HDMI",
   "display.active.extend": "Monitor principal + TV · HDMI",
