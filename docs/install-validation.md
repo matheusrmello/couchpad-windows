@@ -98,6 +98,15 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
 
+## Candidato 1.0.24
+
+- Shell em masonry (3/2/1 colunas independentes), card TV separado do Display e Parâmetros em 2 colunas; corrige o crash de resize.
+- 360 testes; build Debug/Release 0/0; smoke do build e do instalado OK.
+- Instalação per-user exit 0; App/rescue `1.0.24.0`; tasks `Ready`; journal ausente; settings preservado.
+- Resize validado no executável instalado: cliente 780 e 640 sem fechar o app; restaurado para 1020×780.
+- Evidência dos 9 cards por conteúdo/âncoras (títulos de card não são peers UIA — pendência de a11y já registrada).
+- Instalador `CouchPad-Setup-1.0.24-win-x64.exe`: 84.320.976 bytes, SHA-256 `E75D0FB0A1F1388B7F094C59C8642B2AB9C09CB7619A197899872D0C4A6DFA6E`. Publicação pendente.
+
 ## Candidato 1.0.23
 
 - Mescla os modos do Windows (GDI) aos do EDID; 4K60 aparece quando o driver o expõe. Resumo do display passa a "Tela atual".

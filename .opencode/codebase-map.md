@@ -1,7 +1,7 @@
 # Mapa do codebase — CouchPad Windows
 
 > Resumo operacional para orquestração. Detalhes em `docs/codebase-map.md`.
-> Estado: 1.0.23 · atualizado em 2026-11-23.
+> Estado: 1.0.24 · atualizado em 2026-11-23.
 
 ## Stack
 
