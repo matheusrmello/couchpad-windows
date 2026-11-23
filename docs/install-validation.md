@@ -98,6 +98,15 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
 
+## Candidato 1.0.21
+
+- Recurso: resolução, taxa de atualização e escala do Windows da TV por perfil de ambiente (D082); modos lidos do EDID; apply via `ChangeDisplaySettingsEx` com validação/rollback; escala por monitor via `PerMonitorSettings\DpiValue`.
+- 358 testes; build Debug/Release 0/0; smoke do build e do instalado OK.
+- Instalação per-user exit 0; App/rescue `1.0.21.0` (ProductVersion `1.0.21+744732e9…`); tasks `Ready`; journal ausente; `settings.json` preservado por hash logo após instalar.
+- UIA no executável instalado: seção “Modo da TV” com resoluções Automático/3840×2160/2560×1440/1920×1080/1280×720; para 1080p, taxas 60/50/30/25/24 Hz; escalas Automático/100/125/150/175/200%; sem `display.tv_mode_unavailable`. Nenhuma escrita de display durante a leitura.
+- Aplicação real na TV (modo + escala) pendente de teste do usuário.
+- Instalador `CouchPad-Setup-1.0.21-win-x64.exe`: 84.312.220 bytes, SHA-256 `1C76BB5232D5E66B32B3F88F3170FA19C3720C399CD8F7AC582843F6D7BA2DC5`. Publicação pendente.
+
 ## Candidato 1.0.20
 
 - Remove o HUD de monitoramento de hardware e a integração RTSS (D081); shell com 8 cards, foco em automação.

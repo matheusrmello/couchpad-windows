@@ -72,6 +72,8 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
   atual; não altera hardware.
 - [ ] Títulos dos cards não são expostos como peers de texto no UIA; revisar
   template do `Card` (a11y).
+- [ ] ComboBoxes de modo da TV expõem `ToString()` técnico no `ValuePattern`;
+  os itens expõem o rótulo. Revisar a11y (polimento).
 - [ ] Navegação por teclado/leitor de tela dentro do menu nativo da bandeja
   (depende do shell do Windows; não automatizada).
 
@@ -86,7 +88,7 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 
 ## 5. i18n e conteúdo
 
-- [x] pt-BR e inglês em paridade (223 chaves).
+- [x] pt-BR e inglês em paridade (232 chaves).
 - [x] Nenhuma string visível fora dos catálogos.
 - [x] Fallback inglês.
 - [x] Erros e dicas traduzidos.
@@ -133,7 +135,7 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 ```
 
 - Build 0 avisos/0 erros.
-- 295 testes.
+- 358 testes.
 - Smoke OK.
 - Capturas oficiais em `docs/screenshots/` nos 3 breakpoints × 2 idiomas.
 - UIAutomation: ordem de foco e nomes em 3/2/1 colunas.

@@ -1,6 +1,6 @@
 # Mapa do codebase — CouchPad Windows
 
-> Documento de orientação para um agente novo. Todo o conteúdo abaixo deriva de leitura direta dos arquivos do repositório em `C:\Users\Usuario\Documents\couchpad windows` (estado da versão 1.0.20). Nada aqui descreve código que não exista no checkout.
+> Documento de orientação para um agente novo. Todo o conteúdo abaixo deriva de leitura direta dos arquivos do repositório em `C:\Users\Usuario\Documents\couchpad windows` (estado da versão 1.0.21). Nada aqui descreve código que não exista no checkout.
 
 ## 1. Visão geral
 
@@ -11,7 +11,7 @@ O CouchPad Windows recria, de forma clean-room e 100% gratuita, o comportamento 
 | UI | Avalonia 12.1.4 (`Avalonia.Desktop`, `Avalonia.Themes.Fluent`) | `src/CouchPad.App/CouchPad.App.csproj` |
 | Runtime | .NET 10, `net10.0` (Notifications usa `net10.0-windows10.0.18362.0`) | todos os `.csproj` |
 | MVVM | CommunityToolkit.Mvvm 8.4.0 | `src/CouchPad.App/CouchPad.App.csproj` |
-| Versão | `1.0.20` | `Directory.Build.props` |
+| Versão | `1.0.21` | `Directory.Build.props` |
 | Identidade | Company/Product `CouchPad`, autor Matheus Mello, licença MIT | `Directory.Build.props`, `LICENSE` |
 | Build | `Nullable`, `ImplicitUsings`, `Deterministic`, `LangVersion=latest`, `NeutralLanguage=en` | `Directory.Build.props` |
 | Testes | xUnit 2.9.3, `Microsoft.NET.Test.Sdk` 17.14.1 | `tests/*/*.csproj` |
@@ -43,7 +43,7 @@ artifacts/     local e ignorado pelo Git (logs e instaladores por versão)
 | `src/CouchPad.Platform.Windows/CouchPad.Platform.Windows.csproj` | Biblioteca `net10.0` | Implementações Windows: CCD, Core Audio, XInput, Task Scheduler, Win32, watchdog | `WindowsDisplayService.cs`, `WindowsAudioService.cs`, `WindowsRescueGuard.cs`, `DisplayTransaction.cs`, `README.md` |
 | `src/CouchPad.Notifications.Windows/CouchPad.Notifications.Windows.csproj` | Exe WinAppSDK experimental (`net10.0-windows10.0.18362.0`, `win-x64`) | Contagem regressiva em notificação nativa; opcional e excluída do payload do instalador | `Program.cs` |
 | `src/CouchPad.Rescue/CouchPad.Rescue.csproj` | Exe `net10.0` | Processo de rescue separado: startup recovery, watchdog, tarefas de logon, recuperação assistida | `Program.cs` |
-| `tests/CouchPad.Core.Tests/CouchPad.Core.Tests.csproj` | xUnit | Testes de Core + Platform.Windows, fakes e processos com backend falso | `AutomationCoordinatorTests.cs` (44 casos), `DisplayTopologySerializationTests.cs` (29), `UiLocalizationTests.cs` |
+| `tests/CouchPad.Core.Tests/CouchPad.Core.Tests.csproj` | xUnit | Testes de Core + Platform.Windows, fakes e processos com backend falso | `AutomationCoordinatorTests.cs` (44 casos), `DisplayTopologySerializationTests.cs` (29), `DisplayPreferenceTests.cs`, `EdidModeParserTests.cs`, `EdidIdentityTests.cs`, `PerMonitorDpiTests.cs`, `UiLocalizationTests.cs` |
 | `tests/CouchPad.App.Tests/CouchPad.App.Tests.csproj` | xUnit | Testes de ViewModels, i18n, updates e composição | `MainWindowViewModelDisplayTests.cs` (18), `WindowsDisplayCompositionTests.cs` (8) |
 
 Os `tools/*` são executáveis independentes (`AudioProbe`, `DisplayProbe`, `RescueDryRun`, `RescueProcessTests`, `StartupRecoveryProcessTests`, `DisplayFailureHardware`, `AudioSwitchHardware`, entre outros), todos referenciando `Platform.Windows` e executados manualmente.
@@ -77,12 +77,13 @@ Verificação factual: todos os `DllImport` estão em `Platform.Windows` (`Windo
 |---|---|---|
 | Automação / state machine | `Core/Automation/AutomationCoordinator.cs`, `AutomationState.cs`, `AutomationSnapshot.cs`, `AutomationSettings.cs`, `DelayOptions.cs`, `DelayScheduler.cs` | Estados `Idle`, `WaitingForGamepad`, `Pending`, `Applying`, `Active`, `Error`, `RescuePending`; `SemaphoreSlim` + CTS cancelável |
 | Display / CCD | `Core/Display/DisplayService.cs` (`IDisplayService`, `IDisplayWriteControl`, `SimulatedDisplayService`); `Platform.Windows/WindowsDisplayService.cs`, `DisplayTopologyPlanner.cs`, `DisplayTopologyValidator.cs`, `DisplaySnapshotComparer.cs`, `DisplaySnapshotRehydrator.cs`, `DisplayTransaction.cs`, `DisplayMutationLock.cs`, `DisplaySessionOwner.cs` | Modos `TvOnly`, `Extend`, `InternalOnly`; `Mirror` rejeitado (D043); topologia opaca em `DisplayState.Topology` |
+| Modo/escala da TV (1.0.21, D082) | `Core/Display/DisplayPreference.cs` (`DisplayPreference`, modo alvo); `Platform.Windows/EdidReader.cs`, `EdidModeParser.cs`, `EdidIdentity.cs`, `PerMonitorDpi.cs`; `App/ViewModels/MainWindowViewModel.DisplayModes.cs`, `DisplayModeOptions.cs` | Modos/refresh lidos do EDID; apply por `ChangeDisplaySettingsEx` com validação e rollback; escala por monitor via `PerMonitorSettings\DpiValue`; leitura nunca escreve |
 | Áudio / Core Audio | `Core/Audio/AudioService.cs` (`IAudioService`, `IAudioBaselineService`, `AudioBaseline`); `Platform.Windows/WindowsAudioService.cs`, `WindowsAudioProbe.cs`, `WindowsAudioTestTone.cs`, `AudioRecoveryTransaction.cs`, `GuardedAudioRecovery.cs`, `WindowsAudioRecoveryBackend.cs`, `WindowsAudioRescueGuard.cs` | Baseline versionado dos três papéis (console/multimídia/comunicações); escrita exige transação armada |
 | Gamepad / XInput | `Core/Devices/GamepadDevice.cs`, `GamepadButtons.cs`, `GamepadChordDetector.cs`; `Platform.Windows/WindowsGamepadWatcher.cs`, `WindowsGamepadButtonSource.cs` | Polling read-only dos 4 slots; `GamepadChordPresets` (LB+RB+Y padrão, 800 ms) |
 | Perfis de ambiente | `Core/Settings/EnvironmentProfile.cs`; `App/ViewModels/MainWindowViewModel.Profiles.cs`, `EnvironmentProfileOption.cs` | `ActiveProfileId` espelhado nos campos de hardware (D076) |
 | Journal / rescue | `Core/Automation/SessionJournalEntry.cs`, `JsonSessionJournalStore.cs`, `RescueGuard.cs`; `Platform.Windows/RescueTransactionContext.cs`, `RescueDecisionStore.cs`, `RescueWatchdogLoop.cs`, `RescueLogonTask.cs`, `StartupRecovery.cs`, `StartupRecoveryAttempts.cs`, `StartupLaunchSequence.cs`, `RescueFailureLog.cs`, `WindowsAssistedRecovery.cs`; `src/CouchPad.Rescue/Program.cs` | Journal `pending` antes do apply e `active` depois; `IRescueLease` com `commit/abort/abandon` e `FailureToken` |
 | Settings / persistência | `Core/Settings/AppSettings.cs`, `JsonAppSettingsStore.cs`, `Storage/AppPaths.cs` | JSON camelCase, escrita atômica `.tmp` + move, `.bak` de arquivo corrompido, `JsonExtensionData` preserva chaves desconhecidas |
-| Localização | `Core/Localization/AppLanguage.cs`; `App/Localization/LocalizationService.cs`, `TrExtension.cs`, `Strings.pt-BR.json`, `Strings.en.json` | 223 chaves planas em cada catálogo |
+| Localização | `Core/Localization/AppLanguage.cs`; `App/Localization/LocalizationService.cs`, `TrExtension.cs`, `Strings.pt-BR.json`, `Strings.en.json` | 232 chaves planas em cada catálogo |
 | Tema / componentes | `App/Themes/Tokens.axaml` (56 chaves `CouchPad.*`), `Components.axaml` (6 `ControlTheme`), `Controls.axaml` (50 `Style`); `App/Controls/Card.cs`, `ActionButton.cs`, `StatusPill.cs`, `StatusRow.cs`, `KeyChip.cs`, `PathPicker.cs` | `ActionButton` com `Variant` e `State` e pseudo-classes |
 | Updates | `App/Updates/GitHubUpdateCheck.cs`, `App/ViewModels/MainWindowViewModel.Updates.cs` | Consulta releases públicas do GitHub, cache de 1 dia em `update-cache.json`, `TimeProvider` injetado |
 | Launchers | `Core/Launchers/LauncherService.cs`; `Platform.Windows/WindowsLauncherService.cs` | `Steam` e `Hydra`; só fecha processo que ele próprio iniciou |
@@ -90,7 +91,7 @@ Verificação factual: todos os `DllImport` estão em `Platform.Windows` (`Windo
 
 ## 6. Padrões de código observados
 
-- **MVVM com source generators**: `MainWindowViewModel` é `partial : ObservableObject` dividido em `MainWindowViewModel.cs`, `.Hardware.cs`, `.Profiles.cs`, `.Diagnosis.cs`, `.Updates.cs`. Há 28 `[ObservableProperty]`, 13 `[RelayCommand]` e 23 `partial void OnXChanged` nos ViewModels (ex.: `MainWindowViewModel.OnUseWindowsGamepadChanged`).
+- **MVVM com source generators**: `MainWindowViewModel` é `partial : ObservableObject` dividido em `MainWindowViewModel.cs`, `.Hardware.cs`, `.Profiles.cs`, `.Diagnosis.cs`, `.Updates.cs`. Há 32 `[ObservableProperty]`, 13 `[RelayCommand]` e 26 `partial void OnXChanged` nos ViewModels (ex.: `MainWindowViewModel.OnUseWindowsGamepadChanged`).
 - **Composição/DI manual**: `App.OnFrameworkInitializationCompleted` (`src/CouchPad.App/App.axaml.cs`) escolhe produção x simulação por flags (`--smoke`, `--simulate`, `--gallery`), cria stores, serviços e o `MainWindowViewModel` por construtor com delegates (`discoverTargets`, `configureStartup`, `productionMode`). Não há container de DI.
 - **Interfaces no Core + implementação Windows + fake/simulação**: `IDisplayService`/`SimulatedDisplayService`, `IAudioService`/`SimulatedAudioService`, `IGamepadWatcher`/`SimulatedGamepadWatcher`, `IRescueGuard`/`NoopRescueGuard`, `IGamepadButtonSource`/`NoopGamepadButtonSource`.
 - **Fail-closed**: o coordenador grava journal `pending` e aborta se a gravação falhar (D037); após qualquer mutação tentada executa `TryRestoreAsync`; perda do watchdog marca `_recoveryUncertain` e bloqueia novas transições (D034/D038); `DisplayTransaction` faz rollback obrigatório; `DisplaySessionOwner` garante posse exclusiva do journal.
@@ -100,15 +101,15 @@ Verificação factual: todos os `DllImport` estão em `Platform.Windows` (`Windo
 
 ## 7. Padrões de UI
 
-- XAML declarativo com `x:DataType` e `AvaloniaUseCompiledBindingsByDefault=true`; todo o texto visível vem de `{loc:Tr chave}` (204 ocorrências em `Views/*.axaml`).
+- XAML declarativo com `x:DataType` e `AvaloniaUseCompiledBindingsByDefault=true`; todo o texto visível vem de `{loc:Tr chave}` (213 ocorrências em `Views/*.axaml`).
 - Tokens centralizados em `Themes/Tokens.axaml` (`CouchPad.Background`, `CouchPad.Accent`, `CouchPad.SurfaceRaised`, tipografia, espaçamento), consumidos por `{DynamicResource ...}`.
 - Componentes como `TemplatedControl`/`ContentControl` com `ControlTheme` em `Themes/Components.axaml`; variações por classe em `Themes/Controls.axaml` (`TextBlock.cardTitle`, `Button.loading`, `Button.updateNotice`).
 - Breakpoints e layout em `Views/MainWindow.axaml.cs`: `WideBreakpoint = 1000`, `MediumBreakpoint = 720`; `ApplyLayout` recria colunas/linhas do `CardsGrid`, posiciona 8 cards e reordena os filhos para alinhar a ordem de Tab à ordem visual.
-- Acessibilidade: 56 usos de `AutomationProperties` em `Views/*.axaml`, incluindo `AutomationProperties.Name` e `LiveSetting="Polite"`; foco visível de 2 px, estados com texto além de cor (`docs/ui-spec.md`); checklist em `docs/ui-a11y-checklist.md`.
+- Acessibilidade: 60 usos de `AutomationProperties` em `Views/*.axaml`, incluindo `AutomationProperties.Name` e `LiveSetting="Polite"`; foco visível de 2 px, estados com texto além de cor (`docs/ui-spec.md`); checklist em `docs/ui-a11y-checklist.md`.
 
 ## 8. Padrões de i18n
 
-- Dois catálogos planos: `src/CouchPad.App/Localization/Strings.pt-BR.json` e `Strings.en.json`, ambos com 223 chaves e cópia `PreserveNewest` para `Localization/`.
+- Dois catálogos planos: `src/CouchPad.App/Localization/Strings.pt-BR.json` e `Strings.en.json`, ambos com 232 chaves e cópia `PreserveNewest` para `Localization/`.
 - `LocalizationService` (singleton `Lazy`) indexa por chave, faz fallback para inglês, incrementa `Revision` e persiste `Language` em `AppSettings` sem derrubar a UI em falha.
 - `TrExtension`/`TrConverter` criam um `Binding` em `Revision`, então a UI se atualiza ao trocar idioma (inclusive bandeja, que reassina `PropertyChanged`).
 - Paridade validada por `tests/CouchPad.App.Tests/LocalizationCatalogTests.cs` (mesmas chaves nos dois arquivos, valores não vazios).
@@ -125,7 +126,7 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 
 - `--smoke` abre a janela, imprime uma linha (tamanho, idioma, título) e fecha; `--gallery` abre `ComponentGalleryWindow`; `--simulate` força simulação.
 - Flags de produção em `App.axaml.cs`/`Program.cs`: `--windows-display`, `--windows-gamepad`, `--experimental-windows-notifications`, `--apply-hardware-after`, `--hardware-applied`, `--recovery-succeeded`, `--recovery-failed`.
-- Contagem de testes: **295 testes** (252 em `tests/CouchPad.Core.Tests` e 43 em `tests/CouchPad.App.Tests`) na 1.0.20; o código contém 234 `[Fact]` + 19 `[Theory]` (com 51 `[InlineData]`), sendo 37 `[Fact]` em `tests/CouchPad.App.Tests` e 197 em `tests/CouchPad.Core.Tests`.
+- Contagem de testes: **358 testes** (311 em `tests/CouchPad.Core.Tests` e 47 em `tests/CouchPad.App.Tests`) na 1.0.21; o código contém 264 `[Fact]` + 28 `[Theory]` (com 84 `[InlineData]`), sendo 41 `[Fact]` em `tests/CouchPad.App.Tests` e 223 em `tests/CouchPad.Core.Tests`.
 - `packaging/Build-Installer.ps1` recebe `-Dotnet`, `-Iscc`, `-Version` (default lido de `Directory.Build.props`) e `-SkipDownloadsCopy`; publica `App` e `Rescue` self-contained `win-x64` com `-p:CouchPadInstallerPublish=true`, copia o rescue para o payload, recusa payload com `notifications`, gera um `CouchPad.InstallCheck.exe` de pré-voo, compila `CouchPad.iss` e imprime o SHA-256 do `CouchPad-Setup-<versão>-win-x64.exe` em `artifacts/installer-<versão>`.
 - Versionamento: `Version` única em `Directory.Build.props`; releases por tag `vX.Y.Z` no GitHub (`README.md`, `docs/install-validation.md`).
 
@@ -148,9 +149,9 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 |---|---|
 | `AGENTS.md` | Regras ativas, missão, invariantes, fronteira de camadas, fases, comandos, definição de pronto, handoff |
 | `HANDOFF.md` | Ledger cronológico por versão (1.0.16 → P0), evidências, decisões e pendências |
-| `docs/decisions.md` | Decisões registradas até D081 (perfis, diagnóstico, remoção do monitoramento, OpenCode assume tudo) |
+| `docs/decisions.md` | Decisões registradas até D082 (perfis, diagnóstico, remoção do monitoramento, modo/escala da TV) |
 | `docs/ui-spec.md` | Shell, breakpoints, mapa de cards, estados e critérios visuais |
-| `docs/roadmap.md` | Estado 1.0.20, publicação pendente e registro da remoção do monitoramento (D081) |
+| `docs/roadmap.md` | Estado 1.0.21, modo/escala da TV e publicação pendente (D081, D082) |
 | `docs/validation-queue.md` | Fila sequencial de validação e status por fase |
 | Documento histórico da fase de monitoramento | Removida na 1.0.20 (D081); conteúdo mantido apenas como registro |
 | `docs/install-validation.md` | Validação do instalador, per-user, desinstalação, hashes |

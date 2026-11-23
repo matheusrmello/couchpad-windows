@@ -1,7 +1,7 @@
 # Mapa do codebase — CouchPad Windows
 
 > Resumo operacional para orquestração. Detalhes em `docs/codebase-map.md`.
-> Estado: 1.0.20 · atualizado em 2026-11-18.
+> Estado: 1.0.21 · atualizado em 2026-11-23.
 
 ## Stack
 
@@ -31,6 +31,11 @@ Dependências: `App → Core, Platform.Windows` (+ artefatos Rescue/Notification
 `Platform.Windows → Core`; `Rescue → Platform.Windows`;
 `Core.Tests → Core, Platform.Windows`; `App.Tests → App`; `tools/* → Platform.Windows`.
 
+Modo/escala da TV (1.0.21, D082): `Core/Display/DisplayPreference.cs`;
+`Platform.Windows/EdidReader.cs`, `EdidModeParser.cs`, `EdidIdentity.cs`,
+`PerMonitorDpi.cs`; UI em `App/ViewModels/MainWindowViewModel.DisplayModes.cs`
+e testes `*Preference*`/`Edid*`/`PerMonitorDpiTests`.
+
 ## Comandos
 
 ```powershell
@@ -56,7 +61,7 @@ $dotnet = "C:\Users\Usuario\Documents\couchpad\.build\dotnet-sdk\dotnet.exe"
 - MVVM com `[ObservableProperty]`/`[RelayCommand]`; `MainWindowViewModel` dividido por
   assunto (`.Hardware`, `.Profiles`, `.Diagnosis`, `.Updates`). DI manual em `App.axaml.cs`.
 - Fronteira: `App` sem P/Invoke/COM; `Core` puro; `Platform.Windows` sem regra de produto.
-- i18n obrigatório: `Strings.pt-BR.json` + `Strings.en.json` (223 chaves cada),
+- i18n obrigatório: `Strings.pt-BR.json` + `Strings.en.json` (232 chaves cada),
   `{loc:Tr chave}`; nenhuma string visível hardcoded.
 - UI usa tokens de `Themes/Tokens.axaml`; componentes em `Themes/Components.axaml`.
 - Fail-closed: journal `pending` → apply → `active`, rollback e `_recoveryUncertain`.
