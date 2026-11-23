@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.0.24 (candidato)
+
+- Redesenha o shell em masonry: três colunas independentes, cards com altura natural e sem esticamento.
+- Separa o card TV (resolução, taxa e escala) do card Display; Parâmetros em duas colunas internas.
+- Corrige o crash de redimensionamento ao trocar 3→2→1 colunas.
+- 360 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.23 (candidato)
 
 - Inclui na lista os modos que o Windows expõe para a TV (GDI) mesclados ao EDID; 4K60 aparece quando o driver o oferece, mesmo que o EDID não o declare.

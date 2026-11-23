@@ -12,6 +12,7 @@ public sealed class UiLocalizationTests
     {
         "section.automation",
         "section.display",
+        "section.tv",
         "section.gamepad",
         "section.combo",
         "section.settings",
@@ -23,6 +24,7 @@ public sealed class UiLocalizationTests
     {
         "AutomationCard",
         "DisplayCard",
+        "TvCard",
         "GamepadCard",
         "ComboCard",
         "SettingsCard",

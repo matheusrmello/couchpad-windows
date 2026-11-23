@@ -62,8 +62,9 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// 3 colunas em ≥1000 px, 2 em 720–999 px e 1 abaixo de 720 px.
-    /// Os cards são reposicionados por código para manter o XAML declarativo.
+    /// Masonry de 3 colunas em ≥1000 px, 2 em 720–999 px e 1 abaixo de 720 px.
+    /// Os cards são movidos entre as colunas em código para manter o XAML declarativo.
+    /// A ordem de adição define a ordem de Tab.
     /// </summary>
     private void ApplyLayout(double width)
     {
@@ -74,12 +75,36 @@ public partial class MainWindow : Window
         }
 
         var grid = this.FindControl<Grid>("CardsGrid");
-        if (grid is null)
+        var column0 = this.FindControl<StackPanel>("Column0");
+        var column1 = this.FindControl<StackPanel>("Column1");
+        var column2 = this.FindControl<StackPanel>("Column2");
+
+        if (grid is null || column0 is null || column1 is null || column2 is null)
         {
             return;
         }
 
+        var automationCard = this.FindControl<Control>("AutomationCard");
+        var displayCard = this.FindControl<Control>("DisplayCard");
+        var gamepadCard = this.FindControl<Control>("GamepadCard");
+        var comboCard = this.FindControl<Control>("ComboCard");
+        var countdownCard = this.FindControl<Control>("CountdownCard");
+        var transitionCard = this.FindControl<Control>("TransitionCard");
+        var launchersCard = this.FindControl<Control>("LaunchersCard");
+        var settingsCard = this.FindControl<Control>("SettingsCard");
+        var tvCard = this.FindControl<Control>("TvCard");
+
         _columns = columns;
+
+        column0.Children.Clear();
+        column1.Children.Clear();
+        column2.Children.Clear();
+
+        // Zera os índices antes de limpar as definições: com menos colunas que a
+        // posição atual, o índice antigo deixaria a grade inconsistente.
+        Grid.SetColumn(column0, 0);
+        Grid.SetColumn(column1, 0);
+        Grid.SetColumn(column2, 0);
 
         grid.ColumnDefinitions.Clear();
         for (var i = 0; i < columns; i++)
@@ -87,98 +112,53 @@ public partial class MainWindow : Window
             grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
         }
 
-        var rows = columns switch { 3 => 3, 2 => 4, _ => 8 };
-        grid.RowDefinitions.Clear();
-        for (var i = 0; i < rows; i++)
-        {
-            grid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        }
+        Grid.SetColumn(column0, 0);
+        column0.IsVisible = true;
+        Grid.SetColumn(column1, columns >= 2 ? 1 : 0);
+        column1.IsVisible = columns >= 2;
+        Grid.SetColumn(column2, columns >= 3 ? 2 : 0);
+        column2.IsVisible = columns >= 3;
 
-        var cards = new (string Name, Control? Card)[]
+        (StackPanel Panel, Control?[] Cards)[] layout = columns switch
         {
-            ("AutomationCard", this.FindControl<Control>("AutomationCard")),
-            ("DisplayCard", this.FindControl<Control>("DisplayCard")),
-            ("GamepadCard", this.FindControl<Control>("GamepadCard")),
-            ("ComboCard", this.FindControl<Control>("ComboCard")),
-            ("CountdownCard", this.FindControl<Control>("CountdownCard")),
-            ("TransitionCard", this.FindControl<Control>("TransitionCard")),
-            ("LaunchersCard", this.FindControl<Control>("LaunchersCard")),
-            ("SettingsCard", this.FindControl<Control>("SettingsCard")),
+            3 => new[]
+            {
+                (column0, new[] { automationCard, countdownCard, launchersCard }),
+                (column1, new[] { displayCard, gamepadCard, comboCard }),
+                (column2, new[] { tvCard, transitionCard, settingsCard }),
+            },
+            2 => new[]
+            {
+                (column0, new[] { displayCard, automationCard, countdownCard, launchersCard }),
+                (column1, new[] { tvCard, gamepadCard, comboCard, transitionCard, settingsCard }),
+            },
+            _ => new[]
+            {
+                (column0, new[]
+                {
+                    automationCard,
+                    displayCard,
+                    tvCard,
+                    gamepadCard,
+                    comboCard,
+                    countdownCard,
+                    transitionCard,
+                    launchersCard,
+                    settingsCard,
+                }),
+            },
         };
 
-        for (var index = 0; index < cards.Length; index++)
+        foreach (var (panel, cards) in layout)
         {
-            var (name, card) = cards[index];
-            if (card is null)
+            foreach (var card in cards)
             {
-                continue;
-            }
-
-            var (row, column, rowSpan, columnSpan) = Placement(name, index, columns);
-
-            Grid.SetRow(card, row);
-            Grid.SetColumn(card, column);
-            Grid.SetRowSpan(card, rowSpan);
-            Grid.SetColumnSpan(card, columnSpan);
-        }
-
-        // A ordem do visual tree guia o Tab; alinhe-a com a ordem visual
-        // (linha/coluna) em cada breakpoint.
-        var ordered = cards
-            .Select(item => item.Card)
-            .OfType<Control>()
-            .OrderBy(Grid.GetRow)
-            .ThenBy(Grid.GetColumn)
-            .ToArray();
-
-        for (var index = 0; index < ordered.Length; index++)
-        {
-            var current = grid.Children.IndexOf(ordered[index]);
-            if (current != index)
-            {
-                grid.Children.Move(current, index);
+                if (card is not null)
+                {
+                    panel.Children.Add(card);
+                }
             }
         }
-    }
-
-    private static (int Row, int Column, int RowSpan, int ColumnSpan) Placement(
-        string name,
-        int index,
-        int columns)
-    {
-        if (columns == 1)
-        {
-            return (index, 0, 1, 1);
-        }
-
-        if (columns == 2)
-        {
-            return name switch
-            {
-                "AutomationCard" => (0, 0, 1, 1),
-                "DisplayCard" => (0, 1, 1, 1),
-                "GamepadCard" => (1, 0, 1, 1),
-                "ComboCard" => (1, 1, 1, 1),
-                "CountdownCard" => (2, 0, 1, 1),
-                "TransitionCard" => (2, 1, 1, 1),
-                "LaunchersCard" => (3, 0, 1, 1),
-                "SettingsCard" => (3, 1, 1, 1),
-                _ => (index, 0, 1, 1),
-            };
-        }
-
-        return name switch
-        {
-            "AutomationCard" => (0, 0, 1, 1),
-            "DisplayCard" => (0, 1, 1, 2),
-            "GamepadCard" => (1, 0, 1, 1),
-            "ComboCard" => (1, 1, 1, 1),
-            "CountdownCard" => (1, 2, 1, 1),
-            "TransitionCard" => (2, 0, 1, 1),
-            "LaunchersCard" => (2, 1, 1, 1),
-            "SettingsCard" => (2, 2, 1, 1),
-            _ => (index, 0, 1, 1),
-        };
     }
 
     private async void OnFolderPickerRequested(object? sender, EventArgs e)

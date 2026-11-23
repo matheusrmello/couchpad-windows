@@ -366,6 +366,16 @@
   driver ou injeção.
 - Validação: 358 testes, build 0/0, smoke; validação na TV real pendente.
 
+## D083 — Shell em masonry e card TV separado
+
+- Data: 2026-11-23
+- Decisão: substituir o Grid de linhas por três colunas independentes
+  (masonry), com cards de altura natural, e separar resolução/Hz/escala em um
+  card TV próprio. Parâmetros usa duas colunas internas. A ordem de Tab segue
+  a coluna.
+- Motivo: cards com conteúdos desiguais esticavam e deixavam corpos vazios.
+- Validação: 360 testes, build 0/0, smoke; capturas 3×2.
+
 ## Formato de nova decisão
 
 ```md

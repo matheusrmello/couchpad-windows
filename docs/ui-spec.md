@@ -1,7 +1,7 @@
 # CouchPad — Especificação de UI (P1–P7a)
 
-- Data: 2026-11-17
-- Fases: P1–P7 implementadas; UI atual em 1.0.20, sem HUD de monitoramento
+- Data: 2026-11-23
+- Fases: P1–P7 implementadas; UI atual em 1.0.24 (masonry, card TV separado)
 - Base visual: referência do ShiftPad 2.2.0, recriada com identidade própria
 - Plataforma: Avalonia 12.1.4 / .NET 10 (`net10.0`)
 
@@ -26,37 +26,57 @@
 
 ---
 
-## 2. Layout responsivo
+## 2. Layout responsivo em masonry
 
 | Largura da janela | Colunas | Organização |
 |---|---|---|
-| `>= 1000 px` | 3 | Automação + Display; Gamepad + Combinação + Contagem; Transição + Launchers + Parâmetros |
-| `720–999 px` | 2 | Automação + Display; Gamepad + Combinação; Contagem + Transição; Launchers + Parâmetros |
-| `< 720 px` | 1 | Cards empilhados na ordem de leitura |
+| `>= 1000 px` | 3 | coluna 0: Automação, Contagem, Launchers; coluna 1: Display, Gamepad, Combinação; coluna 2: TV, Transição, Parâmetros |
+| `720–999 px` | 2 | coluna 0: Display, Automação, Contagem, Launchers; coluna 1: TV, Gamepad, Combinação, Transição, Parâmetros |
+| `< 720 px` | 1 | Automação, Display, TV, Gamepad, Combinação, Contagem, Transição, Launchers, Parâmetros |
 
 - Janela padrão: `1020 × 780`.
 - Mínimo: `640 × 640`.
 - O conteúdo fica em `ScrollViewer`; cabeçalho e rodapé permanecem fixos.
-- O reposicionamento dos cards é feito em `MainWindow.axaml.cs`
-  (`ApplyLayout`), mantendo o XAML declarativo.
 - O espaçamento entre cards é `10 px`; o padding dos cards é `16 px`.
 
-### 2.1 Mapa de cards
+### 2.1 Masonry
+
+- Cada coluna é um `StackPanel` independente dentro de `CardsGrid`; os cards
+  são empilhados na ordem da coluna e mantêm **altura natural**.
+- Nenhum card estica para igualar a altura do vizinho. Antes do masonry, um
+  `Grid` de linhas esticava os cards de conteúdos desiguais e deixava corpos
+  vazios; agora um card curto simplesmente encerra a sua altura e o próximo
+  sobe.
+- A ordem de `Tab` segue a ordem de adição dos cards em cada coluna.
+- A distribuição é feita em `MainWindow.axaml.cs` (`ApplyLayout`), que limpa e
+  repovoa as três colunas e recria as definições ao trocar `3 → 2 → 1` colunas,
+  mantendo o XAML declarativo. Zerar `Grid.Column` antes de limpar as
+  definições evita o crash de redimensionamento.
+
+### 2.2 Card TV separado
+
+- Resolução, taxa de atualização e escala do Windows da TV ficam no card
+  **TV**, próprio. O card **Display** cuida de perfis de ambiente, resumo
+  atual/destino, seletores de TV e monitor interno, aviso e diagnóstico.
+- O card **Parâmetros** usa duas colunas internas para os toggles.
+- São 9 cards; nenhum ocupa linha inteira.
+
+### 2.3 Mapa de cards
 
 | Card | 3 colunas | 2 colunas | 1 coluna |
 |---|---|---|---|
-| Automação | (0,0) | (0,0) | linha 0 |
-| Display | (0,1) span 2 | (0,1) | linha 1 |
-| Gamepad | (1,0) | (1,0) | linha 2 |
-| Combinação | (1,1) | (1,1) | linha 3 |
-| Contagem | (1,2) | (2,0) | linha 4 |
-| Transição | (2,0) | (2,1) | linha 5 |
-| Launchers | (2,1) | (3,0) | linha 6 |
-| Parâmetros | (2,2) | (3,1) | linha 7 |
+| Automação | coluna 0 | coluna 0 | linha 0 |
+| Display | coluna 1 | coluna 0 | linha 1 |
+| TV | coluna 2 | coluna 1 | linha 2 |
+| Gamepad | coluna 1 | coluna 1 | linha 3 |
+| Combinação | coluna 1 | coluna 1 | linha 4 |
+| Contagem | coluna 0 | coluna 0 | linha 5 |
+| Transição | coluna 2 | coluna 1 | linha 6 |
+| Launchers | coluna 0 | coluna 0 | linha 7 |
+| Parâmetros | coluna 2 | coluna 1 | linha 8 |
 
-São 8 cards; nenhum ocupa linha inteira. Os cards seguem a ordem de leitura em
-todos os breakpoints: Automação, Display, Gamepad, Combinação, Contagem,
-Transição, Launchers e Parâmetros.
+A ordem de leitura em uma coluna é a ordem de cima para baixo. Os cards não
+mudam de conteúdo entre breakpoints; apenas a coluna e a posição mudam.
 
 ---
 
@@ -106,8 +126,22 @@ Transição, Launchers e Parâmetros.
   - erro de descoberta usa `display.targets_error`.
 - A descoberta é read-only; nada muda até `AllowDisplayWrites` e os seletores
   serem salvos e o app reiniciado.
+- Resolução, taxa e escala da TV não ficam aqui: são do card TV (3.4).
 
-### 3.4 Card Gamepad
+### 3.4 Card TV
+
+- Título `section.tv`.
+- Ajuda `display.tv_mode_hint` sobre o modo aplicado ao perfil ativo.
+- Select `display.tv_resolution` com os modos do EDID mesclados aos modos que o
+  Windows expõe para a TV, incluindo o modo automático.
+- Select `display.tv_refresh`, habilitado apenas quando a resolução escolhida
+  tem taxa explícita.
+- Select `display.tv_scale` com as escalas do Windows por monitor, mais
+  `display.tv_scale_hint`.
+- Aviso `TvModesStatus` em âmbar quando não há modos ou a leitura falha, com
+  `AutomationProperties.LiveSetting=Polite`.
+
+### 3.5 Card Gamepad
 
 - Título `section.gamepad`.
 - Linha `Controle principal` com `gamepad.none`/`gamepad.simulated` e tom
@@ -118,16 +152,19 @@ Transição, Launchers e Parâmetros.
   `SimulatedGamepadWatcher` e dispara a state machine.
 - O watcher real de gamepad entra na P4/P6.
 
-### 3.5 Card Combinação
+### 3.6 Card Combinação
 
 - Título `section.combo`.
 - Ajuda `combo.help`.
 - Quatro `KeyChip`: `1`, `LB`, `RB`, `A`, todos vindos do catálogo.
 - Botão `combo.change` desabilitado até a captura real de botões.
 
-### 3.6 Card Parâmetros
+### 3.7 Card Parâmetros
 
 - Título `section.settings`.
+- Os toggles ficam em **duas colunas internas** (fechar launcher/iniciar com o
+  Windows na primeira; minimizar para a bandeja/permitir escrita de display na
+  segunda), com a ajuda de cada toggle abaixo do seu par.
 - Toggles: fechar launcher ao ativar, iniciar com o Windows, minimizar para a
   bandeja e **permitir escrita de display** (`settings.allow_display_writes`,
   padrão desligado).
@@ -137,14 +174,14 @@ Transição, Launchers e Parâmetros.
 - Ajuda `settings.help`.
 - A P3 persiste todos esses valores em `%LOCALAPPDATA%\CouchPad\settings.json`.
 
-### 3.7 Card Transição
+### 3.8 Card Transição
 
 - Título `section.transition`.
 - Select de modo de tela: Somente TV, Estender, Espelhar.
 - Select de modo de áudio: Mover para HDMI, Manter atual.
 - Padrões: Somente TV e Mover para HDMI.
 
-### 3.8 Card Launchers
+### 3.9 Card Launchers
 
 - Título `section.launchers`.
 - Linha Steam com `ToggleSwitch`.
@@ -153,7 +190,7 @@ Transição, Launchers e Parâmetros.
 - O seletor usa `StorageProvider.OpenFolderPickerAsync` (sem admin).
 - O caminho escolhido aparece truncado com `…` quando não couber.
 
-### 3.9 Rodapé
+### 3.10 Rodapé
 
 - `StatusDot` + texto de estado (mesmo estado do cabeçalho).
 - Versão (`footer.version`, via `AssemblyInformationalVersion`).
@@ -162,14 +199,14 @@ Transição, Launchers e Parâmetros.
 - `Sobre` (`footer.about`) abre `AboutWindow` como diálogo modal.
 - Seletor de idioma com `language.ptbr` e `language.en`.
 
-### 3.10 Sobre
+### 3.11 Sobre
 
 - Janela modal `440 × 340`, centralizada no dono, sem botão na barra de
   tarefas.
 - Marca, tagline, aviso 100% gratuito, licença MIT, versão e fase.
 - Botão `about.close` (`Esc`/`Enter` fecham).
 
-### 3.11 Adições P6/P7a
+### 3.12 Adições P6/P7a
 
 - Card **Contagem regressiva**: atrasos de ativação/desativação; o texto da
   contagem aparece na status pill.
@@ -339,14 +376,14 @@ captura de combinação, bandeja, autostart e rescue no logon.
 ## 9. Verificação
 
 - Build: 0 avisos, 0 erros.
-- Testes: 295 aprovados — catálogos/i18n, composição do shell, temas,
+- Testes: 360 aprovados — catálogos/i18n, composição do shell, temas,
   estados da galeria, state machine, atrasos/cancelamento, journal, settings,
-  composição Windows, guard, áudio, launcher e P6.
+  composição Windows, guard, áudio, launcher, modos da TV e P6.
 - Smoke: janela configurada `1020 × 780` (limitada pela área de trabalho em
   telas 720p), troca pt/en, título `CouchPad`.
 - Galeria: `CouchPad.dll --gallery` abre em `1100 × 720`; todos os estados
   visíveis e navegáveis por teclado.
-- Capturas oficiais atualizadas (16/11/2026, versão 1.0.13):
+- Capturas oficiais atualizadas (23/11/2026, versão 1.0.24, shell em masonry):
   `docs/screenshots/p7a-3col-pt.png`, `p7a-2col-pt.png`, `p7a-1col-pt.png`,
   `p7a-3col-en.png`, `p7a-2col-en.png`, `p7a-1col-en.png`.
 - Checklist de acessibilidade: `docs/ui-a11y-checklist.md`; UIAutomation

@@ -70,155 +70,236 @@
       </Grid>
     </StackPanel>
 
-    <!-- Cards -->
+    <!-- Cards: masonry de três colunas. ApplyLayout redistribui os cards
+         conforme a largura; aqui fica a distribuição de 3 colunas. -->
     <ScrollViewer Grid.Row="1"
                   HorizontalScrollBarVisibility="Disabled"
                   VerticalScrollBarVisibility="Auto"
                   Padding="0,0,4,0">
       <Grid x:Name="CardsGrid"
-            RowSpacing="10"
             ColumnSpacing="10"
-            RowDefinitions="Auto,Auto,Auto"
             ColumnDefinitions="*,*,*">
 
-        <!-- Automação -->
-        <controls:Card x:Name="AutomationCard"
-                       Grid.Row="1"
-                       Grid.Column="0"
-                       Title="{loc:Tr section.automation}"
-                       TitleIcon="M 13,2 L 4,13 H 10 L 9,22 L 20,10 H 13 Z">
-          <controls:Card.HeaderAction>
-            <ToggleSwitch IsChecked="{Binding AutomationEnabled}"
-                          IsEnabled="{Binding CanToggleAutomation}"
-                          AutomationProperties.Name="{loc:Tr automation.toggle}"
-                          AutomationProperties.HelpText="{loc:Tr automation.help}" />
-          </controls:Card.HeaderAction>
+        <!-- Coluna 0 -->
+        <StackPanel x:Name="Column0" Grid.Column="0" Spacing="10" VerticalAlignment="Top">
 
-          <StackPanel Spacing="10">
-            <TextBlock Classes="hint" Text="{loc:Tr automation.help}" />
-            <TextBlock Classes="hint" IsVisible="{Binding ShowHardwareSetup}" Text="{Binding HardwareSetupText}"
-                       AutomationProperties.LiveSetting="Polite" TextWrapping="Wrap" />
-            <WrapPanel IsVisible="{Binding ShowHardwareSetup}">
-              <Button Classes="secondary small" Margin="0,0,8,4"
-                      Content="{loc:Tr automation.suggest}" Command="{Binding SuggestHardwareCommand}" />
-              <Button Classes="primary" Margin="0,0,0,4"
-                      Content="{loc:Tr automation.apply}" Command="{Binding ApplyHardwareCommand}" />
-            </WrapPanel>
-            <TextBlock Classes="hint" Text="{Binding HardwareSuggestionText}"
-                       IsVisible="{Binding HasHardwareSuggestion}"
-                       AutomationProperties.LiveSetting="Polite" />
-            <TextBlock Classes="hint" Text="{Binding HardwareApplyStatus}"
-                       IsVisible="{Binding HardwareApplyStatus, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
-                       AutomationProperties.LiveSetting="Polite" />
-            <TextBlock Classes="hint"
-                       Foreground="{DynamicResource CouchPad.Danger}"
-                       Text="{Binding RecoveryHelpText}"
-                       IsVisible="{Binding IsRecoveryUncertain}"
-                       AutomationProperties.LiveSetting="Polite"
-                       TextWrapping="Wrap" />
-            <Button Content="{loc:Tr recovery.retry}"
-                    IsVisible="{Binding CanRetryRecovery}"
-                    Command="{Binding RetryRecoveryCommand}"
-                    AutomationProperties.HelpText="{loc:Tr recovery.retry_help}" />
-            <TextBlock Classes="hint"
-                       Text="{loc:Tr recovery.failed}"
-                       IsVisible="{Binding RecoveryFailed}"
-                       Foreground="{DynamicResource CouchPad.Danger}"
-                       AutomationProperties.LiveSetting="Polite"
-                       TextWrapping="Wrap" />
+          <!-- Automação -->
+          <controls:Card x:Name="AutomationCard"
+                         Title="{loc:Tr section.automation}"
+                         TitleIcon="M 13,2 L 4,13 H 10 L 9,22 L 20,10 H 13 Z">
+            <controls:Card.HeaderAction>
+              <ToggleSwitch IsChecked="{Binding AutomationEnabled}"
+                            IsEnabled="{Binding CanToggleAutomation}"
+                            AutomationProperties.Name="{loc:Tr automation.toggle}"
+                            AutomationProperties.HelpText="{loc:Tr automation.help}" />
+            </controls:Card.HeaderAction>
 
-            <StackPanel Spacing="6">
-              <controls:StatusRow Label="{loc:Tr automation.gamepad}"
-                                  Value="{Binding GamepadSummary}"
-                                  Tone="{Binding GamepadTone}" />
-              <controls:StatusRow Label="{loc:Tr automation.display}"
-                                  Value="{Binding DisplaySummary}" />
-              <controls:StatusRow Label="{loc:Tr automation.audio}"
-                                  Value="{Binding AudioSummary}" />
-              <controls:StatusRow Label="{loc:Tr automation.launcher}"
-                                  Value="{Binding LauncherSummary}" />
+            <StackPanel Spacing="10">
+              <TextBlock Classes="hint" Text="{loc:Tr automation.help}" />
+              <TextBlock Classes="hint" IsVisible="{Binding ShowHardwareSetup}" Text="{Binding HardwareSetupText}"
+                         AutomationProperties.LiveSetting="Polite" TextWrapping="Wrap" />
+              <WrapPanel IsVisible="{Binding ShowHardwareSetup}">
+                <Button Classes="secondary small" Margin="0,0,8,4"
+                        Content="{loc:Tr automation.suggest}" Command="{Binding SuggestHardwareCommand}" />
+                <Button Classes="primary" Margin="0,0,0,4"
+                        Content="{loc:Tr automation.apply}" Command="{Binding ApplyHardwareCommand}" />
+              </WrapPanel>
+              <TextBlock Classes="hint" Text="{Binding HardwareSuggestionText}"
+                         IsVisible="{Binding HasHardwareSuggestion}"
+                         AutomationProperties.LiveSetting="Polite" />
+              <TextBlock Classes="hint" Text="{Binding HardwareApplyStatus}"
+                         IsVisible="{Binding HardwareApplyStatus, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
+                         AutomationProperties.LiveSetting="Polite" />
+              <TextBlock Classes="hint"
+                         Foreground="{DynamicResource CouchPad.Danger}"
+                         Text="{Binding RecoveryHelpText}"
+                         IsVisible="{Binding IsRecoveryUncertain}"
+                         AutomationProperties.LiveSetting="Polite"
+                         TextWrapping="Wrap" />
+              <Button Content="{loc:Tr recovery.retry}"
+                      IsVisible="{Binding CanRetryRecovery}"
+                      Command="{Binding RetryRecoveryCommand}"
+                      AutomationProperties.HelpText="{loc:Tr recovery.retry_help}" />
+              <TextBlock Classes="hint"
+                         Text="{loc:Tr recovery.failed}"
+                         IsVisible="{Binding RecoveryFailed}"
+                         Foreground="{DynamicResource CouchPad.Danger}"
+                         AutomationProperties.LiveSetting="Polite"
+                         TextWrapping="Wrap" />
+
+              <StackPanel Spacing="6">
+                <controls:StatusRow Label="{loc:Tr automation.gamepad}"
+                                    Value="{Binding GamepadSummary}"
+                                    Tone="{Binding GamepadTone}" />
+                <controls:StatusRow Label="{loc:Tr automation.display}"
+                                    Value="{Binding DisplaySummary}" />
+                <controls:StatusRow Label="{loc:Tr automation.audio}"
+                                    Value="{Binding AudioSummary}" />
+                <controls:StatusRow Label="{loc:Tr automation.launcher}"
+                                    Value="{Binding LauncherSummary}" />
+              </StackPanel>
             </StackPanel>
-          </StackPanel>
-        </controls:Card>
+          </controls:Card>
 
-        <!-- Display -->
-        <controls:Card x:Name="DisplayCard"
-                       Grid.Row="1"
-                       Grid.Column="1"
-                       Grid.ColumnSpan="2"
-                       Title="{loc:Tr section.display}"
-                       TitleIcon="F0 M 4,4 H 20 Q 22,4 22,6 V 16 Q 22,18 20,18 H 4 Q 2,18 2,16 V 6 Q 2,4 4,4 Z M 4,6 H 20 V 16 H 4 Z M 8,20 H 16 V 22 H 8 Z">
-          <controls:Card.HeaderAction>
-            <controls:ActionButton Classes="small"
-                                   Variant="Secondary"
-                                   State="{Binding DisplayRefreshState}"
-                                   Content="{Binding DisplayRefreshText}"
-                                   Command="{Binding RefreshDisplaysCommand}"
-                                   IsEnabled="{Binding !IsRefreshing}"
-                                   AutomationProperties.Name="{Binding DisplayRefreshText}" />
-          </controls:Card.HeaderAction>
-
-          <StackPanel Spacing="12">
-            <StackPanel Spacing="6">
-              <TextBlock Classes="caption" Text="{loc:Tr profiles.title}" />
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <ComboBox ItemsSource="{Binding EnvironmentProfiles}"
-                          SelectedItem="{Binding SelectedEnvironmentProfile, Mode=TwoWay}"
-                          PlaceholderText="{loc:Tr profiles.name}"
-                          AutomationProperties.Name="{loc:Tr profiles.title}"
-                          AutomationProperties.HelpText="{loc:Tr profiles.help}"
-                          ToolTip.Tip="{loc:Tr profiles.help}">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate x:DataType="vm:EnvironmentProfileOption">
-                      <TextBlock Text="{Binding DisplayName}" />
-                    </DataTemplate>
-                  </ComboBox.ItemTemplate>
+          <!-- Contagem regressiva -->
+          <controls:Card x:Name="CountdownCard"
+                         Title="{loc:Tr section.countdown}"
+                         TitleIcon="F0 M 9,2 H 15 V 4 H 9 Z M 12,6 A 8,8 0 1 0 12,22 A 8,8 0 1 0 12,6 Z M 12,8 A 6,6 0 1 0 12,20 A 6,6 0 1 0 12,8 Z M 11,10 H 13 V 14 H 16 V 16 H 11 Z">
+            <StackPanel Spacing="10">
+              <TextBlock Classes="hint" Text="{loc:Tr countdown.help}" TextWrapping="Wrap" />
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{loc:Tr settings.activation_delay}" />
+                <ComboBox SelectedIndex="{Binding ActivationDelayIndex, Mode=TwoWay}"
+                          AutomationProperties.Name="{loc:Tr settings.activation_delay}">
+                  <ComboBoxItem Content="{loc:Tr delay.immediate}" />
+                  <ComboBoxItem Content="{loc:Tr delay.1s}" />
+                  <ComboBoxItem Content="{loc:Tr delay.2s}" />
+                  <ComboBoxItem Content="{loc:Tr delay.3s}" />
+                  <ComboBoxItem Content="{loc:Tr delay.5s}" />
                 </ComboBox>
-                <WrapPanel Grid.Column="1" VerticalAlignment="Center">
-                  <Button Classes="link"
-                          Content="{loc:Tr profiles.new}"
-                          Command="{Binding NewEnvironmentProfileCommand}"
-                          AutomationProperties.Name="{loc:Tr profiles.new}" />
-                  <Button Classes="link"
-                          Content="{loc:Tr profiles.delete}"
-                          Command="{Binding DeleteEnvironmentProfileCommand}"
-                          AutomationProperties.Name="{loc:Tr profiles.delete}" />
-                </WrapPanel>
-              </Grid>
-              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <TextBlock Classes="caption"
-                           Text="{loc:Tr profiles.name}"
-                           VerticalAlignment="Center" />
-                <TextBox Grid.Column="1"
-                         MaxLength="64"
-                         Text="{Binding SelectedProfileName, Mode=TwoWay}"
-                         PlaceholderText="{loc:Tr profiles.name}"
-                         AutomationProperties.Name="{loc:Tr profiles.name}" />
-              </Grid>
+              </StackPanel>
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{loc:Tr settings.deactivation_delay}" />
+                <ComboBox SelectedIndex="{Binding DeactivationDelayIndex, Mode=TwoWay}"
+                          AutomationProperties.Name="{loc:Tr settings.deactivation_delay}">
+                  <ComboBoxItem Content="{loc:Tr delay.immediate}" />
+                  <ComboBoxItem Content="{loc:Tr delay.1s}" />
+                  <ComboBoxItem Content="{loc:Tr delay.2s}" />
+                  <ComboBoxItem Content="{loc:Tr delay.3s}" />
+                  <ComboBoxItem Content="{loc:Tr delay.5s}" />
+                </ComboBox>
+              </StackPanel>
             </StackPanel>
+          </controls:Card>
 
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-              <StackPanel Spacing="4">
-                <TextBlock Classes="caption" Text="{loc:Tr display.current}" />
-                <TextBlock Classes="value"
-                           Text="{Binding DisplaySummary}"
-                           TextWrapping="Wrap" />
-              </StackPanel>
-              <StackPanel Grid.Column="1" Spacing="4">
-                <TextBlock Classes="caption" Text="{loc:Tr display.target}" />
-                <TextBlock Classes="value accent"
-                           Text="{loc:Tr display.target_value}"
-                           TextWrapping="Wrap" />
-              </StackPanel>
-            </Grid>
+          <!-- Launchers -->
+          <controls:Card x:Name="LaunchersCard"
+                         Title="{loc:Tr section.launchers}"
+                         TitleIcon="F0 M 12,2 A 10,10 0 1 0 12,22 A 10,10 0 1 0 12,2 Z M 12,4 A 8,8 0 1 0 12,20 A 8,8 0 1 0 12,4 Z M 9,7 L 17,12 L 9,17 Z">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <TextBlock Text="{loc:Tr launchers.enabled}" VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="1"
+                              IsChecked="{Binding SteamEnabled}"
+                              AutomationProperties.Name="{loc:Tr launchers.enabled}" />
+              </Grid>
 
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
               <StackPanel Spacing="4">
-                <TextBlock Classes="caption" Text="{loc:Tr display.tv_target}" />
+                <TextBlock Classes="caption" Text="{loc:Tr launchers.select}" />
+                <ComboBox SelectedIndex="{Binding LauncherIndex, Mode=TwoWay}" AutomationProperties.Name="{loc:Tr launchers.select}">
+                  <ComboBoxItem Content="{loc:Tr launchers.steam}" />
+                  <ComboBoxItem Content="{loc:Tr launchers.hydra}" />
+                </ComboBox>
+              </StackPanel>
+              <TextBlock Classes="hint"
+                         Text="{Binding LauncherErrorText}"
+                         IsVisible="{Binding HasLauncherError}"
+                         Foreground="{DynamicResource CouchPad.Danger}"
+                         AutomationProperties.LiveSetting="Polite"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+          </controls:Card>
+        </StackPanel>
+
+        <!-- Coluna 1 -->
+        <StackPanel x:Name="Column1" Grid.Column="1" Spacing="10" VerticalAlignment="Top">
+
+          <!-- Display -->
+          <controls:Card x:Name="DisplayCard"
+                         Title="{loc:Tr section.display}"
+                         TitleIcon="F0 M 4,4 H 20 Q 22,4 22,6 V 16 Q 22,18 20,18 H 4 Q 2,18 2,16 V 6 Q 2,4 4,4 Z M 4,6 H 20 V 16 H 4 Z M 8,20 H 16 V 22 H 8 Z">
+            <controls:Card.HeaderAction>
+              <controls:ActionButton Classes="small"
+                                     Variant="Secondary"
+                                     State="{Binding DisplayRefreshState}"
+                                     Content="{Binding DisplayRefreshText}"
+                                     Command="{Binding RefreshDisplaysCommand}"
+                                     IsEnabled="{Binding !IsRefreshing}"
+                                     AutomationProperties.Name="{Binding DisplayRefreshText}" />
+            </controls:Card.HeaderAction>
+
+            <StackPanel Spacing="12">
+              <StackPanel Spacing="6">
+                <TextBlock Classes="caption" Text="{loc:Tr profiles.title}" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                  <ComboBox ItemsSource="{Binding EnvironmentProfiles}"
+                            SelectedItem="{Binding SelectedEnvironmentProfile, Mode=TwoWay}"
+                            PlaceholderText="{loc:Tr profiles.name}"
+                            AutomationProperties.Name="{loc:Tr profiles.title}"
+                            AutomationProperties.HelpText="{loc:Tr profiles.help}"
+                            ToolTip.Tip="{loc:Tr profiles.help}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:EnvironmentProfileOption">
+                        <TextBlock Text="{Binding DisplayName}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                  <WrapPanel Grid.Column="1" VerticalAlignment="Center">
+                    <Button Classes="link"
+                            Content="{loc:Tr profiles.new}"
+                            Command="{Binding NewEnvironmentProfileCommand}"
+                            AutomationProperties.Name="{loc:Tr profiles.new}" />
+                    <Button Classes="link"
+                            Content="{loc:Tr profiles.delete}"
+                            Command="{Binding DeleteEnvironmentProfileCommand}"
+                            AutomationProperties.Name="{loc:Tr profiles.delete}" />
+                  </WrapPanel>
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                  <TextBlock Classes="caption"
+                             Text="{loc:Tr profiles.name}"
+                             VerticalAlignment="Center" />
+                  <TextBox Grid.Column="1"
+                           MaxLength="64"
+                           Text="{Binding SelectedProfileName, Mode=TwoWay}"
+                           PlaceholderText="{loc:Tr profiles.name}"
+                           AutomationProperties.Name="{loc:Tr profiles.name}" />
+                </Grid>
+              </StackPanel>
+
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                <StackPanel Spacing="4">
+                  <TextBlock Classes="caption" Text="{loc:Tr display.current}" />
+                  <TextBlock Classes="value"
+                             Text="{Binding DisplaySummary}"
+                             TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4">
+                  <TextBlock Classes="caption" Text="{loc:Tr display.target}" />
+                  <TextBlock Classes="value accent"
+                             Text="{loc:Tr display.target_value}"
+                             TextWrapping="Wrap" />
+                </StackPanel>
+              </Grid>
+
+              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <StackPanel Spacing="4">
+                  <TextBlock Classes="caption" Text="{loc:Tr display.tv_target}" />
+                  <ComboBox ItemsSource="{Binding DisplayTargets}"
+                            SelectedItem="{Binding SelectedTvTarget, Mode=TwoWay}"
+                            PlaceholderText="{loc:Tr display.target_none}"
+                            AutomationProperties.Name="{loc:Tr display.tv_target}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:DisplayTargetOption">
+                        <TextBlock Text="{Binding DisplayName}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Classes="link"
+                        VerticalAlignment="Bottom"
+                        Content="{loc:Tr display.targets_refresh}"
+                        Command="{Binding RefreshDisplayTargetsCommand}"
+                        AutomationProperties.Name="{loc:Tr display.targets_refresh}" />
+              </Grid>
+
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{loc:Tr display.internal_target}" />
                 <ComboBox ItemsSource="{Binding DisplayTargets}"
-                          SelectedItem="{Binding SelectedTvTarget, Mode=TwoWay}"
+                          SelectedItem="{Binding SelectedInternalTarget, Mode=TwoWay}"
                           PlaceholderText="{loc:Tr display.target_none}"
-                          AutomationProperties.Name="{loc:Tr display.tv_target}">
+                          AutomationProperties.Name="{loc:Tr display.internal_target}">
                   <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:DisplayTargetOption">
                       <TextBlock Text="{Binding DisplayName}" />
@@ -226,16 +307,82 @@
                   </ComboBox.ItemTemplate>
                 </ComboBox>
               </StackPanel>
-              <Button Grid.Column="1"
-                      Classes="link"
-                      VerticalAlignment="Bottom"
-                      Content="{loc:Tr display.targets_refresh}"
-                      Command="{Binding RefreshDisplayTargetsCommand}"
-                      AutomationProperties.Name="{loc:Tr display.targets_refresh}" />
-            </Grid>
 
-            <StackPanel Spacing="6">
-              <TextBlock Classes="caption" Text="{loc:Tr display.tv_mode}" />
+              <TextBlock Classes="hint" Text="{Binding DisplayTargetHint}" />
+              <TextBlock Classes="hint"
+                         Foreground="{DynamicResource CouchPad.Danger}"
+                         Text="{Binding DisplayTargetsError}"
+                         IsVisible="{Binding HasDisplayTargetsError}"
+                         AutomationProperties.LiveSetting="Polite"
+                         TextWrapping="Wrap" />
+
+              <Expander Header="{loc:Tr diagnosis.title}"
+                        IsExpanded="False"
+                        AutomationProperties.Name="{loc:Tr diagnosis.title}"
+                        AutomationProperties.HelpText="{loc:Tr diagnosis.help}">
+                <TextBlock Text="{Binding HardwareDiagnosisText}"
+                           TextWrapping="Wrap"
+                           Margin="0,6,0,0" />
+              </Expander>
+            </StackPanel>
+          </controls:Card>
+
+          <!-- Gamepad -->
+          <controls:Card x:Name="GamepadCard"
+                         Title="{loc:Tr section.gamepad}"
+                         TitleIcon="F0 M 8,5 H 16 C 19,5 21,7 22,11 L 23,16 C 24,20 20,22 17,19 L 15,17 H 9 L 7,19 C 4,22 0,20 1,16 L 2,11 C 3,7 5,5 8,5 Z M 7,8 H 9 V 10 H 11 V 12 H 9 V 14 H 7 V 12 H 5 V 10 H 7 Z M 15,11 A 1.5,1.5 0 1 0 18,11 A 1.5,1.5 0 1 0 15,11 Z M 18,14 A 1,1 0 1 0 20,14 A 1,1 0 1 0 18,14 Z">
+            <StackPanel Spacing="10">
+              <controls:StatusRow Label="{loc:Tr gamepad.primary}"
+                                  Value="{Binding GamepadSummary}"
+                                  Tone="{Binding GamepadTone}" />
+
+              <TextBlock Classes="hint"
+                         IsVisible="{Binding IsSimulationAvailable}"
+                         Text="{loc:Tr gamepad.simulated_help}" />
+
+              <controls:ActionButton Classes="small"
+                                     Variant="Secondary"
+                                     State="Idle"
+                                     HorizontalAlignment="Left"
+                                     IsVisible="{Binding IsSimulationAvailable}"
+                                     Content="{Binding GamepadActionText}"
+                                     Command="{Binding ToggleGamepadCommand}"
+                                     AutomationProperties.Name="{Binding GamepadActionText}" />
+            </StackPanel>
+          </controls:Card>
+
+          <!-- Combinação -->
+          <controls:Card x:Name="ComboCard"
+                         Title="{loc:Tr section.combo}"
+                         TitleIcon="F0 M 2,4 H 10 V 12 H 2 Z M 4,6 H 8 V 10 H 4 Z M 14,4 H 22 V 12 H 14 Z M 16,6 H 20 V 10 H 16 Z M 2,16 H 10 V 24 H 2 Z M 4,18 H 8 V 22 H 4 Z M 14,16 H 22 V 24 H 14 Z M 16,18 H 20 V 22 H 16 Z">
+            <StackPanel Spacing="10">
+              <TextBlock Classes="hint" Text="{loc:Tr combo.help}" />
+
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <controls:KeyChip Text="{loc:Tr combo.key.1}" />
+                <controls:KeyChip Text="{loc:Tr combo.key.lb}" />
+                <controls:KeyChip Text="{loc:Tr combo.key.rb}" />
+                <controls:KeyChip Text="{loc:Tr combo.key.a}" />
+              </StackPanel>
+
+              <Button Classes="secondary small"
+                      HorizontalAlignment="Left"
+                      Content="{loc:Tr combo.change}"
+                      IsEnabled="False"
+                      AutomationProperties.HelpText="{loc:Tr combo.change_reason}"
+                      ToolTip.Tip="{loc:Tr combo.change_reason}" />
+            </StackPanel>
+          </controls:Card>
+        </StackPanel>
+
+        <!-- Coluna 2 -->
+        <StackPanel x:Name="Column2" Grid.Column="2" Spacing="10" VerticalAlignment="Top">
+
+          <!-- TV -->
+          <controls:Card x:Name="TvCard"
+                         Title="{loc:Tr section.tv}"
+                         TitleIcon="F0 M 3,4 H 21 Q 23,4 23,6 V 16 Q 23,18 21,18 H 3 Q 1,18 1,16 V 6 Q 1,4 3,4 Z M 3,6 V 16 H 21 V 6 Z M 6,20 H 18 V 22 H 6 Z">
+            <StackPanel Spacing="10">
               <TextBlock Classes="hint" Text="{loc:Tr display.tv_mode_hint}" TextWrapping="Wrap" />
 
               <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
@@ -287,280 +434,190 @@
                          AutomationProperties.LiveSetting="Polite"
                          TextWrapping="Wrap" />
             </StackPanel>
+          </controls:Card>
 
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr display.internal_target}" />
-              <ComboBox ItemsSource="{Binding DisplayTargets}"
-                        SelectedItem="{Binding SelectedInternalTarget, Mode=TwoWay}"
-                        PlaceholderText="{loc:Tr display.target_none}"
-                        AutomationProperties.Name="{loc:Tr display.internal_target}">
-                <ComboBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:DisplayTargetOption">
-                    <TextBlock Text="{Binding DisplayName}" />
-                  </DataTemplate>
-                </ComboBox.ItemTemplate>
-              </ComboBox>
-            </StackPanel>
+          <!-- Transição -->
+          <controls:Card x:Name="TransitionCard"
+                         Title="{loc:Tr section.transition}"
+                         TitleIcon="M 2,6 H 16 V 3 L 22,8 L 16,13 V 10 H 2 Z M 22,14 H 8 V 11 L 2,16 L 8,21 V 18 H 22 Z">
+            <StackPanel Spacing="10">
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{loc:Tr transition.display_mode}" />
+                <ComboBox SelectedIndex="{Binding DisplayModeIndex, Mode=TwoWay}"
+                          AutomationProperties.Name="{loc:Tr transition.display_mode}">
+                  <ComboBoxItem Content="{loc:Tr display_mode.tv_only}" />
+                  <ComboBoxItem Content="{loc:Tr display_mode.extend}" />
+                </ComboBox>
+              </StackPanel>
 
-            <TextBlock Classes="hint" Text="{Binding DisplayTargetHint}" />
-            <TextBlock Classes="hint"
-                       Foreground="{DynamicResource CouchPad.Danger}"
-                       Text="{Binding DisplayTargetsError}"
-                       IsVisible="{Binding HasDisplayTargetsError}"
-                       AutomationProperties.LiveSetting="Polite"
-                       TextWrapping="Wrap" />
-
-            <Expander Header="{loc:Tr diagnosis.title}"
-                      IsExpanded="False"
-                      AutomationProperties.Name="{loc:Tr diagnosis.title}"
-                      AutomationProperties.HelpText="{loc:Tr diagnosis.help}">
-              <TextBlock Text="{Binding HardwareDiagnosisText}"
-                         TextWrapping="Wrap"
-                         Margin="0,6,0,0" />
-            </Expander>
-          </StackPanel>
-        </controls:Card>
-
-        <!-- Gamepad -->
-        <controls:Card x:Name="GamepadCard"
-                       Grid.Row="2"
-                       Grid.Column="0"
-                       Title="{loc:Tr section.gamepad}"
-                       TitleIcon="F0 M 8,5 H 16 C 19,5 21,7 22,11 L 23,16 C 24,20 20,22 17,19 L 15,17 H 9 L 7,19 C 4,22 0,20 1,16 L 2,11 C 3,7 5,5 8,5 Z M 7,8 H 9 V 10 H 11 V 12 H 9 V 14 H 7 V 12 H 5 V 10 H 7 Z M 15,11 A 1.5,1.5 0 1 0 18,11 A 1.5,1.5 0 1 0 15,11 Z M 18,14 A 1,1 0 1 0 20,14 A 1,1 0 1 0 18,14 Z">
-          <StackPanel Spacing="10">
-            <controls:StatusRow Label="{loc:Tr gamepad.primary}"
-                                Value="{Binding GamepadSummary}"
-                                Tone="{Binding GamepadTone}" />
-
-            <TextBlock Classes="hint"
-                       IsVisible="{Binding IsSimulationAvailable}"
-                       Text="{loc:Tr gamepad.simulated_help}" />
-
-            <controls:ActionButton Classes="small"
-                                   Variant="Secondary"
-                                   State="Idle"
-                                   HorizontalAlignment="Left"
-                                   IsVisible="{Binding IsSimulationAvailable}"
-                                   Content="{Binding GamepadActionText}"
-                                   Command="{Binding ToggleGamepadCommand}"
-                                   AutomationProperties.Name="{Binding GamepadActionText}" />
-          </StackPanel>
-        </controls:Card>
-
-        <!-- Combinação -->
-        <controls:Card x:Name="ComboCard"
-                       Grid.Row="2"
-                       Grid.Column="1"
-                       Title="{loc:Tr section.combo}"
-                       TitleIcon="F0 M 2,4 H 10 V 12 H 2 Z M 4,6 H 8 V 10 H 4 Z M 14,4 H 22 V 12 H 14 Z M 16,6 H 20 V 10 H 16 Z M 2,16 H 10 V 24 H 2 Z M 4,18 H 8 V 22 H 4 Z M 14,16 H 22 V 24 H 14 Z M 16,18 H 20 V 22 H 16 Z">
-          <StackPanel Spacing="10">
-            <TextBlock Classes="hint" Text="{loc:Tr combo.help}" />
-
-            <StackPanel Orientation="Horizontal" Spacing="6">
-              <controls:KeyChip Text="{loc:Tr combo.key.1}" />
-              <controls:KeyChip Text="{loc:Tr combo.key.lb}" />
-              <controls:KeyChip Text="{loc:Tr combo.key.rb}" />
-              <controls:KeyChip Text="{loc:Tr combo.key.a}" />
-            </StackPanel>
-
-            <Button Classes="secondary small"
-                    HorizontalAlignment="Left"
-                    Content="{loc:Tr combo.change}"
-                    IsEnabled="False"
-                    AutomationProperties.HelpText="{loc:Tr combo.change_reason}"
-                    ToolTip.Tip="{loc:Tr combo.change_reason}" />
-          </StackPanel>
-        </controls:Card>
-
-        <!-- Contagem regressiva -->
-        <controls:Card x:Name="CountdownCard"
-                       Grid.Row="2"
-                       Grid.Column="2"
-                       Title="{loc:Tr section.countdown}"
-                       TitleIcon="F0 M 9,2 H 15 V 4 H 9 Z M 12,6 A 8,8 0 1 0 12,22 A 8,8 0 1 0 12,6 Z M 12,8 A 6,6 0 1 0 12,20 A 6,6 0 1 0 12,8 Z M 11,10 H 13 V 14 H 16 V 16 H 11 Z">
-          <StackPanel Spacing="10">
-            <TextBlock Classes="hint" Text="{loc:Tr countdown.help}" TextWrapping="Wrap" />
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr settings.activation_delay}" />
-              <ComboBox SelectedIndex="{Binding ActivationDelayIndex, Mode=TwoWay}"
-                        AutomationProperties.Name="{loc:Tr settings.activation_delay}">
-                <ComboBoxItem Content="{loc:Tr delay.immediate}" />
-                <ComboBoxItem Content="{loc:Tr delay.1s}" />
-                <ComboBoxItem Content="{loc:Tr delay.2s}" />
-                <ComboBoxItem Content="{loc:Tr delay.3s}" />
-                <ComboBoxItem Content="{loc:Tr delay.5s}" />
-              </ComboBox>
-            </StackPanel>
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr settings.deactivation_delay}" />
-              <ComboBox SelectedIndex="{Binding DeactivationDelayIndex, Mode=TwoWay}"
-                        AutomationProperties.Name="{loc:Tr settings.deactivation_delay}">
-                <ComboBoxItem Content="{loc:Tr delay.immediate}" />
-                <ComboBoxItem Content="{loc:Tr delay.1s}" />
-                <ComboBoxItem Content="{loc:Tr delay.2s}" />
-                <ComboBoxItem Content="{loc:Tr delay.3s}" />
-                <ComboBoxItem Content="{loc:Tr delay.5s}" />
-              </ComboBox>
-            </StackPanel>
-          </StackPanel>
-        </controls:Card>
-
-        <!-- Parâmetros -->
-        <controls:Card x:Name="SettingsCard"
-                       Grid.Row="3"
-                       Grid.Column="2"
-                       Title="{loc:Tr section.settings}"
-                       TitleIcon="M 2,5 H 7 V 3 H 10 V 5 H 22 V 7 H 10 V 9 H 7 V 7 H 2 Z M 2,11 H 15 V 9 H 18 V 11 H 22 V 13 H 18 V 15 H 15 V 13 H 2 Z M 2,17 H 7 V 15 H 10 V 17 H 22 V 19 H 10 V 21 H 7 V 19 H 2 Z">
-          <StackPanel Spacing="10">
-            <StackPanel Spacing="6">
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <TextBlock Text="{loc:Tr settings.close_launcher}" VerticalAlignment="Center" />
-                <ToggleSwitch Grid.Column="1"
-                              IsChecked="{Binding CloseLauncherOnActivate}"
-                              AutomationProperties.Name="{loc:Tr settings.close_launcher}" />
-              </Grid>
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <TextBlock Text="{loc:Tr settings.start_with_windows}" VerticalAlignment="Center" />
-                <ToggleSwitch Grid.Column="1"
-                              IsChecked="{Binding StartWithWindows}"
-                              IsEnabled="{Binding CanConfigureStartup}"
-                              AutomationProperties.Name="{loc:Tr settings.start_with_windows}"
-                              AutomationProperties.HelpText="{loc:Tr settings.start_with_windows_help}" />
-              </Grid>
-              <TextBlock IsVisible="{Binding StartupError}"
-                         Text="{loc:Tr settings.startup_error}"
-                         Foreground="{DynamicResource CouchPad.Danger}"
-                         AutomationProperties.LiveSetting="Polite"
-                         TextWrapping="Wrap" />
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{loc:Tr transition.audio_mode}" />
+                <ComboBox SelectedIndex="{Binding AudioModeIndex, Mode=TwoWay}"
+                          AutomationProperties.Name="{loc:Tr transition.audio_mode}">
+                  <ComboBoxItem Content="{loc:Tr audio_mode.move}" />
+                  <ComboBoxItem Content="{loc:Tr audio_mode.keep}" />
+                </ComboBox>
+                <TextBlock Classes="hint" Text="{loc:Tr audio.restore_help}" TextWrapping="Wrap" />
+              </StackPanel>
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{loc:Tr audio.tv_endpoint}" />
+                <ComboBox ItemsSource="{Binding AudioEndpoints}"
+                          SelectedItem="{Binding SelectedTvAudioEndpoint, Mode=TwoWay}"
+                          PlaceholderText="{loc:Tr audio.endpoint_none}"
+                          AutomationProperties.Name="{loc:Tr audio.tv_endpoint}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AudioEndpointOption">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Classes="caption" Text="{loc:Tr audio.endpoint_current}"
+                                   IsVisible="{Binding IsCurrent}" />
+                        <TextBlock Classes="caption" Text="{loc:Tr audio.endpoint_unavailable}"
+                                   IsVisible="{Binding !IsAvailable}" />
+                        <TextBlock Text="{Binding DisplayName}" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <WrapPanel>
+                  <Button Classes="link" Content="{loc:Tr audio.refresh}"
+                          Command="{Binding RefreshAudioEndpointsCommand}" />
+                  <Button Classes="secondary small" Content="{loc:Tr audio.test}"
+                          Command="{Binding TestAudioCommand}" IsVisible="{Binding IsProductionMode}" />
+                </WrapPanel>
+                <TextBlock Classes="hint" Text="{loc:Tr audio.test_inactive}"
+                           IsVisible="{Binding SelectedAudioCanAppearLater}" />
+                <TextBlock Classes="hint" Text="{Binding AudioSetupText}"
+                           IsVisible="{Binding AudioSetupText, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
+                           AutomationProperties.LiveSetting="Polite" />
+              </StackPanel>
               <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding !IsProductionMode}">
-                <TextBlock Text="{loc:Tr settings.real_gamepad}" VerticalAlignment="Center" />
-                <ToggleSwitch Grid.Column="1"
-                              IsChecked="{Binding UseWindowsGamepad}"
-                              AutomationProperties.Name="{loc:Tr settings.real_gamepad}"
-                              AutomationProperties.HelpText="{loc:Tr settings.real_gamepad_help}" />
+                <TextBlock Text="{loc:Tr audio.allow_writes}" VerticalAlignment="Center" />
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AllowAudioWrites}"
+                              AutomationProperties.Name="{loc:Tr audio.allow_writes}" />
               </Grid>
-              <TextBlock Classes="hint" IsVisible="{Binding !IsProductionMode}" Text="{loc:Tr settings.real_gamepad_help}" />
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <TextBlock Text="{loc:Tr settings.minimize_to_tray}" VerticalAlignment="Center" />
-                <ToggleSwitch Grid.Column="1"
-                              IsChecked="{Binding MinimizeToTray}"
-                              AutomationProperties.Name="{loc:Tr settings.minimize_to_tray}"
-                              AutomationProperties.HelpText="{loc:Tr settings.minimize_to_tray_help}" />
+              <TextBlock Classes="hint" Text="{loc:Tr audio.restart_help}" TextWrapping="Wrap"
+                         IsVisible="{Binding !IsProductionMode}" />
+            </StackPanel>
+          </controls:Card>
+
+          <!-- Parâmetros -->
+          <controls:Card x:Name="SettingsCard"
+                         Title="{loc:Tr section.settings}"
+                         TitleIcon="M 2,5 H 7 V 3 H 10 V 5 H 22 V 7 H 10 V 9 H 7 V 7 H 2 Z M 2,11 H 15 V 9 H 18 V 11 H 22 V 13 H 18 V 15 H 15 V 13 H 2 Z M 2,17 H 7 V 15 H 10 V 17 H 22 V 19 H 10 V 21 H 7 V 19 H 2 Z">
+            <StackPanel Spacing="10">
+              <Grid ColumnDefinitions="*,*"
+                    ColumnSpacing="12"
+                    RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+
+                <Grid Grid.Row="0" Grid.Column="0"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="6">
+                  <TextBlock Classes="caption"
+                             Text="{loc:Tr settings.close_launcher}"
+                             TextWrapping="Wrap"
+                             VerticalAlignment="Center" />
+                  <ToggleSwitch Grid.Column="1"
+                                IsChecked="{Binding CloseLauncherOnActivate}"
+                                AutomationProperties.Name="{loc:Tr settings.close_launcher}" />
+                </Grid>
+
+                <Grid Grid.Row="0" Grid.Column="1"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="6">
+                  <TextBlock Classes="caption"
+                             Text="{loc:Tr settings.start_with_windows}"
+                             TextWrapping="Wrap"
+                             VerticalAlignment="Center" />
+                  <ToggleSwitch Grid.Column="1"
+                                IsChecked="{Binding StartWithWindows}"
+                                IsEnabled="{Binding CanConfigureStartup}"
+                                AutomationProperties.Name="{loc:Tr settings.start_with_windows}"
+                                AutomationProperties.HelpText="{loc:Tr settings.start_with_windows_help}" />
+                </Grid>
+
+                <TextBlock Grid.Row="1" Grid.ColumnSpan="2"
+                           Margin="0,6,0,0"
+                           IsVisible="{Binding StartupError}"
+                           Text="{loc:Tr settings.startup_error}"
+                           Foreground="{DynamicResource CouchPad.Danger}"
+                           AutomationProperties.LiveSetting="Polite"
+                           TextWrapping="Wrap" />
+
+                <Grid Grid.Row="2" Grid.Column="0"
+                      Margin="0,10,0,0"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="6">
+                  <TextBlock Classes="caption"
+                             Text="{loc:Tr settings.real_gamepad}"
+                             TextWrapping="Wrap"
+                             VerticalAlignment="Center" />
+                  <ToggleSwitch Grid.Column="1"
+                                IsChecked="{Binding UseWindowsGamepad}"
+                                AutomationProperties.Name="{loc:Tr settings.real_gamepad}"
+                                AutomationProperties.HelpText="{loc:Tr settings.real_gamepad_help}" />
+                </Grid>
+
+                <Grid Grid.Row="2" Grid.Column="1"
+                      Margin="0,10,0,0"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="6">
+                  <TextBlock Classes="caption"
+                             Text="{loc:Tr settings.minimize_to_tray}"
+                             TextWrapping="Wrap"
+                             VerticalAlignment="Center" />
+                  <ToggleSwitch Grid.Column="1"
+                                IsChecked="{Binding MinimizeToTray}"
+                                AutomationProperties.Name="{loc:Tr settings.minimize_to_tray}"
+                                AutomationProperties.HelpText="{loc:Tr settings.minimize_to_tray_help}" />
+                </Grid>
+
+                <TextBlock Grid.Row="3" Grid.ColumnSpan="2"
+                           Margin="0,4,0,0"
+                           Classes="hint"
+                           IsVisible="{Binding !IsProductionMode}"
+                           Text="{loc:Tr settings.real_gamepad_help}"
+                           TextWrapping="Wrap" />
+
+                <Grid Grid.Row="4" Grid.Column="0"
+                      Margin="0,10,0,0"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="6"
+                      IsVisible="{Binding !IsProductionMode}">
+                  <TextBlock Classes="caption"
+                             Text="{loc:Tr settings.allow_display_writes}"
+                             TextWrapping="Wrap"
+                             VerticalAlignment="Center" />
+                  <ToggleSwitch Grid.Column="1"
+                                IsChecked="{Binding AllowDisplayWrites}"
+                                AutomationProperties.Name="{loc:Tr settings.allow_display_writes}"
+                                AutomationProperties.HelpText="{loc:Tr settings.allow_display_writes_help}" />
+                </Grid>
+
+                <TextBlock Grid.Row="5" Grid.ColumnSpan="2"
+                           Margin="0,4,0,0"
+                           Classes="hint"
+                           IsVisible="{Binding !IsProductionMode}"
+                           Text="{loc:Tr settings.allow_display_writes_help}"
+                           TextWrapping="Wrap" />
+
+                <CheckBox Grid.Row="6" Grid.ColumnSpan="2"
+                          Margin="0,10,0,0"
+                          Content="{loc:Tr update.check}"
+                          IsChecked="{Binding CheckForUpdates}"
+                          IsVisible="{Binding UpdatesAvailable}"
+                          AutomationProperties.Name="{loc:Tr update.check}" />
+
+                <CheckBox Grid.Row="7" Grid.ColumnSpan="2"
+                          Margin="0,4,0,0"
+                          Content="{loc:Tr update.include_previews}"
+                          IsChecked="{Binding IncludePreviewUpdates}"
+                          IsEnabled="{Binding CheckForUpdates}"
+                          IsVisible="{Binding UpdatesAvailable}"
+                          AutomationProperties.Name="{loc:Tr update.include_previews}" />
               </Grid>
-              <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding !IsProductionMode}">
-                <TextBlock Text="{loc:Tr settings.allow_display_writes}" VerticalAlignment="Center" />
-                <ToggleSwitch Grid.Column="1"
-                              IsChecked="{Binding AllowDisplayWrites}"
-                              AutomationProperties.Name="{loc:Tr settings.allow_display_writes}"
-                              AutomationProperties.HelpText="{loc:Tr settings.allow_display_writes_help}" />
-              </Grid>
-              <TextBlock Classes="hint" IsVisible="{Binding !IsProductionMode}" Text="{loc:Tr settings.allow_display_writes_help}" />
+              <TextBlock Classes="hint" Text="{loc:Tr settings.help}" />
             </StackPanel>
-
-            <StackPanel Spacing="6" IsVisible="{Binding UpdatesAvailable}">
-              <CheckBox Content="{loc:Tr update.check}" IsChecked="{Binding CheckForUpdates}"
-                        AutomationProperties.Name="{loc:Tr update.check}" />
-              <CheckBox Content="{loc:Tr update.include_previews}" IsChecked="{Binding IncludePreviewUpdates}"
-                        IsEnabled="{Binding CheckForUpdates}" AutomationProperties.Name="{loc:Tr update.include_previews}" />
-            </StackPanel>
-            <TextBlock Classes="hint" Text="{loc:Tr settings.help}" />
-          </StackPanel>
-        </controls:Card>
-
-        <!-- Transição -->
-        <controls:Card x:Name="TransitionCard"
-                       Grid.Row="3"
-                       Grid.Column="0"
-                       Title="{loc:Tr section.transition}"
-                       TitleIcon="M 2,6 H 16 V 3 L 22,8 L 16,13 V 10 H 2 Z M 22,14 H 8 V 11 L 2,16 L 8,21 V 18 H 22 Z">
-          <StackPanel Spacing="10">
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr transition.display_mode}" />
-              <ComboBox SelectedIndex="{Binding DisplayModeIndex, Mode=TwoWay}"
-                        AutomationProperties.Name="{loc:Tr transition.display_mode}">
-                <ComboBoxItem Content="{loc:Tr display_mode.tv_only}" />
-                <ComboBoxItem Content="{loc:Tr display_mode.extend}" />
-              </ComboBox>
-            </StackPanel>
-
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr transition.audio_mode}" />
-              <ComboBox SelectedIndex="{Binding AudioModeIndex, Mode=TwoWay}"
-                        AutomationProperties.Name="{loc:Tr transition.audio_mode}">
-                <ComboBoxItem Content="{loc:Tr audio_mode.move}" />
-                <ComboBoxItem Content="{loc:Tr audio_mode.keep}" />
-              </ComboBox>
-              <TextBlock Classes="hint" Text="{loc:Tr audio.restore_help}" TextWrapping="Wrap" />
-            </StackPanel>
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr audio.tv_endpoint}" />
-              <ComboBox ItemsSource="{Binding AudioEndpoints}"
-                        SelectedItem="{Binding SelectedTvAudioEndpoint, Mode=TwoWay}"
-                        PlaceholderText="{loc:Tr audio.endpoint_none}"
-                        AutomationProperties.Name="{loc:Tr audio.tv_endpoint}">
-                <ComboBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:AudioEndpointOption">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <TextBlock Classes="caption" Text="{loc:Tr audio.endpoint_current}"
-                                 IsVisible="{Binding IsCurrent}" />
-                      <TextBlock Classes="caption" Text="{loc:Tr audio.endpoint_unavailable}"
-                                 IsVisible="{Binding !IsAvailable}" />
-                      <TextBlock Text="{Binding DisplayName}" />
-                    </StackPanel>
-                  </DataTemplate>
-                </ComboBox.ItemTemplate>
-              </ComboBox>
-              <WrapPanel>
-                <Button Classes="link" Content="{loc:Tr audio.refresh}"
-                        Command="{Binding RefreshAudioEndpointsCommand}" />
-                <Button Classes="secondary small" Content="{loc:Tr audio.test}"
-                        Command="{Binding TestAudioCommand}" IsVisible="{Binding IsProductionMode}" />
-              </WrapPanel>
-              <TextBlock Classes="hint" Text="{loc:Tr audio.test_inactive}"
-                         IsVisible="{Binding SelectedAudioCanAppearLater}" />
-              <TextBlock Classes="hint" Text="{Binding AudioSetupText}"
-                         IsVisible="{Binding AudioSetupText, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
-                         AutomationProperties.LiveSetting="Polite" />
-            </StackPanel>
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding !IsProductionMode}">
-              <TextBlock Text="{loc:Tr audio.allow_writes}" VerticalAlignment="Center" />
-              <ToggleSwitch Grid.Column="1" IsChecked="{Binding AllowAudioWrites}"
-                            AutomationProperties.Name="{loc:Tr audio.allow_writes}" />
-            </Grid>
-            <TextBlock Classes="hint" Text="{loc:Tr audio.restart_help}" TextWrapping="Wrap"
-                       IsVisible="{Binding !IsProductionMode}" />
-          </StackPanel>
-        </controls:Card>
-
-        <!-- Launchers -->
-        <controls:Card x:Name="LaunchersCard"
-                       Grid.Row="3"
-                       Grid.Column="1"
-                       Title="{loc:Tr section.launchers}"
-                       TitleIcon="F0 M 12,2 A 10,10 0 1 0 12,22 A 10,10 0 1 0 12,2 Z M 12,4 A 8,8 0 1 0 12,20 A 8,8 0 1 0 12,4 Z M 9,7 L 17,12 L 9,17 Z">
-          <StackPanel Spacing="10">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-              <TextBlock Text="{loc:Tr launchers.enabled}" VerticalAlignment="Center" />
-              <ToggleSwitch Grid.Column="1"
-                            IsChecked="{Binding SteamEnabled}"
-                            AutomationProperties.Name="{loc:Tr launchers.enabled}" />
-            </Grid>
-
-            <StackPanel Spacing="4">
-              <TextBlock Classes="caption" Text="{loc:Tr launchers.select}" />
-              <ComboBox SelectedIndex="{Binding LauncherIndex, Mode=TwoWay}" AutomationProperties.Name="{loc:Tr launchers.select}">
-                <ComboBoxItem Content="{loc:Tr launchers.steam}" />
-                <ComboBoxItem Content="{loc:Tr launchers.hydra}" />
-              </ComboBox>
-            </StackPanel>
-            <TextBlock Classes="hint"
-                       Text="{Binding LauncherErrorText}"
-                       IsVisible="{Binding HasLauncherError}"
-                       Foreground="{DynamicResource CouchPad.Danger}"
-                       AutomationProperties.LiveSetting="Polite"
-                       TextWrapping="Wrap" />
-          </StackPanel>
-        </controls:Card>
+          </controls:Card>
+        </StackPanel>
       </Grid>
     </ScrollViewer>
 

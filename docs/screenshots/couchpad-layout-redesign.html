@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CouchPad — proposta de layout (1.0.24)</title>
+<style>
+  :root {
+    /* Tokens de src/CouchPad.App/Themes/Tokens.axaml */
+    --bg: #0A0A0B;
+    --surface: #17181A;
+    --surface-raised: #1F2023;
+    --surface-sunken: #111214;
+    --border: #2A2B2F;
+    --border-strong: #3A3B40;
+    --text: #F2F3F5;
+    --muted: #9AA0A6;
+    --accent: #2FD07A;
+    --accent-muted: #123D28;
+    --accent-muted-hover: #1B5A3A;
+    --info: #8CC6FF;
+    --info-muted: #15304F;
+    --warning: #F2C94C;
+    --warning-muted: #3A3117;
+    --danger: #EB5757;
+
+    --radius-card: 14px;
+    --radius-control: 8px;
+    --gap: 10px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); }
+  body {
+    color: var(--text);
+    font-family: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  svg { display: block; }
+  .ico { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ico-xs { width: 12px; height: 12px; }
+
+  /* ---------- prancha ---------- */
+  .board {
+    width: 1500px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .board-head {
+    width: 1436px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+  }
+  .kicker {
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  h1 {
+    margin: 7px 0 0;
+    font-size: 26px;
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -.02em;
+  }
+  .board-sub { margin: 7px 0 0; font-size: 13px; color: var(--muted); }
+  .board-specs { display: flex; align-items: center; gap: 15px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .board-specs b { color: var(--text); font-weight: 600; }
+  .board-specs .sep { width: 1px; height: 12px; background: var(--border); }
+
+  .stage { display: flex; align-items: flex-start; gap: 24px; }
+
+  .frame-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 18px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .frame-label b { color: var(--text); font-weight: 600; }
+  .frame-label .tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* ---------- janela ---------- */
+  .win {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 26px 64px rgba(0, 0, 0, .55);
+  }
+  .win.lg { width: 1020px; height: 780px; padding: 0 18px; }
+  .win.md { width: 780px; height: 620px; padding: 0 14px; }
+  .win.sm { width: 640px; height: 620px; padding: 0 14px; }
+
+  /* ---------- cabeçalho ---------- */
+  .app-head { padding: 12px 0; border-bottom: 1px solid var(--border); position: relative; }
+  .app-head::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -1px;
+    width: 96px; height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .app-head-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .logo {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    background: var(--accent-muted);
+    border: 1px solid var(--accent-muted-hover);
+    color: var(--accent);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    flex: 0 0 auto;
+  }
+  .app-name { font-size: 20px; font-weight: 600; line-height: 1.1; letter-spacing: -.02em; }
+  .app-tag { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .head-right { display: flex; align-items: center; gap: 8px; }
+
+  /* ---------- masonry ---------- */
+  .masonry {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--gap);
+    padding: 12px 0;
+  }
+  .masonry.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mcol { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+
+  /* ---------- card ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    /* altura natural: nada de flex: 1 nem align-self: stretch */
+  }
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 20px; }
+  .ct { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .ci {
+    width: 20px; height: 20px;
+    border-radius: 6px;
+    display: grid; place-items: center;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    flex: 0 0 auto;
+  }
+  .ci svg { width: 12px; height: 12px; }
+  .card h2 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; white-space: nowrap; }
+  .card-help { margin: 0; font-size: 13px; line-height: 1.4; color: var(--muted); }
+  .caption { margin: 0; font-size: 11px; line-height: 1.4; color: var(--muted); }
+  .hint { margin: 0; font-size: 11px; line-height: 1.35; color: var(--muted); }
+
+  /* ---------- controles ---------- */
+  .switch {
+    width: 36px; height: 20px;
+    border-radius: 999px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-strong);
+    position: relative;
+    flex: 0 0 auto;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+  .switch.on { background: var(--accent-muted); border-color: var(--accent-muted-hover); }
+  .switch.on::after { left: 18px; background: var(--accent); }
+
+  .select {
+    height: 32px;
+    padding: 0 9px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+    min-width: 0;
+  }
+  .select > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .select .chev { color: var(--muted); flex: 0 0 auto; }
+  .select.accent { border-color: var(--accent-muted-hover); }
+
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .field > label { font-size: 11px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid2 .span2 { grid-column: 1 / -1; }
+
+  .row { display: flex; align-items: center; gap: 10px; min-height: 32px; }
+  .row .k { flex: 1; font-size: 13px; color: var(--muted); }
+  .row .select { width: 92px; flex: 0 0 auto; }
+
+  /* áudio: select + ação na mesma linha */
+  .audio-row { display: flex; align-items: center; gap: 8px; min-height: 32px; }
+  .audio-row .select { flex: 1; }
+
+  .btn {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border-strong);
+    background: var(--surface-raised);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .btn.primary { background: var(--accent-muted); border-color: var(--accent-muted-hover); color: var(--accent); }
+  .btn.wide { width: 100%; }
+  .btn.sm { height: 28px; font-size: 11px; padding: 0 9px; }
+  .btn[disabled] { opacity: .42; }
+  .tbtn { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .tbtn.acc { color: var(--accent); }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 20px;
+    padding: 0 7px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  .pill .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .pill.ok { color: var(--accent); background: var(--accent-muted); border-color: var(--accent-muted-hover); }
+  .pill.info { color: var(--info); background: var(--info-muted); border-color: var(--info-muted); }
+  .pill.warn { color: var(--warning); background: var(--warning-muted); border-color: var(--warning-muted); }
+
+  .seg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 3px;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+  }
+  .seg > span {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+  }
+  .seg > span.on { background: var(--accent-muted); color: var(--accent); font-weight: 600; }
+
+  /* ---------- status rows ---------- */
+  .srows { display: flex; flex-direction: column; }
+  .srow {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 0;
+    border-top: 1px solid var(--border);
+    min-width: 0;
+  }
+  .srow:first-child { border-top: 0; padding-top: 0; }
+  .srow:last-child { padding-bottom: 0; }
+  .srow .ci { width: 22px; height: 22px; border-radius: 7px; }
+  .srow .sk { display: block; font-size: 11px; color: var(--muted); line-height: 1.2; }
+  .srow .sv { display: block; font-size: 13px; color: var(--text); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .srow .txt { min-width: 0; flex: 1; }
+
+  /* ---------- tiles atual/destino ---------- */
+  .tiles { display: grid; grid-template-columns: 1fr 16px 1fr; align-items: stretch; gap: 6px; }
+  .tile {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-sunken);
+    padding: 8px 9px;
+    min-width: 0;
+  }
+  .tile.dest { border-color: var(--accent-muted-hover); }
+  .tile .cap { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tile .val { font-size: 12px; font-weight: 600; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile.dest .val { color: var(--accent); }
+  .tile .sub { font-size: 10px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile-arrow { display: grid; place-items: center; color: var(--muted); }
+  .tile-arrow svg { width: 13px; height: 13px; }
+
+  /* ---------- perfis ---------- */
+  .profile-row { display: flex; align-items: center; gap: 10px; }
+  .profile-row .select { flex: 1; }
+
+  /* ---------- diagnóstico ---------- */
+  .diag {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-sunken);
+    padding: 8px 10px;
+  }
+  .diag-head { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .diag-head .dt { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .diag-head .sp { flex: 1; }
+  .diag-head .chev { color: var(--muted); flex: 0 0 auto; }
+  .diag-lines { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+  .diag-line { display: flex; gap: 5px; font-size: 11px; line-height: 1.4; color: var(--muted); }
+  .diag-line b { color: var(--text); font-weight: 600; }
+  .diag-line .ok { color: var(--accent); flex: 0 0 auto; }
+
+  /* ---------- gamepad ---------- */
+  .gp { display: flex; align-items: center; gap: 10px; }
+  .gp .txt { min-width: 0; flex: 1; }
+  .gp-art {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    display: grid; place-items: center;
+    background: var(--accent-muted);
+    border: 1px solid var(--accent-muted-hover);
+    color: var(--accent);
+    flex: 0 0 auto;
+  }
+  .gp-art svg { width: 22px; height: 22px; }
+  .gp-name { font-size: 13px; font-weight: 600; }
+  .gp-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ---------- combinação ---------- */
+  .keys { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .key {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-raised);
+    display: inline-grid;
+    place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    box-shadow: 0 2px 0 var(--bg);
+  }
+  .keys .plus { color: var(--muted); font-size: 11px; }
+
+  /* ---------- launchers ---------- */
+  .launch-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .opt {
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 9px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .opt.on { border-color: var(--accent-muted-hover); color: var(--text); }
+  .opt .rd { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--border-strong); flex: 0 0 auto; }
+  .opt.on .rd { background: var(--accent); border-color: var(--accent); }
+
+  /* ---------- parâmetros ---------- */
+  .toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 11px 12px; }
+  .trow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 0;
+    min-width: 0;
+  }
+  .trow:last-child { grid-column: 1 / -1; }
+  .trow span.tl { font-size: 11px; line-height: 1.3; color: var(--text); }
+  .trow .switch { width: 28px; height: 18px; margin-top: 1px; }
+  .trow .switch::after { width: 12px; height: 12px; }
+  .trow .switch.on::after { left: 12px; }
+  .trow.off span.tl { color: var(--muted); }
+
+  /* ---------- rodapé ---------- */
+  .app-foot {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0 12px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .app-foot .ver { white-space: nowrap; }
+  .app-foot .flink { color: var(--muted); white-space: nowrap; }
+  .app-foot .lang {
+    margin-left: auto;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  /* ---------- frames menores ---------- */
+  .mini .app-head { padding: 10px 0; }
+  .mini .logo { width: 30px; height: 30px; border-radius: 8px; font-size: 14px; }
+  .mini .app-name { font-size: 16px; }
+  .mini .app-tag { font-size: 10px; }
+  .mini .card { padding: 12px; gap: 8px; border-radius: 12px; }
+  .mini .card h2 { font-size: 13px; }
+  .mini .card-help { font-size: 12px; }
+  .mini .caption, .mini .hint, .mini .srow .sk, .mini .tile .cap, .mini .tile .sub, .mini .diag-line { font-size: 10px; }
+  .mini .srow .sv, .mini .row .k, .mini .gp-name, .mini .opt, .mini .trow span.tl { font-size: 12px; }
+  .mini .select { height: 28px; font-size: 12px; }
+  .mini .btn { height: 28px; font-size: 11px; }
+  .mini .seg > span { height: 22px; font-size: 11px; }
+  .mini .key { height: 26px; min-width: 27px; font-size: 10px; }
+  .mini .tile .val { font-size: 11px; }
+  .mini .app-foot { padding: 8px 0 10px; font-size: 10px; }
+  .mini .app-foot .lang { height: 22px; font-size: 10px; }
+  .mini .masonry { padding: 10px 0; gap: 8px; }
+  .mini .mcol { gap: 8px; }
+  .mini .trow .switch { width: 28px; height: 16px; }
+  .mini .trow .switch::after { width: 10px; height: 10px; }
+  .mini .trow .switch.on::after { left: 14px; }
+
+  /* viewport com rolagem: cards continuam abaixo */
+  .scroll {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(180deg, #000 82%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 82%, transparent 100%);
+  }
+
+  /* ---------- anotações ---------- */
+  .notes {
+    width: 300px;
+    flex: 0 0 auto;
+    padding: 4px 0 0 20px;
+    border-left: 1px solid var(--border);
+  }
+  .notes .nt-head { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .note { display: flex; gap: 12px; margin-top: 16px; }
+  .note .num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    padding-top: 2px;
+    width: 18px;
+    flex: 0 0 auto;
+  }
+  .note .nt { font-size: 13px; font-weight: 600; }
+  .note p { margin: 4px 0 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+  .notes .tokens {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .notes .tokens b { color: var(--text); font-weight: 600; }
+
+  .board-foot { width: 1436px; font-size: 11px; color: var(--muted); }
+  .board-foot b { color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body>
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 5 13h6l-1 9 9-12h-6l1-8Z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="m8 3 4 3 4-3"/></symbol>
+  <symbol id="i-gamepad" viewBox="0 0 24 24"><path d="M7 8h10a5 5 0 0 1 4.7 6.7l-1 2.8a2.3 2.3 0 0 1-3.9.8L14.5 16h-5l-2.3 2.3a2.3 2.3 0 0 1-3.9-.8l-1-2.8A5 5 0 0 1 7 8Z"/><path d="M8 12h3M9.5 10.5v3M15.5 11.5h.01M17.5 13.5h.01"/></symbol>
+  <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M14 4c3.5 0 6 2.5 6 6-2.8 5.2-6.3 7.5-10 8.5L7 15.5C8 11.8 10.3 8.3 14 4Z"/><path d="m8 16-3 3M10 18l-1 3M6 14l-3 1"/></symbol>
+  <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 10v3l2 2M9 2h6M12 2v3"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h6M14 6h6M4 12h10M18 12h2M4 18h2M10 18h10"/><circle cx="12" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chev-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.5 2.8 8.1 7 10 4.2-1.9 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+</svg>
+
+<main class="board">
+  <header class="board-head">
+    <div>
+      <div class="kicker">Proposta visual · mock estático</div>
+      <h1>CouchPad — proposta de layout (1.0.24)</h1>
+      <p class="board-sub">Masonry de 3 colunas com altura natural, Display e TV separados, Parâmetros em grade.</p>
+    </div>
+    <div class="board-specs">
+      <span>frame <b>1020×780</b></span>
+      <span class="sep"></span>
+      <span>colunas <b>3 / 2 / 1</b></span>
+      <span class="sep"></span>
+      <span>breakpoints <b>1020 · 780 · 640</b></span>
+      <span class="sep"></span>
+      <span>gap <b>10 px</b></span>
+    </div>
+  </header>
+
+  <!-- ================= FRAME PRINCIPAL ================= -->
+  <section class="stage">
+    <div>
+      <div class="frame-label"><b>App</b> · 1020 × 780 · 3 colunas <span class="tag">masonry</span></div>
+
+      <div class="win lg">
+        <header class="app-head">
+          <div class="app-head-row">
+            <div class="brand">
+              <div class="logo">C</div>
+              <div>
+                <div class="app-name">CouchPad</div>
+                <div class="app-tag">Jogando no conforto do sofá</div>
+              </div>
+            </div>
+            <div class="head-right">
+              <span class="pill ok"><span class="dot"></span>Ativo</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="masonry">
+          <!-- Coluna 1 -->
+          <div class="mcol">
+            <article class="card">
+              <div class="card-head">
+                <div class="ct"><span class="ci"><svg class="ico"><use href="#i-bolt"/></svg></span><h2>Automação</h2></div>
+                <span class="switch on"></span>
+              </div>
+              <p class="card-help">Ative para reagir ao controle quando ele conectar.</p>
+              <div class="srows">
+                <div class="srow">
+                  <span class="ci"><svg class="ico"><use href="#i-gamepad"/></svg></span>
+                  <div class="txt"><span class="sk">Gamepad</span><span class="sv">8BitDo Ultimate 2</span></div>
+                  <span class="pill ok">Conectado</span>
+                </div>
+                <div class="srow">
+                  <span class="ci"><svg class="ico"><use href="#i-monitor"/></svg></span>
+                  <div class="txt"><span class="sk">Tela</span><span class="sv">TV · 3840×2160</span></div>
+                  <span class="pill">HDMI</span>
+                </div>
+                <div class="srow">
+                  <span class="ci"><svg class="ico"><use href="#i-speaker"/></svg></span>
+                  <div class="txt"><span class="sk">Áudio</span><span class="sv">Samsung HDMI</span></div>
+                  <span class="pill">padrão</span>
+                </div>
+                <div class="srow">
+                  <span class="ci"><svg class="ico"><use href="#i-rocket"/></svg></span>
+                  <div class="txt"><span class="sk">Launcher</span><span class="sv">Nenhum</span></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div class="ct"><span class="ci"><svg class="ico"><use href="#i-timer"/></svg></span><h2>Contagem</h2></div>
+              </div>
+              <div class="row"><span class="k">Atraso ao ativar</span><span class="select"><span>2 s</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+              <div class="row"><span class="k">Atraso ao desativar</span><span class="select"><span>2 s</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+              <p class="caption">Aplicado quando a automação estiver ativa.</p>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div class="ct"><span class="ci"><svg class="ico"><use href="#i-rocket"/></svg></span><h2>Launchers</h2></div>
+                <span class="switch on"></span>
+              </div>
+              <div class="launch-opts">
+                <div class="opt on"><span class="rd"></span>Steam</div>
+                <div class="opt"><span class="rd"></span>Hydra</div>
+              </div>
+              <button class="btn wide"><svg class="ico ico-xs"><use href="#i-rocket"/></svg>Abrir launcher</button>
+            </article>
+          </div>
+
+          <!-- Coluna 2 -->
+          <div class="mcol">
+            <article class="card">
+              <div class="card-head">
+                <div class="ct"><span class="ci"><svg class="ico"><use href="#i-monitor"/></svg></span><h2>Display</h2></div>
+                <span class="tbtn">Atualizar</span>
+              </div>
+              <div class="field">
+                <label>Perfil de ambiente</label>
+                <div class="profile-row">
+                  <span class="select"><span>Padrão</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span>
+                  <span class="tbtn acc">Novo</span>
+                  <span class="tbtn">Excluir</span>
+                </div>
+              </div>
+              <div class="tiles">
+                <div class="tile">
+                  <div class="cap">Atual</div>
+                  <div class="val">Monitor principal</div>
+                  <div class="sub">1920×1080 · 60 Hz</div>
+                </div>
+                <div class="tile-arrow"><svg class="ico"><use href="#i-arrow"/></svg></div>
+                <div class="tile dest">
+                  <div class="cap">Destino</div>
+                  <div class="val">TV · HDMI</div>
+                  <div class="sub">3840×2160 · 60 Hz</div>
+                </div>
+              </div>
+              <div class="grid2">
+                <div class="field">
+                  <label>TV alvo</label>
+                  <span class="select"><span>SAMSUNG</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span>
+                </div>
+                <div class="field">
+                  <label>Monitor interno</label>
+                  <span class="select"><span>AOC 27G2G4</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span>
+                </div>
+              </div>
+              <div class="diag">
+                <div class="diag-head">
+                  <svg class="ico ico-xs" style="color:var(--accent)"><use href="#i-shield"/></svg>
+                  <span class="dt">Diagnóstico da identificação</span>
+                  <span class="sp"></span>
+                  <span class="pill ok">alta</span>
+                  <svg class="ico ico-xs chev"><use href="#i-chev-up"/></svg>
+                </div>
+                <div class="diag-lines">
+                  <div class="diag-line"><span class="ok">✓</span><span><b>TV</b> SAMSUNG (EDID 11596/29031); inativa; HDMI.</span></div>
+                  <div class="diag-line"><span class="ok">✓</span><span><b>Monitor</b> AOC 27G2G4; ativo; não-HDMI.</span></div>
+                  <div class="diag-line"><span class="ok">✓</span><span><b>Áudio</b> nome do endpoint igual ao nome da TV.</span></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div class="ct"><span class="ci"><svg class="ico"><use href="#i-gamepad"/></svg></span><h2>Gamepad</h2></div>
+              </div>
+              <div class="gp">
+                <div class="gp-art"><svg class="ico" style="width:22px;height:22px"><use href="#i-gamepad"/></svg></div>
+                <div class="txt">
+                  <div class="gp-name">Controle conectado</div>
+                  <div class="gp-sub">8BitDo Ultimate 2 · USB</div>
+                </div>
+                <button class="btn sm"><svg class="ico ico-xs"><use href="#i-gamepad"/></svg>Big Picture</button>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div class="ct"><span class="ci"><svg class="ico"><use href="#i-key"/></svg></span><h2>Combinação</h2></div>
+                <span class="pill">atalho</span>
+              </div>
+              <div class="keys">
+                <span class="key">LB</span><span class="plus">+</span>
+                <span class="key">RB</span><span class="plus">+</span>
+                <span class="key">A</span>
+              </div>
+              <button class="btn" disabled>Alterar</button>
+            </article>
+          </div>
+
+          <!-- Coluna 3 -->
+          <div class="mcol">
+            <article class="card">
+              <div class="card-head">
+                <div class="ct"><span class="ci"><svg class="ico"><use href="#i-tv"/></svg></span><h2>TV</h2></div>
+                <span class="pill info">HDMI</span>
+              </div>
+              <div class="grid2">
+                <div class="field">
+                  <label>Resolução</label>
+                  <span class="select"><span>3840×2160</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span>
+                </div>
+                <div class="field">
+                  <label>Taxa</label>
+                  <span class="select"><span>60 Hz</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span>
+                </div>
+                <div class="field span2">
+                  <label>Escala do Windows</label>
+                  <span class="select"><span>125%</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span>
+                </div>
+              </div>
+              <p class="caption">Aplicado quando a automação ativar a TV; a escala pode valer só para apps abertos depois.</p>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div class="ct"><span class="ci"><svg class="ico"><use href="#i-sliders"/></svg></span><h2>Transição</h2></div>
+              </div>
+              <div class="field">
+                <label>Modo de tela</label>
+                <div class="seg"><span class="on">Somente TV</span><span>Estender</span></div>
+              </div>
+              <div class="field">
+                <label>Modo de áudio</label>
+                <div class="seg"><span class="on">Mover para HDMI</span><span>Manter atual</span></div>
+              </div>
+              <div class="field">
+                <label>Saída de áudio</label>
+                <div class="audio-row">
+                  <span class="select"><span>Samsung HDMI</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span>
+                  <button class="btn"><svg class="ico ico-xs"><use href="#i-speaker"/></svg>Testar som</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="card">
+              <div class="card-head">
+                <div class="ct"><span class="ci"><svg class="ico"><use href="#i-grid"/></svg></span><h2>Parâmetros</h2></div>
+              </div>
+              <div class="toggles">
+                <div class="trow"><span class="tl">Iniciar com Windows</span><span class="switch on"></span></div>
+                <div class="trow"><span class="tl">Minimizar para bandeja</span><span class="switch on"></span></div>
+                <div class="trow"><span class="tl">Fechar launcher</span><span class="switch on"></span></div>
+                <div class="trow off"><span class="tl">Permitir escrita de display</span><span class="switch"></span></div>
+                <div class="trow"><span class="tl">Verificar atualizações</span><span class="switch on"></span></div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <footer class="app-foot">
+          <span class="ver">Versão 1.0.23</span>
+          <span class="flink">Redefinir</span>
+          <span class="flink">Sobre</span>
+          <span class="lang">Português (Brasil)<svg class="ico ico-xs"><use href="#i-chev"/></svg></span>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Anotações -->
+    <aside class="notes">
+      <div class="nt-head">Decisões desta versão</div>
+
+      <div class="note">
+        <span class="num">01</span>
+        <div>
+          <div class="nt">Sem esticar cards</div>
+          <p>Altura natural pelo conteúdo. O espaço que sobra fica na coluna, nunca dentro do card.</p>
+        </div>
+      </div>
+      <div class="note">
+        <span class="num">02</span>
+        <div>
+          <div class="nt">Display e TV separados</div>
+          <p>Identificação, perfis e diagnóstico ficam em Display. Resolução, Hz e escala ficam em TV.</p>
+        </div>
+      </div>
+      <div class="note">
+        <span class="num">03</span>
+        <div>
+          <div class="nt">Parâmetros em 2 colunas</div>
+          <p>Grade interna de 2 colunas encurta o card sem perder nenhum toggle.</p>
+        </div>
+      </div>
+      <div class="note">
+        <span class="num">04</span>
+        <div>
+          <div class="nt">Tab segue a coluna</div>
+          <p>Ordem de foco desce a coluna inteira e só então salta para a próxima, sem zigue-zague.</p>
+        </div>
+      </div>
+
+      <div class="tokens">
+        <span><b>Card</b> raio 14 · borda 1 · padding 16</span>
+        <span><b>Tipografia</b> 15 título · 13 corpo · 11 caption</span>
+        <span><b>Grid</b> gap 10 · colunas 1020 / 780 / 640</span>
+        <span><b>Tokens</b> fundo, surface, border, accent, info, warning, danger</span>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ================= FRAMES MENORES ================= -->
+  <section class="stage">
+    <div>
+      <div class="frame-label"><b>780 × 620</b> · 2 colunas <span class="tag">≤ 1020</span></div>
+      <div class="win md mini">
+        <header class="app-head">
+          <div class="app-head-row">
+            <div class="brand">
+              <div class="logo">C</div>
+              <div>
+                <div class="app-name">CouchPad</div>
+                <div class="app-tag">Jogando no conforto do sofá</div>
+              </div>
+            </div>
+            <span class="pill ok"><span class="dot"></span>Ativo</span>
+          </div>
+        </header>
+
+        <div class="scroll">
+          <div class="masonry two">
+            <div class="mcol">
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-bolt"/></svg></span><h2>Automação</h2></div>
+                  <span class="switch on"></span>
+                </div>
+                <p class="card-help">Ative para reagir ao controle quando ele conectar.</p>
+                <div class="srows">
+                  <div class="srow">
+                    <span class="ci"><svg class="ico"><use href="#i-gamepad"/></svg></span>
+                    <div class="txt"><span class="sk">Gamepad</span><span class="sv">8BitDo Ultimate 2</span></div>
+                    <span class="pill ok">Conectado</span>
+                  </div>
+                  <div class="srow">
+                    <span class="ci"><svg class="ico"><use href="#i-monitor"/></svg></span>
+                    <div class="txt"><span class="sk">Tela</span><span class="sv">TV · 3840×2160</span></div>
+                    <span class="pill">HDMI</span>
+                  </div>
+                  <div class="srow">
+                    <span class="ci"><svg class="ico"><use href="#i-speaker"/></svg></span>
+                    <div class="txt"><span class="sk">Áudio</span><span class="sv">Samsung HDMI</span></div>
+                  </div>
+                  <div class="srow">
+                    <span class="ci"><svg class="ico"><use href="#i-rocket"/></svg></span>
+                    <div class="txt"><span class="sk">Launcher</span><span class="sv">Nenhum</span></div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-monitor"/></svg></span><h2>Display</h2></div>
+                  <span class="tbtn">Atualizar</span>
+                </div>
+                <div class="profile-row">
+                  <span class="select"><span>Padrão</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span>
+                  <span class="tbtn acc">Novo</span>
+                  <span class="tbtn">Excluir</span>
+                </div>
+                <div class="tiles">
+                  <div class="tile">
+                    <div class="cap">Atual</div>
+                    <div class="val">Monitor principal</div>
+                    <div class="sub">1920×1080</div>
+                  </div>
+                  <div class="tile-arrow"><svg class="ico"><use href="#i-arrow"/></svg></div>
+                  <div class="tile dest">
+                    <div class="cap">Destino</div>
+                    <div class="val">TV · HDMI</div>
+                    <div class="sub">3840×2160</div>
+                  </div>
+                </div>
+                <div class="grid2">
+                  <div class="field"><label>TV alvo</label><span class="select"><span>SAMSUNG</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                  <div class="field"><label>Monitor interno</label><span class="select"><span>AOC 27G2G4</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                </div>
+                <div class="diag">
+                  <div class="diag-head">
+                    <svg class="ico ico-xs" style="color:var(--accent)"><use href="#i-shield"/></svg>
+                    <span class="dt">Diagnóstico da identificação</span>
+                    <span class="sp"></span>
+                    <span class="pill ok">alta</span>
+                    <svg class="ico ico-xs chev"><use href="#i-chev"/></svg>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-gamepad"/></svg></span><h2>Gamepad</h2></div>
+                </div>
+                <div class="gp">
+                  <div class="gp-art"><svg class="ico" style="width:18px;height:18px"><use href="#i-gamepad"/></svg></div>
+                  <div>
+                    <div class="gp-name">Controle conectado</div>
+                    <div class="gp-sub">8BitDo Ultimate 2</div>
+                  </div>
+                </div>
+                <button class="btn wide"><svg class="ico ico-xs"><use href="#i-gamepad"/></svg>Big Picture</button>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-key"/></svg></span><h2>Combinação</h2></div>
+                  <span class="pill">atalho</span>
+                </div>
+                <div class="keys">
+                  <span class="key">LB</span><span class="plus">+</span>
+                  <span class="key">RB</span><span class="plus">+</span>
+                  <span class="key">A</span>
+                </div>
+                <button class="btn" disabled>Alterar</button>
+              </article>
+            </div>
+
+            <div class="mcol">
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-tv"/></svg></span><h2>TV</h2></div>
+                  <span class="pill info">HDMI</span>
+                </div>
+                <div class="grid2">
+                  <div class="field"><label>Resolução</label><span class="select"><span>3840×2160</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                  <div class="field"><label>Taxa</label><span class="select"><span>60 Hz</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                  <div class="field span2"><label>Escala do Windows</label><span class="select"><span>125%</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                </div>
+                <p class="hint">Aplicado quando a automação ativar a TV.</p>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-timer"/></svg></span><h2>Contagem</h2></div>
+                </div>
+                <div class="row"><span class="k">Atraso ao ativar</span><span class="select"><span>2 s</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                <div class="row"><span class="k">Atraso ao desativar</span><span class="select"><span>2 s</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-sliders"/></svg></span><h2>Transição</h2></div>
+                </div>
+                <div class="field">
+                  <label>Modo de tela</label>
+                  <div class="seg"><span class="on">Somente TV</span><span>Estender</span></div>
+                </div>
+                <div class="field">
+                  <label>Modo de áudio</label>
+                  <div class="seg"><span class="on">Mover para HDMI</span><span>Manter atual</span></div>
+                </div>
+                <button class="btn wide"><svg class="ico ico-xs"><use href="#i-speaker"/></svg>Testar som</button>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-rocket"/></svg></span><h2>Launchers</h2></div>
+                  <span class="switch on"></span>
+                </div>
+                <div class="launch-opts">
+                  <div class="opt on"><span class="rd"></span>Steam</div>
+                  <div class="opt"><span class="rd"></span>Hydra</div>
+                </div>
+                <button class="btn wide">Abrir launcher</button>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-grid"/></svg></span><h2>Parâmetros</h2></div>
+                </div>
+                <div class="toggles">
+                  <div class="trow"><span class="tl">Iniciar com Windows</span><span class="switch on"></span></div>
+                  <div class="trow"><span class="tl">Minimizar para bandeja</span><span class="switch on"></span></div>
+                  <div class="trow"><span class="tl">Fechar launcher</span><span class="switch on"></span></div>
+                  <div class="trow off"><span class="tl">Permitir escrita de display</span><span class="switch"></span></div>
+                  <div class="trow"><span class="tl">Verificar atualizações</span><span class="switch on"></span></div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <footer class="app-foot">
+          <span class="ver">Versão 1.0.23</span>
+          <span class="flink">Redefinir</span>
+          <span class="flink">Sobre</span>
+          <span class="lang">Português (Brasil)<svg class="ico ico-xs"><use href="#i-chev"/></svg></span>
+        </footer>
+      </div>
+    </div>
+
+    <div>
+      <div class="frame-label"><b>640 × 620</b> · 1 coluna <span class="tag">≤ 780</span></div>
+      <div class="win sm mini">
+        <header class="app-head">
+          <div class="app-head-row">
+            <div class="brand">
+              <div class="logo">C</div>
+              <div>
+                <div class="app-name">CouchPad</div>
+                <div class="app-tag">Jogando no conforto do sofá</div>
+              </div>
+            </div>
+            <span class="pill ok"><span class="dot"></span>Ativo</span>
+          </div>
+        </header>
+
+        <div class="scroll">
+          <div class="masonry" style="grid-template-columns:1fr;padding:10px 0">
+            <div class="mcol">
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-bolt"/></svg></span><h2>Automação</h2></div>
+                  <span class="switch on"></span>
+                </div>
+                <p class="card-help">Ative para reagir ao controle quando ele conectar.</p>
+                <div class="srows">
+                  <div class="srow">
+                    <span class="ci"><svg class="ico"><use href="#i-gamepad"/></svg></span>
+                    <div class="txt"><span class="sk">Gamepad</span><span class="sv">8BitDo Ultimate 2</span></div>
+                    <span class="pill ok">Conectado</span>
+                  </div>
+                  <div class="srow">
+                    <span class="ci"><svg class="ico"><use href="#i-monitor"/></svg></span>
+                    <div class="txt"><span class="sk">Tela</span><span class="sv">TV · 3840×2160</span></div>
+                    <span class="pill">HDMI</span>
+                  </div>
+                  <div class="srow">
+                    <span class="ci"><svg class="ico"><use href="#i-speaker"/></svg></span>
+                    <div class="txt"><span class="sk">Áudio</span><span class="sv">Samsung HDMI</span></div>
+                    <span class="pill">padrão</span>
+                  </div>
+                  <div class="srow">
+                    <span class="ci"><svg class="ico"><use href="#i-rocket"/></svg></span>
+                    <div class="txt"><span class="sk">Launcher</span><span class="sv">Nenhum</span></div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-monitor"/></svg></span><h2>Display</h2></div>
+                  <span class="tbtn">Atualizar</span>
+                </div>
+                <div class="profile-row">
+                  <span class="select"><span>Padrão</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span>
+                  <span class="tbtn acc">Novo</span>
+                  <span class="tbtn">Excluir</span>
+                </div>
+                <div class="tiles">
+                  <div class="tile">
+                    <div class="cap">Atual</div>
+                    <div class="val">Monitor principal</div>
+                    <div class="sub">1920×1080 · 60 Hz</div>
+                  </div>
+                  <div class="tile-arrow"><svg class="ico"><use href="#i-arrow"/></svg></div>
+                  <div class="tile dest">
+                    <div class="cap">Destino</div>
+                    <div class="val">TV · HDMI</div>
+                    <div class="sub">3840×2160 · 60 Hz</div>
+                  </div>
+                </div>
+                <div class="grid2">
+                  <div class="field"><label>TV alvo</label><span class="select"><span>SAMSUNG</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                  <div class="field"><label>Monitor interno</label><span class="select"><span>AOC 27G2G4</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                </div>
+                <div class="diag">
+                  <div class="diag-head">
+                    <svg class="ico ico-xs" style="color:var(--accent)"><use href="#i-shield"/></svg>
+                    <span class="dt">Diagnóstico da identificação</span>
+                    <span class="sp"></span>
+                    <span class="pill ok">alta</span>
+                    <svg class="ico ico-xs chev"><use href="#i-chev"/></svg>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-tv"/></svg></span><h2>TV</h2></div>
+                  <span class="pill info">HDMI</span>
+                </div>
+                <div class="grid2" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+                  <div class="field"><label>Resolução</label><span class="select"><span>3840×2160</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                  <div class="field"><label>Taxa</label><span class="select"><span>60 Hz</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                  <div class="field"><label>Escala</label><span class="select"><span>125%</span><svg class="ico ico-xs chev"><use href="#i-chev"/></svg></span></div>
+                </div>
+                <p class="hint">Aplicado quando a automação ativar a TV. A escala pode valer só para apps abertos depois.</p>
+              </article>
+
+              <article class="card">
+                <div class="card-head">
+                  <div class="ct"><span class="ci"><svg class="ico"><use href="#i-grid"/></svg></span><h2>Parâmetros</h2></div>
+                </div>
+                <div class="toggles">
+                  <div class="trow"><span class="tl">Iniciar com Windows</span><span class="switch on"></span></div>
+                  <div class="trow"><span class="tl">Minimizar para bandeja</span><span class="switch on"></span></div>
+                  <div class="trow"><span class="tl">Fechar launcher</span><span class="switch on"></span></div>
+                  <div class="trow off"><span class="tl">Permitir escrita de display</span><span class="switch"></span></div>
+                  <div class="trow"><span class="tl">Verificar atualizações</span><span class="switch on"></span></div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <footer class="app-foot">
+          <span class="ver">Versão 1.0.23</span>
+          <span class="flink">Redefinir</span>
+          <span class="flink">Sobre</span>
+          <span class="lang">Português (Brasil)<svg class="ico ico-xs"><use href="#i-chev"/></svg></span>
+        </footer>
+      </div>
+    </div>
+  </section>
+
+  <p class="board-foot"><b>Como ler:</b> o frame grande mostra a distribuição completa em 3 colunas; os menores mostram os mesmos cards em 2 e 1 coluna, com o restante continuando abaixo (rolagem). Nenhum card estica para preencher a coluna.</p>
+</main>
+</body>
+</html>
