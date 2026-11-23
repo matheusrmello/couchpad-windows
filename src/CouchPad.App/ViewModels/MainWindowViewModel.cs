@@ -782,6 +782,11 @@ public partial class MainWindowViewModel : ObservableObject
             SyncSelectedProfileFromSelection();
             var current = _settings.Load();
             var preference = CurrentDisplayPreference;
+            // "Automático" (sem resolução/refresh) zera as chaves espelhadas no
+            // topo das settings; a escala continua vindo da preferência
+            // (null = automático).
+            var isAutoMode = preference.Width is null && preference.Height is null &&
+                preference.RefreshHz is null;
             _settings.Save(current with
             {
                 ActiveProfileId = SelectedEnvironmentProfile?.Id,
@@ -811,9 +816,9 @@ public partial class MainWindowViewModel : ObservableObject
                 InternalEdidManufacturer = SelectedInternalTarget?.EdidManufacturer,
                 InternalEdidProduct = SelectedInternalTarget?.EdidProduct,
                 InternalExactName = SelectedInternalTarget?.FriendlyName,
-                TvWidth = preference.Width,
-                TvHeight = preference.Height,
-                TvRefreshHz = preference.RefreshHz,
+                TvWidth = isAutoMode ? null : preference.Width,
+                TvHeight = isAutoMode ? null : preference.Height,
+                TvRefreshHz = isAutoMode ? null : preference.RefreshHz,
                 TvScalePercent = preference.ScalePercent,
             });
             return true;

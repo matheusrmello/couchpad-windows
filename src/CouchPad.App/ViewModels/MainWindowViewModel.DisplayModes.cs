@@ -7,11 +7,27 @@ namespace CouchPad.App.ViewModels;
 /// <summary>
 /// Seletores de resolução, taxa de atualização e escala da TV. A preferência é
 /// gravada no perfil ativo e espelhada no topo das settings; sem modos
-/// enumerados, a preferência existente é preservada (fail-safe).
+/// enumerados, a preferência existente é preservada (fail-safe). Selecionar
+/// "Automático" com modos disponíveis limpa resolução/refresh e mantém a escala.
 /// </summary>
 public partial class MainWindowViewModel
 {
     private IReadOnlyList<DisplayModeOption> _displayModes = [];
+
+    /// <summary>
+    /// Evita que a seleção programática de "Automático" (carga, troca de perfil,
+    /// reenumeração) zere a preferência gravada no perfil.
+    /// </summary>
+    private bool _suppressDisplayPreferenceSync;
+
+    /// <summary>
+    /// Verdadeiro somente quando o usuário escolhe "Automático" no seletor de
+    /// resolução. Uma seleção automática programática (carga, troca de perfil,
+    /// modo salvo fora da enumeração) preserva a preferência gravada.
+    /// </summary>
+    private bool _autoModeChosenByUser;
+
+    private bool HasEnumeratedDisplayModes => _displayModes.Count > 0;
 
     public ObservableCollection<TvModeOption> TvModes { get; } = new();
 
@@ -56,6 +72,13 @@ public partial class MainWindowViewModel
                     SelectedTvScale?.Percent ?? profile.TvScalePercent);
             }
 
+            // Sem resolução/refresh a preferência é automática, mas a escala
+            // escolhida (ou a já salva) continua valendo.
+            if ((SelectedTvScale?.Percent ?? SelectedEnvironmentProfile?.TvScalePercent) is { } scale)
+            {
+                return new DisplayPreference(null, null, null, scale);
+            }
+
             return DisplayPreference.Auto;
         }
     }
@@ -63,7 +86,9 @@ public partial class MainWindowViewModel
     private void LoadDisplayModes()
     {
         var wasLoading = _isLoadingSettings;
+        var wasSuppressed = _suppressDisplayPreferenceSync;
         _isLoadingSettings = true;
+        _suppressDisplayPreferenceSync = true;
         try
         {
             var previousMode = SelectedTvMode?.Mode;
@@ -90,6 +115,7 @@ public partial class MainWindowViewModel
         finally
         {
             _isLoadingSettings = wasLoading;
+            _suppressDisplayPreferenceSync = wasSuppressed;
         }
     }
 
@@ -168,25 +194,49 @@ public partial class MainWindowViewModel
 
     private void ApplyProfileDisplayPreference(EnvironmentProfileOption profile)
     {
-        var match = profile.TvWidth is { } width && profile.TvHeight is { } height
-            ? TvModes.FirstOrDefault(option => option.Mode is { } mode &&
-                mode.Width == width && mode.Height == height)
-            : null;
-        SelectedTvMode = match ?? TvModes.FirstOrDefault();
-        RefreshTvRefreshOptions(profile.TvRefreshHz);
-        SelectedTvScale = TvScaleOptions.FirstOrDefault(option => option.Percent == profile.TvScalePercent)
-            ?? TvScaleOptions.FirstOrDefault();
+        var wasSuppressed = _suppressDisplayPreferenceSync;
+        _suppressDisplayPreferenceSync = true;
+        try
+        {
+            var match = profile.TvWidth is { } width && profile.TvHeight is { } height
+                ? TvModes.FirstOrDefault(option => option.Mode is { } mode &&
+                    mode.Width == width && mode.Height == height)
+                : null;
+            SelectedTvMode = match ?? TvModes.FirstOrDefault();
+            _autoModeChosenByUser = false;
+            RefreshTvRefreshOptions(profile.TvRefreshHz);
+            SelectedTvScale = TvScaleOptions.FirstOrDefault(option => option.Percent == profile.TvScalePercent)
+                ?? TvScaleOptions.FirstOrDefault();
+        }
+        finally
+        {
+            _suppressDisplayPreferenceSync = wasSuppressed;
+        }
     }
 
     private void SyncSelectedProfileDisplayPreference(EnvironmentProfileOption profile)
     {
-        // Resolução/refresh só são gravados quando há um modo enumerado
-        // selecionado; sem enumeração o perfil mantém o que já tinha.
+        // Carga e troca de perfil são programáticas: a preferência gravada não
+        // pode ser zerada por uma seleção "Automático" que só reflete o estado.
+        if (_suppressDisplayPreferenceSync)
+        {
+            return;
+        }
+
         if (SelectedTvMode?.Mode is { } mode)
         {
             profile.TvWidth = mode.Width;
             profile.TvHeight = mode.Height;
             profile.TvRefreshHz = SelectedTvRefresh?.Hz;
+        }
+        else if (_autoModeChosenByUser)
+        {
+            // "Automático" escolhido explicitamente pelo usuário: limpa
+            // resolução e refresh do perfil. Sem modos enumerados o perfil
+            // mantém o que já tinha (fail-safe).
+            profile.TvWidth = null;
+            profile.TvHeight = null;
+            profile.TvRefreshHz = null;
         }
 
         // A escala é gravada sempre, mesmo sem modos enumerados.
@@ -199,6 +249,7 @@ public partial class MainWindowViewModel
         TvRefreshOptions.Clear();
         SelectedTvRefresh = null;
         SelectedTvScale = TvScaleOptions.FirstOrDefault(option => option.Percent is null);
+        _autoModeChosenByUser = false;
     }
 
     partial void OnSelectedTvModeChanged(TvModeOption? value)
@@ -207,6 +258,8 @@ public partial class MainWindowViewModel
         {
             return;
         }
+
+        _autoModeChosenByUser = value?.Mode is null;
 
         var wasLoading = _isLoadingSettings;
         _isLoadingSettings = true;

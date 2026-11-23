@@ -184,16 +184,26 @@ public partial class MainWindowViewModel
             return;
         }
 
+        var wasLoading = _isLoadingSettings;
+        var wasSuppressed = _suppressDisplayPreferenceSync;
         _isLoadingSettings = true;
+        _suppressDisplayPreferenceSync = true;
         try
         {
             ApplyProfileToSelection(value);
         }
         finally
         {
-            _isLoadingSettings = false;
+            _isLoadingSettings = wasLoading;
         }
 
-        OnHardwareSelectionChanged();
+        try
+        {
+            OnHardwareSelectionChanged();
+        }
+        finally
+        {
+            _suppressDisplayPreferenceSync = wasSuppressed;
+        }
     }
 }

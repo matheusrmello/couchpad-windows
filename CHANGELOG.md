@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 1.0.22 (candidato)
+
+- Corrige o modo Automático da TV: selecionar "Automático" agora limpa resolução e taxa do perfil (a escala é preservada), em vez de manter o último modo e aplicá-lo sem aviso.
+- 358 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.21 (candidato)
 
 - Adiciona seleção de resolução, taxa de atualização e escala do Windows da TV por perfil de ambiente.
