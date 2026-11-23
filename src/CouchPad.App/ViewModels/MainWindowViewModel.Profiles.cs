@@ -60,6 +60,10 @@ public partial class MainWindowViewModel
                 InternalEdidManufacturer = settings.InternalEdidManufacturer,
                 InternalEdidProduct = settings.InternalEdidProduct,
                 InternalExactName = settings.InternalExactName,
+                TvWidth = settings.TvWidth,
+                TvHeight = settings.TvHeight,
+                TvRefreshHz = settings.TvRefreshHz,
+                TvScalePercent = settings.TvScalePercent,
             });
         }
 
@@ -79,6 +83,7 @@ public partial class MainWindowViewModel
             profile.InternalDevicePath, profile.InternalEdidManufacturer, profile.InternalEdidProduct,
             profile.InternalExactName));
         SelectedTvAudioEndpoint = ResolveAudioEndpoint(profile.TvAudioEndpointId);
+        ApplyProfileDisplayPreference(profile);
     }
 
     private AudioEndpointOption? ResolveAudioEndpoint(string? id)
@@ -116,6 +121,7 @@ public partial class MainWindowViewModel
         profile.InternalEdidManufacturer = SelectedInternalTarget?.EdidManufacturer;
         profile.InternalEdidProduct = SelectedInternalTarget?.EdidProduct;
         profile.InternalExactName = SelectedInternalTarget?.FriendlyName;
+        SyncSelectedProfileDisplayPreference(profile);
     }
 
     [RelayCommand]

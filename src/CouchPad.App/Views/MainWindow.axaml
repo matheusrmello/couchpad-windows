@@ -234,6 +234,60 @@
                       AutomationProperties.Name="{loc:Tr display.targets_refresh}" />
             </Grid>
 
+            <StackPanel Spacing="6">
+              <TextBlock Classes="caption" Text="{loc:Tr display.tv_mode}" />
+              <TextBlock Classes="hint" Text="{loc:Tr display.tv_mode_hint}" TextWrapping="Wrap" />
+
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                <StackPanel Spacing="4">
+                  <TextBlock Classes="caption" Text="{loc:Tr display.tv_resolution}" />
+                  <ComboBox ItemsSource="{Binding TvModes}"
+                            SelectedItem="{Binding SelectedTvMode, Mode=TwoWay}"
+                            AutomationProperties.Name="{loc:Tr display.tv_resolution}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:TvModeOption">
+                        <TextBlock Text="{Binding Label}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4">
+                  <TextBlock Classes="caption" Text="{loc:Tr display.tv_refresh}" />
+                  <ComboBox ItemsSource="{Binding TvRefreshOptions}"
+                            SelectedItem="{Binding SelectedTvRefresh, Mode=TwoWay}"
+                            IsEnabled="{Binding IsTvRefreshEnabled}"
+                            AutomationProperties.Name="{loc:Tr display.tv_refresh}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:TvRefreshOption">
+                        <TextBlock Text="{Binding Label}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+              </Grid>
+
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{loc:Tr display.tv_scale}" />
+                <ComboBox ItemsSource="{Binding TvScaleOptions}"
+                          SelectedItem="{Binding SelectedTvScale, Mode=TwoWay}"
+                          AutomationProperties.Name="{loc:Tr display.tv_scale}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TvScaleOption">
+                      <TextBlock Text="{Binding Label}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Classes="hint" Text="{loc:Tr display.tv_scale_hint}" TextWrapping="Wrap" />
+              </StackPanel>
+
+              <TextBlock Classes="hint"
+                         Text="{Binding TvModesStatus}"
+                         IsVisible="{Binding TvModesStatus, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
+                         Foreground="{DynamicResource CouchPad.Warning}"
+                         AutomationProperties.LiveSetting="Polite"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+
             <StackPanel Spacing="4">
               <TextBlock Classes="caption" Text="{loc:Tr display.internal_target}" />
               <ComboBox ItemsSource="{Binding DisplayTargets}"

@@ -114,7 +114,8 @@ public sealed class LauncherCoordinatorTests
     private sealed class FailingDisplay : IDisplayService
     {
         public DisplayState GetCurrent() => new(DisplayMode.InternalOnly, true, false);
-        public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default) => throw new InvalidOperationException();
+        public IReadOnlyList<DisplayModeOption> GetAvailableModes() => Array.Empty<DisplayModeOption>();
+        public Task<DisplayState> ApplyAsync(DisplayMode mode, DisplayPreference? preference = null, CancellationToken cancellationToken = default) => throw new InvalidOperationException();
         public Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 

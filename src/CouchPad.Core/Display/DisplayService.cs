@@ -25,7 +25,17 @@ public interface IDisplayService
 {
     DisplayState GetCurrent();
 
-    Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default);
+    /// <summary>Modos suportados pela TV; vazio quando a plataforma não enumera.</summary>
+    IReadOnlyList<DisplayModeOption> GetAvailableModes();
+
+    /// <summary>
+    /// Aplica o modo. <paramref name="preference"/> deve ser nulo para automático;
+    /// a plataforma decide o que consegue honrar e o modo continua obrigatório.
+    /// </summary>
+    Task<DisplayState> ApplyAsync(
+        DisplayMode mode,
+        DisplayPreference? preference = null,
+        CancellationToken cancellationToken = default);
 
     Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default);
 }
@@ -51,6 +61,15 @@ public static class DisplayApplyFailure
 /// </summary>
 public sealed class SimulatedDisplayService : IDisplayService
 {
+    private static readonly IReadOnlyList<DisplayModeOption> Modes =
+    [
+        new(3840, 2160, 30),
+        new(2560, 1440, 60),
+        new(1920, 1080, 120),
+        new(1920, 1080, 60),
+        new(1280, 720, 60),
+    ];
+
     private readonly TimeSpan _latency;
 
     public SimulatedDisplayService(TimeSpan? latency = null) =>
@@ -59,10 +78,16 @@ public sealed class SimulatedDisplayService : IDisplayService
     public DisplayState Current { get; private set; } =
         new(DisplayMode.InternalOnly, PrimaryActive: true, TvActive: false);
 
+    /// <summary>Última preferência recebida, só para diagnóstico; não altera o estado.</summary>
+    public DisplayPreference? LastPreference { get; private set; }
+
     public DisplayState GetCurrent() => Current;
+
+    public IReadOnlyList<DisplayModeOption> GetAvailableModes() => Modes;
 
     public async Task<DisplayState> ApplyAsync(
         DisplayMode mode,
+        DisplayPreference? preference = null,
         CancellationToken cancellationToken = default)
     {
         if (mode == DisplayMode.Mirror)
@@ -72,6 +97,8 @@ public sealed class SimulatedDisplayService : IDisplayService
             throw error;
         }
         await DelayAsync(cancellationToken);
+
+        LastPreference = preference;
 
         Current = mode switch
         {

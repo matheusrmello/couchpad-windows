@@ -64,6 +64,18 @@ public sealed record AppSettings
     public string? InternalExactName { get; init; }
 
     /// <summary>
+    /// Preferência de resolução/Hz/escala da TV espelhada do perfil ativo.
+    /// Nulos = automático (Windows escolhe). Validados ao carregar o arquivo.
+    /// </summary>
+    public int? TvWidth { get; init; }
+
+    public int? TvHeight { get; init; }
+
+    public int? TvRefreshHz { get; init; }
+
+    public int? TvScalePercent { get; init; }
+
+    /// <summary>
     /// Active named hardware profile. The top-level TV/internal/audio fields are
     /// kept mirrored to this profile so startup composition keeps the existing
     /// single-configuration contract.

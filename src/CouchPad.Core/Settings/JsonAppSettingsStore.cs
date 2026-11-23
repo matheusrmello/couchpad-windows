@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CouchPad.Core.Display;
 using CouchPad.Core.Storage;
 
 namespace CouchPad.Core.Settings;
@@ -47,8 +48,9 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore
             }
 
             var json = File.ReadAllText(_path);
-            return JsonSerializer.Deserialize<AppSettings>(json, SerializerOptions)
+            var settings = JsonSerializer.Deserialize<AppSettings>(json, SerializerOptions)
                 ?? new AppSettings();
+            return Normalize(settings);
         }
         catch (JsonException)
         {
@@ -74,8 +76,36 @@ public sealed class JsonAppSettingsStore : IAppSettingsStore
         }
 
         var temp = _path + ".tmp";
-        File.WriteAllText(temp, JsonSerializer.Serialize(settings, SerializerOptions));
+        var normalized = Normalize(settings);
+        File.WriteAllText(temp, JsonSerializer.Serialize(normalized, SerializerOptions));
         File.Move(temp, _path, overwrite: true);
+    }
+
+    private static AppSettings Normalize(AppSettings settings)
+    {
+        var preference = new DisplayPreference(settings.TvWidth, settings.TvHeight,
+            settings.TvRefreshHz, settings.TvScalePercent).Normalize();
+        return settings with
+        {
+            TvWidth = preference.Width,
+            TvHeight = preference.Height,
+            TvRefreshHz = preference.RefreshHz,
+            TvScalePercent = preference.ScalePercent,
+            EnvironmentProfiles = settings.EnvironmentProfiles?.Select(NormalizeProfile).ToList(),
+        };
+    }
+
+    private static EnvironmentProfile NormalizeProfile(EnvironmentProfile profile)
+    {
+        var preference = new DisplayPreference(profile.TvWidth, profile.TvHeight,
+            profile.TvRefreshHz, profile.TvScalePercent).Normalize();
+        return profile with
+        {
+            TvWidth = preference.Width,
+            TvHeight = preference.Height,
+            TvRefreshHz = preference.RefreshHz,
+            TvScalePercent = preference.ScalePercent,
+        };
     }
 
     private void TryBackupCorruptFile()

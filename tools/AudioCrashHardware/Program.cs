@@ -34,7 +34,7 @@ if (args[0] == "--child")
     await using var lease = await guard.BeginAsync("audio hardware crash test");
     lease.ThrowIfUnavailable();
     using var linked = CancellationTokenSource.CreateLinkedTokenSource(lease.FailureToken);
-    await display.ApplyAsync(DisplayMode.TvOnly, linked.Token);
+    await display.ApplyAsync(DisplayMode.TvOnly, cancellationToken: linked.Token);
     lease.ThrowIfUnavailable();
     var audioTimer = Stopwatch.StartNew();
     while (true)

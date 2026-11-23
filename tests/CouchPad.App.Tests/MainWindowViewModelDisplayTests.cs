@@ -339,7 +339,8 @@ public sealed class MainWindowViewModelDisplayTests
         public bool CanApply { get; private set; } = true;
         public void DisableNewWrites() => CanApply = false;
         public DisplayState GetCurrent() => new(DisplayMode.InternalOnly, true, false);
-        public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public IReadOnlyList<DisplayModeOption> GetAvailableModes() => Array.Empty<DisplayModeOption>();
+        public Task<DisplayState> ApplyAsync(DisplayMode mode, DisplayPreference? preference = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 

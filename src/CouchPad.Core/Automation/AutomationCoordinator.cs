@@ -312,7 +312,7 @@ public sealed class AutomationCoordinator
             guardedToken.ThrowIfCancellationRequested();
             lease?.ThrowIfUnavailable();
             mutationStarted = true;
-            try { await _display.ApplyAsync(settings.DisplayMode, guardedToken); }
+            try { await _display.ApplyAsync(settings.DisplayMode, settings.DisplayPreference, guardedToken); }
             catch (Exception ex) when (DisplayApplyFailure.IsUnchanged(ex))
             {
                 mutationStarted = false;

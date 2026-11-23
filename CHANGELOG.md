@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.0.21 (candidato)
+
+- Adiciona seleção de resolução, taxa de atualização e escala do Windows da TV por perfil de ambiente.
+- Modos lidos do EDID; aplicação via `ChangeDisplaySettingsEx` com validação e rollback; escala por monitor via DPI do Windows.
+- 358 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.20 (candidato)
 
 - Remove o HUD de monitoramento de hardware (CPU, CPU do jogo, GPU, RAM, VRAM, processo, resolução e FPS), incluindo overlay, modal, card, chord, sampler PDH, integração RTSS e settings `performanceHud*`.

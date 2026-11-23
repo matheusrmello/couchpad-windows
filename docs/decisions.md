@@ -351,6 +351,21 @@
   decisão.
 - Validação: 295 testes, build Debug/Release 0/0 e smoke.
 
+## D082 — Preferência de modo da TV por perfil
+
+- Data: 2026-11-18
+- Decisão: cada perfil de ambiente guarda resolução, taxa de atualização e
+  escala do Windows para a TV. O apply ativa a topologia, seleciona o modo a
+  partir do EDID (`EdidModeParser`) via `ChangeDisplaySettingsEx`, valida e faz
+  rollback; a escala usa a chave `PerMonitorSettings\DpiValue` existente, com
+  broadcast de `WM_SETTINGCHANGE`. Se a chave DPI não existir, falha antes de
+  mudar o display; o erro é reportado no estado da automação, sem texto de UI
+  em `Platform.Windows`.
+- Limitações: a escala pode exigir reabrir apps ou sair/entrar; os modos vêm do
+  EDID (DTD/VIC) e não há como forçar 4K60 se a TV não anunciar; sem admin,
+  driver ou injeção.
+- Validação: 358 testes, build 0/0, smoke; validação na TV real pendente.
+
 ## Formato de nova decisão
 
 ```md

@@ -30,6 +30,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly AutomationCoordinator _coordinator;
     private readonly IDisplayWriteControl? _displayWriteControl;
     private readonly Func<IReadOnlyList<DisplayTargetOption>>? _discoverTargets;
+    private readonly Func<IReadOnlyList<DisplayModeOption>>? _discoverDisplayModes;
     private readonly Func<IReadOnlyList<AudioEndpointOption>>? _discoverAudioEndpoints;
     private readonly Action? _revokeAudioWrites;
     private readonly Func<bool>? _readStartup;
@@ -132,12 +133,14 @@ public partial class MainWindowViewModel : ObservableObject
         AppSettings? configuredHardware = null,
         Action? restartForHardware = null,
         Action<string>? playAudioTest = null,
-        bool hardwareApplied = false)
+        bool hardwareApplied = false,
+        Func<IReadOnlyList<DisplayModeOption>>? discoverDisplayModes = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
         _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         _discoverTargets = discoverTargets;
+        _discoverDisplayModes = discoverDisplayModes;
         _discoverAudioEndpoints = discoverAudioEndpoints;
         _revokeAudioWrites = revokeAudioWrites;
         _readStartup = readStartup;
@@ -504,6 +507,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (IsProductionMode) RefreshDisplayTargets();
             else await Task.Delay(700);
+            LoadDisplayModes();
         }
         finally
         {
@@ -542,6 +546,7 @@ public partial class MainWindowViewModel : ObservableObject
             SelectedTvAudioEndpoint = null;
             SelectedTvTarget = null;
             SelectedInternalTarget = null;
+            ResetDisplaySelections();
             DisplayTargetsError = null;
             IsRefreshing = false;
         }
@@ -736,6 +741,7 @@ public partial class MainWindowViewModel : ObservableObject
             CustomLauncherPath = settings.CustomLauncherPath;
             AllowDisplayWrites = settings.AllowDisplayWrites;
             AllowAudioWrites = settings.AllowAudioWrites;
+            LoadDisplayModes();
             LoadEnvironmentProfiles(settings);
             if (IsProductionMode && (!HardwareMatchesSelection || !settings.UseWindowsGamepad ||
                 !settings.AllowDisplayWrites || !settings.AllowAudioWrites || IsRecoveryUncertain))
@@ -761,6 +767,7 @@ public partial class MainWindowViewModel : ObservableObject
         CloseLauncherOnActivate = CloseLauncherOnActivate,
         LauncherEnabled = SteamEnabled,
         Launcher = LauncherIndex == 1 ? LauncherKind.Hydra : LauncherKind.Steam,
+        DisplayPreference = CurrentDisplayPreference,
     };
 
     private bool PersistSettings()
@@ -774,6 +781,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             SyncSelectedProfileFromSelection();
             var current = _settings.Load();
+            var preference = CurrentDisplayPreference;
             _settings.Save(current with
             {
                 ActiveProfileId = SelectedEnvironmentProfile?.Id,
@@ -803,6 +811,10 @@ public partial class MainWindowViewModel : ObservableObject
                 InternalEdidManufacturer = SelectedInternalTarget?.EdidManufacturer,
                 InternalEdidProduct = SelectedInternalTarget?.EdidProduct,
                 InternalExactName = SelectedInternalTarget?.FriendlyName,
+                TvWidth = preference.Width,
+                TvHeight = preference.Height,
+                TvRefreshHz = preference.RefreshHz,
+                TvScalePercent = preference.ScalePercent,
             });
             return true;
         }
@@ -925,5 +937,6 @@ public partial class MainWindowViewModel : ObservableObject
 
         OnPropertyChanged(nameof(VersionText));
         OnPropertyChanged(nameof(UpdateNoticeText));
+        RelocalizeDisplayOptions();
     }
 }

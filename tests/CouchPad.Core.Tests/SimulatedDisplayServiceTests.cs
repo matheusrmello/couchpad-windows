@@ -17,6 +17,17 @@ public sealed class SimulatedDisplayServiceTests
     }
 
     [Fact]
+    public void Available_modes_are_not_empty_and_include_1080p60()
+    {
+        var service = new SimulatedDisplayService(TimeSpan.Zero);
+
+        var modes = service.GetAvailableModes();
+
+        Assert.NotEmpty(modes);
+        Assert.Contains(new DisplayModeOption(1920, 1080, 60), modes);
+    }
+
+    [Fact]
     public async Task Apply_modes_map_to_expected_state()
     {
         var service = new SimulatedDisplayService(TimeSpan.Zero);

@@ -116,6 +116,74 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
     }
 
     [Fact]
+    public void Save_then_load_roundtrips_tv_preference()
+    {
+        var store = new JsonAppSettingsStore(SettingsPath);
+        var expected = new AppSettings
+        {
+            TvWidth = 1920,
+            TvHeight = 1080,
+            TvRefreshHz = 60,
+            TvScalePercent = 125,
+        };
+
+        store.Save(expected);
+        var actual = store.Load();
+
+        Assert.Equal(1920, actual.TvWidth);
+        Assert.Equal(1080, actual.TvHeight);
+        Assert.Equal(60, actual.TvRefreshHz);
+        Assert.Equal(125, actual.TvScalePercent);
+    }
+
+    [Fact]
+    public void Load_normalizes_invalid_tv_preference_to_auto()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(
+            SettingsPath,
+            """
+            {
+              "tvWidth": 1920,
+              "tvRefreshHz": 0,
+              "tvScalePercent": 999
+            }
+            """);
+        var store = new JsonAppSettingsStore(SettingsPath);
+
+        var settings = store.Load();
+
+        Assert.Null(settings.TvWidth);
+        Assert.Null(settings.TvHeight);
+        Assert.Null(settings.TvRefreshHz);
+        Assert.Null(settings.TvScalePercent);
+    }
+
+    [Fact]
+    public void Load_keeps_valid_tv_components_and_drops_the_rest()
+    {
+        Directory.CreateDirectory(_directory);
+        File.WriteAllText(
+            SettingsPath,
+            """
+            {
+              "tvWidth": 2560,
+              "tvHeight": 1440,
+              "tvRefreshHz": 0,
+              "tvScalePercent": 150
+            }
+            """);
+        var store = new JsonAppSettingsStore(SettingsPath);
+
+        var settings = store.Load();
+
+        Assert.Equal(2560, settings.TvWidth);
+        Assert.Equal(1440, settings.TvHeight);
+        Assert.Null(settings.TvRefreshHz);
+        Assert.Equal(150, settings.TvScalePercent);
+    }
+
+    [Fact]
     public void Load_corrupt_json_returns_defaults_and_backs_up_file()
     {
         Directory.CreateDirectory(_directory);

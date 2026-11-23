@@ -24,4 +24,13 @@ public sealed record EnvironmentProfile
     public ushort? InternalEdidProduct { get; init; }
 
     public string? InternalExactName { get; init; }
+
+    /// <summary>Preferência de resolução/Hz/escala da TV; nulos = automático.</summary>
+    public int? TvWidth { get; init; }
+
+    public int? TvHeight { get; init; }
+
+    public int? TvRefreshHz { get; init; }
+
+    public int? TvScalePercent { get; init; }
 }

@@ -35,6 +35,14 @@ public partial class EnvironmentProfileOption : ObservableObject
 
     public string? InternalExactName { get; set; }
 
+    public int? TvWidth { get; set; }
+
+    public int? TvHeight { get; set; }
+
+    public int? TvRefreshHz { get; set; }
+
+    public int? TvScalePercent { get; set; }
+
     public string DisplayName => string.IsNullOrWhiteSpace(Name) ? Id[..Math.Min(8, Id.Length)] : Name;
 
     partial void OnNameChanged(string value) => OnPropertyChanged(nameof(DisplayName));
@@ -52,6 +60,10 @@ public partial class EnvironmentProfileOption : ObservableObject
         InternalEdidManufacturer = InternalEdidManufacturer,
         InternalEdidProduct = InternalEdidProduct,
         InternalExactName = InternalExactName,
+        TvWidth = TvWidth,
+        TvHeight = TvHeight,
+        TvRefreshHz = TvRefreshHz,
+        TvScalePercent = TvScalePercent,
     };
 
     public static EnvironmentProfileOption FromModel(EnvironmentProfile profile) =>
@@ -66,5 +78,9 @@ public partial class EnvironmentProfileOption : ObservableObject
             InternalEdidManufacturer = profile.InternalEdidManufacturer,
             InternalEdidProduct = profile.InternalEdidProduct,
             InternalExactName = profile.InternalExactName,
+            TvWidth = profile.TvWidth,
+            TvHeight = profile.TvHeight,
+            TvRefreshHz = profile.TvRefreshHz,
+            TvScalePercent = profile.TvScalePercent,
         };
 }

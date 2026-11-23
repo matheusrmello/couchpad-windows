@@ -15,6 +15,9 @@ public sealed record AutomationSettings
 
     public DisplayMode DisplayMode { get; init; } = DisplayMode.TvOnly;
 
+    /// <summary>Resolução/Hz/escala desejados para a TV; auto deixa o Windows escolher.</summary>
+    public DisplayPreference DisplayPreference { get; init; } = DisplayPreference.Auto;
+
     public AudioMode AudioMode { get; init; } = AudioMode.MoveToHdmi;
 
     public bool CloseLauncherOnActivate { get; init; } = true;

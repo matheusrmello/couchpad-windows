@@ -12,6 +12,14 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private const uint ActivePaths = 2;
     public const uint AllPaths = 1;
     private const int PathSize = 72, ModeSize = 64, InsufficientBuffer = 122;
+    private const int DevModeSize = 220;
+    private const uint EnumCurrentSettings = 0xFFFFFFFF;
+    private const uint CdsUpdateRegistry = 0x1;
+    private const int DispChangeSuccessful = 0;
+    private const uint DmPelsWidth = 0x80000, DmPelsHeight = 0x100000, DmDisplayFrequency = 0x400000;
+
+    internal static int DevModeSizeBytes => Marshal.SizeOf<DevMode>();
+    internal static int DisplayDeviceSizeBytes => Marshal.SizeOf<DisplayDevice>();
 
     private readonly WindowsDisplayOptions _options;
     private readonly RescueTransactionContext? _transaction;
@@ -19,11 +27,14 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private readonly CancellationTokenSource _writesRevoked = new();
     private readonly Func<uint, Snapshot>? _captureOverride;
     private readonly Func<byte[], byte[], uint, int>? _setOverride;
+    private readonly Func<string, byte[]?>? _edidOverride;
+    private readonly Lazy<IReadOnlyList<DisplayModeOption>> _availableModes;
 
     public WindowsDisplayService(WindowsDisplayOptions options, RescueTransactionContext? transaction = null)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _transaction = transaction;
+        _availableModes = new Lazy<IReadOnlyList<DisplayModeOption>>(LoadAvailableModes);
     }
 
     private WindowsDisplayService(WindowsDisplayOptions options, RescueTransactionContext transaction, bool recoveryWriter)
@@ -38,6 +49,9 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
         _captureOverride = capture ?? throw new ArgumentNullException(nameof(capture));
         _setOverride = set ?? throw new ArgumentNullException(nameof(set));
     }
+
+    internal WindowsDisplayService(WindowsDisplayOptions options, Func<string, byte[]?>? edidOverride) : this(options) =>
+        _edidOverride = edidOverride;
 
     public DisplayState GetCurrent()
     {
@@ -135,7 +149,22 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
 
     private readonly SemaphoreSlim _writeGate = new(1, 1);
 
-    public Task<DisplayState> ApplyAsync(DisplayMode mode, CancellationToken cancellationToken = default)
+    public IReadOnlyList<DisplayModeOption> GetAvailableModes() => _availableModes.Value;
+
+    private IReadOnlyList<DisplayModeOption> LoadAvailableModes()
+    {
+        try
+        {
+            var edid = _edidOverride is not null ? _edidOverride(_options.DevicePath) : EdidReader.ReadForDevice(_options);
+            return edid is null ? Array.Empty<DisplayModeOption>() : EdidModeParser.Parse(edid);
+        }
+        catch
+        {
+            return Array.Empty<DisplayModeOption>();
+        }
+    }
+
+    public Task<DisplayState> ApplyAsync(DisplayMode mode, DisplayPreference? preference = null, CancellationToken cancellationToken = default)
     {
         if (mode == DisplayMode.Mirror)
         {
@@ -150,18 +179,18 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             throw error;
         }
         if (_setOverride is null && _transaction is null) throw new RescueDecisionUncertainException("A guarded transaction is required.");
-        return ApplyWithRevocationAsync(mode, cancellationToken);
+        return ApplyWithRevocationAsync(mode, preference, cancellationToken);
     }
 
     public bool CanApply => _options.AllowWrites && !_writesRevoked.IsCancellationRequested;
 
     public void DisableNewWrites() => _writesRevoked.Cancel();
 
-    private async Task<DisplayState> ApplyWithRevocationAsync(DisplayMode mode, CancellationToken cancellationToken)
+    private async Task<DisplayState> ApplyWithRevocationAsync(DisplayMode mode, DisplayPreference? preference, CancellationToken cancellationToken)
     {
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _writesRevoked.Token);
         var attempted = false;
-        try { return await ApplyCoreAsync(mode, linked.Token, () => attempted = true).ConfigureAwait(false); }
+        try { return await ApplyCoreAsync(mode, preference, linked.Token, () => attempted = true).ConfigureAwait(false); }
         catch (Exception ex) when (!attempted && ex is not RescueDecisionUncertainException)
         {
             DisplayApplyFailure.MarkUnchanged(ex);
@@ -169,7 +198,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
         }
     }
 
-    private async Task<DisplayState> ApplyCoreAsync(DisplayMode mode, CancellationToken cancellationToken, Action markAttempted)
+    private async Task<DisplayState> ApplyCoreAsync(DisplayMode mode, DisplayPreference? preference, CancellationToken cancellationToken, Action markAttempted)
     {
         await _writeGate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -179,22 +208,67 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                 : null;
             cancellationToken.ThrowIfCancellationRequested();
             EnsureMutationAllowed();
+            var normalized = (preference ?? DisplayPreference.Auto).Normalize();
             var all = Capture(AllPaths);
             var tv = SelectTarget(all.Targets, _options.DevicePath, _options.EdidManufacturer, _options.EdidProduct, _options.ExactName);
             var before = Capture(ActivePaths);
             var selector = _options.InternalDisplay ?? throw new InvalidOperationException("Internal display selector is required.");
             var internalDisplay = SelectTarget(all.Targets, selector.DevicePath, selector.EdidManufacturer, selector.EdidProduct, selector.ExactName);
             var proposal = DisplayTopologyPlanner.Create(before, all, tv, internalDisplay, mode);
+            var requestedMode = ResolveRequestedMode(normalized);
+            // Resolve the per-monitor DPI key before touching the display: Windows
+            // only creates that profile after the TV has been configured once, so
+            // failing here leaves the current display unchanged.
+            var scalePercent = normalized.ScalePercent;
+            string? dpiKey = null;
+            int? previousDpi = null;
+            if (scalePercent is not null)
+            {
+                var edid = _edidOverride?.Invoke(_options.DevicePath) ?? EdidReader.ReadForDevice(_options);
+                var prefix = EdidIdentity.BuildDpiPrefix(edid);
+                dpiKey = prefix is null ? null : PerMonitorDpi.FindKey(prefix);
+                if (dpiKey is null)
+                    throw new InvalidOperationException("Set the TV scale once in Windows to create the DPI profile.");
+                previousDpi = PerMonitorDpi.ReadDpiValue(dpiKey);
+            }
+
+            string? gdiDeviceName = null;
             DisplayState? after = null;
             DisplayTransaction.Execute(
                 () => SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x40),
-                () => { markAttempted(); SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x80); EnsureMutationAllowed(); },
-                () => { after = GetCurrent(); if (after.Mode != mode) throw new InvalidOperationException("Display verification failed."); EnsureMutationAllowed(); },
-                () => RestoreSnapshot(before), cancellationToken);
+                () =>
+                {
+                    markAttempted();
+                    SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x80);
+                    EnsureMutationAllowed();
+                    if (requestedMode is not null) gdiDeviceName = ApplyDisplayMode(requestedMode);
+                    if (scalePercent is { } scale && !PerMonitorDpi.Apply(dpiKey!, scale))
+                        throw new InvalidOperationException("Failed to apply the TV display scale.");
+                },
+                () =>
+                {
+                    after = GetCurrent();
+                    if (after.Mode != mode) throw new InvalidOperationException("Display verification failed.");
+                    if (requestedMode is not null) VerifyDisplayMode(gdiDeviceName!, requestedMode);
+                    if (scalePercent is { } expectedScale && PerMonitorDpi.ReadPercent(dpiKey!) != expectedScale)
+                        throw new InvalidOperationException("TV display scale verification failed.");
+                    EnsureMutationAllowed();
+                },
+                () =>
+                {
+                    RestoreSnapshot(before);
+                    if (previousDpi is { } value) PerMonitorDpi.WriteDpiValue(dpiKey!, value);
+                },
+                cancellationToken);
             return after!;
         }
         finally { _writeGate.Release(); }
     }
+
+    private static DisplayModeOption? ResolveRequestedMode(DisplayPreference preference) =>
+        preference.Width is { } width && preference.Height is { } height && preference.RefreshHz is { } refresh
+            ? new DisplayModeOption(width, height, refresh)
+            : null;
 
     public Task RestoreAsync(DisplayState state, CancellationToken cancellationToken = default)
     {
@@ -281,6 +355,113 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
         finally { pathPin.Free(); modePin.Free(); }
     }
 
+    private string ApplyDisplayMode(DisplayModeOption mode)
+    {
+        var deviceName = ResolveGdiDeviceName();
+        var devMode = CreateDevMode();
+        var found = false;
+        for (uint index = 0; ; index++)
+        {
+            var candidate = CreateDevMode();
+            if (!EnumDisplaySettingsW(deviceName, index, ref candidate)) break;
+            if (candidate.dmPelsWidth == (uint)mode.Width &&
+                candidate.dmPelsHeight == (uint)mode.Height &&
+                RefreshMatches(candidate.dmDisplayFrequency, mode.RefreshHz))
+            {
+                devMode = candidate;
+                found = true;
+                break;
+            }
+        }
+        if (!found) throw new InvalidOperationException("Requested TV display mode is unavailable.");
+
+        devMode.dmFields |= DmPelsWidth | DmPelsHeight | DmDisplayFrequency;
+        var result = ChangeDisplaySettingsExW(deviceName, ref devMode, IntPtr.Zero, CdsUpdateRegistry, IntPtr.Zero);
+        if (result != DispChangeSuccessful)
+            throw new InvalidOperationException($"Changing the TV display mode failed ({result}).");
+
+        return deviceName;
+    }
+
+    private static void VerifyDisplayMode(string deviceName, DisplayModeOption mode)
+    {
+        var current = CreateDevMode();
+        if (!EnumDisplaySettingsW(deviceName, EnumCurrentSettings, ref current) ||
+            current.dmPelsWidth != (uint)mode.Width ||
+            current.dmPelsHeight != (uint)mode.Height ||
+            !RefreshMatches(current.dmDisplayFrequency, mode.RefreshHz))
+            throw new InvalidOperationException("TV display mode verification failed.");
+    }
+
+    // EDID timings round 59.94 Hz to 60, so an exact match is too strict.
+    private static bool RefreshMatches(uint actual, int expected) => Math.Abs((long)actual - expected) <= 1;
+
+    private string ResolveGdiDeviceName()
+    {
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
+        var monitorId = ExtractMonitorId(_options.DevicePath);
+        for (uint adapterIndex = 0; ; adapterIndex++)
+        {
+            var adapter = CreateDisplayDevice();
+            if (!EnumDisplayDevicesW(null, adapterIndex, ref adapter, 0)) break;
+            var match = IsTvDevice(monitorId, adapter.DeviceID, adapter.DeviceString);
+            if (!match)
+            {
+                for (uint monitorIndex = 0; ; monitorIndex++)
+                {
+                    var monitor = CreateDisplayDevice();
+                    if (!EnumDisplayDevicesW(adapter.DeviceName, monitorIndex, ref monitor, 0)) break;
+                    if (IsTvDevice(monitorId, monitor.DeviceID, monitor.DeviceString)) { match = true; break; }
+                }
+            }
+            if (match) return adapter.DeviceName;
+        }
+        throw new InvalidOperationException("TV display device could not be found.");
+    }
+
+    private bool IsTvDevice(string? monitorId, string? deviceId, string? deviceString)
+    {
+        if (!string.IsNullOrEmpty(deviceId))
+        {
+            if (!string.IsNullOrEmpty(_options.DevicePath) &&
+                string.Equals(deviceId, _options.DevicePath, StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (!string.IsNullOrEmpty(monitorId) &&
+                deviceId.Contains(monitorId, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return !string.IsNullOrEmpty(_options.ExactName) &&
+            !string.IsNullOrEmpty(deviceString) &&
+            string.Equals(deviceString, _options.ExactName, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? ExtractMonitorId(string? devicePath)
+    {
+        const string marker = "DISPLAY#";
+        if (string.IsNullOrEmpty(devicePath)) return null;
+        var start = devicePath.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (start < 0) return null;
+        start += marker.Length;
+        var end = devicePath.IndexOf('#', start);
+        return end > start ? devicePath[start..end] : null;
+    }
+
+    private static DevMode CreateDevMode() => new()
+    {
+        dmDeviceName = string.Empty,
+        dmFormName = string.Empty,
+        dmSize = (ushort)DevModeSize,
+    };
+
+    private static DisplayDevice CreateDisplayDevice() => new()
+    {
+        cb = Marshal.SizeOf<DisplayDevice>(),
+        DeviceName = string.Empty,
+        DeviceString = string.Empty,
+        DeviceID = string.Empty,
+        DeviceKey = string.Empty,
+    };
+
     private void EnsureMutationAllowed()
     {
         if (_setOverride is not null && _transaction is null) return;
@@ -315,9 +496,44 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     public sealed record Snapshot(int SchemaVersion, uint QueryFlags, int PathSize, int ModeSize, string PathsBase64, string ModesBase64, List<Target> Targets);
     [StructLayout(LayoutKind.Sequential)] private struct Header { public uint Type, Size, AdapterLow; public int AdapterHigh; public uint Id; }
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)] private struct TargetName { public Header Header; public uint Flags, Technology; public ushort Manufacturer, Product; public uint Connector; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string FriendlyName; [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DevicePath; }
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct DisplayDevice
+    {
+        public int cb;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string DeviceName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceString;
+        public uint StateFlags;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceID;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string DeviceKey;
+    }
+    // DEVMODEW: 64 name + 8 versions + 4 fields + 16 printer/position + 10 extras
+    // + 64 form + 2 logpixels + 12 mode + 8 flags/frequency + 32 icm/panning = 220.
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct DevMode
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmDeviceName;
+        public ushort dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra;
+        public uint dmFields;
+        public DevModePosition Position;
+        public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmFormName;
+        public ushort dmLogPixels;
+        public uint dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags, dmDisplayFrequency;
+        public uint dmICMMethod, dmICMIntent, dmMediaType, dmDitherType, dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    private struct DevModePosition { public int X, Y; public uint Orientation, FixedOutput; }
     [DllImport("user32.dll")] private static extern int GetDisplayConfigBufferSizes(uint flags, out uint paths, out uint modes);
     [DllImport("user32.dll")] private static extern int QueryDisplayConfig(uint flags, ref uint paths, IntPtr pathInfo, ref uint modes, IntPtr modeInfo, IntPtr topology);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int DisplayConfigGetDeviceInfo(ref TargetName request);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool EnumDisplayDevicesW(string? deviceName, uint devNum, ref DisplayDevice displayDevice, uint flags);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool EnumDisplaySettingsW(string deviceName, uint modeNum, ref DevMode devMode);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int ChangeDisplaySettingsExW(string? deviceName, ref DevMode devMode, IntPtr hwnd, uint flags, IntPtr param);
 }
 
 public sealed record WindowsDisplayOptions(string DevicePath, ushort EdidManufacturer, ushort EdidProduct, string? ExactName = null, bool AllowWrites = false, DisplaySelector? InternalDisplay = null);

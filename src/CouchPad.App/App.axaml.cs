@@ -61,6 +61,7 @@ public partial class App : Application
             var (audioService, audioGuard) = CreateWindowsAudioServices(displayService, hardwareSettings, transaction,
                 rescuePath, journalPath);
             if (audioGuard is not null) rescueGuard = audioGuard;
+            var viewModelDisplayService = displayService ?? new SimulatedDisplayService();
             _displaySessionOwner = isGallery || Program.OwnsDisplaySession ? null : AcquireDisplayOwner(journalPath);
             if (isProduction) _gamepadWatcher = new WindowsGamepadWatcher();
             if (isProduction &&
@@ -81,10 +82,11 @@ public partial class App : Application
                         settingsStore,
                         new JsonSessionJournalStore(journalPath),
                         gamepadWatcher: _gamepadWatcher,
-                        displayService: displayService,
+                        displayService: viewModelDisplayService,
                         audioService: audioService,
                         rescueGuard: rescueGuard,
                         discoverTargets: discoverTargets,
+                        discoverDisplayModes: viewModelDisplayService.GetAvailableModes,
                         discoverAudioEndpoints: isProduction ? DiscoverAudioEndpoints : null,
                         revokeAudioWrites: OperatingSystem.IsWindows() && audioService is WindowsAudioService windowsAudio
                             ? windowsAudio.DisableNewWrites : null,

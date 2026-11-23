@@ -262,7 +262,7 @@ public class WindowsDisplayServiceFakeTests
         using var source = new CancellationTokenSource();
         var actions = new List<uint>();
         var service = Create((p, m, action) => { actions.Add(action); if (actions.Count == 2) source.Cancel(); return 0; });
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.ApplyAsync(DisplayMode.TvOnly, source.Token));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.ApplyAsync(DisplayMode.TvOnly, cancellationToken: source.Token));
         Assert.Equal(new uint[] { 0x40, 0x80, 0x40, 0x80 }, actions);
     }
 }

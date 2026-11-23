@@ -36,7 +36,7 @@ using var linked = CancellationTokenSource.CreateLinkedTokenSource(lease.Failure
 try
 {
     lease.ThrowIfUnavailable();
-    await display.ApplyAsync(targetMode, linked.Token);
+    await display.ApplyAsync(targetMode, cancellationToken: linked.Token);
     lease.ThrowIfUnavailable();
     if (args[0] == "--extend-inventory-confirmed")
     {

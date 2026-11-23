@@ -202,6 +202,25 @@ public sealed class AutomationCoordinatorTests
     }
 
     [Fact]
+    public async Task Activation_forwards_configured_display_preference()
+    {
+        var (coordinator, display, _, _, _) = Create();
+        var preference = new DisplayPreference(1920, 1080, 60, 125);
+        await coordinator.UpdateSettingsAsync(new AutomationSettings
+        {
+            Enabled = true,
+            DisplayMode = DisplayMode.TvOnly,
+            DisplayPreference = preference,
+        });
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Active, coordinator.State);
+        Assert.Contains(preference, display.Preferences);
+        Assert.Equal(preference, display.Preferences[^1]);
+    }
+
+    [Fact]
     public async Task Activation_delay_goes_pending_then_active()
     {
         var (coordinator, display, audio, delay, journal) = Create();
@@ -825,6 +844,8 @@ public sealed class AutomationCoordinatorTests
 
         public List<DisplayMode> Applied { get; } = new();
 
+        public List<DisplayPreference?> Preferences { get; } = new();
+
         public List<DisplayState> Restored { get; } = new();
 
         public Exception? ApplyException { get; set; }
@@ -839,8 +860,11 @@ public sealed class AutomationCoordinatorTests
 
         public DisplayState GetCurrent() => Current;
 
+        public IReadOnlyList<DisplayModeOption> GetAvailableModes() => Array.Empty<DisplayModeOption>();
+
         public async Task<DisplayState> ApplyAsync(
             DisplayMode mode,
+            DisplayPreference? preference = null,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -851,6 +875,7 @@ public sealed class AutomationCoordinatorTests
             }
 
             Applied.Add(mode);
+            Preferences.Add(preference);
             Current = mode switch
             {
                 DisplayMode.TvOnly => new DisplayState(DisplayMode.TvOnly, false, true),
