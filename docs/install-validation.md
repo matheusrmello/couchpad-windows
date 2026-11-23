@@ -98,6 +98,15 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
 
+## Candidato 1.0.23
+
+- Mescla os modos do Windows (GDI) aos do EDID; 4K60 aparece quando o driver o expõe. Resumo do display passa a "Tela atual".
+- 360 testes; build Debug/Release 0/0; smoke do build e do instalado OK.
+- Instalação per-user exit 0; App/rescue `1.0.23.0`; tasks `Ready`; journal ausente; settings preservado.
+- Perfil ajustado para 3840×2160@60 (escala 200% preservada). UIA: resoluções incluem 4096×2160 e 3840×2160; para 4K, taxas 60/59/50/30/29/25/24/23 Hz; seleção 4K60 confirmada.
+- Observação: a janela abriu em 1280×720 com topo negativo (-31), barra de título fora da área visível; registrar como bug de posicionamento.
+- Instalador `CouchPad-Setup-1.0.23-win-x64.exe`: 84.314.869 bytes, SHA-256 `47B7BFCD3654B8B6CF4387D5BC88DCF7E674B7A923B181DD76BCF750A7D4255D`. Publicação pendente.
+
 ## Candidato 1.0.22
 
 - Corrige o modo Automático da TV: selecionar "Automático" limpa resolução/refresh do perfil (escala preservada).

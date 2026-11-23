@@ -83,6 +83,8 @@ Ajuste: `DangerMuted` passou de `#3A1D1E` (4,39:1) para `#35191B`
 - [x] Toggle 44×24 px; atende ao mínimo 24×24 da WCAG 2.2 AA.
 - [x] Layout 3/2/1 colunas; conteúdo rolável.
 - [x] Janela mínima 640×640.
+- [ ] Janela abriu com topo negativo em tela 1280×720 (barra fora da área);
+  revisar posicionamento inicial.
 - [x] Textos longos usam `TextWrapping`; caminhos usam ellipsis.
 - [x] Nenhum texto é cortado no breakpoint de 1 coluna na captura atual.
 

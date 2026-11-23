@@ -1,6 +1,6 @@
 # CouchPad Windows — Handoff e Bootstrap
 
-**1.0.23 (candidato, 23/11/2026):** mescla modos do Windows (4K60 visível) e corrige o resumo para "Tela atual". 360 testes, build 0/0, smoke. Instalação e publicação pendentes.
+**1.0.23 (candidato, 23/11/2026):** mescla modos do Windows (4K60 visível) e corrige o resumo para "Tela atual". 360 testes, build 0/0, smoke. Instalado em 23/11/2026; perfil 4K60; publicação pendente.
 
 **1.0.22 (candidato, 23/11/2026):** corrige o modo Automático da TV (limpa resolução/refresh do perfil; escala preservada). 358 testes, build 0/0, smoke. Instalado em 23/11/2026; perfil 1080p60; publicação pendente.
 
