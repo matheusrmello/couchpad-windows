@@ -98,6 +98,14 @@ Para voltar a uma versão anterior, conclua qualquer recuperação pendente, fa�
 - `settings.json` restaurado ao conteúdo original após os testes; chord físico em controle real ainda pendente.
 - Instalador `CouchPad-Setup-1.0.14-win-x64.exe`: 84.337.865 bytes, SHA-256 `A745068F7A6FA4D3A8025A706C8292B90C73D50F7EC31E35C53BAED89D7032E0`. Publicação no GitHub pendente.
 
+## Candidato 1.0.22
+
+- Corrige o modo Automático da TV: selecionar "Automático" limpa resolução/refresh do perfil (escala preservada).
+- 358 testes; build Debug/Release 0/0; smoke do build e do instalado OK.
+- Instalação per-user exit 0; App/rescue `1.0.22.0`; tasks `Ready`; journal ausente; settings preservado na instalação.
+- Perfil ajustado para 1920×1080@60 (escala 200% preservada); UIA confirma "Resolução 1920×1080" e "Taxa 60 Hz".
+- Instalador `CouchPad-Setup-1.0.22-win-x64.exe`: 84.313.330 bytes, SHA-256 `EFE45675DD34A84A9B109E23D6BCEE3DD626971260DD413D5103738BC12F1F72`. Publicação pendente.
+
 ## Candidato 1.0.21
 
 - Recurso: resolução, taxa de atualização e escala do Windows da TV por perfil de ambiente (D082); modos lidos do EDID; apply via `ChangeDisplaySettingsEx` com validação/rollback; escala por monitor via `PerMonitorSettings\DpiValue`.
