@@ -19,6 +19,7 @@
   "recovery.retry": "Retry recovery",
   "recovery.retry_help": "Starts the separate rescue; CouchPad reopens after recovery.",
   "recovery.failed": "Recovery could not be completed. Check your display and audio connections before trying again.",
+  "errors.automation": "Automation failed: {0}",
 
   "section.automation": "Automation",
   "section.display": "Display",

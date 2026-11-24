@@ -126,6 +126,12 @@
                          Foreground="{DynamicResource CouchPad.Danger}"
                          AutomationProperties.LiveSetting="Polite"
                          TextWrapping="Wrap" />
+              <TextBlock Classes="hint"
+                         Text="{Binding AutomationErrorText}"
+                         IsVisible="{Binding AutomationErrorText, Converter={x:Static converters:ObjectConverters.IsNotNull}}"
+                         Foreground="{DynamicResource CouchPad.Danger}"
+                         AutomationProperties.LiveSetting="Polite"
+                         TextWrapping="Wrap" />
 
               <StackPanel Spacing="6">
                 <controls:StatusRow Label="{loc:Tr automation.gamepad}"

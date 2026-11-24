@@ -1,5 +1,12 @@
 # Histórico de versões
 
+## 1.0.25 (candidato)
+
+- Exibe a mensagem real de falha da automação no card Automação (com live region), em vez de apenas o pill "Erro".
+- Aguarda a TV ficar pronta (até 2 s) após ativar a topologia antes de aplicar resolução/Hz, evitando falha por corrida com o 4K60.
+- A mensagem de modo indisponível agora inclui a resolução e a taxa pedidas.
+- 360 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.24 (candidato)
 
 - Redesenha o shell em masonry: três colunas independentes, cards com altura natural e sem esticamento.

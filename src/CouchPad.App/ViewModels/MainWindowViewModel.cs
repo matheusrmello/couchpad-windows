@@ -260,6 +260,10 @@ public partial class MainWindowViewModel : ObservableObject
 
     public string LauncherErrorText => _localization["launchers.failed"];
 
+    public string? AutomationErrorText => _coordinator.State == AutomationState.Error && !string.IsNullOrWhiteSpace(_coordinator.LastError)
+        ? string.Format(_localization["errors.automation"], _coordinator.LastError)
+        : null;
+
     public string RecoveryHelpText => _localization["recovery.help"];
 
     public StatusTone CurrentStatusTone => _coordinator.State switch
@@ -902,6 +906,7 @@ public partial class MainWindowViewModel : ObservableObject
             OnPropertyChanged(nameof(CanRetryRecovery));
             OnPropertyChanged(nameof(HasLauncherError));
             OnPropertyChanged(nameof(RecoveryHelpText));
+            OnPropertyChanged(nameof(AutomationErrorText));
         }
 
         if (Dispatcher.UIThread.CheckAccess())
@@ -934,6 +939,7 @@ public partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(AudioSummary));
         OnPropertyChanged(nameof(RecoveryHelpText));
         OnPropertyChanged(nameof(LauncherErrorText));
+        OnPropertyChanged(nameof(AutomationErrorText));
         OnPropertyChanged(nameof(DisplayTargetHint));
         if (DisplayTargetsError is not null)
         {

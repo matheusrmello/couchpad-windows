@@ -413,6 +413,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private string ApplyDisplayMode(DisplayModeOption mode)
     {
         var deviceName = ResolveGdiDeviceName();
+        WaitForDisplayReady(deviceName);
         var devMode = CreateDevMode();
         var found = false;
         for (uint index = 0; ; index++)
@@ -428,7 +429,8 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                 break;
             }
         }
-        if (!found) throw new InvalidOperationException("Requested TV display mode is unavailable.");
+        if (!found) throw new InvalidOperationException(
+            $"Requested TV display mode {mode.Width}x{mode.Height}@{mode.RefreshHz} Hz is unavailable.");
 
         devMode.dmFields |= DmPelsWidth | DmPelsHeight | DmDisplayFrequency;
         var result = ChangeDisplaySettingsExW(deviceName, ref devMode, IntPtr.Zero, CdsUpdateRegistry, IntPtr.Zero);
@@ -446,6 +448,21 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             current.dmPelsHeight != (uint)mode.Height ||
             !RefreshMatches(current.dmDisplayFrequency, mode.RefreshHz))
             throw new InvalidOperationException("TV display mode verification failed.");
+    }
+
+    private static void WaitForDisplayReady(string deviceName)
+    {
+        var deadline = Environment.TickCount64 + 2000;
+        while (true)
+        {
+            var current = CreateDevMode();
+            if (EnumDisplaySettingsW(deviceName, EnumCurrentSettings, ref current) &&
+                current.dmPelsWidth > 0 && current.dmPelsHeight > 0)
+                return;
+            if (Environment.TickCount64 >= deadline) break;
+            Thread.Sleep(50);
+        }
+        throw new InvalidOperationException("TV display did not become ready.");
     }
 
     // EDID timings round 59.94 Hz to 60, so an exact match is too strict.
