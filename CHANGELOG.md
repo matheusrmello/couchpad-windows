@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 1.0.33 (candidato)
+
+- Corrige a ativação em hardware real: a verificação de topologia passa a aguardar a estabilização do driver (até 6 s) em vez de reverter a mudança por leitura prematura.
+- A verificação de resolução/Hz usa a mesma estabilização, com janela de 3 s.
+- 424 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.32 (candidato)
 
 - Corrige o estado incoerente na primeira abertura após a TV trocar a identidade do endpoint de áudio: as permissões de escrita deixavam de ser revogadas e o painel de configuração de hardware desaparece quando a identidade é re-ancorada automaticamente.

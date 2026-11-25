@@ -407,6 +407,19 @@
 
 **Complemento (1.0.32).** A baseline de hardware (`_configuredHardware`) é re-ancorada quando o bootstrap prova que o ID de áudio configurado não existe mais entre os endpoints **vivos**. Sem isso, a primeira abertura após a reconexão da TV persistia `allowDisplayWrites/allowAudioWrites = false` com `automationEnabled = true`, deixando o toggle travado e o painel "Aplicar configuração" visível. A guarda usa `IsAvailable` (e não a presença no inventário), porque o inventário ainda lista o endpoint morto com `State = 4`. A revogação por troca manual de seleção pelo usuário permanece inalterada.
 
+## D086 — Verificação de topologia com estabilização
+
+**Contexto.** O CCD conclui a aplicação de topologia de forma assíncrona: `SetDisplayConfig` pode retornar sucesso enquanto uma leitura imediata de `QueryDisplayConfig` ainda reporta a topologia anterior. Com verificação de leitura única, toda ativação em hardware real falhava com `TopologyVerificationFailed` e era revertida, mesmo com o driver tendo aceitado a mudança.
+
+**Decisão.**
+1. A verificação de topologia consulta o estado em intervalos de 200 ms, até 6 s, e só declara sucesso quando o modo observado iguala o solicitado.
+2. A verificação de resolução/Hz usa o mesmo mecanismo com janela de 3 s.
+3. Cada iteração revalida a revogação de escrita e o gate do journal; nenhuma exceção de revogação ou `RescueDecisionUncertainException` é engolida.
+4. Deadline esgotado mantém `TopologyVerificationFailed` e o rollback do baseline — o fail-closed não muda, apenas ganha tempo de estabilização.
+5. Seams internos (`TopologyVerifyTimeoutMs`, `ModeVerifyTimeoutMs`, `VerifyPollIntervalMs`) permitem janelas curtas em teste.
+
+**Consequências.** A ativação deixa de falhar por latência do driver; o pior caso passa a ser de até 6 s antes de declarar falha. Nenhuma dependência nova.
+
 ## Formato de nova decisão
 
 ```md

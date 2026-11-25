@@ -47,6 +47,48 @@ public sealed class DisplayServiceFencingTests : IDisposable
         Assert.Empty(actions);
     }
 
+    [Fact]
+    public async Task Revocation_during_verification_propagates_without_rollback()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var decisionPath = Path.Combine(_directory, "decision.json");
+        var store = new RescueDecisionStore(decisionPath);
+        var id = Guid.NewGuid();
+        await store.InitializeAsync(id, Hash);
+        var context = new RescueTransactionContext(_directory);
+        context.Bind(decisionPath, id, Hash);
+        var active = Snapshot(2, PathFor(0, 20));
+        var all = Snapshot(1, PathFor(0, 20), PathFor(0, 10), PathFor(1, 10));
+        var actions = new List<uint>();
+        var applied = false;
+        var released = false;
+        var service = new WindowsDisplayService(
+            new("tv", 1, 2, AllowWrites: true, InternalDisplay: new("monitor", 3, 4)),
+            flags =>
+            {
+                if (flags != WindowsDisplayService.AllPaths) return active;
+                // Recovery takes over the transaction while verification waits.
+                if (applied && !released) { released = true; context.Release(id); }
+                return all;
+            },
+            (paths, modes, action) =>
+            {
+                actions.Add(action);
+                if (action == 0x80) applied = true;
+                return 0;
+            }, context)
+        {
+            TopologyVerifyTimeoutMs = 2_000,
+            VerifyPollIntervalMs = 1,
+        };
+
+        await Assert.ThrowsAsync<RescueDecisionUncertainException>(() => service.ApplyAsync(DisplayMode.TvOnly));
+
+        // An uncertain verification is never swallowed by the polling loop and
+        // never starts a competing rollback; only validate and apply happened.
+        Assert.Equal(new uint[] { 0x40, 0x80 }, actions);
+    }
+
     public void Dispose()
     {
         if (!Directory.Exists(_directory)) return;

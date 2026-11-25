@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**1.0.33 (candidato, 25/11/2026):** verificação de topologia com estabilização (corrige falso negativo que revertia toda ativação). 424 testes, build 0/0, smoke. Validação na TV pendente.
+
 **1.0.32 (candidato, 25/11/2026):** re-ancora a baseline de hardware quando o endpoint de áudio é re-resolvido, mantendo as permissões de escrita coerentes. 422 testes, build 0/0, smoke. Validação na TV pendente.
 
 **1.0.31 (candidato, 25/11/2026):** bootstrap da identidade de áudio da TV pelo nome do display; persistência automática do endpoint correto. 421 testes, build 0/0, smoke. Validação na TV pendente.

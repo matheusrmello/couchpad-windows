@@ -215,7 +215,13 @@ public class WindowsDisplayServiceFakeTests
     {
         var active = Snapshot(2, Path(0, 20));
         var all = Snapshot(1, Path(0, 20), Path(0, 10), Path(1, 10));
-        return new(new("tv", 1, 2, AllowWrites: true, InternalDisplay: new("internal", 3, 4)), flags => flags == 1 ? all : active, set);
+        return new(new("tv", 1, 2, AllowWrites: true, InternalDisplay: new("internal", 3, 4)), flags => flags == 1 ? all : active, set)
+        {
+            // Verification polls on wall-clock deadlines, so tests shrink them.
+            TopologyVerifyTimeoutMs = 100,
+            ModeVerifyTimeoutMs = 100,
+            VerifyPollIntervalMs = 1,
+        };
     }
     [Fact]
     public async Task Revocation_during_apply_rolls_back_and_blocks_further_applies()
@@ -256,6 +262,36 @@ public class WindowsDisplayServiceFakeTests
         var error = await Assert.ThrowsAsync<DisplayApplyException>(() => service.ApplyAsync(DisplayMode.TvOnly));
         Assert.Equal(DisplayApplyErrorCode.TopologyVerificationFailed, error.Code);
         Assert.Equal(new uint[] { 0x40, 0x80, 0x40, 0x80 }, actions);
+        Assert.Equal(DisplayMode.InternalOnly, service.GetCurrent().Mode);
+    }
+    [Fact]
+    public async Task Late_topology_convergence_is_accepted()
+    {
+        var active = Snapshot(2, Path(0, 20));
+        var tvOnly = Snapshot(2, Path(0, 10));
+        var all = Snapshot(1, Path(0, 20), Path(0, 10), Path(1, 10));
+        var applied = false;
+        var lateReads = 0;
+        var service = new WindowsDisplayService(
+            new("tv", 1, 2, AllowWrites: true, InternalDisplay: new("internal", 3, 4)),
+            flags =>
+            {
+                if (flags == 1) return all;
+                if (!applied) return active;
+                // The driver keeps reporting the previous topology for a moment.
+                return lateReads++ < 3 ? active : tvOnly;
+            },
+            (p, m, action) => { if (action == 0x80) applied = true; return 0; })
+        {
+            TopologyVerifyTimeoutMs = 2_000,
+            ModeVerifyTimeoutMs = 100,
+            VerifyPollIntervalMs = 1,
+        };
+
+        var result = await service.ApplyAsync(DisplayMode.TvOnly);
+
+        Assert.Equal(DisplayMode.TvOnly, result.Mode);
+        Assert.True(lateReads >= 4, $"The verification should retry before converging, saw {lateReads} reads.");
     }
     [Fact]
     public async Task Cancel_after_apply_restores_baseline()

@@ -20,6 +20,14 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private const int BadModeRetries = 2;
     private const int BadModeRetryDelayMs = 250;
     private const long DisplayReadyTimeoutMs = 10_000;
+    // The CCD driver completes the topology change asynchronously: SetDisplayConfig
+    // can return success while an immediate QueryDisplayConfig still reports the
+    // previous topology, and EnumDisplaySettings can still report the old timing.
+    // Verification therefore polls until the read converges instead of trusting a
+    // single immediate read; the deadline keeps the fail-closed outcome intact.
+    private const int DefaultTopologyVerifyTimeoutMs = 6_000;
+    private const int DefaultModeVerifyTimeoutMs = 3_000;
+    private const int DefaultVerifyPollIntervalMs = 200;
     private const uint DisplayDeviceAttachedToDesktop = 0x1;
     private const uint DmPelsWidth = 0x80000, DmPelsHeight = 0x100000, DmDisplayFrequency = 0x400000;
 
@@ -35,6 +43,16 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private readonly Func<string, byte[]?>? _edidOverride;
     private readonly Func<DisplayModeOption, int>? _changeModeOverride;
     private readonly Lazy<IReadOnlyList<DisplayModeOption>> _edidModes;
+
+    /// <summary>
+    /// Test seam: the verification windows are wall-clock deadlines, so tests
+    /// shrink them instead of sleeping through the production budget.
+    /// </summary>
+    internal int TopologyVerifyTimeoutMs { get; set; } = DefaultTopologyVerifyTimeoutMs;
+
+    internal int ModeVerifyTimeoutMs { get; set; } = DefaultModeVerifyTimeoutMs;
+
+    internal int VerifyPollIntervalMs { get; set; } = DefaultVerifyPollIntervalMs;
 
     public WindowsDisplayService(WindowsDisplayOptions options, RescueTransactionContext? transaction = null)
     {
@@ -336,9 +354,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                 },
                 () =>
                 {
-                    after = GetCurrent();
-                    if (after.Mode != mode)
-                        throw new DisplayApplyException(DisplayApplyErrorCode.TopologyVerificationFailed, "Display verification failed.");
+                    after = WaitForTopology(mode, cancellationToken);
                     if (requestedMode is not null && _changeModeOverride is null) VerifyDisplayMode(gdiDeviceName!, requestedMode);
                     if (scalePercent is { } expectedScale && dpiKey is not null && PerMonitorDpi.ReadPercent(dpiKey) != expectedScale)
                         throw new DisplayApplyException(DisplayApplyErrorCode.ScaleFailed, "TV display scale verification failed.");
@@ -517,15 +533,55 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
         }
     }
 
-    private static void VerifyDisplayMode(string deviceName, DisplayModeOption mode)
+    /// <summary>
+    /// Polls the active topology until it matches the requested mode or the
+    /// deadline expires. Windows accepts the CCD apply before the driver has
+    /// finished deactivating the previous target, so an immediate single read
+    /// can still report the old topology and would abort a valid activation.
+    /// The window only widens stabilization: if the topology never converges
+    /// the apply still fails closed and the caller rolls back.
+    /// </summary>
+    private DisplayState WaitForTopology(DisplayMode mode, CancellationToken cancellationToken)
+    {
+        var deadline = Environment.TickCount64 + TopologyVerifyTimeoutMs;
+        while (true)
+        {
+            // Keep revocation responsive while waiting: a revoked writer or a
+            // journal that no longer permits mutation must abort immediately.
+            cancellationToken.ThrowIfCancellationRequested();
+            EnsureMutationAllowed();
+            var after = GetCurrent();
+            if (after.Mode == mode) return after;
+            if (Environment.TickCount64 >= deadline)
+                throw new DisplayApplyException(DisplayApplyErrorCode.TopologyVerificationFailed, "Display verification failed.");
+            Thread.Sleep(VerifyPollIntervalMs);
+        }
+    }
+
+    /// <summary>
+    /// Same asynchronous-read caveat as the topology: the GDI current mode can
+    /// still report the previous timing right after the change is accepted, so
+    /// the read-back polls for a short window before failing closed.
+    /// </summary>
+    private void VerifyDisplayMode(string deviceName, DisplayModeOption mode)
+    {
+        var deadline = Environment.TickCount64 + ModeVerifyTimeoutMs;
+        while (!DisplayModeMatches(deviceName, mode))
+        {
+            if (Environment.TickCount64 >= deadline)
+                throw DisplayApplyException.ForMode(
+                    DisplayApplyErrorCode.ModeVerificationFailed, mode, "TV display mode verification failed.");
+            Thread.Sleep(VerifyPollIntervalMs);
+        }
+    }
+
+    private static bool DisplayModeMatches(string deviceName, DisplayModeOption mode)
     {
         var current = CreateDevMode();
-        if (!EnumDisplaySettingsW(deviceName, EnumCurrentSettings, ref current) ||
-            current.dmPelsWidth != (uint)mode.Width ||
-            current.dmPelsHeight != (uint)mode.Height ||
-            !RefreshMatches(current.dmDisplayFrequency, mode.RefreshHz))
-            throw DisplayApplyException.ForMode(
-                DisplayApplyErrorCode.ModeVerificationFailed, mode, "TV display mode verification failed.");
+        return EnumDisplaySettingsW(deviceName, EnumCurrentSettings, ref current) &&
+            current.dmPelsWidth == (uint)mode.Width &&
+            current.dmPelsHeight == (uint)mode.Height &&
+            RefreshMatches(current.dmDisplayFrequency, mode.RefreshHz);
     }
 
     /// <summary>
