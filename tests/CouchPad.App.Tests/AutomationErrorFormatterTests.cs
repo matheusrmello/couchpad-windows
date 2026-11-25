@@ -65,6 +65,24 @@ public sealed class AutomationErrorFormatterTests
     }
 
     [Fact]
+    public void Unresolved_audio_endpoint_uses_its_own_message_in_both_languages()
+    {
+        var portuguese = AutomationErrorFormatter.Format(Portuguese(), "The saved TV audio endpoint is not available.",
+            null, null, null, true);
+        var english = AutomationErrorFormatter.Format(English(), "The saved TV audio endpoint is not available.",
+            null, null, null, true);
+
+        Assert.NotNull(portuguese);
+        Assert.Contains("A saída de áudio da TV não foi encontrada", portuguese);
+        Assert.Contains("Selecione a saída HDMI da TV", portuguese);
+        Assert.DoesNotContain("Falha na automação", portuguese);
+        Assert.NotNull(english);
+        Assert.Contains("The TV audio output was not found", english);
+        Assert.Contains("Pick the TV HDMI output", english);
+        Assert.DoesNotContain("Automation failed", english);
+    }
+
+    [Fact]
     public void Untyped_error_uses_the_generic_message()
     {
         var localization = Portuguese();

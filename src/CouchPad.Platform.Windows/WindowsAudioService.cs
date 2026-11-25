@@ -4,7 +4,11 @@ using CouchPad.Core.Automation;
 
 namespace CouchPad.Platform.Windows;
 
-public sealed record WindowsAudioOptions(string TvEndpointId, bool AllowWrites = false, TimeSpan? AvailabilityTimeout = null);
+public sealed record WindowsAudioOptions(
+    string TvEndpointId,
+    bool AllowWrites = false,
+    TimeSpan? AvailabilityTimeout = null,
+    string? TvEndpointName = null);
 
 /// <summary>Explicit-endpoint audio service. Writes require an armed rescue transaction.</summary>
 [SupportedOSPlatform("windows")]
@@ -38,8 +42,13 @@ public sealed class WindowsAudioService : IAudioService, IAudioBaselineService
     public AudioOutput GetCurrent()
     {
         var inventory = _inventory();
+        if (ResolveEndpoint(inventory) is not { } endpoint)
+        {
+            return AudioOutput.Default;
+        }
+
         return new[] { inventory.Console, inventory.Multimedia, inventory.Communications }
-            .All(id => string.Equals(id, _options.TvEndpointId, StringComparison.OrdinalIgnoreCase)) ? AudioOutput.Hdmi : AudioOutput.Default;
+            .All(id => string.Equals(id, endpoint.Id, StringComparison.OrdinalIgnoreCase)) ? AudioOutput.Hdmi : AudioOutput.Default;
     }
 
     public async Task<AudioOutput> ApplyAsync(AudioMode mode, CancellationToken cancellationToken = default)
@@ -52,30 +61,40 @@ public sealed class WindowsAudioService : IAudioService, IAudioBaselineService
         deadline.CancelAfter(_options.AvailabilityTimeout ?? TimeSpan.FromSeconds(15));
         try { return await ApplyAvailableAsync(deadline.Token).ConfigureAwait(false); }
         catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && !_writesRevoked.IsCancellationRequested && deadline.IsCancellationRequested)
-        { throw new TimeoutException("The selected audio endpoint did not become available.", ex); }
+        { throw new AudioEndpointUnavailableException(_options.TvEndpointName, _options.TvEndpointId, ex); }
     }
+
+    /// <summary>Active exact ID first; otherwise the unique active endpoint with the saved name.</summary>
+    private WindowsAudioProbe.Endpoint? ResolveEndpoint(WindowsAudioProbe.Inventory inventory) =>
+        TvAudioEndpointResolver.Resolve(inventory.Endpoints, _options.TvEndpointId, _options.TvEndpointName);
 
     private async Task<AudioOutput> ApplyAvailableAsync(CancellationToken token)
     {
+        WindowsAudioProbe.Endpoint endpoint;
         while (true)
         {
             token.ThrowIfCancellationRequested();
-            var matches = _inventory().Endpoints.Where(e => e.State == 1 && string.Equals(e.Id, _options.TvEndpointId, StringComparison.OrdinalIgnoreCase)).ToArray();
-            if (matches.Length > 1) throw new InvalidOperationException("Audio endpoint identity is ambiguous.");
-            if (matches.Length == 1) break;
+            var endpoints = _inventory().Endpoints;
+            var duplicates = endpoints.Count(e => e.State == 1 && string.Equals(e.Id, _options.TvEndpointId, StringComparison.OrdinalIgnoreCase));
+            if (duplicates > 1) throw new InvalidOperationException("Audio endpoint identity is ambiguous.");
+            if (TvAudioEndpointResolver.Resolve(endpoints, _options.TvEndpointId, _options.TvEndpointName) is { } resolved)
+            {
+                endpoint = resolved;
+                break;
+            }
             await Task.Delay(100, token).ConfigureAwait(false);
         }
         await using var held = await DisplayMutationLock.AcquireAsync(_transaction.MutationLockPath, token).ConfigureAwait(false);
         await _transaction.ExecuteIfStateAsync(RescueDecisionState.Armed, () =>
         {
-            WindowsAudioProbe.SelectActiveById(_inventory().Endpoints, _options.TvEndpointId);
+            WindowsAudioProbe.SelectActiveById(_inventory().Endpoints, endpoint.Id);
             foreach (var role in Enum.GetValues<AudioRole>())
             {
                 token.ThrowIfCancellationRequested();
-                _backend.SetDefault(_options.TvEndpointId, role);
+                _backend.SetDefault(endpoint.Id, role);
             }
             foreach (var role in Enum.GetValues<AudioRole>())
-                if (!string.Equals(_backend.GetDefault(role), _options.TvEndpointId, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(_backend.GetDefault(role), endpoint.Id, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidOperationException("Audio default verification failed.");
         }, token).ConfigureAwait(false);
         return AudioOutput.Hdmi;

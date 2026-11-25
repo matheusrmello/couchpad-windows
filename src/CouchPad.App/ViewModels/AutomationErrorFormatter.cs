@@ -15,12 +15,18 @@ public static class AutomationErrorFormatter
         string? error,
         DisplayApplyErrorCode? code,
         DisplayModeOption? mode,
-        int? nativeResult)
+        int? nativeResult,
+        bool audioEndpointUnavailable = false)
     {
         ArgumentNullException.ThrowIfNull(localization);
         if (string.IsNullOrWhiteSpace(error))
         {
             return null;
+        }
+
+        if (audioEndpointUnavailable)
+        {
+            return localization["errors.audio.endpointUnavailable"];
         }
 
         if (code is { } displayCode)

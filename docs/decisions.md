@@ -389,6 +389,20 @@
 
 **Consequências.** 4K60 exige "Entrada de Sinal Plus" (HDMI 2.0) na TV para o EDID anunciar o VIC 97; perfis antigos com 4K60 passam a falhar de forma explícita e reversível. `SimulatedDisplayService` herda o default interface method e não marca modos. Nenhuma dependência nova.
 
+**Revisão (1.0.30).** O EDID do registro é apenas cache e pode estar obsoleto: a TV SAM7167 roda 4K60 a 594 MHz enquanto o EDID cacheado declara máximo de 297 MHz (HDMI 1.4, sem VIC 97). Por isso o EDID deixou de ser veto e passou a ser consultivo: a ativação sempre tenta, e a falha em `DISP_CHANGE_BADMODE` é classificada como `UnsupportedMode` (modo não anunciado) ou `ModeRejected` (anunciado).
+
+## D085 — Identidade do endpoint de áudio resolvida por nome
+
+**Contexto.** O Windows recria o endpoint HDMI com um GUID novo a cada reconexão da TV. As settings guardavam `{2ea8704a…}`, que continuava no inventário com `State = 4` (NOTPRESENT), enquanto o endpoint vivo era `{45d7969c…}`. Casar só por ID exato derrubava a automação inteira na etapa de áudio, depois de já ter mexido no display.
+
+**Decisão.**
+1. A identidade do endpoint é resolvida por uma função pura no Core (`AudioEndpointIdentity.Resolve`), na ordem: ID exato **ativo** único → primeiro token do nome normalizado entre endpoints ativos → nulo.
+2. Ambiguidade (dois endpoints ativos com o mesmo token) não escreve nada: a seleção permanece e a UI mostra a saída indisponível.
+3. O App persiste o ID e o nome resolvidos, para a próxima execução não precisar resolver de novo.
+4. Quando não há resolução, a falha é `AudioEndpointUnavailableException` com mensagem localizada (`errors.audio.endpointUnavailable`), nunca `Win32Exception` cru.
+
+**Consequências.** Reconexões da TV deixam de quebrar a automação; o nome amigável passa a ser a âncora de identidade. Duas TVs Samsung simultâneas exigem escolha manual. Nenhuma dependência nova.
+
 ## Formato de nova decisão
 
 ```md

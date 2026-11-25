@@ -52,6 +52,7 @@ public partial class MainWindowViewModel
             EnvironmentProfiles.Add(new EnvironmentProfileOption(name: _localization["profiles.default_name"])
             {
                 TvAudioEndpointId = settings.TvAudioEndpointId,
+                TvAudioEndpointName = settings.TvAudioEndpointName,
                 TvDevicePath = settings.TvDevicePath,
                 TvEdidManufacturer = settings.TvEdidManufacturer,
                 TvEdidProduct = settings.TvEdidProduct,
@@ -82,11 +83,11 @@ public partial class MainWindowViewModel
         SelectedInternalTarget = EnsureTarget(CreateSavedTarget(
             profile.InternalDevicePath, profile.InternalEdidManufacturer, profile.InternalEdidProduct,
             profile.InternalExactName));
-        SelectedTvAudioEndpoint = ResolveAudioEndpoint(profile.TvAudioEndpointId);
+        SelectedTvAudioEndpoint = ResolveAudioEndpoint(profile.TvAudioEndpointId, profile.TvAudioEndpointName);
         ApplyProfileDisplayPreference(profile);
     }
 
-    private AudioEndpointOption? ResolveAudioEndpoint(string? id)
+    private AudioEndpointOption? ResolveAudioEndpoint(string? id, string? name)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -100,7 +101,7 @@ public partial class MainWindowViewModel
             return match;
         }
 
-        var placeholder = new AudioEndpointOption(id, null);
+        var placeholder = new AudioEndpointOption(id, name);
         AudioEndpoints.Add(placeholder);
         return placeholder;
     }
@@ -113,6 +114,7 @@ public partial class MainWindowViewModel
         }
 
         profile.TvAudioEndpointId = SelectedTvAudioEndpoint?.Id;
+        profile.TvAudioEndpointName = SelectedTvAudioEndpoint?.Name;
         profile.TvDevicePath = SelectedTvTarget?.DevicePath;
         profile.TvEdidManufacturer = SelectedTvTarget?.EdidManufacturer;
         profile.TvEdidProduct = SelectedTvTarget?.EdidProduct;
@@ -130,6 +132,7 @@ public partial class MainWindowViewModel
         var profile = new EnvironmentProfileOption(name: NextProfileName())
         {
             TvAudioEndpointId = SelectedTvAudioEndpoint?.Id,
+            TvAudioEndpointName = SelectedTvAudioEndpoint?.Name,
             TvDevicePath = SelectedTvTarget?.DevicePath,
             TvEdidManufacturer = SelectedTvTarget?.EdidManufacturer,
             TvEdidProduct = SelectedTvTarget?.EdidProduct,

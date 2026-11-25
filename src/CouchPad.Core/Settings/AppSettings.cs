@@ -47,6 +47,9 @@ public sealed record AppSettings
 
     public string? TvAudioEndpointId { get; init; }
 
+    /// <summary>Friendly name saved with the endpoint ID; used to re-resolve a stale ID.</summary>
+    public string? TvAudioEndpointName { get; init; }
+
     public string? TvDevicePath { get; init; }
 
     public ushort? TvEdidManufacturer { get; init; }

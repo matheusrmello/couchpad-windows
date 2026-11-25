@@ -1,5 +1,15 @@
 # Histórico de versões
 
+## 1.0.30 (candidato)
+
+- Corrige a ativação em TVs cujo EDID em cache está desatualizado: o EDID deixa de bloquear a aplicação do modo e passa a explicar a falha (`não anunciado pela TV` vs `a TV recusou`).
+- Só aplica resolução/Hz em adaptador de vídeo ativo, com espera de até 10 s re-resolvendo o adaptador e uma nova tentativa em `DISP_CHANGE_BADMODE`.
+- Mensagens de falha de display e de áudio agora são localizadas (pt-BR/en) e acionáveis, em vez de texto técnico em inglês.
+- Resolve a saída de áudio da TV por nome quando o Windows recria o endpoint com um GUID novo, e persiste a nova identidade.
+- Corrige o rótulo do endpoint de áudio que mostrava um fragmento de GUID truncado.
+- Marca na lista de resoluções os modos que o Windows oferece mas o EDID não anuncia.
+- 415 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.28 (candidato)
 
 - Modos que o Windows oferece mas o EDID da TV não anuncia aparecem marcados como "não anunciado pela TV"; a UI deixa claro por que o 4K60 pode não aplicar.

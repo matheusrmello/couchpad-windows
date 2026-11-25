@@ -31,4 +31,25 @@ public sealed class WindowsAudioProbeTests
         Assert.Throws<InvalidOperationException>(() => WindowsAudioProbe.SelectActiveById([selected, selected], "ID"));
         Assert.Throws<InvalidOperationException>(() => WindowsAudioProbe.SelectActiveById([other], "ID"));
     }
+
+    [Fact]
+    public void Stale_id_resolves_to_the_active_endpoint_with_the_saved_name()
+    {
+        const string savedName = "SAMSUNG (3- HD Audio Driver for Display Audio)";
+        var stale = new WindowsAudioProbe.Endpoint("stale", 4, savedName);
+        var live = new WindowsAudioProbe.Endpoint("live", 1, "SAMSUNG -2 (2- HD Audio Driver for Display Audio)");
+        var monitor = new WindowsAudioProbe.Endpoint("monitor", 1, "AOC");
+
+        Assert.Equal(live, TvAudioEndpointResolver.Resolve([stale, live, monitor], "stale", savedName));
+        Assert.Equal(live, TvAudioEndpointResolver.Resolve([stale, live, monitor], null, savedName));
+        Assert.Null(TvAudioEndpointResolver.Resolve([stale, monitor], "stale", savedName));
+        Assert.Null(TvAudioEndpointResolver.Resolve([stale], "stale", null));
+    }
+
+    [Fact]
+    public void Resolver_uses_the_ui_normalization_helper()
+    {
+        Assert.Equal("SAMSUNG", TvAudioEndpointResolver.NormalizeName(
+            "SAMSUNG -2 (2- HD Audio Driver for Display Audio)"));
+    }
 }

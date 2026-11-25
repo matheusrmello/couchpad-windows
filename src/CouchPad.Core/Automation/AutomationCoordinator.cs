@@ -30,6 +30,7 @@ public sealed class AutomationCoordinator
     private DisplayApplyErrorCode? _lastErrorCode;
     private DisplayModeOption? _lastErrorMode;
     private int? _lastErrorNativeResult;
+    private bool _lastAudioEndpointUnavailable;
     private bool _recoveryUncertain;
     private bool _launcherFailed;
 
@@ -118,6 +119,18 @@ public sealed class AutomationCoordinator
             lock (_sync)
             {
                 return _lastErrorNativeResult;
+            }
+        }
+    }
+
+    /// <summary>True when the last error came from an unresolved TV audio endpoint identity.</summary>
+    public bool LastErrorIsAudioEndpointUnavailable
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _lastAudioEndpointUnavailable;
             }
         }
     }
@@ -663,6 +676,7 @@ public sealed class AutomationCoordinator
             _lastErrorCode = applyError?.Code;
             _lastErrorMode = applyError?.RequestedMode;
             _lastErrorNativeResult = applyError?.NativeResult;
+            _lastAudioEndpointUnavailable = state == AutomationState.Error && IsAudioEndpointUnavailable(exception);
             args = new AutomationStateChangedEventArgs(state, _lastError, _recoveryUncertain);
         }
 
@@ -674,6 +688,14 @@ public sealed class AutomationCoordinator
         DisplayApplyException apply => apply,
         AggregateException aggregate => aggregate.Flatten().InnerExceptions.OfType<DisplayApplyException>().FirstOrDefault(),
         _ => null,
+    };
+
+    private static bool IsAudioEndpointUnavailable(Exception? exception) => exception switch
+    {
+        AudioEndpointUnavailableException => true,
+        AggregateException aggregate => aggregate.Flatten().InnerExceptions.Any(
+            inner => inner is AudioEndpointUnavailableException),
+        _ => false,
     };
 
     private static async Task<bool> FinishLeaseAsync(IRescueLease? lease, bool restored)

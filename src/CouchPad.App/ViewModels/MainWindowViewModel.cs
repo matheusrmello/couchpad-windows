@@ -269,7 +269,8 @@ public partial class MainWindowViewModel : ObservableObject
 
     private string? FormatAutomationError() => AutomationErrorFormatter.Format(
         _localization, _coordinator.LastError, _coordinator.LastErrorCode,
-        _coordinator.LastErrorMode, _coordinator.LastErrorNativeResult);
+        _coordinator.LastErrorMode, _coordinator.LastErrorNativeResult,
+        _coordinator.LastErrorIsAudioEndpointUnavailable);
 
     public string RecoveryHelpText => _localization["recovery.help"];
 
@@ -420,6 +421,7 @@ public partial class MainWindowViewModel : ObservableObject
     {
         if (_discoverAudioEndpoints is null) return;
         var selected = SelectedTvAudioEndpoint;
+        var resolvedIdentity = false;
         _isLoadingSettings = true;
         try
         {
@@ -431,7 +433,7 @@ public partial class MainWindowViewModel : ObservableObject
                 AudioEndpoints.Add(endpoint);
             if (selected is not null)
             {
-                var match = AudioEndpoints.FirstOrDefault(e => string.Equals(e.Id, selected.Id, StringComparison.OrdinalIgnoreCase));
+                var match = ResolveSavedAudioEndpoint(selected);
                 if (match is null)
                 {
                     match = selected with
@@ -444,6 +446,7 @@ public partial class MainWindowViewModel : ObservableObject
                     AudioEndpoints.Add(match);
                 }
                 SelectedTvAudioEndpoint = match;
+                resolvedIdentity = !string.Equals(match.Id, selected.Id, StringComparison.OrdinalIgnoreCase);
             }
             _audioInventoryFailed = false;
         }
@@ -454,9 +457,26 @@ public partial class MainWindowViewModel : ObservableObject
         finally
         {
             _isLoadingSettings = false;
+            // A stale ID resolved by friendly name becomes the new saved identity.
+            if (resolvedIdentity) PersistSettings();
             NotifyHardwareSetup();
             OnPropertyChanged(nameof(AudioSetupText));
         }
+    }
+
+    /// <summary>
+    /// Exact active ID first; otherwise the unique live endpoint whose normalized
+    /// name matches the saved one. Never guesses when the identity is ambiguous.
+    /// </summary>
+    private AudioEndpointOption? ResolveSavedAudioEndpoint(AudioEndpointOption saved)
+    {
+        var reference = AudioEndpointIdentity.Resolve(
+            AudioEndpoints.Select(endpoint => new AudioEndpointRef(endpoint.Id, endpoint.Name, endpoint.IsAvailable)),
+            saved.Id, saved.Name);
+        return reference is { } match
+            ? AudioEndpoints.FirstOrDefault(endpoint =>
+                string.Equals(endpoint.Id, match.Id, StringComparison.OrdinalIgnoreCase))
+            : null;
     }
 
     private IReadOnlyList<AudioEndpointOption> LabelDuplicateEndpoints(IReadOnlyList<AudioEndpointOption> endpoints)
@@ -859,6 +879,7 @@ public partial class MainWindowViewModel : ObservableObject
                 AllowDisplayWrites = IsProductionMode ? AutomationEnabled && HardwareMatchesSelection : AllowDisplayWrites,
                 AllowAudioWrites = IsProductionMode ? AutomationEnabled && HardwareMatchesSelection : AllowAudioWrites,
                 TvAudioEndpointId = SelectedTvAudioEndpoint?.Id,
+                TvAudioEndpointName = SelectedTvAudioEndpoint?.Name,
                 TvDevicePath = SelectedTvTarget?.DevicePath,
                 TvEdidManufacturer = SelectedTvTarget?.EdidManufacturer,
                 TvEdidProduct = SelectedTvTarget?.EdidProduct,

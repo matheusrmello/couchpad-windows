@@ -33,6 +33,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private readonly Func<uint, Snapshot>? _captureOverride;
     private readonly Func<byte[], byte[], uint, int>? _setOverride;
     private readonly Func<string, byte[]?>? _edidOverride;
+    private readonly Func<DisplayModeOption, int>? _changeModeOverride;
     private readonly Lazy<IReadOnlyList<DisplayModeOption>> _edidModes;
 
     public WindowsDisplayService(WindowsDisplayOptions options, RescueTransactionContext? transaction = null)
@@ -58,10 +59,17 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     internal WindowsDisplayService(WindowsDisplayOptions options, Func<string, byte[]?>? edidOverride) : this(options) =>
         _edidOverride = edidOverride;
 
-    /// <summary>Test seam: display writes plus a fixed EDID, still with no real hardware.</summary>
+    /// <summary>
+    /// Test seam: display writes, a fixed EDID and an optional mode-change result,
+    /// still with no real hardware. The mode-change override replaces the native
+    /// change together with its read-back verification.
+    /// </summary>
     internal WindowsDisplayService(WindowsDisplayOptions options, Func<uint, Snapshot> capture, Func<byte[], byte[], uint, int> set,
-        Func<string, byte[]?>? edidOverride) : this(options, capture, set) =>
+        Func<string, byte[]?>? edidOverride, Func<DisplayModeOption, int>? changeModeOverride = null) : this(options, capture, set)
+    {
         _edidOverride = edidOverride;
+        _changeModeOverride = changeModeOverride;
+    }
 
     public DisplayState GetCurrent()
     {
@@ -284,15 +292,12 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             var internalDisplay = SelectTarget(all.Targets, selector.DevicePath, selector.EdidManufacturer, selector.EdidProduct, selector.ExactName);
             var proposal = DisplayTopologyPlanner.Create(before, all, tv, internalDisplay, mode);
             var requestedMode = ResolveRequestedMode(normalized);
-            // The Windows driver can list modes the sink does not accept over the
-            // current link (for example 4K60 on an HDMI 1.4 EDID). Applying one of
-            // those ends in DISP_CHANGE_BADMODE, so trust the EDID list when it is
-            // available and refuse before any mutation.
-            if (requestedMode is not null && !IsModeAdvertised(requestedMode, _edidModes.Value))
-                throw DisplayApplyException.ForMode(
-                    DisplayApplyErrorCode.UnsupportedMode,
-                    requestedMode,
-                    $"The TV EDID does not advertise {requestedMode.Width}x{requestedMode.Height}@{requestedMode.RefreshHz} Hz.");
+            // The EDID cached in the registry can be stale: it may report a lower
+            // pixel clock or omit a VIC while the sink is already running that
+            // mode. Only the active sink is authoritative, so the EDID is
+            // consultive — it never blocks the apply, it only refines the
+            // classification of a refusal after the change is attempted.
+            var advertised = requestedMode is null || IsModeAdvertised(requestedMode, _edidModes.Value);
             // Resolve the per-monitor DPI key before touching the display. Windows
             // only creates that profile after the TV has been configured once, so
             // the scale is best-effort: a missing profile or EDID skip only the
@@ -325,7 +330,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                     markAttempted();
                     SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x80);
                     EnsureMutationAllowed();
-                    if (requestedMode is not null) gdiDeviceName = ApplyDisplayMode(requestedMode);
+                    if (requestedMode is not null) gdiDeviceName = ApplyDisplayMode(requestedMode, advertised);
                     if (scalePercent is { } scale && dpiKey is not null && !PerMonitorDpi.Apply(dpiKey, scale))
                         throw new DisplayApplyException(DisplayApplyErrorCode.ScaleFailed, "Failed to apply the TV display scale.");
                 },
@@ -334,7 +339,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                     after = GetCurrent();
                     if (after.Mode != mode)
                         throw new DisplayApplyException(DisplayApplyErrorCode.TopologyVerificationFailed, "Display verification failed.");
-                    if (requestedMode is not null) VerifyDisplayMode(gdiDeviceName!, requestedMode);
+                    if (requestedMode is not null && _changeModeOverride is null) VerifyDisplayMode(gdiDeviceName!, requestedMode);
                     if (scalePercent is { } expectedScale && dpiKey is not null && PerMonitorDpi.ReadPercent(dpiKey) != expectedScale)
                         throw new DisplayApplyException(DisplayApplyErrorCode.ScaleFailed, "TV display scale verification failed.");
                     EnsureMutationAllowed();
@@ -442,7 +447,8 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
 
     /// <summary>
     /// True when the requested mode appears in the EDID list. An empty list means
-    /// the EDID is unavailable, so the gate stays open and the Windows list rules.
+    /// the EDID is unavailable, so the answer stays open. Consultive only: the
+    /// EDID is a registry cache that can be stale, so this never blocks an apply.
     /// </summary>
     internal static bool IsModeAdvertised(DisplayModeOption requested, IReadOnlyList<DisplayModeOption> advertised) =>
         advertised.Count == 0 ||
@@ -450,8 +456,16 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             mode.Height == requested.Height &&
             RefreshMatches((uint)mode.RefreshHz, requested.RefreshHz));
 
-    private string ApplyDisplayMode(DisplayModeOption mode)
+    /// <summary>
+    /// Applies the requested mode. The EDID boolean only classifies a
+    /// DISP_CHANGE_BADMODE refusal: a mode the stale EDID does not advertise is
+    /// reported as unsupported for the current link, while any other refusal is a
+    /// plain rejection.
+    /// </summary>
+    private string ApplyDisplayMode(DisplayModeOption mode, bool advertised)
     {
+        if (_changeModeOverride is not null) return ClassifyModeChange(_changeModeOverride(mode), string.Empty, mode, advertised);
+
         var deviceName = WaitForDisplayReady(TryResolveAttachedGdiDeviceName, mode);
         var devMode = FindDisplayMode(deviceName, mode) ?? throw DisplayApplyException.ForMode(
             DisplayApplyErrorCode.UnsupportedMode,
@@ -469,11 +483,25 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                 DisplayApplyErrorCode.DisplayNotReady, mode, "TV display is no longer attached to the desktop.", result);
             result = ChangeDisplaySettingsExW(deviceName, ref devMode, IntPtr.Zero, CdsUpdateRegistry, IntPtr.Zero);
         }
-        if (result != DispChangeSuccessful)
-            throw DisplayApplyException.ForMode(
-                DisplayApplyErrorCode.ModeRejected, mode, $"Changing the TV display mode failed ({result}).", result);
 
-        return deviceName;
+        return ClassifyModeChange(result, deviceName, mode, advertised);
+    }
+
+    private static string ClassifyModeChange(int result, string deviceName, DisplayModeOption mode, bool advertised)
+    {
+        if (result == DispChangeSuccessful) return deviceName;
+        // DISP_CHANGE_BADMODE after the retries means the sink refused a mode
+        // Windows still lists. When the (possibly outdated) EDID does not
+        // advertise it either, the current link is the likely limit; the UI maps
+        // that code to the signal-input guidance.
+        if (result == DispChangeBadMode && !advertised)
+            throw DisplayApplyException.ForMode(
+                DisplayApplyErrorCode.UnsupportedMode,
+                mode,
+                $"The active TV sink refused {mode.Width}x{mode.Height}@{mode.RefreshHz} Hz and the EDID does not advertise it.",
+                result);
+        throw DisplayApplyException.ForMode(
+            DisplayApplyErrorCode.ModeRejected, mode, $"Changing the TV display mode failed ({result}).", result);
     }
 
     private DevMode? FindDisplayMode(string deviceName, DisplayModeOption mode)

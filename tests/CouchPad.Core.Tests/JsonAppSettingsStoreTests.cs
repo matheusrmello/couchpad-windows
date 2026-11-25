@@ -67,6 +67,7 @@ public sealed class JsonAppSettingsStoreTests : IDisposable
             AllowDisplayWrites = true,
             AllowAudioWrites = true,
             TvAudioEndpointId = "endpoint-tv",
+            TvAudioEndpointName = "SAMSUNG (3- HD Audio Driver for Display Audio)",
             TvDevicePath = @"\\?\DISPLAY#SAM7167#tv",
             TvEdidManufacturer = 11596,
             TvEdidProduct = 29031,

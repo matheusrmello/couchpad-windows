@@ -9,6 +9,8 @@ public sealed record EnvironmentProfile
 
     public string? TvAudioEndpointId { get; init; }
 
+    public string? TvAudioEndpointName { get; init; }
+
     public string? TvDevicePath { get; init; }
 
     public ushort? TvEdidManufacturer { get; init; }

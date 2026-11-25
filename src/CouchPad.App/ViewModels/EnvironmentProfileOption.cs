@@ -19,6 +19,8 @@ public partial class EnvironmentProfileOption : ObservableObject
 
     public string? TvAudioEndpointId { get; set; }
 
+    public string? TvAudioEndpointName { get; set; }
+
     public string? TvDevicePath { get; set; }
 
     public ushort? TvEdidManufacturer { get; set; }
@@ -52,6 +54,7 @@ public partial class EnvironmentProfileOption : ObservableObject
         Id = Id,
         Name = Name,
         TvAudioEndpointId = TvAudioEndpointId,
+        TvAudioEndpointName = TvAudioEndpointName,
         TvDevicePath = TvDevicePath,
         TvEdidManufacturer = TvEdidManufacturer,
         TvEdidProduct = TvEdidProduct,
@@ -70,6 +73,7 @@ public partial class EnvironmentProfileOption : ObservableObject
         new(profile.Id, profile.Name)
         {
             TvAudioEndpointId = profile.TvAudioEndpointId,
+            TvAudioEndpointName = profile.TvAudioEndpointName,
             TvDevicePath = profile.TvDevicePath,
             TvEdidManufacturer = profile.TvEdidManufacturer,
             TvEdidProduct = profile.TvEdidProduct,

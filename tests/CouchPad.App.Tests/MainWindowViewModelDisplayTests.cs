@@ -51,6 +51,56 @@ public sealed class MainWindowViewModelDisplayTests
     }
 
     [Fact]
+    public void Stale_audio_id_is_resolved_by_saved_name_and_persisted()
+    {
+        var store = new FakeSettingsStore
+        {
+            Current = new AppSettings
+            {
+                TvAudioEndpointId = "stale-tv",
+                TvAudioEndpointName = "SAMSUNG (3- HD Audio Driver for Display Audio)",
+            },
+        };
+        LocalizationService.Instance.Initialize(store);
+        var live = new AudioEndpointOption("live-tv",
+            "SAMSUNG -2 (2- HD Audio Driver for Display Audio)", IsAvailable: true, IsDisplayAudio: true);
+        var stale = new AudioEndpointOption("stale-tv",
+            "SAMSUNG (3- HD Audio Driver for Display Audio)", IsDisplayAudio: true);
+        var monitor = new AudioEndpointOption("monitor-audio", "AOC", IsAvailable: true, IsCurrent: true);
+
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            discoverAudioEndpoints: () => [stale, live, monitor]);
+
+        Assert.Equal(live, vm.SelectedTvAudioEndpoint);
+        Assert.Equal("live-tv", store.Current.TvAudioEndpointId);
+        Assert.Equal(live.Name, store.Current.TvAudioEndpointName);
+    }
+
+    [Fact]
+    public void Ambiguous_audio_identity_keeps_the_saved_id_and_does_not_persist()
+    {
+        var store = new FakeSettingsStore
+        {
+            Current = new AppSettings
+            {
+                TvAudioEndpointId = "stale-tv",
+                TvAudioEndpointName = "SAMSUNG (3- HD Audio Driver for Display Audio)",
+            },
+        };
+        LocalizationService.Instance.Initialize(store);
+        var first = new AudioEndpointOption("first", "SAMSUNG TV", IsAvailable: true, IsDisplayAudio: true);
+        var second = new AudioEndpointOption("second", "SAMSUNG -2 (2- HD Audio Driver for Display Audio)",
+            IsAvailable: true, IsDisplayAudio: true);
+
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            discoverAudioEndpoints: () => [first, second]);
+
+        Assert.Equal("stale-tv", vm.SelectedTvAudioEndpoint?.Id);
+        Assert.False(vm.SelectedTvAudioEndpoint!.IsAvailable);
+        Assert.Equal("stale-tv", store.Current.TvAudioEndpointId);
+    }
+
+    [Fact]
     public async Task Audio_test_routes_by_selected_id_and_refuses_unavailable_output()
     {
         var store = new FakeSettingsStore();

@@ -19,6 +19,7 @@
   "recovery.retry": "Retry recovery",
   "recovery.retry_help": "Starts the separate rescue; CouchPad reopens after recovery.",
   "recovery.failed": "Recovery could not be completed. Check your display and audio connections before trying again.",
+  "errors.audio.endpointUnavailable": "The TV audio output was not found. Pick the TV HDMI output in the audio card.",
   "errors.automation": "Automation failed: {0}",
   "errors.display.unsupportedMode": "The TV does not advertise {0}×{1} @ {2} Hz. Turn on Input Signal Plus (HDMI 2.0) on the TV or pick a mode it advertises.",
   "errors.display.displayNotReady": "The TV did not activate as a monitor. Check that it is on and on the right HDMI input.",

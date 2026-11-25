@@ -44,9 +44,43 @@ public sealed class WindowsAudioServiceTests : IDisposable
         var disabled = Create(context, backend, false, () => Inventory("tv"));
         await Assert.ThrowsAsync<NotSupportedException>(() => disabled.ApplyAsync(AudioMode.MoveToHdmi));
         var missing = Create(context, backend, true, () => Inventory());
-        await Assert.ThrowsAsync<TimeoutException>(() => missing.ApplyAsync(AudioMode.MoveToHdmi));
+        await Assert.ThrowsAsync<AudioEndpointUnavailableException>(() => missing.ApplyAsync(AudioMode.MoveToHdmi));
         var ambiguous = Create(context, backend, true, () => Inventory("tv", "tv"));
         await Assert.ThrowsAsync<InvalidOperationException>(() => ambiguous.ApplyAsync(AudioMode.MoveToHdmi));
+        Assert.Equal(0, backend.Writes);
+    }
+
+    [Fact]
+    public async Task Stale_id_resolves_by_saved_name_and_writes_the_live_endpoint()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var (context, _, _) = await Armed();
+        var backend = new Backend();
+        const string savedName = "SAMSUNG (3- HD Audio Driver for Display Audio)";
+        var service = Create(context, backend, true,
+            () => new WindowsAudioProbe.Inventory(
+            [
+                new("stale-tv", 4, savedName),
+                new("live-tv", 1, "SAMSUNG -2 (2- HD Audio Driver for Display Audio)"),
+                new("monitor", 1, "AOC"),
+            ], "monitor", "monitor", "monitor"),
+            name: savedName);
+        Assert.Equal(AudioOutput.Hdmi, await service.ApplyAsync(AudioMode.MoveToHdmi));
+        Assert.All(Enum.GetValues<AudioRole>(), role => Assert.Equal("live-tv", backend.GetDefault(role)));
+    }
+
+    [Fact]
+    public async Task Unresolved_identity_reports_the_saved_name_and_id()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var (context, _, _) = await Armed();
+        var backend = new Backend();
+        const string savedName = "SAMSUNG (3- HD Audio Driver for Display Audio)";
+        var service = Create(context, backend, true, () => Inventory("monitor"), name: savedName);
+        var error = await Assert.ThrowsAsync<AudioEndpointUnavailableException>(
+            () => service.ApplyAsync(AudioMode.MoveToHdmi));
+        Assert.Equal(savedName, error.SavedName);
+        Assert.Equal("tv", error.SavedEndpointId);
         Assert.Equal(0, backend.Writes);
     }
 
@@ -87,8 +121,9 @@ public sealed class WindowsAudioServiceTests : IDisposable
     }
 
     [SupportedOSPlatform("windows")]
-    private static WindowsAudioService Create(RescueTransactionContext context, Backend backend, bool allow, Func<WindowsAudioProbe.Inventory> inventory) =>
-        new(new WindowsAudioOptions("tv", allow, TimeSpan.FromMilliseconds(40)), context, backend, inventory, () => Baseline);
+    private static WindowsAudioService Create(RescueTransactionContext context, Backend backend, bool allow,
+        Func<WindowsAudioProbe.Inventory> inventory, string? name = null) =>
+        new(new WindowsAudioOptions("tv", allow, TimeSpan.FromMilliseconds(40), name), context, backend, inventory, () => Baseline);
 
     private static WindowsAudioProbe.Inventory Inventory(params string[] ids) =>
         new(ids.Select(id => new WindowsAudioProbe.Endpoint(id, 1, id)).ToArray(), "monitor", "monitor", "monitor");
