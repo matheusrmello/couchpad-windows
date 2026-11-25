@@ -16,6 +16,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private const uint EnumCurrentSettings = 0xFFFFFFFF;
     private const uint CdsUpdateRegistry = 0x1;
     private const int DispChangeSuccessful = 0;
+    private const uint DisplayDeviceAttachedToDesktop = 0x1;
     private const uint DmPelsWidth = 0x80000, DmPelsHeight = 0x100000, DmDisplayFrequency = 0x400000;
 
     internal static int DevModeSizeBytes => Marshal.SizeOf<DevMode>();
@@ -484,24 +485,33 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private string? TryResolveGdiDeviceName()
     {
         var monitorId = ExtractMonitorId(_options.DevicePath);
+        string? fallback = null;
         for (uint adapterIndex = 0; ; adapterIndex++)
         {
             var adapter = CreateDisplayDevice();
             if (!EnumDisplayDevicesW(null, adapterIndex, ref adapter, 0)) break;
-            var match = IsTvDevice(monitorId, adapter.DeviceID, adapter.DeviceString);
-            if (!match)
-            {
-                for (uint monitorIndex = 0; ; monitorIndex++)
-                {
-                    var monitor = CreateDisplayDevice();
-                    if (!EnumDisplayDevicesW(adapter.DeviceName, monitorIndex, ref monitor, 0)) break;
-                    if (IsTvDevice(monitorId, monitor.DeviceID, monitor.DeviceString)) { match = true; break; }
-                }
-            }
-            if (match) return adapter.DeviceName;
+            if (!AdapterMatchesTvDevice(monitorId, adapter)) continue;
+            // A TV adapter that is detached from the desktop answers mode changes
+            // with DISP_CHANGE_BADMODE, so prefer one that is actually attached.
+            if (IsAttachedToDesktop(adapter.StateFlags)) return adapter.DeviceName;
+            fallback ??= adapter.DeviceName;
         }
-        return null;
+        return fallback;
     }
+
+    private bool AdapterMatchesTvDevice(string? monitorId, DisplayDevice adapter)
+    {
+        if (IsTvDevice(monitorId, adapter.DeviceID, adapter.DeviceString)) return true;
+        for (uint monitorIndex = 0; ; monitorIndex++)
+        {
+            var monitor = CreateDisplayDevice();
+            if (!EnumDisplayDevicesW(adapter.DeviceName, monitorIndex, ref monitor, 0)) return false;
+            if (IsTvDevice(monitorId, monitor.DeviceID, monitor.DeviceString)) return true;
+        }
+    }
+
+    private static bool IsAttachedToDesktop(uint stateFlags) =>
+        (stateFlags & DisplayDeviceAttachedToDesktop) != 0;
 
     private bool IsTvDevice(string? monitorId, string? deviceId, string? deviceString)
     {

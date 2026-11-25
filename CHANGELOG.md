@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 1.0.27 (candidato)
+
+- Prefere o adaptador GDI ativo da TV ao aplicar resolução/Hz, evitando `DISP_CHANGE_BADMODE (-2)` quando o Windows mantém um DISPLAY inativo com o mesmo EDID.
+- 360 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.26 (candidato)
 
 - Escala da TV passa a ser best-effort: se o perfil de DPI não existir, a automação ignora a escala e segue com display e áudio, em vez de falhar antes de qualquer mudança.
