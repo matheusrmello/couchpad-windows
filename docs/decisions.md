@@ -405,6 +405,8 @@
 
 **Complemento (1.0.31).** Quando o ID e o nome salvos falham — caso de settings anteriores à D085 — a resolução usa uma terceira âncora: o primeiro token do nome do display da TV (`SAMSUNG (SAM7167)` → `SAMSUNG`), exigindo correspondência única entre endpoints ativos. Se `TvExactName` estiver vazio, o comportamento anterior (fail-closed) é mantido, sem regressão.
 
+**Complemento (1.0.32).** A baseline de hardware (`_configuredHardware`) é re-ancorada quando o bootstrap prova que o ID de áudio configurado não existe mais entre os endpoints **vivos**. Sem isso, a primeira abertura após a reconexão da TV persistia `allowDisplayWrites/allowAudioWrites = false` com `automationEnabled = true`, deixando o toggle travado e o painel "Aplicar configuração" visível. A guarda usa `IsAvailable` (e não a presença no inventário), porque o inventário ainda lista o endpoint morto com `State = 4`. A revogação por troca manual de seleção pelo usuário permanece inalterada.
+
 ## Formato de nova decisão
 
 ```md

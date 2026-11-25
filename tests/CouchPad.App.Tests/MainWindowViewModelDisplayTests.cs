@@ -178,6 +178,44 @@ public sealed class MainWindowViewModelDisplayTests
     }
 
     [Fact]
+    public void Stale_configured_audio_identity_is_rebaselined_by_the_bootstrap()
+    {
+        var store = new FakeSettingsStore
+        {
+            Current = new AppSettings
+            {
+                AutomationEnabled = true,
+                UseWindowsGamepad = true,
+                AllowDisplayWrites = true,
+                AllowAudioWrites = true,
+                TvDevicePath = "tv-path", TvEdidManufacturer = 11596, TvEdidProduct = 29031,
+                InternalDevicePath = "monitor-path", InternalEdidManufacturer = 58117, InternalEdidProduct = 9986,
+                TvAudioEndpointId = "dead-tv-audio",
+                TvExactName = "SAMSUNG (SAM7167)",
+            }
+        };
+        LocalizationService.Instance.Initialize(store);
+        var live = new AudioEndpointOption("live-tv-audio",
+            "SAMSUNG -2 (2- HD Audio Driver for Display Audio)", IsAvailable: true, IsDisplayAudio: true);
+        var dead = new AudioEndpointOption("dead-tv-audio",
+            "SAMSUNG (3- HD Audio Driver for Display Audio)", IsDisplayAudio: true);
+        var monitor = new AudioEndpointOption("monitor-audio", "AOC 27G2", IsAvailable: true, IsCurrent: true);
+
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            productionMode: true, configuredHardware: store.Current, discoverTargets: Discover,
+            discoverAudioEndpoints: () => [dead, live, monitor]);
+
+        Assert.Equal(live, vm.SelectedTvAudioEndpoint);
+        Assert.Equal("live-tv-audio", store.Current.TvAudioEndpointId);
+        Assert.Equal(live.Name, store.Current.TvAudioEndpointName);
+        Assert.True(vm.AllowDisplayWrites);
+        Assert.True(vm.AllowAudioWrites);
+        Assert.False(vm.ShowHardwareSetup);
+        Assert.True(store.Current.AllowDisplayWrites);
+        Assert.True(store.Current.AllowAudioWrites);
+    }
+
+    [Fact]
     public void Production_without_configured_hardware_cannot_enable_simulated_automation()
     {
         var store = new FakeSettingsStore { Current = new AppSettings { AutomationEnabled = true } };

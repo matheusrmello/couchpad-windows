@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**1.0.32 (candidato, 25/11/2026):** re-ancora a baseline de hardware quando o endpoint de áudio é re-resolvido, mantendo as permissões de escrita coerentes. 422 testes, build 0/0, smoke. Validação na TV pendente.
+
 **1.0.31 (candidato, 25/11/2026):** bootstrap da identidade de áudio da TV pelo nome do display; persistência automática do endpoint correto. 421 testes, build 0/0, smoke. Validação na TV pendente.
 
 **1.0.30 (candidato, 25/11/2026):** EDID consultivo (não veta modo), erros de display/áudio localizados, escrita só em adaptador ativo e identidade de áudio resolvida por nome. 415 testes, build 0/0, smoke. Validação na TV pendente.

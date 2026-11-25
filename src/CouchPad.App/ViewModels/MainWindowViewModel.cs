@@ -37,7 +37,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly Func<bool>? _readStartup;
     private readonly Action<bool>? _configureStartup;
     private readonly bool _canStartRecovery;
-    private readonly AppSettings? _configuredHardware;
+    private AppSettings? _configuredHardware;
     public bool IsProductionMode { get; }
     [ObservableProperty]
     private bool _recoveryFailed;
@@ -422,6 +422,7 @@ public partial class MainWindowViewModel : ObservableObject
         if (_discoverAudioEndpoints is null) return;
         var selected = SelectedTvAudioEndpoint;
         var resolvedIdentity = false;
+        AudioEndpointOption? resolvedMatch = null;
         _isLoadingSettings = true;
         try
         {
@@ -447,6 +448,7 @@ public partial class MainWindowViewModel : ObservableObject
                 }
                 SelectedTvAudioEndpoint = match;
                 resolvedIdentity = !string.Equals(match.Id, selected.Id, StringComparison.OrdinalIgnoreCase);
+                resolvedMatch = match;
             }
             _audioInventoryFailed = false;
         }
@@ -458,6 +460,18 @@ public partial class MainWindowViewModel : ObservableObject
         {
             _isLoadingSettings = false;
             // A stale ID resolved by friendly name becomes the new saved identity.
+            // The configured baseline follows only when the saved endpoint has no
+            // live counterpart, so a manual selection change still revokes writes.
+            if (resolvedIdentity && resolvedMatch is not null && _configuredHardware is { } configured &&
+                !AudioEndpoints.Any(endpoint => endpoint.IsAvailable &&
+                    string.Equals(endpoint.Id, configured.TvAudioEndpointId, StringComparison.OrdinalIgnoreCase)))
+            {
+                _configuredHardware = configured with
+                {
+                    TvAudioEndpointId = resolvedMatch.Id,
+                    TvAudioEndpointName = resolvedMatch.Name,
+                };
+            }
             if (resolvedIdentity) PersistSettings();
             NotifyHardwareSetup();
             OnPropertyChanged(nameof(AudioSetupText));

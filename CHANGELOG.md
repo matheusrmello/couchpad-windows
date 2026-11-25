@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 1.0.32 (candidato)
+
+- Corrige o estado incoerente na primeira abertura após a TV trocar a identidade do endpoint de áudio: as permissões de escrita deixavam de ser revogadas e o painel de configuração de hardware desaparece quando a identidade é re-ancorada automaticamente.
+- 422 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.31 (candidato)
 
 - Corrige a saída de áudio da TV em instalações antigas: quando o ID salvo não existe mais e nunca houve nome gravado, o endpoint ativo é encontrado pelo nome do display da TV e a nova identidade é persistida automaticamente.
