@@ -8,7 +8,8 @@ public sealed record WindowsAudioOptions(
     string TvEndpointId,
     bool AllowWrites = false,
     TimeSpan? AvailabilityTimeout = null,
-    string? TvEndpointName = null);
+    string? TvEndpointName = null,
+    string? TvDisplayName = null);
 
 /// <summary>Explicit-endpoint audio service. Writes require an armed rescue transaction.</summary>
 [SupportedOSPlatform("windows")]
@@ -64,9 +65,13 @@ public sealed class WindowsAudioService : IAudioService, IAudioBaselineService
         { throw new AudioEndpointUnavailableException(_options.TvEndpointName, _options.TvEndpointId, ex); }
     }
 
-    /// <summary>Active exact ID first; otherwise the unique active endpoint with the saved name.</summary>
+    /// <summary>
+    /// Active exact ID first; then the unique active endpoint with the saved name;
+    /// then the unique active endpoint matching the TV display name token.
+    /// </summary>
     private WindowsAudioProbe.Endpoint? ResolveEndpoint(WindowsAudioProbe.Inventory inventory) =>
-        TvAudioEndpointResolver.Resolve(inventory.Endpoints, _options.TvEndpointId, _options.TvEndpointName);
+        TvAudioEndpointResolver.Resolve(
+            inventory.Endpoints, _options.TvEndpointId, _options.TvEndpointName, _options.TvDisplayName);
 
     private async Task<AudioOutput> ApplyAvailableAsync(CancellationToken token)
     {
@@ -77,7 +82,8 @@ public sealed class WindowsAudioService : IAudioService, IAudioBaselineService
             var endpoints = _inventory().Endpoints;
             var duplicates = endpoints.Count(e => e.State == 1 && string.Equals(e.Id, _options.TvEndpointId, StringComparison.OrdinalIgnoreCase));
             if (duplicates > 1) throw new InvalidOperationException("Audio endpoint identity is ambiguous.");
-            if (TvAudioEndpointResolver.Resolve(endpoints, _options.TvEndpointId, _options.TvEndpointName) is { } resolved)
+            if (TvAudioEndpointResolver.Resolve(
+                    endpoints, _options.TvEndpointId, _options.TvEndpointName, _options.TvDisplayName) is { } resolved)
             {
                 endpoint = resolved;
                 break;

@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 1.0.31 (candidato)
+
+- Corrige a saída de áudio da TV em instalações antigas: quando o ID salvo não existe mais e nunca houve nome gravado, o endpoint ativo é encontrado pelo nome do display da TV e a nova identidade é persistida automaticamente.
+- 421 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.30 (candidato)
 
 - Corrige a ativação em TVs cujo EDID em cache está desatualizado: o EDID deixa de bloquear a aplicação do modo e passa a explicar a falha (`não anunciado pela TV` vs `a TV recusou`).

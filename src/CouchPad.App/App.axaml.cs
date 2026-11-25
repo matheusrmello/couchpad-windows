@@ -344,7 +344,8 @@ public partial class App : Application
         if (!settings.AllowAudioWrites || string.IsNullOrWhiteSpace(settings.TvAudioEndpointId) || string.IsNullOrEmpty(actualHost) ||
             !string.Equals(Path.GetFullPath(actualHost), expectedHost, StringComparison.OrdinalIgnoreCase)) return (new UnavailableAudioService(), null);
         return (new WindowsAudioService(new WindowsAudioOptions(
-            settings.TvAudioEndpointId, AllowWrites: true, TvEndpointName: settings.TvAudioEndpointName), transaction),
+            settings.TvAudioEndpointId, AllowWrites: true, TvEndpointName: settings.TvAudioEndpointName,
+            TvDisplayName: settings.TvExactName), transaction),
             new WindowsAudioRescueGuard(rescuePath, journalPath, TimeSpan.FromSeconds(60), transaction, allowRecovery: true));
     }
 

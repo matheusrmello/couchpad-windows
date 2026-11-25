@@ -466,13 +466,14 @@ public partial class MainWindowViewModel : ObservableObject
 
     /// <summary>
     /// Exact active ID first; otherwise the unique live endpoint whose normalized
-    /// name matches the saved one. Never guesses when the identity is ambiguous.
+    /// name matches the saved one; otherwise the unique live endpoint anchored by
+    /// the TV display name token. Never guesses when the identity is ambiguous.
     /// </summary>
     private AudioEndpointOption? ResolveSavedAudioEndpoint(AudioEndpointOption saved)
     {
         var reference = AudioEndpointIdentity.Resolve(
             AudioEndpoints.Select(endpoint => new AudioEndpointRef(endpoint.Id, endpoint.Name, endpoint.IsAvailable)),
-            saved.Id, saved.Name);
+            saved.Id, saved.Name, SelectedTvTarget?.FriendlyName);
         return reference is { } match
             ? AudioEndpoints.FirstOrDefault(endpoint =>
                 string.Equals(endpoint.Id, match.Id, StringComparison.OrdinalIgnoreCase))

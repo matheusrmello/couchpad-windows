@@ -403,6 +403,8 @@
 
 **Consequências.** Reconexões da TV deixam de quebrar a automação; o nome amigável passa a ser a âncora de identidade. Duas TVs Samsung simultâneas exigem escolha manual. Nenhuma dependência nova.
 
+**Complemento (1.0.31).** Quando o ID e o nome salvos falham — caso de settings anteriores à D085 — a resolução usa uma terceira âncora: o primeiro token do nome do display da TV (`SAMSUNG (SAM7167)` → `SAMSUNG`), exigindo correspondência única entre endpoints ativos. Se `TvExactName` estiver vazio, o comportamento anterior (fail-closed) é mantido, sem regressão.
+
 ## Formato de nova decisão
 
 ```md

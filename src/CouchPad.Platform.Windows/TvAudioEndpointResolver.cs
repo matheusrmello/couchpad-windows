@@ -11,16 +11,18 @@ public static class TvAudioEndpointResolver
 {
     /// <summary>
     /// Resolves the saved TV endpoint: active exact ID, then a unique active
-    /// endpoint whose normalized friendly name matches; null when unresolved.
+    /// endpoint whose normalized friendly name matches, then the first token of
+    /// the TV display name; null when unresolved or ambiguous.
     /// </summary>
     public static WindowsAudioProbe.Endpoint? Resolve(
-        IEnumerable<WindowsAudioProbe.Endpoint> endpoints, string? savedEndpointId, string? savedFriendlyName)
+        IEnumerable<WindowsAudioProbe.Endpoint> endpoints, string? savedEndpointId, string? savedFriendlyName,
+        string? tvDisplayName = null)
     {
         ArgumentNullException.ThrowIfNull(endpoints);
         var source = endpoints as IReadOnlyList<WindowsAudioProbe.Endpoint> ?? endpoints.ToArray();
         var identity = AudioEndpointIdentity.Resolve(
             source.Select(endpoint => new AudioEndpointRef(endpoint.Id, endpoint.FriendlyName, endpoint.State == 1)),
-            savedEndpointId, savedFriendlyName);
+            savedEndpointId, savedFriendlyName, tvDisplayName);
         if (identity is not { } match)
         {
             return null;

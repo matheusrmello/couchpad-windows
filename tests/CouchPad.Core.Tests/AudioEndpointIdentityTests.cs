@@ -75,4 +75,46 @@ public sealed class AudioEndpointIdentityTests
 
         Assert.Null(AudioEndpointIdentity.Resolve([first, second], "same", SavedName));
     }
+
+    [Fact]
+    public void Tv_display_name_bootstraps_the_endpoint_when_no_saved_identity_matches()
+    {
+        var stale = new AudioEndpointRef("{2ea8704a}", SavedName, false);
+        var live = new AudioEndpointRef("{45d7969c}", LiveName, true);
+        var monitor = new AudioEndpointRef("monitor", "AOC", true);
+
+        Assert.Equal(live, AudioEndpointIdentity.Resolve(
+            [stale, live, monitor], "{2ea8704a}", null, "SAMSUNG (SAM7167)"));
+        Assert.Equal("SAMSUNG", AudioEndpointIdentity.NormalizeName("SAMSUNG (SAM7167)"));
+    }
+
+    [Fact]
+    public void Ambiguous_tv_display_name_tokens_are_not_resolved()
+    {
+        var first = new AudioEndpointRef("first", "SAMSUNG TV", true);
+        var second = new AudioEndpointRef("second", LiveName, true);
+        var monitor = new AudioEndpointRef("monitor", "AOC", true);
+
+        Assert.Null(AudioEndpointIdentity.Resolve(
+            [first, second, monitor], "stale", null, "SAMSUNG (SAM7167)"));
+    }
+
+    [Fact]
+    public void Missing_tv_display_name_keeps_the_previous_behavior()
+    {
+        var live = new AudioEndpointRef("live", LiveName, true);
+
+        Assert.Null(AudioEndpointIdentity.Resolve([live], "stale", null, null));
+        Assert.Null(AudioEndpointIdentity.Resolve([live], "stale", null));
+    }
+
+    [Fact]
+    public void Three_argument_calls_keep_resolving_by_the_saved_identity()
+    {
+        var live = new AudioEndpointRef("live", LiveName, true);
+        var monitor = new AudioEndpointRef("monitor", "AOC", true);
+
+        Assert.Equal(live, AudioEndpointIdentity.Resolve([live, monitor], "stale", LiveName));
+        Assert.Null(AudioEndpointIdentity.Resolve([monitor], "stale", LiveName));
+    }
 }

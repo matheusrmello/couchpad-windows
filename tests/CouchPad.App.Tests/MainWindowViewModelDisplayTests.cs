@@ -77,6 +77,35 @@ public sealed class MainWindowViewModelDisplayTests
     }
 
     [Fact]
+    public void Missing_saved_name_bootstraps_from_the_tv_display_name()
+    {
+        var store = new FakeSettingsStore
+        {
+            Current = new AppSettings
+            {
+                TvAudioEndpointId = "{2ea8704a}",
+                TvExactName = "SAMSUNG (SAM7167)",
+                TvDevicePath = "\\\\?\\DISPLAY#SAM7167#tv",
+                TvEdidManufacturer = 1,
+                TvEdidProduct = 2,
+            },
+        };
+        LocalizationService.Instance.Initialize(store);
+        var live = new AudioEndpointOption("{45d7969c}",
+            "SAMSUNG -2 (2- HD Audio Driver for Display Audio)", IsAvailable: true, IsDisplayAudio: true);
+        var stale = new AudioEndpointOption("{2ea8704a}",
+            "SAMSUNG (3- HD Audio Driver for Display Audio)", IsDisplayAudio: true);
+        var monitor = new AudioEndpointOption("monitor-audio", "AOC 27G2", IsAvailable: true, IsCurrent: true);
+
+        var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
+            discoverAudioEndpoints: () => [stale, live, monitor]);
+
+        Assert.Equal(live, vm.SelectedTvAudioEndpoint);
+        Assert.Equal("{45d7969c}", store.Current.TvAudioEndpointId);
+        Assert.Equal(live.Name, store.Current.TvAudioEndpointName);
+    }
+
+    [Fact]
     public void Ambiguous_audio_identity_keeps_the_saved_id_and_does_not_persist()
     {
         var store = new FakeSettingsStore

@@ -52,4 +52,18 @@ public sealed class WindowsAudioProbeTests
         Assert.Equal("SAMSUNG", TvAudioEndpointResolver.NormalizeName(
             "SAMSUNG -2 (2- HD Audio Driver for Display Audio)"));
     }
+
+    [Fact]
+    public void Resolver_bootstraps_a_stale_endpoint_from_the_tv_display_name()
+    {
+        const string savedName = "SAMSUNG (3- HD Audio Driver for Display Audio)";
+        var stale = new WindowsAudioProbe.Endpoint("{2ea8704a}", 4, savedName);
+        var live = new WindowsAudioProbe.Endpoint("{45d7969c}", 1, "SAMSUNG -2 (2- HD Audio Driver for Display Audio)");
+        var monitor = new WindowsAudioProbe.Endpoint("monitor", 1, "AOC 27G2");
+
+        Assert.Equal(live, TvAudioEndpointResolver.Resolve(
+            [stale, live, monitor], "{2ea8704a}", null, "SAMSUNG (SAM7167)"));
+        Assert.Null(TvAudioEndpointResolver.Resolve([stale, monitor], "{2ea8704a}", null, "SAMSUNG (SAM7167)"));
+        Assert.Null(TvAudioEndpointResolver.Resolve([stale, live, monitor], "{2ea8704a}", null));
+    }
 }
