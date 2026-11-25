@@ -14,6 +14,9 @@ public partial class MainWindowViewModel
 {
     private IReadOnlyList<DisplayModeOption> _displayModes = [];
 
+    /// <summary>Modos que o EDID da TV anuncia; vazio quando não há EDID.</summary>
+    private IReadOnlyList<DisplayModeOption> _tvAdvertisedModes = [];
+
     /// <summary>
     /// Evita que a seleção programática de "Automático" (carga, troca de perfil,
     /// reenumeração) zere a preferência gravada no perfil.
@@ -102,6 +105,20 @@ public partial class MainWindowViewModel
                 discovered = [];
             }
 
+            IReadOnlyList<DisplayModeOption> advertised;
+            try
+            {
+                advertised = _discoverAdvertisedDisplayModes?.Invoke() ?? [];
+            }
+            catch
+            {
+                advertised = [];
+            }
+
+            _tvAdvertisedModes = advertised
+                .Where(mode => mode.Width > 0 && mode.Height > 0 && mode.RefreshHz > 0)
+                .ToArray();
+
             _displayModes = discovered
                 .Where(mode => mode.Width > 0 && mode.Height > 0 && mode.RefreshHz > 0)
                 .OrderByDescending(mode => (long)mode.Width * mode.Height)
@@ -124,11 +141,12 @@ public partial class MainWindowViewModel
     {
         TvModes.Clear();
         TvModes.Add(new TvModeOption(null, _localization["display.tv_auto"]));
-        foreach (var resolution in _displayModes
-                     .GroupBy(mode => (mode.Width, mode.Height))
-                     .Select(group => group.First()))
+        foreach (var option in TvModeAdvertisement.BuildTvModeLabels(
+                     _displayModes,
+                     _tvAdvertisedModes,
+                     _localization["display.mode_not_advertised"]))
         {
-            TvModes.Add(new TvModeOption(resolution, resolution.ResolutionLabel));
+            TvModes.Add(option);
         }
 
         var match = previousMode is { } previous

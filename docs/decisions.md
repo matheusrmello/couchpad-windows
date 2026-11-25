@@ -376,6 +376,19 @@
 - Motivo: cards com conteúdos desiguais esticavam e deixavam corpos vazios.
 - Validação: 360 testes, build 0/0, smoke; capturas 3×2.
 
+## D084 — EDID como fonte de verdade dos modos e erros de display tipados
+
+**Contexto.** `MergeModes` unia os modos do driver do Windows aos do EDID, então um modo que o sink não aceita (3840×2160@60 com EDID HDMI 1.4, máx. 297 MHz e sem VIC 97) chegava à UI. Na ativação, `ChangeDisplaySettingsEx` devolvia `DISP_CHANGE_BADMODE (-2)` e o App exibia uma mensagem em inglês no meio da interface pt-BR.
+
+**Decisão.**
+1. O EDID é a fonte de verdade sobre o que a TV anuncia. Modos oferecidos apenas pelo driver continuam listados, mas marcados como "não anunciado pela TV".
+2. Antes de qualquer mutação, um modo pedido fora do EDID falha com `DisplayApplyException(UnsupportedMode)`, sem tocar no display (fail-closed).
+3. Falhas de display carregam `DisplayApplyErrorCode`; a camada App formata via `errors.display.*`. `Platform.Windows` não fornece texto de UI.
+4. Escrita só em adaptador GDI *attached to desktop*; espera de até 10 s re-resolvendo o adaptador; retry de até 2 tentativas apenas em `BADMODE`.
+5. A escala da TV permanece best-effort.
+
+**Consequências.** 4K60 exige "Entrada de Sinal Plus" (HDMI 2.0) na TV para o EDID anunciar o VIC 97; perfis antigos com 4K60 passam a falhar de forma explícita e reversível. `SimulatedDisplayService` herda o default interface method e não marca modos. Nenhuma dependência nova.
+
 ## Formato de nova decisão
 
 ```md

@@ -31,6 +31,7 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IDisplayWriteControl? _displayWriteControl;
     private readonly Func<IReadOnlyList<DisplayTargetOption>>? _discoverTargets;
     private readonly Func<IReadOnlyList<DisplayModeOption>>? _discoverDisplayModes;
+    private readonly Func<IReadOnlyList<DisplayModeOption>>? _discoverAdvertisedDisplayModes;
     private readonly Func<IReadOnlyList<AudioEndpointOption>>? _discoverAudioEndpoints;
     private readonly Action? _revokeAudioWrites;
     private readonly Func<bool>? _readStartup;
@@ -134,13 +135,15 @@ public partial class MainWindowViewModel : ObservableObject
         Action? restartForHardware = null,
         Action<string>? playAudioTest = null,
         bool hardwareApplied = false,
-        Func<IReadOnlyList<DisplayModeOption>>? discoverDisplayModes = null)
+        Func<IReadOnlyList<DisplayModeOption>>? discoverDisplayModes = null,
+        Func<IReadOnlyList<DisplayModeOption>>? discoverAdvertisedDisplayModes = null)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
         _countdownTimer.Tick += (_, _) => OnPropertyChanged(nameof(StatusText));
         _settings = settingsStore ?? throw new ArgumentNullException(nameof(settingsStore));
         _discoverTargets = discoverTargets;
         _discoverDisplayModes = discoverDisplayModes;
+        _discoverAdvertisedDisplayModes = discoverAdvertisedDisplayModes;
         _discoverAudioEndpoints = discoverAudioEndpoints;
         _revokeAudioWrites = revokeAudioWrites;
         _readStartup = readStartup;
@@ -260,9 +263,13 @@ public partial class MainWindowViewModel : ObservableObject
 
     public string LauncherErrorText => _localization["launchers.failed"];
 
-    public string? AutomationErrorText => _coordinator.State == AutomationState.Error && !string.IsNullOrWhiteSpace(_coordinator.LastError)
-        ? string.Format(_localization["errors.automation"], _coordinator.LastError)
+    public string? AutomationErrorText => _coordinator.State == AutomationState.Error
+        ? FormatAutomationError()
         : null;
+
+    private string? FormatAutomationError() => AutomationErrorFormatter.Format(
+        _localization, _coordinator.LastError, _coordinator.LastErrorCode,
+        _coordinator.LastErrorMode, _coordinator.LastErrorNativeResult);
 
     public string RecoveryHelpText => _localization["recovery.help"];
 
@@ -420,14 +427,20 @@ public partial class MainWindowViewModel : ObservableObject
                 .OrderByDescending(e => e.IsAvailable).ThenByDescending(e => e.IsCurrent)
                 .ThenBy(e => e.Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
             AudioEndpoints.Clear();
-            foreach (var endpoint in endpoints)
+            foreach (var endpoint in LabelDuplicateEndpoints(endpoints))
                 AudioEndpoints.Add(endpoint);
             if (selected is not null)
             {
                 var match = AudioEndpoints.FirstOrDefault(e => string.Equals(e.Id, selected.Id, StringComparison.OrdinalIgnoreCase));
                 if (match is null)
                 {
-                    match = selected with { IsAvailable = false, IsCurrent = false, CanAppearAfterDisplayChange = false };
+                    match = selected with
+                    {
+                        IsAvailable = false,
+                        IsCurrent = false,
+                        CanAppearAfterDisplayChange = false,
+                        DuplicateLabel = null,
+                    };
                     AudioEndpoints.Add(match);
                 }
                 SelectedTvAudioEndpoint = match;
@@ -444,6 +457,40 @@ public partial class MainWindowViewModel : ObservableObject
             NotifyHardwareSetup();
             OnPropertyChanged(nameof(AudioSetupText));
         }
+    }
+
+    private IReadOnlyList<AudioEndpointOption> LabelDuplicateEndpoints(IReadOnlyList<AudioEndpointOption> endpoints)
+    {
+        var totals = endpoints
+            .Where(endpoint => !string.IsNullOrWhiteSpace(endpoint.Name))
+            .GroupBy(endpoint => endpoint.Name!, StringComparer.CurrentCultureIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.CurrentCultureIgnoreCase);
+        if (totals.Count == 0)
+        {
+            return endpoints;
+        }
+
+        var seen = new Dictionary<string, int>(StringComparer.CurrentCultureIgnoreCase);
+        var labeled = new AudioEndpointOption[endpoints.Count];
+        for (var index = 0; index < endpoints.Count; index++)
+        {
+            var endpoint = endpoints[index];
+            if (endpoint.Name is not { } name || !totals.TryGetValue(name, out var total))
+            {
+                labeled[index] = endpoint;
+                continue;
+            }
+
+            var position = seen.TryGetValue(name, out var found) ? found + 1 : 1;
+            seen[name] = position;
+            labeled[index] = endpoint with
+            {
+                DuplicateLabel = string.Format(_localization["audio.endpoint_duplicate"], position, total),
+            };
+        }
+
+        return labeled;
     }
 
     private DisplayTargetOption? EnsureTarget(DisplayTargetOption? target)

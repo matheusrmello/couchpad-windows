@@ -221,6 +221,66 @@ public sealed class AutomationCoordinatorTests
     }
 
     [Fact]
+    public async Task Display_apply_error_exposes_typed_code_and_requested_mode()
+    {
+        var (coordinator, display, _, _, _) = Create();
+        display.ApplyException = new DisplayApplyException(
+            DisplayApplyErrorCode.ModeRejected, "rejected", 3840, 2160, 60, nativeResult: -2);
+        await coordinator.UpdateSettingsAsync(new AutomationSettings
+        {
+            Enabled = true,
+            DisplayMode = DisplayMode.TvOnly,
+            DisplayPreference = new DisplayPreference(3840, 2160, 60, null),
+        });
+
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Equal(DisplayApplyErrorCode.ModeRejected, coordinator.LastErrorCode);
+        Assert.Equal(new DisplayModeOption(3840, 2160, 60), coordinator.LastErrorMode);
+        Assert.Equal(-2, coordinator.LastErrorNativeResult);
+        Assert.Equal("rejected", coordinator.LastError);
+    }
+
+    [Fact]
+    public async Task Typed_display_error_is_cleared_by_a_successful_retry()
+    {
+        var (coordinator, display, _, _, _) = Create();
+        display.ApplyException = new DisplayApplyException(
+            DisplayApplyErrorCode.UnsupportedMode, "unsupported", 3840, 2160, 60);
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Equal(DisplayApplyErrorCode.UnsupportedMode, coordinator.LastErrorCode);
+
+        display.ApplyException = null;
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Active, coordinator.State);
+        Assert.Null(coordinator.LastError);
+        Assert.Null(coordinator.LastErrorCode);
+        Assert.Null(coordinator.LastErrorMode);
+        Assert.Null(coordinator.LastErrorNativeResult);
+    }
+
+    [Fact]
+    public async Task Unrelated_error_does_not_keep_a_stale_display_code()
+    {
+        var (coordinator, display, _, _, _) = Create();
+        display.ApplyException = new DisplayApplyException(
+            DisplayApplyErrorCode.ModeRejected, "rejected", 1920, 1080, 60);
+        await coordinator.SetEnabledAsync(true);
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+        Assert.Equal(DisplayApplyErrorCode.ModeRejected, coordinator.LastErrorCode);
+
+        display.ApplyException = new InvalidOperationException("audio-side failure");
+        await coordinator.GamepadConnectedAsync(GamepadDevice.Simulated);
+
+        Assert.Equal(AutomationState.Error, coordinator.State);
+        Assert.Null(coordinator.LastErrorCode);
+        Assert.Null(coordinator.LastErrorMode);
+    }
+
+    [Fact]
     public async Task Activation_delay_goes_pending_then_active()
     {
         var (coordinator, display, audio, delay, journal) = Create();

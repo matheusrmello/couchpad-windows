@@ -1,5 +1,14 @@
 # Histórico de versões
 
+## 1.0.28 (candidato)
+
+- Modos que o Windows oferece mas o EDID da TV não anuncia aparecem marcados como "não anunciado pela TV"; a UI deixa claro por que o 4K60 pode não aplicar.
+- Ativação falha antes de qualquer mudança de tela quando o modo pedido não está no EDID, em vez de tentar e abortar com `-2`.
+- Mensagens de falha de display agora são localizadas (pt-BR/en) e acionáveis, em vez de texto técnico em inglês.
+- Só aplica resolução/Hz em adaptador de vídeo ativo, com espera de até 10 s e uma nova tentativa em `DISP_CHANGE_BADMODE`.
+- Corrige o rótulo do endpoint de áudio que mostrava um fragmento de GUID truncado.
+- 396 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.27 (candidato)
 
 - Prefere o adaptador GDI ativo da TV ao aplicar resolução/Hz, evitando `DISP_CHANGE_BADMODE (-2)` quando o Windows mantém um DISPLAY inativo com o mesmo EDID.

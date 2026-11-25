@@ -29,6 +29,14 @@ public interface IDisplayService
     IReadOnlyList<DisplayModeOption> GetAvailableModes();
 
     /// <summary>
+    /// Modos anunciados pelo EDID da TV; subconjunto de
+    /// <see cref="GetAvailableModes"/> e vazio quando o EDID não está
+    /// disponível. A implementação padrão devolve a lista completa, então
+    /// fakes e simulações continuam válidos.
+    /// </summary>
+    IReadOnlyList<DisplayModeOption> GetTvAdvertisedModes() => GetAvailableModes();
+
+    /// <summary>
     /// Aplica o modo. <paramref name="preference"/> deve ser nulo para automático;
     /// a plataforma decide o que consegue honrar e o modo continua obrigatório.
     /// </summary>

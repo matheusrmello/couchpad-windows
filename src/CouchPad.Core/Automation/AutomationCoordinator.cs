@@ -27,6 +27,9 @@ public sealed class AutomationCoordinator
     private AutomationSnapshot? _snapshot;
     private AutomationState _state = AutomationState.Idle;
     private string? _lastError;
+    private DisplayApplyErrorCode? _lastErrorCode;
+    private DisplayModeOption? _lastErrorMode;
+    private int? _lastErrorNativeResult;
     private bool _recoveryUncertain;
     private bool _launcherFailed;
 
@@ -79,6 +82,42 @@ public sealed class AutomationCoordinator
             lock (_sync)
             {
                 return _lastError;
+            }
+        }
+    }
+
+    /// <summary>Typed display error of the last failed activation; null otherwise.</summary>
+    public DisplayApplyErrorCode? LastErrorCode
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _lastErrorCode;
+            }
+        }
+    }
+
+    /// <summary>Requested TV mode of the last typed display error; null otherwise.</summary>
+    public DisplayModeOption? LastErrorMode
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _lastErrorMode;
+            }
+        }
+    }
+
+    /// <summary>Native result of the last typed display error; null otherwise.</summary>
+    public int? LastErrorNativeResult
+    {
+        get
+        {
+            lock (_sync)
+            {
+                return _lastErrorNativeResult;
             }
         }
     }
@@ -389,7 +428,7 @@ public sealed class AutomationCoordinator
                 _recoveryUncertain = true;
             }
             // Keep the recovery journal even when the immediate rollback succeeds.
-            SetState(AutomationState.Error, ex.Message);
+            SetState(AutomationState.Error, ex.Message, ex);
         }
         catch (OperationCanceledException)
         {
@@ -440,7 +479,7 @@ public sealed class AutomationCoordinator
                 if (!TryClearJournal()) lock (_sync) { _recoveryUncertain = true; }
             }
 
-            SetState(AutomationState.Error, ex.Message);
+            SetState(AutomationState.Error, ex.Message, ex);
         }
         finally
         {
@@ -520,7 +559,7 @@ public sealed class AutomationCoordinator
             await TryRestoreAsync(snapshot.RestoreDisplay, snapshot.RestoreAudio, snapshot.RestoreAudioBaseline);
             lease.Abandon();
             lock (_sync) { _recoveryUncertain = true; }
-            SetState(AutomationState.Error, ex.Message);
+            SetState(AutomationState.Error, ex.Message, ex);
             return;
         }
         catch (OperationCanceledException)
@@ -538,7 +577,7 @@ public sealed class AutomationCoordinator
         {
             lease?.Abandon();
             if (lease is not null) lock (_sync) { _recoveryUncertain = true; }
-            SetState(AutomationState.Error, ex.Message);
+            SetState(AutomationState.Error, ex.Message, ex);
             return;
         }
         finally
@@ -592,7 +631,7 @@ public sealed class AutomationCoordinator
         }
         catch (Exception ex)
         {
-            SetState(AutomationState.Error, ex.Message);
+            SetState(AutomationState.Error, ex.Message, ex);
         }
         finally
         {
@@ -609,7 +648,7 @@ public sealed class AutomationCoordinator
         }
     }
 
-    private void SetState(AutomationState state, string? error = null)
+    private void SetState(AutomationState state, string? error = null, Exception? exception = null)
     {
         AutomationStateChangedEventArgs args;
 
@@ -617,11 +656,25 @@ public sealed class AutomationCoordinator
         {
             _state = state;
             _lastError = state == AutomationState.Error ? error : null;
+            // A typed display error survives only while the state is Error and
+            // the captured exception really brought a code. Any other transition
+            // (new attempt, idle, active) clears both so no stale code is shown.
+            var applyError = state == AutomationState.Error ? AsApplyError(exception) : null;
+            _lastErrorCode = applyError?.Code;
+            _lastErrorMode = applyError?.RequestedMode;
+            _lastErrorNativeResult = applyError?.NativeResult;
             args = new AutomationStateChangedEventArgs(state, _lastError, _recoveryUncertain);
         }
 
         StateChanged?.Invoke(this, args);
     }
+
+    private static DisplayApplyException? AsApplyError(Exception? exception) => exception switch
+    {
+        DisplayApplyException apply => apply,
+        AggregateException aggregate => aggregate.Flatten().InnerExceptions.OfType<DisplayApplyException>().FirstOrDefault(),
+        _ => null,
+    };
 
     private static async Task<bool> FinishLeaseAsync(IRescueLease? lease, bool restored)
     {

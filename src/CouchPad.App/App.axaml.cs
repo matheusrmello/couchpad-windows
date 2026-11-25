@@ -87,6 +87,7 @@ public partial class App : Application
                         rescueGuard: rescueGuard,
                         discoverTargets: discoverTargets,
                         discoverDisplayModes: viewModelDisplayService.GetAvailableModes,
+                        discoverAdvertisedDisplayModes: viewModelDisplayService.GetTvAdvertisedModes,
                         discoverAudioEndpoints: isProduction ? DiscoverAudioEndpoints : null,
                         revokeAudioWrites: OperatingSystem.IsWindows() && audioService is WindowsAudioService windowsAudio
                             ? windowsAudio.DisableNewWrites : null,

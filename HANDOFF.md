@@ -1,5 +1,7 @@
 # CouchPad Windows — Handoff e Bootstrap
 
+**1.0.28 (candidato, 25/11/2026):** EDID como fonte de verdade dos modos, erros de display tipados e localizados, escrita só em adaptador ativo, rótulo de áudio corrigido. 396 testes, build 0/0, smoke. Validação na TV pendente.
+
 **1.0.27 (candidato, 25/11/2026):** prefere o adaptador ativo da TV (evita BADMODE em display inativo). 360 testes, build 0/0, smoke. Validação na TV pendente.
 
 **1.0.26 (candidato, 25/11/2026):** escala da TV best-effort (não bloqueia a automação sem perfil DPI). 360 testes, build 0/0, smoke. Instalação e validação do 4K60 pendentes.

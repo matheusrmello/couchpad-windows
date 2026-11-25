@@ -253,7 +253,8 @@ public class WindowsDisplayServiceFakeTests
     {
         var actions = new List<uint>();
         var service = Create((p, m, action) => { actions.Add(action); return 0; });
-        await Assert.ThrowsAsync<InvalidOperationException>(() => service.ApplyAsync(DisplayMode.TvOnly));
+        var error = await Assert.ThrowsAsync<DisplayApplyException>(() => service.ApplyAsync(DisplayMode.TvOnly));
+        Assert.Equal(DisplayApplyErrorCode.TopologyVerificationFailed, error.Code);
         Assert.Equal(new uint[] { 0x40, 0x80, 0x40, 0x80 }, actions);
     }
     [Fact]

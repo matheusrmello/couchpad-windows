@@ -61,7 +61,8 @@ public sealed class MainWindowViewModelDisplayTests
         var played = new List<string>();
         var vm = new MainWindowViewModel(LocalizationService.Instance, store, new FakeJournal(),
             discoverAudioEndpoints: () => [inactive, selected, defaultAudio], playAudioTest: played.Add);
-        Assert.Equal(new[] { defaultAudio, selected, inactive }, vm.AudioEndpoints.ToArray());
+        Assert.Equal(new[] { defaultAudio.Id, selected.Id, inactive.Id },
+            vm.AudioEndpoints.Select(endpoint => endpoint.Id).ToArray());
         vm.SelectedTvAudioEndpoint = inactive;
         Assert.False(vm.TestAudioCommand.CanExecute(null));
         vm.SelectedTvAudioEndpoint = selected;

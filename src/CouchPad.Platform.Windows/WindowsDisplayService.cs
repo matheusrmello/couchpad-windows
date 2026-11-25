@@ -16,6 +16,10 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private const uint EnumCurrentSettings = 0xFFFFFFFF;
     private const uint CdsUpdateRegistry = 0x1;
     private const int DispChangeSuccessful = 0;
+    private const int DispChangeBadMode = -2;
+    private const int BadModeRetries = 2;
+    private const int BadModeRetryDelayMs = 250;
+    private const long DisplayReadyTimeoutMs = 10_000;
     private const uint DisplayDeviceAttachedToDesktop = 0x1;
     private const uint DmPelsWidth = 0x80000, DmPelsHeight = 0x100000, DmDisplayFrequency = 0x400000;
 
@@ -52,6 +56,11 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     }
 
     internal WindowsDisplayService(WindowsDisplayOptions options, Func<string, byte[]?>? edidOverride) : this(options) =>
+        _edidOverride = edidOverride;
+
+    /// <summary>Test seam: display writes plus a fixed EDID, still with no real hardware.</summary>
+    internal WindowsDisplayService(WindowsDisplayOptions options, Func<uint, Snapshot> capture, Func<byte[], byte[], uint, int> set,
+        Func<string, byte[]?>? edidOverride) : this(options, capture, set) =>
         _edidOverride = edidOverride;
 
     public DisplayState GetCurrent()
@@ -151,6 +160,9 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
     private readonly SemaphoreSlim _writeGate = new(1, 1);
 
     public IReadOnlyList<DisplayModeOption> GetAvailableModes() => MergeModes(_edidModes.Value, EnumerateWindowsModes());
+
+    /// <summary>Somente o que o EDID anuncia; vazio quando o EDID não está disponível.</summary>
+    public IReadOnlyList<DisplayModeOption> GetTvAdvertisedModes() => _edidModes.Value;
 
     private IReadOnlyList<DisplayModeOption> LoadEdidModes()
     {
@@ -272,6 +284,15 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             var internalDisplay = SelectTarget(all.Targets, selector.DevicePath, selector.EdidManufacturer, selector.EdidProduct, selector.ExactName);
             var proposal = DisplayTopologyPlanner.Create(before, all, tv, internalDisplay, mode);
             var requestedMode = ResolveRequestedMode(normalized);
+            // The Windows driver can list modes the sink does not accept over the
+            // current link (for example 4K60 on an HDMI 1.4 EDID). Applying one of
+            // those ends in DISP_CHANGE_BADMODE, so trust the EDID list when it is
+            // available and refuse before any mutation.
+            if (requestedMode is not null && !IsModeAdvertised(requestedMode, _edidModes.Value))
+                throw DisplayApplyException.ForMode(
+                    DisplayApplyErrorCode.UnsupportedMode,
+                    requestedMode,
+                    $"The TV EDID does not advertise {requestedMode.Width}x{requestedMode.Height}@{requestedMode.RefreshHz} Hz.");
             // Resolve the per-monitor DPI key before touching the display. Windows
             // only creates that profile after the TV has been configured once, so
             // the scale is best-effort: a missing profile or EDID skip only the
@@ -306,15 +327,16 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                     EnsureMutationAllowed();
                     if (requestedMode is not null) gdiDeviceName = ApplyDisplayMode(requestedMode);
                     if (scalePercent is { } scale && dpiKey is not null && !PerMonitorDpi.Apply(dpiKey, scale))
-                        throw new InvalidOperationException("Failed to apply the TV display scale.");
+                        throw new DisplayApplyException(DisplayApplyErrorCode.ScaleFailed, "Failed to apply the TV display scale.");
                 },
                 () =>
                 {
                     after = GetCurrent();
-                    if (after.Mode != mode) throw new InvalidOperationException("Display verification failed.");
+                    if (after.Mode != mode)
+                        throw new DisplayApplyException(DisplayApplyErrorCode.TopologyVerificationFailed, "Display verification failed.");
                     if (requestedMode is not null) VerifyDisplayMode(gdiDeviceName!, requestedMode);
                     if (scalePercent is { } expectedScale && dpiKey is not null && PerMonitorDpi.ReadPercent(dpiKey) != expectedScale)
-                        throw new InvalidOperationException("TV display scale verification failed.");
+                        throw new DisplayApplyException(DisplayApplyErrorCode.ScaleFailed, "TV display scale verification failed.");
                     EnsureMutationAllowed();
                 },
                 () =>
@@ -418,34 +440,53 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
         finally { pathPin.Free(); modePin.Free(); }
     }
 
+    /// <summary>
+    /// True when the requested mode appears in the EDID list. An empty list means
+    /// the EDID is unavailable, so the gate stays open and the Windows list rules.
+    /// </summary>
+    internal static bool IsModeAdvertised(DisplayModeOption requested, IReadOnlyList<DisplayModeOption> advertised) =>
+        advertised.Count == 0 ||
+        advertised.Any(mode => mode.Width == requested.Width &&
+            mode.Height == requested.Height &&
+            RefreshMatches((uint)mode.RefreshHz, requested.RefreshHz));
+
     private string ApplyDisplayMode(DisplayModeOption mode)
     {
-        var deviceName = ResolveGdiDeviceName();
-        WaitForDisplayReady(deviceName);
-        var devMode = CreateDevMode();
-        var found = false;
-        for (uint index = 0; ; index++)
-        {
-            var candidate = CreateDevMode();
-            if (!EnumDisplaySettingsW(deviceName, index, ref candidate)) break;
-            if (candidate.dmPelsWidth == (uint)mode.Width &&
-                candidate.dmPelsHeight == (uint)mode.Height &&
-                RefreshMatches(candidate.dmDisplayFrequency, mode.RefreshHz))
-            {
-                devMode = candidate;
-                found = true;
-                break;
-            }
-        }
-        if (!found) throw new InvalidOperationException(
+        var deviceName = WaitForDisplayReady(TryResolveAttachedGdiDeviceName, mode);
+        var devMode = FindDisplayMode(deviceName, mode) ?? throw DisplayApplyException.ForMode(
+            DisplayApplyErrorCode.UnsupportedMode,
+            mode,
             $"Requested TV display mode {mode.Width}x{mode.Height}@{mode.RefreshHz} Hz is unavailable.");
 
         devMode.dmFields |= DmPelsWidth | DmPelsHeight | DmDisplayFrequency;
         var result = ChangeDisplaySettingsExW(deviceName, ref devMode, IntPtr.Zero, CdsUpdateRegistry, IntPtr.Zero);
+        for (var retry = 0; result == DispChangeBadMode && retry < BadModeRetries; retry++)
+        {
+            // A just-attached TV can answer DISP_CHANGE_BADMODE while Windows is
+            // still publishing its modes, so re-resolve the device and retry.
+            Thread.Sleep(BadModeRetryDelayMs);
+            deviceName = TryResolveAttachedGdiDeviceName() ?? throw DisplayApplyException.ForMode(
+                DisplayApplyErrorCode.DisplayNotReady, mode, "TV display is no longer attached to the desktop.", result);
+            result = ChangeDisplaySettingsExW(deviceName, ref devMode, IntPtr.Zero, CdsUpdateRegistry, IntPtr.Zero);
+        }
         if (result != DispChangeSuccessful)
-            throw new InvalidOperationException($"Changing the TV display mode failed ({result}).");
+            throw DisplayApplyException.ForMode(
+                DisplayApplyErrorCode.ModeRejected, mode, $"Changing the TV display mode failed ({result}).", result);
 
         return deviceName;
+    }
+
+    private DevMode? FindDisplayMode(string deviceName, DisplayModeOption mode)
+    {
+        for (uint index = 0; ; index++)
+        {
+            var candidate = CreateDevMode();
+            if (!EnumDisplaySettingsW(deviceName, index, ref candidate)) return null;
+            if (candidate.dmPelsWidth == (uint)mode.Width &&
+                candidate.dmPelsHeight == (uint)mode.Height &&
+                RefreshMatches(candidate.dmDisplayFrequency, mode.RefreshHz))
+                return candidate;
+        }
     }
 
     private static void VerifyDisplayMode(string deviceName, DisplayModeOption mode)
@@ -455,33 +496,39 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             current.dmPelsWidth != (uint)mode.Width ||
             current.dmPelsHeight != (uint)mode.Height ||
             !RefreshMatches(current.dmDisplayFrequency, mode.RefreshHz))
-            throw new InvalidOperationException("TV display mode verification failed.");
+            throw DisplayApplyException.ForMode(
+                DisplayApplyErrorCode.ModeVerificationFailed, mode, "TV display mode verification failed.");
     }
 
-    private static void WaitForDisplayReady(string deviceName)
+    /// <summary>
+    /// Waits up to 10 s for the TV to be attached to the desktop and answer with a
+    /// usable current mode. The device is re-resolved on every poll because a TV
+    /// can attach or re-enumerate after the CCD apply.
+    /// </summary>
+    private static string WaitForDisplayReady(Func<string?> resolveDevice, DisplayModeOption mode)
     {
-        var deadline = Environment.TickCount64 + 2000;
+        var deadline = Environment.TickCount64 + DisplayReadyTimeoutMs;
         while (true)
         {
-            var current = CreateDevMode();
-            if (EnumDisplaySettingsW(deviceName, EnumCurrentSettings, ref current) &&
-                current.dmPelsWidth > 0 && current.dmPelsHeight > 0)
-                return;
-            if (Environment.TickCount64 >= deadline) break;
+            var deviceName = resolveDevice();
+            if (!string.IsNullOrEmpty(deviceName))
+            {
+                var current = CreateDevMode();
+                if (EnumDisplaySettingsW(deviceName, EnumCurrentSettings, ref current) &&
+                    current.dmPelsWidth > 0 && current.dmPelsHeight > 0)
+                    return deviceName;
+            }
+            if (Environment.TickCount64 >= deadline)
+                throw DisplayApplyException.ForMode(
+                    DisplayApplyErrorCode.DisplayNotReady, mode, "TV display did not become ready.");
             Thread.Sleep(50);
         }
-        throw new InvalidOperationException("TV display did not become ready.");
     }
 
     // EDID timings round 59.94 Hz to 60, so an exact match is too strict.
     private static bool RefreshMatches(uint actual, int expected) => Math.Abs((long)actual - expected) <= 1;
 
-    private string ResolveGdiDeviceName()
-    {
-        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
-        return TryResolveGdiDeviceName() ?? throw new InvalidOperationException("TV display device could not be found.");
-    }
-
+    /// <summary>Read-only lookup used to enumerate modes; may fall back to a detached adapter.</summary>
     private string? TryResolveGdiDeviceName()
     {
         var monitorId = ExtractMonitorId(_options.DevicePath);
@@ -491,12 +538,27 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             var adapter = CreateDisplayDevice();
             if (!EnumDisplayDevicesW(null, adapterIndex, ref adapter, 0)) break;
             if (!AdapterMatchesTvDevice(monitorId, adapter)) continue;
-            // A TV adapter that is detached from the desktop answers mode changes
-            // with DISP_CHANGE_BADMODE, so prefer one that is actually attached.
             if (IsAttachedToDesktop(adapter.StateFlags)) return adapter.DeviceName;
             fallback ??= adapter.DeviceName;
         }
         return fallback;
+    }
+
+    /// <summary>
+    /// Resolver for display writes: only an adapter attached to the desktop is
+    /// safe. A detached adapter answers DISP_CHANGE_BADMODE, so callers treat
+    /// "none attached" as <see cref="DisplayApplyErrorCode.DisplayNotReady"/>.
+    /// </summary>
+    private string? TryResolveAttachedGdiDeviceName()
+    {
+        var monitorId = ExtractMonitorId(_options.DevicePath);
+        for (uint adapterIndex = 0; ; adapterIndex++)
+        {
+            var adapter = CreateDisplayDevice();
+            if (!EnumDisplayDevicesW(null, adapterIndex, ref adapter, 0)) return null;
+            if (AdapterMatchesTvDevice(monitorId, adapter) && IsAttachedToDesktop(adapter.StateFlags))
+                return adapter.DeviceName;
+        }
     }
 
     private bool AdapterMatchesTvDevice(string? monitorId, DisplayDevice adapter)
