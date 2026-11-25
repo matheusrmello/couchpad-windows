@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 1.0.26 (candidato)
+
+- Escala da TV passa a ser best-effort: se o perfil de DPI não existir, a automação ignora a escala e segue com display e áudio, em vez de falhar antes de qualquer mudança.
+- 360 testes, build Debug/Release 0/0 e smoke.
+
 ## 1.0.25 (candidato)
 
 - Exibe a mensagem real de falha da automação no card Automação (com live region), em vez de apenas o pill "Erro".

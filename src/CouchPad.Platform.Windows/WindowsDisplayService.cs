@@ -271,20 +271,27 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
             var internalDisplay = SelectTarget(all.Targets, selector.DevicePath, selector.EdidManufacturer, selector.EdidProduct, selector.ExactName);
             var proposal = DisplayTopologyPlanner.Create(before, all, tv, internalDisplay, mode);
             var requestedMode = ResolveRequestedMode(normalized);
-            // Resolve the per-monitor DPI key before touching the display: Windows
+            // Resolve the per-monitor DPI key before touching the display. Windows
             // only creates that profile after the TV has been configured once, so
-            // failing here leaves the current display unchanged.
+            // the scale is best-effort: a missing profile or EDID skip only the
+            // scale and never block the display/audio activation.
             var scalePercent = normalized.ScalePercent;
             string? dpiKey = null;
             int? previousDpi = null;
             if (scalePercent is not null)
             {
-                var edid = _edidOverride?.Invoke(_options.DevicePath) ?? EdidReader.ReadForDevice(_options);
-                var prefix = EdidIdentity.BuildDpiPrefix(edid);
-                dpiKey = prefix is null ? null : PerMonitorDpi.FindKey(prefix);
-                if (dpiKey is null)
-                    throw new InvalidOperationException("Set the TV scale once in Windows to create the DPI profile.");
-                previousDpi = PerMonitorDpi.ReadDpiValue(dpiKey);
+                try
+                {
+                    var edid = _edidOverride?.Invoke(_options.DevicePath) ?? EdidReader.ReadForDevice(_options);
+                    var prefix = EdidIdentity.BuildDpiPrefix(edid);
+                    dpiKey = prefix is null ? null : PerMonitorDpi.FindKey(prefix);
+                    previousDpi = dpiKey is null ? null : PerMonitorDpi.ReadDpiValue(dpiKey);
+                }
+                catch
+                {
+                    dpiKey = null;
+                    previousDpi = null;
+                }
             }
 
             string? gdiDeviceName = null;
@@ -297,7 +304,7 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                     SetConfiguration(proposal.Paths, Array.Empty<byte>(), 0x80);
                     EnsureMutationAllowed();
                     if (requestedMode is not null) gdiDeviceName = ApplyDisplayMode(requestedMode);
-                    if (scalePercent is { } scale && !PerMonitorDpi.Apply(dpiKey!, scale))
+                    if (scalePercent is { } scale && dpiKey is not null && !PerMonitorDpi.Apply(dpiKey, scale))
                         throw new InvalidOperationException("Failed to apply the TV display scale.");
                 },
                 () =>
@@ -305,14 +312,14 @@ public sealed class WindowsDisplayService : IDisplayService, IDisplayWriteContro
                     after = GetCurrent();
                     if (after.Mode != mode) throw new InvalidOperationException("Display verification failed.");
                     if (requestedMode is not null) VerifyDisplayMode(gdiDeviceName!, requestedMode);
-                    if (scalePercent is { } expectedScale && PerMonitorDpi.ReadPercent(dpiKey!) != expectedScale)
+                    if (scalePercent is { } expectedScale && dpiKey is not null && PerMonitorDpi.ReadPercent(dpiKey) != expectedScale)
                         throw new InvalidOperationException("TV display scale verification failed.");
                     EnsureMutationAllowed();
                 },
                 () =>
                 {
                     RestoreSnapshot(before);
-                    if (previousDpi is { } value) PerMonitorDpi.WriteDpiValue(dpiKey!, value);
+                    if (previousDpi is { } value && dpiKey is not null) PerMonitorDpi.WriteDpiValue(dpiKey, value);
                 },
                 cancellationToken);
             return after!;
